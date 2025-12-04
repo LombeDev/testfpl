@@ -1,201 +1,11 @@
+/* ========================================= */
 /* --- 1. Font Import (Inter) --- */
+/* ========================================= */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
-/* --- 2. Global Styles for Look and Feel --- */
-
-:root {
-    /* Define some variables for easier theme switching or customization */
-    --primary-color: #7d5fff; /* Purple/Blue accent */
-    --accent-color: #ffc107; /* Gold accent for premium */
-    --text-color: #333;
-    --subtext-color: #666;
-    --box-background: #ffffff;
-    --header-background: #f0f0f0;
-}
-
-/* Apply the background gradient from the image to the body */
-body {
-    /* Use a color scheme similar to the image's background gradient (Blue, Purple, Pink) */
-    background: linear-gradient(135deg, #7b68ee 0%, #ff69b4 50%, #add8e6 100%);
-    min-height: 100vh;
-    font-family: 'Inter', sans-serif; /* Using the imported Inter font */
-    color: var(--text-color);
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* --- 3. Header/Navigation Styles --- */
-
-#main-header {
-    background-color: transparent; /* Top nav bar sits transparently over the gradient background */
-    padding: 10px 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* Navigation Buttons (Menu, Premium, Sign In) */
-.header-left, .header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nav-btn {
-    background-color: var(--box-background);
-    color: var(--text-color);
-    border: none;
-    padding: 8px 15px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.nav-btn:hover {
-    background-color: #f0f0f0;
-}
-
-/* Special styling for the 'Premium' button to match the yellow/gold star look */
-.premium-style {
-    background-color: var(--accent-color); /* Yellow/Gold color */
-    color: var(--text-color);
-}
-
-/* Center Logo (The "F" in the image) */
-.fpl-logo-center {
-    background-color: var(--primary-color);
-    color: var(--box-background);
-    font-size: 30px;
-    font-weight: 900;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* Right Side Elements (Profile Icon and Sign In) */
-.profile-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    /* Recreate the spinning color circle effect with a gradient border/background */
-    background: conic-gradient(red, orange, yellow, green, blue, indigo, violet, red);
-    animation: spin 6s linear infinite; 
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Dropdown Menu for Nav Links (starts hidden) */
-#dropdown-menu {
-    background-color: var(--box-background);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 8px 8px;
-    position: absolute; /* Position it under the header */
-    width: 100%;
-    max-width: 1200px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-    padding: 10px 0;
-}
-
-#dropdown-menu .main-links {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-#dropdown-menu .main-links li a {
-    display: block;
-    padding: 10px 20px;
-    text-decoration: none;
-    color: var(--text-color);
-    transition: background-color 0.2s;
-}
-
-#dropdown-menu .main-links li a:hover {
-    background-color: #f0f0f0;
-}
-
-
-/* --- 4. Main Content Layout and Box Styles (from previous step) --- */
-
-/* Remove default main padding/margins for edge-to-edge layout */
-main {
-    padding: 20px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-/* Style the top-level sections as the data boxes */
-section {
-    background-color: var(--box-background); /* Solid white/off-white background */
-    border-radius: 12px; /* Rounded corners */
-    padding: 0; /* Remove default padding from the section itself */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
-    overflow: hidden;
-}
-
-/* Style for the header/title area inside the box */
-section h2 {
-    background-color: var(--header-background); /* Light grey/off-white header background */
-    color: var(--text-color);
-    padding: 15px 20px;
-    margin-top: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    text-transform: uppercase;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    border-bottom: 1px solid #ddd;
-    font-family: 'Inter', sans-serif; /* Ensure headings use the font */
-}
-
-/* Apply padding to the children of the section if they aren't the title, */
-section > :not(h2) {
-    padding-left: 20px;
-    padding-right: 20px;
-}
-
-section > :last-child {
-    padding-bottom: 20px;
-}
-
-/* Clean up list spacing and styles */
-section ul {
-    list-style: none;
-    padding-left: 20px;
-    margin-top: 5px;
-}
-
-
-
-/* --- 1. Font Import (Inter) --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-
+/* ========================================= */
 /* --- 2. Global Styles & Variables --- */
+/* ========================================= */
 :root {
     /* Mobile/Default Colors */
     --mobile-primary-color: #7d5fff; /* Purple/Blue accent */
@@ -224,7 +34,46 @@ body {
     box-sizing: border-box;
 }
 
+/* Keyframe for the spinning profile icon */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- Loader Styles (Optional, based on your HTML) --- */
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--mobile-primary-color);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 2s linear infinite;
+    margin: 20px auto;
+}
+
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--box-background);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    text-align: center;
+}
+
+#loading-overlay h1 {
+    color: var(--mobile-primary-color);
+}
+
+
+/* ========================================= */
 /* --- 3. Mobile Navigation (Default/Small Screen: Colorful Bar) --- */
+/* ========================================= */
 
 /* Hide Desktop Bars by Default (Mobile) */
 #desktop-top-bar, #desktop-main-nav {
@@ -309,11 +158,6 @@ body {
     animation: spin 6s linear infinite; 
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 /* Dropdown Menu for Nav Links (used by the hamburger icon) */
 #dropdown-menu {
     background-color: var(--box-background);
@@ -348,22 +192,34 @@ body {
     background-color: #f0f0f0;
 }
 
-/* --- 4. Content Box Styles (Applies to both mobile and desktop) --- */
+
+/* ========================================= */
+/* --- 4. Content Box Styles (Applies to all screens) --- */
+/* ========================================= */
 
 main {
     padding: 20px;
     display: grid;
+    /* Defines the available space for the sections */
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
 }
 
+/* 🎯 MODIFIED SECTION RULE to shrink-wrap all content */
 section {
     background-color: var(--box-background);
     border-radius: 12px;
     padding: 0;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+
+    /* 1. SHRINK-WRAP WIDTH: Forces the section to be only as wide as its content */
+    width: fit-content; 
+
+    /* 2. CENTER: Centers the newly shrunken section within its grid column */
+    justify-self: center; 
 }
+/* ------------------------------------------------------------------- */
 
 section h2 {
     background-color: var(--header-background);
@@ -379,6 +235,7 @@ section h2 {
     font-family: 'Inter', sans-serif;
 }
 
+/* Apply padding to the children of the section if they aren't the title */
 section > :not(h2) {
     padding-left: 20px;
     padding-right: 20px;
@@ -392,6 +249,37 @@ section ul {
     list-style: none;
     padding-left: 20px;
     margin-top: 5px;
+}
+
+/* --- Specific Styles for Content Inside Sections --- */
+
+.price-riser {
+    color: green;
+    font-weight: bold;
+}
+
+.price-faller {
+    color: red;
+    font-weight: bold;
+}
+
+.highlight-accent {
+    color: var(--mobile-primary-color);
+    font-weight: bold;
+}
+
+/* Search container styling */
+.search-container {
+    padding: 10px 20px 0 20px;
+}
+
+#statusSearch {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 16px;
 }
 
 
