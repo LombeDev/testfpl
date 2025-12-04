@@ -1,174 +1,173 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOPALA FPL Dashboard</title>
-    
-    <link rel="stylesheet" href="style.css">
-    
-    <link rel="icon" type="image/png" href="favicon.png"> 
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-</head>
 <body>
 
-<div id="loading-overlay">
-    <h1>KOPALA FPL</h1>
-    <p>abana FPL 😎...</p>
-    <div class="loader"></div> 
-</div>
-
-<div id="desktop-top-bar">
-    <div class="top-bar-container">
-        <div class="social-icons-desktop">
-            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-            <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
-            <a href="#"><i class="fa-solid fa-microphone"></i></a>
-        </div>
-        <button class="search-btn-desktop"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+    <div id="loading-overlay">
+        <h1>KOPALA FPL</h1>
+        <p>abana FPL 😎...</p>
+        <div class="loader"></div> 
     </div>
-</div>
 
-<header id="desktop-main-nav">
-    <div class="nav-container">
-        <div class="logo-area-desktop">
-            <span class="fpl-logo-desktop">KOPALA FPL</span>
+    <div id="desktop-top-bar">
+        <div class="top-bar-container">
+            <div class="social-icons-desktop">
+                <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="#"><i class="fa-solid fa-microphone"></i></a>
+            </div>
+            <button class="search-btn-desktop"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
         </div>
-
-        <nav id="main-links-desktop">
-            <ul class="main-links">
-                <li><a href="#standings">FPL LIVE RANK</a></li>
-                <li><a href="#bps-list">Bps</a></li>
-                <li><a href="#fixtures-list">EPL Scores</a></li>
-                <li><a href="#price-changes-list">Price Change</a></li>
-                <li><a href="#price-changes-list">Price Change</a></li>
-                <li><a href="#most-transferred-list" class="has-dropdown">Transfers <i class="fa-solid fa-chevron-down"></i></a></li>
-                <li><a href="#articles" class="has-dropdown">Articles <i class="fa-solid fa-chevron-down"></i></a></li>
-                <li><a href="#tools" class="has-dropdown">Tools <i class="fa-solid fa-chevron-down"></i></a></li>
-            </ul>
-        </nav>
     </div>
-</header>
 
-<div id="mobile-nav-wrapper">
-    <header id="mobile-header">
-        <div class="header-container">
-            <div class="header-left">
-                <button id="menu-btn" class="nav-btn"><i class="fa-solid fa-bars"></i> Menu</button>
-        
+    <header id="desktop-main-nav">
+        <div class="nav-container">
+            <div class="logo-area-desktop">
+                <span class="fpl-logo-desktop">KOPALA FPL</span>
             </div>
-            <div class="header-center"><div class="fpl-logo-center">K</div></div>
-            <div class="header-right">
-               
-                <button class="nav-btn signin-btn">Sign In</button>
-            </div>
+            <nav id="main-links-desktop">
+                <ul class="main-links">
+                    <li><a href="#standings-container">FPL LIVE RANK</a></li>
+                    <li><a href="#bps-list">BPS</a></li>
+                    <li><a href="#fixtures-list">EPL Scores</a></li>
+                    <li><a href="#price-changes-list">Price Changes</a></li>
+                    <li><a href="#most-transferred-list" class="has-dropdown">Transfers <i class="fa-solid fa-chevron-down"></i></a></li>
+                    <li><a href="#articles" class="has-dropdown">Articles <i class="fa-solid fa-chevron-down"></i></a></li>
+                    <li><a href="#tools" class="has-dropdown">Tools <i class="fa-solid fa-chevron-down"></i></a></li>
+                </ul>
+            </nav>
         </div>
     </header>
-    <nav id="dropdown-menu" style="display: none;">
-        </nav>
-</div>
-<main>
 
-    <section id="deadline-section" class="fpl-section">
-        <h2 class="countdown-title">Loading Deadline...</h2>
-        
-        <div id="countdown-timer" class="countdown-display">
-            <p>Fetching next deadline time...</p>
-        </div>
-    </section>
-    
-    <section id="welcome" class="lazy">
-        <h2>Welcome to Kopala FPL</h2> <p>
-            A collection of tools that will help you <span class="highlight-accent">level up your FPL game</span>. We provide consolidated, fast access to:
-        </p>
-        <ul>
-            <li>🏆 **Mini-League Ranks:** See who's rising and falling instantly.</li>
-            <li>📈 **Transfer Activity:** Track price changes and popular moves in real-time.</li>
-            <li>⚽ **Live Fixtures:** Follow goals, assists, and cards as they happen.</li>
-        </ul>
-        
-        <p>
-            Players in green are **<span class="price-riser">Risers</span>** and red are **<span class="price-faller">Fallers</span>**. Scroll down to get started!
-        </p>
-        <li>On the nav bar swipe to the left for you to see more options.</li>
-    </section>
-    
- <section>
-    <div class="grid-item standings-box lazy" id="standings-container">
-    <div id="standings-list">
-        <p>Loading league standings...</p>
-        </div>
-</div>
-        </div>
-    </section>
-
-<!-- BONUS POINTS SECTION -->
-<section id="bonus-points-section">
-    <h2>Bonus Points</h2>
-    <div id="bonus-points"></div>
-</section>
-
-<!-- NEXT FIXTURES SECTION -->
-<section id="fixtures-section">
-    <h2>Next Fixtures</h2>
-    <div id="next-fixtures">
-        <div class="loader"></div>
+    <div id="mobile-nav-wrapper">
+        <header id="mobile-header">
+            <div class="header-container">
+                <div class="header-left">
+                    <button id="menu-btn" class="nav-btn"><i class="fa-solid fa-bars"></i> Menu</button>
+                </div>
+                <div class="header-center"><div class="fpl-logo-center">K</div></div>
+                <div class="header-right">
+                    <button class="nav-btn signin-btn">Sign In</button>
+                </div>
+            </div>
+        </header>
+        <nav id="dropdown-menu" style="display: none;"></nav>
     </div>
-</section>
 
+    <main>
+        <div id="simple-content-container">
+            
+            <div id="deadline-section" class="simple-block lazy">
+                <h2 class="countdown-title">Next FPL Deadline</h2>
+                <div id="countdown-timer">
+                    <p>Fetching next deadline time...</p>
+                </div>
+            </div>
+            <hr>
 
+            <div id="welcome" class="simple-block lazy">
+                <h2>Welcome to Kopala FPL</h2> 
+                <p>
+                    A collection of tools that will help you <span class="highlight-accent">level up your FPL game</span>. We provide consolidated, fast access to:
+                </p>
+                <ul>
+                    <li>🏆 **Mini-League Ranks:** See who's rising and falling instantly.</li>
+                    <li>📈 **Transfer Activity:** Track price changes and popular moves in real-time.</li>
+                    <li>⚽ **Live Fixtures:** Follow goals, assists, and cards as they happen.</li>
+                </ul>
+                <p>
+                    Players in green are **<span class="price-riser">Risers</span>** and red are **<span class="price-faller">Fallers</span>**. Scroll down to get started!
+                </p>
+            </div>
+            <hr>
 
-<!-- EPL TABLE SECTION -->
-<section id="epl-table-section">
-    <h2>Premier League Table</h2>
-    <div id="epl-table-container"></div>
-</section>
+            <div id="standings-container" class="simple-block lazy">
+                <h2>Mini-League Standings (Live Rank)</h2>
+                <div id="standings-list">
+                    <p>Loading league standings...</p>
+                </div>
+            </div>
+            <hr>
 
+            <div id="epl-table-list" class="simple-block lazy">
+                <h3>Current Premier League Standings 🏆</h3>
+                <div id="epl-table-container">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <hr>
 
-    <section class="lazy">
-        <div id="fixtures-list"><div class="loader"></div></div>
-    </section>
+            <div id="fixtures-list-section" class="simple-block lazy">
+                <h3>Live Gameweek Scores ⚽</h3>
+                <div id="fixtures-list">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <hr>
 
-    <section class="lazy">
-        <div id="price-changes-list"><div class="loader"></div></div>
-    </section>
-    
-    <section class="lazy">
-        <div id="most-transferred-list"><div class="loader"></div></div>
-    </section>
+            <div id="bps-list-section" class="simple-block lazy">
+                <h3>Current GW Bonus Points (BPS) 🌟</h3>
+                <div id="bps-list">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <hr>
 
-    <section class="lazy">
-        <div id="most-transferred-out-list"><div class="loader"></div></div>
-    </section>
+            <div id="price-changes-section" class="simple-block lazy">
+                <h3>Price Risers and Fallers 💰</h3>
+                <div id="price-changes-list">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <hr>
 
-    <section class="lazy">
-        <div id="most-captained-list"><div class="loader"></div></div>
-    </section>
+            <div id="most-transferred-in-section" class="simple-block lazy">
+                <h3>Most Transferred In ➡️</h3>
+                <div id="most-transferred-list">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <hr>
 
-    <section>
-        <div class="search-container">
-            <input type="text" id="statusSearch" placeholder="Search player or injury status..." aria-label="Search Player Status">
+            <div id="most-transferred-out-section" class="simple-block lazy">
+                <h3>Most Transferred Out ⬅️</h3>
+                <div id="most-transferred-out-list">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <hr>
+
+            <div id="most-captained-section" class="simple-block lazy">
+                <h3>Most Captained Player ©️</h3>
+                <div id="most-captained-list">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <hr>
+
+            <div id="player-status-section" class="simple-block lazy">
+                <h2>Player Injury/Suspension News 🧑‍⚕️</h2>
+                <div class="search-container">
+                    <input type="text" id="statusSearch" placeholder="Search player or injury status..." aria-label="Search Player Status">
+                </div>
+                <div id="status-list">
+                    <div class="loader"></div>
+                </div>
+            </div>
+
         </div>
-        <div id="status-list"><div class="loader"></div></div>
-    </section>
-    
-</main>
+    </main>
 
-<button id="backToTop">🚀</button>
+    <button id="backToTop">🚀</button>
 
-<footer>
-    <p>&copy; 2026 KOPALA FPL</p>
-    <div class="social-links">
-        <a href="https://twitter.com/YourTwitterHandle" target="_blank" aria-label="Follow us on X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
-        <a href="https://facebook.com/YourFacebookPage" target="_blank" aria-label="Follow us on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-        <a href="mailto: lombeicloud@gmail.com" aria-label="Email us"><i class="fa-solid fa-envelope"></i></a>
-    </div>
-    <p class="disclaimer">Data provided by Fantasy Premier League API and The Sports DB. Not officially affiliated with the Premier League.</p>
-</footer>
+    <footer>
+        <p>&copy; 2026 KOPALA FPL</p>
+        <div class="social-links">
+            <a href="https://twitter.com/YourTwitterHandle" target="_blank" aria-label="Follow us on X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://facebook.com/YourFacebookPage" target="_blank" aria-label="Follow us on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="mailto: lombeicloud@gmail.com" aria-label="Email us"><i class="fa-solid fa-envelope"></i></a>
+        </div>
+        <p class="disclaimer">Data provided by Fantasy Premier League API and The Sports DB. Not officially affiliated with the Premier League.</p>
+    </footer>
 
-<script src="script.js"></script>
-<script src="bonus_points.js"></script>
+    <script src="script.js"></script>
+    <script src="bonus_points.js"></script> 
 
 </body>
-</html>
