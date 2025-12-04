@@ -1,8 +1,8 @@
 /* -----------------------------------------
     GLOBAL SETUP
 ----------------------------------------- */
-// Using the more reliable proxy for cross-origin requests
-const proxy = "https://corsproxy.io/?";
+// Switched to a more reliable proxy for cross-origin requests
+const proxy = "https://api.allorigins.win/raw?url=";
 
 // Global variables initialized at the top
 let teamMap = {};    // Team ID -> Abbreviation (e.g., 1 -> 'ARS')
@@ -33,24 +33,26 @@ const themeToggle = document.getElementById("themeToggle");
 // Load saved preference
 if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark-mode");
-    themeToggle.textContent = "☀️";
+    if (themeToggle) themeToggle.textContent = "☀️";
 }
 
 // Toggle on click
-themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark-mode");
+if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
 
-    if (document.body.classList.contains("dark-mode")) {
-        themeToggle.textContent = "☀️";
-        localStorage.setItem("theme", "dark");
-    } else {
-        themeToggle.textContent = "🌙";
-        localStorage.setItem("theme", "light");
-    }
-});
+        if (document.body.classList.contains("dark-mode")) {
+            themeToggle.textContent = "☀️";
+            localStorage.setItem("theme", "dark");
+        } else {
+            themeToggle.textContent = "🌙";
+            localStorage.setItem("theme", "light");
+        }
+    });
+}
 
 /* -----------------------------------------
-    NAVIGATION MENU TOGGLES (UPDATED FOR NEW HTML IDS)
+    NAVIGATION MENU TOGGLES (Mobile Hamburger)
 ----------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
     const menuButton = document.getElementById('menu-btn'); // The "Menu" button
@@ -60,34 +62,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (menuButton && dropdownMenu) {
         menuButton.addEventListener('click', () => {
             const isHidden = dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '';
+            const icon = menuButton.querySelector('i');
 
             if (isHidden) {
                 dropdownMenu.style.display = 'block';
-                // Optional: Change icon from fa-bars to fa-xmark if needed, though you used text buttons
-                menuButton.querySelector('i').classList.remove('fa-bars');
-                menuButton.querySelector('i').classList.add('fa-xmark');
+                if (icon) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-xmark');
+                }
             } else {
                 dropdownMenu.style.display = 'none';
-                menuButton.querySelector('i').classList.remove('fa-xmark');
-                menuButton.querySelector('i').classList.add('fa-bars');
+                if (icon) {
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+                }
             }
         });
     }
 
     // 2. Close menu when clicking an anchor link inside it
     const menuLinks = dropdownMenu ? dropdownMenu.querySelectorAll('a') : [];
+    const icon = menuButton ? menuButton.querySelector('i') : null;
+
     menuLinks.forEach(link => {
         link.addEventListener('click', () => {
             if (dropdownMenu) dropdownMenu.style.display = 'none';
-            if (menuButton) {
+            if (icon) {
                 // Reset icon back to bars after closing
-                menuButton.querySelector('i').classList.remove('fa-xmark');
-                menuButton.querySelector('i').classList.add('fa-bars');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
             }
         });
     });
-
-    // NOTE: Removed kebab and old hamburger logic as it used deprecated selectors.
 });
 
 
@@ -559,7 +565,6 @@ async function loadMostCaptained(data) {
  * @param {object} data - The full data object from FPL bootstrap-static.
  */
 async function loadSimpleEPLTable(data) {
-    // NOTE: This feature needs an HTML element with id="epl-table-list" to display correctly.
     const container = document.getElementById("epl-table-list");
     if (!container || !data || !data.teams) return;
 
@@ -680,7 +685,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 🌟 BONUS POINTS SCORERS (Current Gameweek)
 async function loadTopBonusPoints(data) {
-    // NOTE: This feature needs an HTML element with id="bps-list" to display correctly.
     const container = document.getElementById("bps-list");
     if (!container || !data) return;
 
@@ -701,6 +705,7 @@ async function loadTopBonusPoints(data) {
         
         // Check 2: Ensure the secondary fetch was successful
         if (!gwDataResponse.ok) {
+            // Throw an error that is caught by the try/catch block below
             throw new Error(`API returned status ${gwDataResponse.status}`);
         }
         
@@ -738,7 +743,8 @@ async function loadTopBonusPoints(data) {
             if (b.gw_bonus !== a.gw_bonus) {
                 return b.gw_bonus - a.gw_bonus; 
             }
-            return b.gw_bps - a.gw.bps;
+            // Corrected BPS tie-breaker comparison
+            return b.gw_bps - a.gw_bps; 
         });
 
         // 4. Render the list
