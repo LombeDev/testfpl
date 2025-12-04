@@ -189,3 +189,315 @@ section ul {
     padding-left: 20px;
     margin-top: 5px;
 }
+
+
+
+/* --- 1. Font Import (Inter) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+/* --- 2. Global Styles & Variables --- */
+:root {
+    /* Mobile/Default Colors */
+    --mobile-primary-color: #7d5fff; /* Purple/Blue accent */
+    --mobile-accent-color: #ffc107; /* Gold accent for premium */
+    --text-color: #333;
+    --subtext-color: #666;
+    --box-background: #ffffff;
+    --header-background: #f0f0f0;
+
+    /* Desktop Colors */
+    --desktop-dark-bg: #145b41; /* Darker green for top bar */
+    --desktop-main-bg: #27885b; /* Main green for nav bar */
+    --desktop-link-color: #ffffff;
+    --desktop-accent-color: #f7f3e8; /* Off-white for accents */
+}
+
+/* Base Body Style (Mobile Background) */
+body {
+    /* Mobile background gradient from the first image */
+    background: linear-gradient(135deg, #7b68ee 0%, #ff69b4 50%, #add8e6 100%);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* --- 3. Mobile Navigation (Default/Small Screen: Colorful Bar) --- */
+
+/* Hide Desktop Bars by Default (Mobile) */
+#desktop-top-bar, #desktop-main-nav {
+    display: none;
+}
+
+/* Mobile Wrapper is visible */
+#mobile-nav-wrapper {
+    display: block;
+    background-color: transparent;
+    padding: 10px 20px;
+}
+
+#mobile-header .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Navigation Buttons (Menu, Premium, Sign In) */
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-btn {
+    background-color: var(--box-background);
+    color: var(--text-color);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.nav-btn:hover {
+    background-color: #f0f0f0;
+}
+
+/* Premium Button Style */
+.premium-style {
+    background-color: var(--mobile-accent-color);
+    color: var(--text-color);
+}
+
+/* Center Logo (The "F") */
+.header-center {
+    flex-grow: 1; 
+    display: flex;
+    justify-content: center;
+}
+
+.fpl-logo-center {
+    background-color: var(--mobile-primary-color);
+    color: var(--box-background);
+    font-size: 30px;
+    font-weight: 900;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Profile Icon (Spinning Circle) */
+.profile-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: conic-gradient(red, orange, yellow, green, blue, indigo, violet, red);
+    animation: spin 6s linear infinite; 
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Dropdown Menu for Nav Links (used by the hamburger icon) */
+#dropdown-menu {
+    background-color: var(--box-background);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 8px 8px;
+    position: absolute;
+    width: calc(100% - 40px); /* Account for main padding */
+    max-width: 1160px; /* Max width of content - 40px padding */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 10px 0;
+}
+
+#dropdown-menu .main-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#dropdown-menu .main-links li a {
+    display: block;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background-color 0.2s;
+}
+
+#dropdown-menu .main-links li a:hover {
+    background-color: #f0f0f0;
+}
+
+/* --- 4. Content Box Styles (Applies to both mobile and desktop) --- */
+
+main {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+section {
+    background-color: var(--box-background);
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+section h2 {
+    background-color: var(--header-background);
+    color: var(--text-color);
+    padding: 15px 20px;
+    margin-top: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom: 1px solid #ddd;
+    font-family: 'Inter', sans-serif;
+}
+
+section > :not(h2) {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+section > :last-child {
+    padding-bottom: 20px;
+}
+
+section ul {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+}
+
+
+/* ========================================= */
+/* --- 5. Desktop Navigation (Media Query) --- */
+/* ========================================= */
+
+@media (min-width: 992px) {
+    /* A. Hide Mobile Nav */
+    #mobile-nav-wrapper {
+        display: none;
+    }
+    
+    /* B. Show Desktop Nav */
+    #desktop-top-bar, #desktop-main-nav {
+        display: block;
+    }
+
+    /* C. Change Body Background for Desktop Look */
+    body {
+        background: var(--box-background); /* White body background for desktop */
+    }
+
+    /* --- Desktop Top Bar (Dark Green) --- */
+    #desktop-top-bar {
+        background-color: var(--desktop-dark-bg);
+        color: var(--desktop-link-color);
+        padding: 5px 20px;
+    }
+    
+    .top-bar-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .social-icons-desktop a {
+        color: var(--desktop-link-color);
+        margin-right: 15px;
+        font-size: 1.1em;
+        transition: opacity 0.2s;
+    }
+    
+    .search-btn-desktop {
+        background-color: #1a6f50;
+        color: var(--desktop-link-color);
+        border: none;
+        padding: 5px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* --- Desktop Main Nav Bar (Bright Green) --- */
+    #desktop-main-nav {
+        background-color: var(--desktop-main-bg);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    #desktop-main-nav .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px 20px;
+    }
+    
+    /* Logo Styling */
+    .fpl-logo-desktop {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--desktop-accent-color);
+        text-transform: uppercase;
+    }
+    
+    /* Main Links Styling */
+    #main-links-desktop .main-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 25px;
+    }
+    
+    #main-links-desktop .main-links li a {
+        text-decoration: none;
+        color: var(--desktop-link-color);
+        font-weight: 600;
+        padding: 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: color 0.2s;
+    }
+    
+    #main-links-desktop .main-links li a:hover {
+        color: var(--desktop-accent-color);
+    }
+    
+    .has-dropdown i {
+        font-size: 0.7em;
+    }
+}
