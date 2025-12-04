@@ -3,6 +3,7 @@
 ----------------------------------------- */
 
 // 🌐 CRITICAL: Proxy for CORS issues (using the stable one)
+// ⚠️ FIX: Ensure this is ONLY declared once globally. (Resolves SyntaxError)
 const proxy = "https://thingproxy.freeboard.io/fetch/";
 
 // Global maps to hold static data fetched from the bootstrap-static API
@@ -232,12 +233,14 @@ async function fetchAndDisplayBonusPoints(allPlayers, gwId, container) {
         const bonusPlayers = playerStats
             .map(stat => {
                 // Find the actual bonus points awarded (0-3)
-                const bonusAwarded = stat.stats.find(s => s.identifier === 'bonus')?.value || 0;
+                // FIX APPLIED HERE: Added ?. before .find to handle missing 'stats' array (TypeError)
+                const bonusAwarded = stat.stats?.find(s => s.identifier === 'bonus')?.value || 0;
                 
                 if (bonusAwarded > 0) {
                     const fullPlayer = allPlayers.find(p => p.id === stat.id);
                     if (fullPlayer) {
-                        const bpsValue = stat.stats.find(s => s.identifier === 'bps')?.value || 0;
+                        // FIX APPLIED HERE: Added ?. before .find to handle missing 'stats' array (TypeError)
+                        const bpsValue = stat.stats?.find(s => s.identifier === 'bps')?.value || 0;
                         
                         return {
                             ...fullPlayer,
