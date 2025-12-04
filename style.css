@@ -1,417 +1,187 @@
-/* ========================================= */
-/* --- 1. Font Import (Inter) --- */
-/* ========================================= */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-
-/* ========================================= */
-/* --- 2. Global Styles & Variables --- */
-/* ========================================= */
-:root {
-    /* Mobile/Default Colors */
-    --mobile-primary-color: #7d5fff; /* Purple/Blue accent */
-    --mobile-accent-color: #ffc107; /* Gold accent for premium */
-    --text-color: #333;
-    --subtext-color: #666;
-    --box-background: #ffffff; /* This is now mostly background color */
-    --header-background: transparent; /* Changed to transparent for simple text look */
-
-    /* Desktop Colors */
-    --desktop-dark-bg: #145b41;
-    --desktop-main-bg: #27885b;
-    --desktop-link-color: #ffffff;
-    --desktop-accent-color: #f7f3e8; 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOPALA FPL Dashboard</title>
     
-    /* Dark Mode Variables */
-    --dark-bg-main: #121212;
-    --dark-bg-box: #1e1e1e;
-    --dark-text: #e0e0e0;
-    --dark-subtext: #aaaaaa;
-    --dark-header-bg: transparent; /* Changed to transparent */
-}
-
-/* Base Body Style (Mobile Background) */
-body {
-    /* Mobile background gradient from the first image */
-    background: linear-gradient(135deg, #7b68ee 0%, #ff69b4 50%, #add8e6 100%);
-    min-height: 100vh;
-    font-family: 'Inter', sans-serif;
-    color: var(--text-color);
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-/* --- Dark Mode Toggle Styles --- */
-body.dark-mode {
-    background: var(--dark-bg-main);
-    color: var(--dark-text);
-}
-
-body.dark-mode :root {
-    --text-color: var(--dark-text);
-    --subtext-color: var(--dark-subtext);
-    --box-background: var(--dark-bg-main); /* Match main background */
-    --header-background: var(--dark-header-bg);
-}
-
-/* --- Loader Styles --- */
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.loader {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--mobile-primary-color);
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 2s linear infinite;
-    margin: 20px auto;
-}
-
-#loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--box-background);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    text-align: center;
-    transition: opacity 0.5s ease-out;
-}
-
-/* ========================================= */
-/* --- 3. Mobile Navigation --- */
-/* ========================================= */
-
-/* Hide Desktop Bars by Default (Mobile) */
-#desktop-top-bar, #desktop-main-nav { display: none; }
-
-/* Mobile Wrapper is visible */
-#mobile-nav-wrapper {
-    display: block;
-    background-color: transparent;
-    padding: 10px 20px;
-}
-
-#mobile-header .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* Navigation Buttons */
-.header-left, .header-right { display: flex; align-items: center; gap: 10px; }
-
-.nav-btn {
-    background-color: var(--box-background);
-    color: var(--text-color);
-    border: none;
-    padding: 8px 15px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-body.dark-mode .nav-btn {
-    box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
-}
-
-.nav-btn:hover { background-color: #f0f0f0; }
-
-.premium-style { background-color: var(--mobile-accent-color); color: var(--text-color); }
-
-.header-center { flex-grow: 1; display: flex; justify-content: center; }
-
-.fpl-logo-center {
-    background-color: var(--mobile-primary-color);
-    color: var(--box-background);
-    font-size: 30px;
-    font-weight: 900;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.profile-icon {
-    width: 30px; height: 30px; border-radius: 50%;
-    background: conic-gradient(red, orange, yellow, green, blue, indigo, violet, red);
-    animation: spin 6s linear infinite; 
-}
-
-/* Dropdown Menu */
-#dropdown-menu {
-    background-color: var(--box-background);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 8px 8px;
-    position: absolute;
-    width: calc(100% - 40px);
-    max-width: 1160px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-    padding: 10px 0;
-}
-
-#dropdown-menu .main-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
-
-#dropdown-menu .main-links li a {
-    display: block; padding: 10px 20px; text-decoration: none;
-    color: var(--text-color); transition: background-color 0.2s;
-}
-
-#dropdown-menu .main-links li a:hover { background-color: #f0f0f0; }
-
-
-/* ========================================= */
-/* --- 4. Simple Content Structure --- */
-/* ========================================= */
-
-main {
-    padding: 20px;
-    /* Main container is now simple text alignment */
-    max-width: 800px; 
-    margin: 0 auto;
-}
-
-/* General block styling for separation */
-.simple-block {
-    background-color: transparent;
-    padding: 10px 0;
-    margin-bottom: 20px;
-}
-
-/* Horizontal rule separator */
-hr {
-    border: none;
-    border-top: 1px solid #ccc;
-    margin: 20px 0;
-    opacity: 0.5;
-}
-
-body.dark-mode hr {
-    border-top: 1px solid #444;
-}
-
-/* Headers inside Blocks */
-.simple-block h2, .simple-block h3 {
-    background-color: var(--header-background); /* Transparent */
-    color: var(--text-color);
-    padding: 10px 0;
-    margin-top: 0;
-    font-size: 1.5em;
-    font-weight: bold;
-    text-transform: uppercase;
-    border-bottom: 2px solid var(--text-color); /* Clear separator */
-    margin-bottom: 15px;
-    font-family: 'Inter', sans-serif;
-}
-.simple-block h3 {
-    font-size: 1.2em;
-    text-transform: none;
-    font-weight: 600;
-    border-bottom: 1px solid var(--text-color);
-}
-
-/* Lazy Loading Fade-in effect */
-.lazy {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
-
-.lazy-loaded {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-
-/* --- Price/Transfer/Captain Lists --- */
-
-.small-list div {
-    padding: 5px 0;
-    border-bottom: 1px dotted #ccc;
-    font-size: 0.95em;
-    display: flex;
-    justify-content: space-between;
-}
-body.dark-mode .small-list div {
-    border-bottom: 1px dotted #444;
-}
-
-.small-list div:last-of-type {
-    border-bottom: none;
-}
-
-.price-riser { color: green; font-weight: bold; }
-.price-faller { color: red; font-weight: bold; }
-.transferred-out { color: #cc5500; }
-.top-rank { font-weight: bold; } /* Removed background */
-
-/* --- Deadline Display --- */
-.deadline-box { text-align: center; }
-
-.countdown-title { border-bottom: none !important; margin-bottom: 5px !important; }
-
-#countdown-timer {
-    font-size: 1.6em;
-    font-weight: 700;
-    color: var(--mobile-primary-color);
-    padding: 5px 0 15px 0;
-    display: block;
-}
-
-/* --- Player Status Search/Filter --- */
-#statusSearch {
-    width: 100%;
-    margin: 10px 0 15px 0;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-sizing: border-box;
-    font-size: 16px;
-    color: var(--text-color);
-    background-color: var(--box-background);
-}
-body.dark-mode #statusSearch {
-    border-color: #444;
-}
-
-#status-list { max-height: 400px; overflow-y: auto; padding: 0; }
-
-.player-news-item { border-bottom: 1px dotted #ddd; padding: 8px 0; }
-body.dark-mode .player-news-item { border-bottom: 1px dotted #444; }
-.player-news-item:last-child { border-bottom: none; }
-
-.player-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-weight: 600; }
-
-.status-badge { font-size: 0.75em; padding: 3px 6px; border-radius: 4px; font-weight: bold; color: white; }
-.status-doubtful { background-color: #ffc107; }
-.status-injured, .status-unavailable { background-color: #dc3545; }
-.news-detail { font-size: 0.85em; color: var(--subtext-color); margin: 0; }
-
-/* --- EPL Table Styles --- */
-.simple-epl-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-
-.simple-epl-table th, .simple-epl-table td {
-    padding: 8px 5px;
-    text-align: right;
-    border-bottom: 1px solid #ccc;
-}
-body.dark-mode .simple-epl-table th, body.dark-mode .simple-epl-table td {
-    border-bottom: 1px solid #444;
-}
-
-.simple-epl-table th:nth-child(2), .simple-epl-table td:nth-child(2) { text-align: left; }
-.team-name-header { text-align: left !important; width: 40%; }
-
-/* Positional Highlighting - Keeping colors for clarity */
-.champions-league { background-color: #ccffcc; }
-.europa-league { background-color: #ccccff; }
-.relegation-zone { background-color: #ffcccc; }
-
-body.dark-mode .champions-league { background-color: #0d4a0d; }
-body.dark-mode .europa-league { background-color: #1a1a4f; }
-body.dark-mode .relegation-zone { background-color: #5a1919; }
-
-/* --- Bonus Points List --- */
-#bps-list div { padding: 5px 0; border-bottom: 1px dotted #ccc; font-size: 0.95em; }
-body.dark-mode #bps-list div { border-bottom: 1px dotted #444; }
-#bps-list div:last-of-type { border-bottom: none; }
-.bonus-icon { color: var(--mobile-accent-color); margin-right: 5px; }
-.bonus-awarded-value { font-weight: 900; }
-.bps-score { color: var(--subtext-color); font-size: 0.85em; }
-
-/* ========================================= */
-/* --- 5. Mini-League Standings Styles --- */
-/* ========================================= */
-
-/* Wrapper for individual league blocks (e.g., 101712 and 147133) */
-.league-standings-block {
-    margin-bottom: 15px; 
-    padding: 0;
-    border: none; /* Removed border */
-}
-
-.league-title {
-    background-color: transparent !important;
-    color: var(--text-color);
-    padding: 5px 0;
-    margin: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    border-bottom: 1px dashed var(--text-color) !important; /* Clear separator for leagues */
-    margin-bottom: 10px;
-}
-body.dark-mode .league-title { border-bottom: 1px dashed var(--dark-text) !important; }
-
-.standings-results > div {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    border-bottom: 1px dotted #ccc;
-    font-size: 0.95em;
-    transition: background-color 0.1s;
-}
-body.dark-mode .standings-results > div { border-bottom: 1px dotted #444; }
-
-.standings-results > div:hover { background-color: #fafafa; }
-body.dark-mode .standings-results > div:hover { background-color: #1a1a1a; }
-
-.standings-results > div:last-child { border-bottom: none; }
-
-.rank-number { font-weight: bold; width: 25px; text-align: left; }
-.manager-name { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px; }
-
-/* Rank Change Indicators */
-.rank-change { font-weight: bold; font-size: 0.8em; padding: 0 5px; width: 40px; text-align: right; }
-.rank-up { color: green; }
-.rank-down { color: red; }
-.rank-unchanged { color: var(--subtext-color); }
-
-/* Removed background colors for rank highlighting */
-.top-rank { font-weight: bold !important; }
-.second-rank, .third-rank { background-color: transparent !important; }
-
-
-/* ========================================= */
-/* --- 6. Fixtures Styles --- */
-/* ========================================= */
-
-.fixtures-list-items { list-style: none; padding: 0; margin: 0; }
-
-.fixtures-list-items li { padding: 8px 0; border-bottom: 1px solid #ccc; font-size: 0.95em; }
-body.dark-mode .fixtures-list-items li { border-bottom: 1px solid #444; }
-
-.fixture-summary { display: flex; justify-content: space-between; align-items: center; font-weight: 500; }
-.fixture-details { padding-top: 5px; margin-top: 5px; border-top: 1px dotted #ccc; font-size: 0.85em; }
-body.dark-mode .fixture-details { border-top: 1px dotted #444; }
-
-/* ... (rest of fixture styles remain the same for functionality) ... */
-
-/* ========================================= */
-/* --- 7. Desktop Navigation (Media Query) --- */
-/* ========================================= */
-
-@media (min-width: 992px) {
-    /* ... (Desktop Navigation styles remain the same) ... */
-}
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="icon" type="image/png" href="favicon.png"> 
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<div id="loading-overlay">
+    <h1>KOPALA FPL</h1>
+    <p>abana FPL 😎...</p>
+    <div class="loader"></div> 
+</div>
+
+<div id="desktop-top-bar">
+    <div class="top-bar-container">
+        <div class="social-icons-desktop">
+            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="#"><i class="fa-solid fa-microphone"></i></a>
+        </div>
+        <button class="search-btn-desktop"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+    </div>
+</div>
+
+<header id="desktop-main-nav">
+    <div class="nav-container">
+        <div class="logo-area-desktop">
+            <span class="fpl-logo-desktop">KOPALA FPL</span>
+        </div>
+        <nav id="main-links-desktop">
+            <ul class="main-links">
+                <li><a href="#standings-container">FPL LIVE RANK</a></li>
+                <li><a href="#bps-list-section">BPS</a></li>
+                <li><a href="#fixtures-list-section">EPL Scores</a></li>
+                <li><a href="#price-changes-section">Price Changes</a></li>
+                <li><a href="#most-transferred-in-section" class="has-dropdown">Transfers <i class="fa-solid fa-chevron-down"></i></a></li>
+                <li><a href="#articles" class="has-dropdown">Articles <i class="fa-solid fa-chevron-down"></i></a></li>
+                <li><a href="#tools" class="has-dropdown">Tools <i class="fa-solid fa-chevron-down"></i></a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<div id="mobile-nav-wrapper">
+    <header id="mobile-header">
+        <div class="header-container">
+            <div class="header-left">
+                <button id="menu-btn" class="nav-btn"><i class="fa-solid fa-bars"></i> Menu</button>
+            </div>
+            <div class="header-center"><div class="fpl-logo-center">K</div></div>
+            <div class="header-right">
+                <button id="themeToggle" class="nav-btn">🌙</button> <button class="nav-btn signin-btn">Sign In</button>
+            </div>
+        </div>
+    </header>
+    <nav id="dropdown-menu" style="display: none;"></nav>
+</div>
+
+<main>
+    <div id="simple-content-container">
+        
+        <div id="deadline-section" class="simple-block lazy">
+            <h2 class="countdown-title">Next FPL Deadline</h2>
+            <div id="countdown-timer">
+                <p>Fetching next deadline time...</p>
+            </div>
+        </div>
+        <hr>
+
+        <div id="welcome" class="simple-block lazy">
+            <h2>Welcome to Kopala FPL</h2> 
+            <p>
+                A collection of tools that will help you <span class="highlight-accent">level up your FPL game</span>. We provide consolidated, fast access to:
+            </p>
+            <ul>
+                <li>🏆 **Mini-League Ranks:** See who's rising and falling instantly.</li>
+                <li>📈 **Transfer Activity:** Track price changes and popular moves in real-time.</li>
+                <li>⚽ **Live Fixtures:** Follow goals, assists, and cards as they happen.</li>
+            </ul>
+            <p>
+                Players in green are **<span class="price-riser">Risers</span>** and red are **<span class="price-faller">Fallers</span>**. Scroll down to get started!
+            </p>
+        </div>
+        <hr>
+
+        <div id="standings-container" class="simple-block lazy">
+            <h2>Mini-League Standings (Live Rank)</h2>
+            <div id="standings-list">
+                <p>Loading league standings...</p>
+            </div>
+        </div>
+        <hr>
+
+        <div id="epl-table-list" class="simple-block lazy">
+            <h3>Current Premier League Standings 🏆</h3>
+            <div id="epl-table-container">
+                <div class="loader"></div>
+            </div>
+        </div>
+        <hr>
+
+        <div id="fixtures-list-section" class="simple-block lazy">
+            <h3>Live Gameweek Scores ⚽</h3>
+            <div id="fixtures-list">
+                <div class="loader"></div>
+            </div>
+        </div>
+        <hr>
+
+        <div id="bps-list-section" class="simple-block lazy">
+            <h3>Current GW Bonus Points (BPS) 🌟</h3>
+            <div id="bps-list">
+                <div class="loader"></div>
+            </div>
+        </div>
+        <hr>
+
+        <div id="price-changes-section" class="simple-block lazy">
+            <h3>Price Risers and Fallers 💰</h3>
+            <div id="price-changes-list">
+                <div class="loader"></div>
+            </div>
+        </div>
+        <hr>
+
+        <div id="most-transferred-in-section" class="simple-block lazy">
+            <h3>Most Transferred In ➡️</h3>
+            <div id="most-transferred-list">
+                <div class="loader"></div>
+            </div>
+        </div>
+        <hr>
+
+        <div id="most-transferred-out-section" class="simple-block lazy">
+            <h3>Most Transferred Out ⬅️</h3>
+            <div id="most-transferred-out-list">
+                <div class="loader"></div>
+            </div>
+        </div>
+        <hr>
+
+        <div id="most-captained-section" class="simple-block lazy">
+            <h3>Most Captained Player ©️</h3>
+            <div id="most-captained-list">
+                <div class="loader"></div>
+            </div>
+        </div>
+        <hr>
+
+        <div id="player-status-section" class="simple-block lazy">
+            <h2>Player Injury/Suspension News 🧑‍⚕️</h2>
+            <div class="search-container">
+                <input type="text" id="statusSearch" placeholder="Search player or injury status..." aria-label="Search Player Status">
+            </div>
+            <div id="status-list">
+                <div class="loader"></div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<button id="backToTop">🚀</button>
+
+<footer>
+    <p>&copy; 2026 KOPALA FPL</p>
+    <div class="social-links">
+        <a href="https://twitter.com/YourTwitterHandle" target="_blank" aria-label="Follow us on X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="https://facebook.com/YourFacebookPage" target="_blank" aria-label="Follow us on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="mailto: lombeicloud@gmail.com" aria-label="Email us"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+    <p class="disclaimer">Data provided by Fantasy Premier League API and The Sports DB. Not officially affiliated with the Premier League.</p>
+</footer>
+
+<script src="script.js"></script>
+<script src="bonus_points.js"></script> 
+
+</body>
+</html>
