@@ -1,19 +1,15 @@
 /* -----------------------------------------
     BONUS POINTS MODULE: bonus_points.js
-// ...
 ----------------------------------------- */
 
 // 🌐 CRITICAL: Proxy for CORS issues (using the stable one)
-// Change this:
-// const proxy = "https://corsproxy.io/?"; 
-
-// TO THIS:
 const proxy = "https://thingproxy.freeboard.io/fetch/";
 
 // Global maps to hold static data fetched from the bootstrap-static API
 let teamMap = {};    // Team ID -> Abbreviation (e.g., 1 -> 'ARS')
 let playerMap = {};  // Player ID -> Full Name
 let currentGameweekId = null;
+let teamFDRMap = {}; // New map to store team strength/FDR data (Team ID -> strength)
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -25,27 +21,36 @@ document.addEventListener("DOMContentLoaded", () => {
  * Main function to coordinate data loading and display.
  */
 async function loadBonusPointsData() {
-    const container = document.getElementById("bps-list");
-    if (!container) return; // Exit if the required container is missing
+    const bonusContainer = document.getElementById("bps-list");
+    // New container for next fixtures
+    const nextFixturesContainer = document.getElementById("next-fixtures-list"); 
+    
+    if (!bonusContainer) return; // Exit if the required container is missing
 
     // 1. Initial Fetch of Static Data (bootstrap-static)
     try {
-        container.innerHTML = `<div class="loader-container"><div class="loader"></div><p>Loading FPL data...</p></div>`;
+        bonusContainer.innerHTML = `<div class="loader-container"><div class="loader"></div><p>Loading FPL data...</p></div>`;
         
         const bootstrapResponse = await fetch(
             proxy + "https://fantasy.premierleague.com/api/bootstrap-static/"
         );
         const data = await bootstrapResponse.json();
 
-        // Populate global maps and find current Gameweek ID
+        let nextGameweekId = null;
+
+        // Populate global maps, find current and next Gameweek ID
         data.teams.forEach(team => {
             teamMap[team.id] = team.short_name;
+            // Store team strength, which is the base for FDR calculation
+            teamFDRMap[team.id] = team.strength;
         });
+        
         data.elements.forEach(player => {
             playerMap[player.id] = `${player.first_name} ${player.second_name}`;
         });
         
         const currentEvent = data.events.find(e => e.is_current);
+        const nextEvent = data.events.find(e => e.is_next);
 
         if (currentEvent) {
             currentGameweekId = currentEvent.id;
@@ -57,20 +62,149 @@ async function loadBonusPointsData() {
                 currentGameweekId = finishedEvents[0].id;
             }
         }
-        
-        // 2. Fetch and Display Bonus Points using the live endpoint
-        if (currentGameweekId) {
-            await fetchAndDisplayBonusPoints(data.elements, currentGameweekId, container);
-        } else {
-            container.innerHTML = `<h3>Bonus Points (Current GW) 🌟</h3><p>Could not determine the current Gameweek ID.</p>`;
+
+        if (nextEvent) {
+            nextGameweekId = nextEvent.id;
         }
+
+        // 2. Fetch and Display Bonus Points
+        if (currentGameweekId) {
+            await fetchAndDisplayBonusPoints(data.elements, currentGameweekId, bonusContainer);
+        } else {
+            bonusContainer.innerHTML = `<h3>Bonus Points (Current GW) 🌟</h3><p>Could not determine the current Gameweek ID.</p>`;
+        }
+
+        // 3. Fetch and Display Next Fixtures and FDR (NEW FUNCTIONALITY)
+        if (nextGameweekId && nextFixturesContainer) {
+            await fetchAndDisplayNextFixturesAndFDR(nextGameweekId, nextFixturesContainer);
+        } else if (nextFixturesContainer) {
+             nextFixturesContainer.innerHTML = `<h3>Next GW Fixtures & FDR</h3><p>Could not determine the next Gameweek ID or end of season.</p>`;
+        }
+
 
     } catch (err) {
         console.error("Error fetching FPL Bootstrap data:", err);
-        container.innerHTML = `<h3>Bonus Points (Current GW) 🌟</h3><p class="error-message">❌ Failed to load FPL data. Check API/Proxy connection.</p>`;
+        bonusContainer.innerHTML = `<h3>Bonus Points (Current GW) 🌟</h3><p class="error-message">❌ Failed to load FPL data. Check API/Proxy connection.</p>`;
+        if (nextFixturesContainer) {
+            nextFixturesContainer.innerHTML = `<h3>Next GW Fixtures & FDR</h3><p class="error-message">❌ Failed to load fixture data.</p>`;
+        }
     }
 }
 
+/**
+ * Maps the FPL FDR number (1-5) to a descriptive CSS class for coloring.
+ * @param {number} difficulty - The fixture difficulty rating (1-5).
+ * @returns {string} The CSS class name.
+ */
+function getFDRColorClass(difficulty) {
+    switch (difficulty) {
+        case 1:
+            return 'fdr-very-easy'; // Green
+        case 2:
+            return 'fdr-easy';      // Light Green
+        case 3:
+            return 'fdr-medium';    // Yellow
+        case 4:
+            return 'fdr-hard';      // Orange
+        case 5:
+            return 'fdr-very-hard'; // Red
+        default:
+            return 'fdr-default';
+    }
+}
+
+/* -----------------------------------------
+    NEW FUNCTION: NEXT FIXTURES + FDR
+----------------------------------------- */
+
+/**
+ * Fetches the next gameweek fixtures, calculates/retrieves FDR, and displays them.
+ * @param {number} nextGameweekId - The ID of the next Gameweek.
+ * @param {HTMLElement} container - The DOM element to render the list in.
+ */
+async function fetchAndDisplayNextFixturesAndFDR(nextGameweekId, container) {
+    container.innerHTML = `<div class="loader-container"><div class="loader"></div><p>Fetching GW ${nextGameweekId} fixtures and FDR...</p></div>`;
+
+    try {
+        const fixturesResponse = await fetch(
+            proxy + "https://fantasy.premierleague.com/api/fixtures/"
+        );
+        
+        if (!fixturesResponse.ok) {
+             throw new Error(`Fixtures API returned status ${fixturesResponse.status}`);
+        }
+        
+        const data = await fixturesResponse.json();
+
+        // 1. Filter for the next Gameweek
+        const nextGWFixtures = data.filter(f => f.event === nextGameweekId);
+
+        if (nextGWFixtures.length === 0) {
+            container.innerHTML = `<h3>GW ${nextGameweekId} Fixtures & FDR</h3><p>No fixtures found for Gameweek ${nextGameweekId}.</p>`;
+            return;
+        }
+
+        // 2. Render the list
+        container.innerHTML = `<h3>GW ${nextGameweekId} Fixtures & FDR 🗓️</h3>`;
+
+        const list = document.createElement('ul');
+        list.classList.add('next-fixtures-list-items');
+        
+        // Sorting ensures double gameweek fixtures appear chronologically
+        nextGWFixtures.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
+
+
+        nextGWFixtures.forEach(fixture => {
+            const homeTeamAbbr = teamMap[fixture.team_h] || `T${fixture.team_h}`;
+            const awayTeamAbbr = teamMap[fixture.team_a] || `T${fixture.team_a}`;
+            
+            // FDR is provided directly by the API in the fixture object
+            const homeFDR = fixture.team_h_difficulty;
+            const awayFDR = fixture.team_a_difficulty;
+
+            const homeFDRClass = getFDRColorClass(homeFDR);
+            const awayFDRClass = getFDRColorClass(awayFDR);
+
+            const kickoffDate = new Date(fixture.kickoff_time);
+            const timeDisplay = kickoffDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateDisplay = kickoffDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+            const listItem = document.createElement('li');
+            listItem.classList.add('upcoming-fixture');
+
+            listItem.innerHTML = `
+                <div class="fixture-summary">
+                    <span class="fixture-team home-team">
+                        <span class="team-label home-label">${homeTeamAbbr}</span> 
+                        <span class="fdr-badge ${homeFDRClass}">${homeFDR}</span>
+                    </span> 
+                    <span class="vs-label">vs</span>
+                    <span class="fixture-team away-team">
+                        <span class="fdr-badge ${awayFDRClass}">${awayFDR}</span>
+                        <span class="team-label away-label">${awayTeamAbbr}</span> 
+                    </span>
+                </div>
+                <div class="fixture-datetime">
+                    <span class="kickoff-date">${dateDisplay}</span>
+                    <span class="kickoff-time">${timeDisplay}</span>
+                </div>
+            `;
+
+            list.appendChild(listItem);
+        });
+
+        container.appendChild(list);
+
+    } catch (err) {
+        console.error("Error loading next fixtures/FDR:", err);
+        container.innerHTML = `<h3>GW ${nextGameweekId} Fixtures & FDR</h3><p class="error-message">❌ Failed to load fixture data. (Network/API Error)</p>`;
+    }
+}
+
+
+/* -----------------------------------------
+    EXISTING FUNCTION: BONUS POINTS
+----------------------------------------- */
 
 /**
  * Fetches the live gameweek data and displays the top bonus points scorers.
@@ -135,7 +269,7 @@ async function fetchAndDisplayBonusPoints(allPlayers, gwId, container) {
         const bonusList = document.createElement('div');
         bonusList.classList.add('bonus-points-list');
 
-        bonusPlayers.forEach((p, index) => {
+        bonusPlayers.forEach((p) => {
             const div = document.createElement("div");
             const teamAbbreviation = teamMap[p.team] || 'N/A';
             
