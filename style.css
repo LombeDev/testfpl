@@ -20,6 +20,13 @@
     --desktop-main-bg: #27885b; /* Main green for nav bar */
     --desktop-link-color: #ffffff;
     --desktop-accent-color: #f7f3e8; /* Off-white for accents */
+    
+    /* Dark Mode Variables */
+    --dark-bg-main: #121212;
+    --dark-bg-box: #1e1e1e;
+    --dark-text: #e0e0e0;
+    --dark-subtext: #aaaaaa;
+    --dark-header-bg: #282828;
 }
 
 /* Base Body Style (Mobile Background) */
@@ -32,6 +39,36 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* --- Dark Mode Toggle Styles --- */
+body.dark-mode {
+    background: var(--dark-bg-main);
+    color: var(--dark-text);
+}
+
+body.dark-mode :root {
+    --text-color: var(--dark-text);
+    --subtext-color: var(--dark-subtext);
+    --box-background: var(--dark-bg-box);
+    --header-background: var(--dark-header-bg);
+}
+
+body.dark-mode section {
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode section h2 {
+    border-bottom: 1px solid #333;
+}
+
+body.dark-mode .standings-results > div {
+    border-bottom: 1px dotted #333;
+}
+
+body.dark-mode .standings-results > div:hover {
+    background-color: #242424;
 }
 
 /* Keyframe for the spinning profile icon */
@@ -64,6 +101,7 @@ body {
     align-items: center;
     z-index: 9999;
     text-align: center;
+    transition: opacity 0.5s ease-out;
 }
 
 #loading-overlay h1 {
@@ -205,23 +243,44 @@ main {
     gap: 20px;
 }
 
-/* 🎯 MODIFIED SECTION RULE to shrink-wrap all content */
-section {
+/* 🎯 Main Grid Item Styling */
+.grid-item {
     background-color: var(--box-background);
     border-radius: 12px;
     padding: 0;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-
-    /* 1. SHRINK-WRAP WIDTH: Forces the section to be only as wide as its content */
-    width: fit-content; 
-
-    /* 2. CENTER: Centers the newly shrunken section within its grid column */
-    justify-self: center; 
+    width: 100%; /* Default width */
 }
-/* ------------------------------------------------------------------- */
 
-section h2 {
+/* Center content boxes horizontally */
+.grid-item {
+    justify-self: center;
+    max-width: 500px; /* Max size for list items */
+}
+
+/* Allow full-width items (like the EPL table) to span wider */
+.grid-item.full-width {
+    grid-column: 1 / -1;
+    max-width: 1200px; 
+}
+
+
+/* Lazy Loading Fade-in effect */
+.lazy {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.lazy-loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* Headers inside Grid Items */
+.grid-item h2, .grid-item h3 {
     background-color: var(--header-background);
     color: var(--text-color);
     padding: 15px 20px;
@@ -234,24 +293,36 @@ section h2 {
     border-bottom: 1px solid #ddd;
     font-family: 'Inter', sans-serif;
 }
+.grid-item h3 {
+    font-size: 1.1em;
+    text-transform: none;
+    font-weight: 600;
+}
 
-/* Apply padding to the children of the section if they aren't the title */
-section > :not(h2) {
+/* Apply padding to the inner content of grid items */
+.grid-item > :not(h2):not(h3) {
     padding-left: 20px;
     padding-right: 20px;
 }
 
-section > :last-child {
+.grid-item > :last-child {
     padding-bottom: 20px;
 }
 
-section ul {
-    list-style: none;
-    padding-left: 20px;
-    margin-top: 5px;
+
+/* --- Price/Transfer/Captain Lists (small-list) --- */
+
+.small-list div {
+    padding: 8px 20px;
+    border-bottom: 1px dotted #eee;
+    font-size: 0.95em;
+    display: flex;
+    justify-content: space-between;
 }
 
-/* --- Specific Styles for Content Inside Sections --- */
+.small-list div:last-of-type {
+    border-bottom: none;
+}
 
 .price-riser {
     color: green;
@@ -263,28 +334,396 @@ section ul {
     font-weight: bold;
 }
 
+.transferred-out {
+    color: #cc5500;
+}
+
 .highlight-accent {
     color: var(--mobile-primary-color);
     font-weight: bold;
 }
 
-/* Search container styling */
-.search-container {
-    padding: 10px 20px 0 20px;
+.top-rank {
+    background-color: var(--mobile-accent-color) !important; /* Gold */
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+/* --- Deadline Display (countdown-timer) --- */
+.deadline-box {
+    text-align: center;
+    padding-bottom: 0 !important;
+}
+
+.countdown-title {
+    font-size: 1.2em;
+    padding: 15px 20px;
+}
+
+#countdown-timer {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: var(--mobile-primary-color);
+    padding: 15px 20px;
+}
+
+/* --- Player Status Search/Filter --- */
+.player-status-box h2 {
+    margin-bottom: 0;
 }
 
 #statusSearch {
-    width: 100%;
+    width: calc(100% - 40px);
+    margin: 10px 20px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
     box-sizing: border-box;
     font-size: 16px;
+    color: var(--text-color);
+    background-color: var(--box-background);
+}
+
+body.dark-mode #statusSearch {
+    border-color: #444;
+}
+
+#status-list {
+    max-height: 400px; 
+    overflow-y: auto; 
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.player-news-item {
+    border-bottom: 1px dotted #ddd;
+    padding: 10px 0;
+}
+
+body.dark-mode .player-news-item {
+    border-bottom: 1px dotted #444;
+}
+
+.player-news-item:last-child {
+    border-bottom: none;
+}
+
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.status-badge {
+    font-size: 0.75em;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: white;
+}
+
+.status-doubtful {
+    background-color: #ffc107; /* Orange */
+}
+
+.status-injured, .status-unavailable {
+    background-color: #dc3545; /* Red */
+}
+
+.news-detail {
+    font-size: 0.85em;
+    color: var(--subtext-color);
+    margin: 0;
+}
+
+/* --- EPL Table Styles (loadSimpleEPLTable) --- */
+.simple-epl-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    padding: 0 20px;
+}
+
+.simple-epl-table th, .simple-epl-table td {
+    padding: 10px 8px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+}
+
+body.dark-mode .simple-epl-table th, body.dark-mode .simple-epl-table td {
+    border-bottom: 1px solid #333;
+}
+
+.simple-epl-table th:nth-child(2), .simple-epl-table td:nth-child(2) {
+    text-align: left;
+}
+
+.team-name-header {
+    text-align: left !important;
+    width: 40%;
+}
+
+/* Positional Highlighting */
+.champions-league {
+    background-color: #ccffcc; /* Light Green */
+}
+.europa-league {
+    background-color: #ccccff; /* Light Blue */
+}
+.relegation-zone {
+    background-color: #ffcccc; /* Light Red */
+}
+
+body.dark-mode .champions-league { background-color: #0d4a0d; }
+body.dark-mode .europa-league { background-color: #1a1a4f; }
+body.dark-mode .relegation-zone { background-color: #5a1919; }
+
+/* --- Bonus Points List --- */
+#bps-list div {
+    padding: 8px 20px;
+    border-bottom: 1px dotted #eee;
+    font-size: 0.95em;
+}
+#bps-list div:last-of-type {
+    border-bottom: none;
+}
+.bonus-icon {
+    color: var(--mobile-accent-color);
+    margin-right: 5px;
+}
+.bonus-awarded-value {
+    font-weight: 900;
+}
+.bps-score {
+    color: var(--subtext-color);
+    font-size: 0.85em;
+}
+
+/* ========================================= */
+/* --- 5. Mini-League Standings Styles --- */
+/* ========================================= */
+
+/* Wrapper for individual league blocks (e.g., 101712 and 147133) */
+.league-standings-block {
+    margin-bottom: 20px; 
+    border-radius: 8px;
+    overflow: hidden;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border: 1px solid #eee;
+}
+
+body.dark-mode .league-standings-block {
+    border-color: #333;
+}
+
+.league-title {
+    background-color: var(--header-background);
+    color: var(--text-color);
+    padding: 10px 20px;
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+}
+body.dark-mode .league-title {
+    border-bottom: 1px solid #333;
+}
+
+.standings-results > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
+    border-bottom: 1px dotted #eee;
+    font-size: 0.95em;
+    transition: background-color 0.1s;
+}
+
+.standings-results > div:hover {
+    background-color: #fafafa;
+}
+
+body.dark-mode .standings-results > div:hover {
+    background-color: #242424;
+}
+
+.standings-results > div:last-child {
+    border-bottom: none;
+}
+
+.rank-number {
+    font-weight: bold;
+    width: 25px; 
+    text-align: left;
+}
+
+.manager-name {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 10px;
+}
+
+/* Rank Change Indicators */
+.rank-change {
+    font-weight: bold;
+    font-size: 0.8em;
+    padding: 0 5px;
+    width: 40px; 
+    text-align: right;
+}
+
+.rank-up {
+    color: #28a745; /* Green arrow up */
+}
+
+.rank-down {
+    color: #dc3545; /* Red arrow down */
+}
+
+.rank-unchanged {
+    color: var(--subtext-color);
+}
+
+/* Top Rank Highlighting */
+.top-rank {
+    background-color: var(--mobile-accent-color) !important; /* Gold */
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+.second-rank {
+    background-color: #fce8a6 !important; /* Lighter gold */
+}
+
+.third-rank {
+    background-color: #f7f3e8 !important; /* Off-white accent */
+}
+
+body.dark-mode .top-rank { background-color: #7b68ee !important; color: white; }
+body.dark-mode .second-rank { background-color: #5a4ac7 !important; color: white; }
+body.dark-mode .third-rank { background-color: #4030a5 !important; color: white; }
+
+
+/* Ensure the titles don't get the 'top-rank' background */
+.league-standings-block .league-title {
+    background-color: var(--header-background) !important;
+    color: var(--text-color) !important;
 }
 
 
 /* ========================================= */
-/* --- 5. Desktop Navigation (Media Query) --- */
+/* --- 6. Fixtures Styles --- */
+/* ========================================= */
+
+.fixtures-list-items {
+    list-style: none;
+    padding: 0 0 10px 0; 
+    margin: 0;
+}
+
+.fixtures-list-items li {
+    padding: 10px 20px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95em;
+}
+
+body.dark-mode .fixtures-list-items li {
+    border-bottom: 1px solid #333;
+}
+
+.fixture-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+}
+
+.fixture-team {
+    flex-basis: 30%;
+    text-align: center;
+}
+
+.home-team {
+    text-align: right;
+}
+
+.away-team {
+    text-align: left;
+}
+
+.vs-label, .vs-label-time {
+    flex-basis: 20%;
+    text-align: center;
+    font-weight: bold;
+    color: var(--subtext-color);
+    font-size: 0.85em;
+}
+
+.score-home, .score-away {
+    font-size: 1.1em;
+    font-weight: 900;
+}
+
+.match-live .score-home, .match-live .score-away {
+    color: #dc3545; /* Red */
+}
+
+.match-status-tag {
+    font-size: 0.75em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-left: 10px;
+    font-weight: 700;
+}
+
+.match-pending .match-status-tag {
+    background-color: #eee;
+    color: var(--subtext-color);
+}
+
+.match-live .match-status-tag {
+    background-color: #ffcccc;
+    color: #cc0000;
+}
+
+.match-finished .match-status-tag {
+    background-color: #ccffcc;
+    color: #008000;
+}
+
+body.dark-mode .match-pending .match-status-tag { background-color: #333; color: var(--dark-subtext); }
+
+/* Fixture Details (Goals/Assists) */
+.fixture-details {
+    padding-top: 5px;
+    margin-top: 5px;
+    border-top: 1px dotted #ccc;
+    font-size: 0.85em;
+}
+body.dark-mode .fixture-details {
+    border-top: 1px dotted #444;
+}
+
+.fixture-details p {
+    margin: 3px 0;
+}
+
+.action-label {
+    font-weight: bold;
+}
+
+.action-goal { color: #007bff; }
+.action-assist { color: #28a745; }
+.action-red-card { color: #dc3545; }
+
+/* ========================================= */
+/* --- 7. Desktop Navigation (Media Query) --- */
 /* ========================================= */
 
 @media (min-width: 992px) {
@@ -300,9 +739,13 @@ section ul {
 
     /* C. Change Body Background for Desktop Look */
     body {
-        background: var(--box-background); /* White body background for desktop */
+        background: var(--box-background); 
     }
-
+    
+    body.dark-mode {
+        background: var(--dark-bg-main);
+    }
+    
     /* --- Desktop Top Bar (Dark Green) --- */
     #desktop-top-bar {
         background-color: var(--desktop-dark-bg);
