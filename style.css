@@ -1,74 +1,31 @@
-/* --- Global Styles for Look and Feel --- */
+/* --- 1. Font Import (Inter) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+/* --- 2. Global Styles for Look and Feel --- */
+
+:root {
+    /* Define some variables for easier theme switching or customization */
+    --primary-color: #7d5fff; /* Purple/Blue accent */
+    --accent-color: #ffc107; /* Gold accent for premium */
+    --text-color: #333;
+    --subtext-color: #666;
+    --box-background: #ffffff;
+    --header-background: #f0f0f0;
+}
 
 /* Apply the background gradient from the image to the body */
 body {
     /* Use a color scheme similar to the image's background gradient (Blue, Purple, Pink) */
     background: linear-gradient(135deg, #7b68ee 0%, #ff69b4 50%, #add8e6 100%);
-    min-height: 100vh; /* Ensure full page coverage */
-    font-family: sans-serif; /* Use a clean font */
-    color: #333; /* Dark text for contrast */
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif; /* Using the imported Inter font */
+    color: var(--text-color);
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* Include padding/border in element's total width/height */
+    box-sizing: border-box;
 }
 
-/* Remove default main padding/margins for edge-to-edge layout */
-main {
-    padding: 20px; /* Overall padding for the content area */
-    display: grid; /* Use grid for layout - optional, but helps with side-by-side boxes */
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
-    gap: 20px; /* Space between boxes */
-}
-
-/* Style the top-level sections as the data boxes */
-section {
-    /* Base Box Style */
-    background-color: #ffffff; /* Solid white/off-white background */
-    border-radius: 12px; /* Rounded corners */
-    padding: 0; /* Important: Remove default padding from the section itself */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
-    overflow: hidden; /* Ensures child elements (like headers) don't escape rounded corners */
-}
-
-/* Style for the header/title area inside the box */
-/* This is an example of how to make the header area look like the 'BONUS POINTS' bar */
-section h2 {
-    background-color: #f0f0f0; /* Light grey/off-white header background */
-    color: #333;
-    padding: 15px 20px; /* Padding for the title, keeping content away from edges */
-    margin-top: 0; /* Remove space above the title */
-    font-size: 1.2em;
-    font-weight: bold;
-    text-transform: uppercase;
-    border-top-left-radius: 12px; /* Match section border radius */
-    border-top-right-radius: 12px;
-    border-bottom: 1px solid #ddd; /* Separator line */
-}
-
-/* Style for the main content inside the box to provide space */
-section p, section ul, section .loader {
-    padding: 0 20px; /* Add padding to inner content, not the section itself */
-}
-
-/* Clean up list spacing */
-section ul {
-    list-style: none;
-    padding-left: 20px; /* Keep padding for lists */
-}
-
-/* Apply padding to the children of the section if they aren't the title, 
-   to maintain the "no spaces in the boxes" look for the box structure, but
-   allow content to breathe. */
-section > :not(h2) {
-    padding-left: 20px;
-    padding-right: 20px;
-}
-section > :last-child {
-    padding-bottom: 20px; /* Add padding to the bottom of the last element */
-}
-
-
-/* --- Header/Navigation Styles --- */
+/* --- 3. Header/Navigation Styles --- */
 
 #main-header {
     background-color: transparent; /* Top nav bar sits transparently over the gradient background */
@@ -78,14 +35,13 @@ section > :last-child {
 
 .header-container {
     display: flex;
-    justify-content: space-between; /* Space out left, center, and right elements */
+    justify-content: space-between;
     align-items: center;
-    max-width: 1200px; /* Optional: Constrain width like the rest of the content */
+    max-width: 1200px;
     margin: 0 auto;
 }
 
-/* --- Navigation Buttons (Menu, Premium, Sign In) --- */
-
+/* Navigation Buttons (Menu, Premium, Sign In) */
 .header-left, .header-right {
     display: flex;
     align-items: center;
@@ -93,15 +49,15 @@ section > :last-child {
 }
 
 .nav-btn {
-    background-color: #fff; /* White background for buttons */
-    color: #333;
+    background-color: var(--box-background);
+    color: var(--text-color);
     border: none;
     padding: 8px 15px;
-    border-radius: 6px; /* Slightly rounded corners */
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle lift */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: background-color 0.2s;
     display: flex;
     align-items: center;
@@ -114,45 +70,33 @@ section > :last-child {
 
 /* Special styling for the 'Premium' button to match the yellow/gold star look */
 .premium-style {
-    background-color: #ffc107; /* Yellow/Gold color */
-    color: #333;
-    /* Optional: Make the star icon stand out */
-}
-.premium-style i {
-    color: #333; /* Darker star icon */
+    background-color: var(--accent-color); /* Yellow/Gold color */
+    color: var(--text-color);
 }
 
-/* --- Center Logo (The "F" in the image) --- */
-
-.header-center {
-    flex-grow: 1; /* Allow center to take up available space */
-    display: flex;
-    justify-content: center; /* Center the logo */
-}
-
+/* Center Logo (The "F" in the image) */
 .fpl-logo-center {
-    background-color: #7d5fff; /* A distinct purple/blue background */
-    color: #fff;
+    background-color: var(--primary-color);
+    color: var(--box-background);
     font-size: 30px;
     font-weight: 900;
     width: 50px;
     height: 50px;
-    border-radius: 50%; /* Perfect circle */
+    border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* --- Right Side Elements (Profile Icon and Sign In) --- */
-
+/* Right Side Elements (Profile Icon and Sign In) */
 .profile-icon {
     width: 30px;
     height: 30px;
     border-radius: 50%;
     /* Recreate the spinning color circle effect with a gradient border/background */
     background: conic-gradient(red, orange, yellow, green, blue, indigo, violet, red);
-    animation: spin 6s linear infinite; /* Optional spin effect */
+    animation: spin 6s linear infinite; 
 }
 
 @keyframes spin {
@@ -160,8 +104,88 @@ section > :last-child {
     100% { transform: rotate(360deg); }
 }
 
-.header-right .signin-btn {
-    /* Slightly less prominent Sign In button */
-    background-color: #fff; 
-    border: 1px solid #ddd;
+/* Dropdown Menu for Nav Links (starts hidden) */
+#dropdown-menu {
+    background-color: var(--box-background);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 8px 8px;
+    position: absolute; /* Position it under the header */
+    width: 100%;
+    max-width: 1200px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 10px 0;
+}
+
+#dropdown-menu .main-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#dropdown-menu .main-links li a {
+    display: block;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background-color 0.2s;
+}
+
+#dropdown-menu .main-links li a:hover {
+    background-color: #f0f0f0;
+}
+
+
+/* --- 4. Main Content Layout and Box Styles (from previous step) --- */
+
+/* Remove default main padding/margins for edge-to-edge layout */
+main {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Style the top-level sections as the data boxes */
+section {
+    background-color: var(--box-background); /* Solid white/off-white background */
+    border-radius: 12px; /* Rounded corners */
+    padding: 0; /* Remove default padding from the section itself */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
+    overflow: hidden;
+}
+
+/* Style for the header/title area inside the box */
+section h2 {
+    background-color: var(--header-background); /* Light grey/off-white header background */
+    color: var(--text-color);
+    padding: 15px 20px;
+    margin-top: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom: 1px solid #ddd;
+    font-family: 'Inter', sans-serif; /* Ensure headings use the font */
+}
+
+/* Apply padding to the children of the section if they aren't the title, */
+section > :not(h2) {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+section > :last-child {
+    padding-bottom: 20px;
+}
+
+/* Clean up list spacing and styles */
+section ul {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
 }
