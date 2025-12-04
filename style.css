@@ -1,0 +1,388 @@
+/* --- 1. Root Variables & Global Reset --- */
+:root {
+    /* Main Color Palette */
+    --primary-color: #e40046; /* Deep red/pink (like the subscribe button) */
+    --accent-color: #00ff87; /* Bright neon green (like the Bonus header) */
+    --background-light: #f5f5f5; /* Off-white for the main background */
+    --card-background: #ffffff; /* Pure white for the main cards */
+    --nav-background: #ffffff; /* Navigation bar background */
+    --border-color: #e0e0e0; /* Light border color for separation */
+    --text-primary: #333333;
+    --text-secondary: #666666;
+
+    /* Design Elements */
+    --border-radius-card: 12px;
+    --border-radius-button: 6px;
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-subtle: 0 2px 4px rgba(0, 0, 0, 0.05);
+    
+    /* FPL Specific Colors */
+    --fpl-yellow: #f8c32c; /* Gold/Yellow for Rank/Bonus */
+    --fpl-orange: #ff9100;
+    --fpl-red: #e40046;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--background-light);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding-top: 100px; /* Space for fixed navigation */
+}
+
+/* --- 2. Navigation Bars --- */
+
+#top-nav-bar, #bottom-nav-bar {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    background-color: var(--nav-background);
+    box-shadow: var(--shadow-subtle);
+}
+
+#top-nav-bar {
+    height: 35px;
+    top: 0;
+    border-bottom: 1px solid var(--border-color);
+    background-color: #eeeeee; /* Slightly darker top bar */
+}
+
+#bottom-nav-bar {
+    height: 65px;
+    top: 35px;
+}
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 100%;
+}
+
+/* Top Bar Details */
+.social-icons a {
+    color: var(--text-secondary);
+    margin-right: 10px;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+.social-icons a:hover { color: var(--primary-color); }
+
+.search-login-actions button {
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    padding: 5px 10px;
+    border-radius: var(--border-radius-button);
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 5px;
+}
+.signin-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+.signin-btn:hover { background-color: #c4003d; }
+
+/* Bottom Bar Details */
+.fpl-logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.main-links {
+    list-style: none;
+    display: flex;
+}
+
+.main-links li a {
+    text-decoration: none;
+    color: var(--text-primary);
+    padding: 0 15px;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.main-links li a:hover {
+    color: var(--primary-color);
+}
+
+/* --- 3. Main Layout & Typography --- */
+
+main {
+    display: grid;
+    gap: 20px;
+    /* Create a three-column layout for the top main cards */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+/* --- 4. Card Styling (General) --- */
+
+.fpl-section,
+#welcome {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-card);
+    box-shadow: var(--shadow-soft);
+    padding: 20px;
+    position: relative;
+    /* Default subtle top border */
+    border-top: 5px solid var(--border-color);
+}
+
+/* Specific Section Top Borders */
+/* Left Ad/Feature Box */
+#welcome {
+    border-top-color: var(--primary-color);
+    grid-column: 1 / 2; /* Lock it to the first column */
+    grid-row: span 2; /* Make it span two rows of content below */
+}
+/* DEADLINE Box */
+#deadline-section {
+    border-top-color: var(--accent-color);
+    grid-column: 1 / 2;
+}
+
+/* BONUS/Live Rank boxes (set to span the two right columns) */
+#bonus-section, #live-rank-section {
+    border-top-color: var(--border-color); /* Subtle border for these */
+}
+
+/* --- 5. Card Header Icons (Check, Swap, Close) --- */
+.card-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+}
+
+.card-actions i {
+    font-size: 1.2rem;
+    margin-left: 8px;
+    padding: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-button);
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+/* Apply colors based on the image */
+.card-actions .fa-square-check { color: var(--accent-color); border-color: var(--accent-color); }
+.card-actions .fa-arrow-up-down { color: var(--text-secondary); }
+.card-actions .fa-xmark { color: var(--primary-color); border-color: var(--primary-color); }
+
+
+/* --- 6. Left Feature List Styling --- */
+
+/* The list of features in the top-left box */
+#welcome ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 20px 0;
+}
+
+#welcome ul li {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+/* Dashed line separator between items */
+#welcome ul li:not(:last-child) {
+    border-bottom: 1px dashed var(--border-color);
+}
+
+#welcome ul li i {
+    font-size: 1.1rem;
+    margin-right: 10px;
+    min-width: 20px; /* Aligns the text better */
+}
+
+.fa-check-square { color: var(--accent-color); }
+.fa-star { color: var(--fpl-yellow); }
+.fa-circle-xmark { color: var(--primary-color); }
+
+.subscribe-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-button);
+    padding: 10px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    display: block; /* Make it fill the width if desired */
+    width: 100%;
+    margin-top: 15px;
+}
+
+/* --- 7. BONUS & Live Rank Specific Styles --- */
+
+/* The bright green header strip */
+.header-strip {
+    background-color: var(--accent-color);
+    color: var(--text-primary);
+    text-align: center;
+    padding: 8px 15px;
+    font-weight: bold;
+    border-radius: var(--border-radius-button);
+    /* Pull it edge-to-edge within the padding */
+    margin: 10px -20px 20px -20px;
+    box-shadow: var(--shadow-subtle);
+}
+
+/* Player Score Rows (Example: Grealish 35) */
+.player-score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--border-color);
+}
+.player-score-row:last-child {
+    border-bottom: none;
+}
+
+.player-details {
+    display: flex;
+    align-items: center;
+}
+
+/* Styling the small rank/color indicators */
+.rank-indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    text-align: center;
+    line-height: 18px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: white;
+    margin-right: 8px;
+}
+
+.rank-1 { background-color: var(--fpl-yellow); }
+.rank-2 { background-color: var(--text-secondary); }
+.rank-3 { background-color: var(--fpl-orange); }
+
+.points-number {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+/* Match fixture style (Bournemouth 0 | 1 Everton) */
+.fixture-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+.team-name { padding: 0 5px; }
+.score-box {
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin: 0 2px;
+}
+
+/* --- 8. LIVE RANK Section (Input & Tabs) --- */
+
+#live-rank-section .team-name-display {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 10px 0 20px 0;
+}
+
+/* Tab-like navigation for metrics */
+.rank-metrics {
+    display: flex;
+    justify-content: space-around;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-button);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.metric-tab {
+    flex-grow: 1;
+    text-align: center;
+    padding: 10px 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: bold;
+    border-right: 1px solid var(--border-color);
+}
+.metric-tab:last-child { border-right: none; }
+.metric-tab:hover { background-color: var(--background-light); }
+
+/* Input and buttons for ID entry */
+.id-entry-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#live-rank-section input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-button);
+    font-size: 1rem;
+}
+
+#live-rank-section .action-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: var(--border-radius-button);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.go-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+.reset-btn {
+    background-color: var(--background-light);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+/* Footer Link */
+.live-rank-footer {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+.live-rank-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+}
