@@ -1,13 +1,14 @@
 /* -----------------------------------------
     GLOBAL SETUP
 ----------------------------------------- */
-// Reverting to the original, more reliable proxy.
-const proxy = "https://corsproxy.io/?"; 
+// 🔥 CRITICAL FIX: Changing the proxy to the most reliable option
+const proxy = "https://thingproxy.freeboard.io/fetch/"; 
 
 // Global variables initialized at the top
 let teamMap = {};    // Team ID -> Abbreviation (e.g., 1 -> 'ARS')
 let playerMap = {};  // Player ID -> Full Name
 let currentGameweekId = null;
+let nextGameweekId = null; // Variable for the next GW
 
 /* -----------------------------------------
     LOADING OVERLAY REMOVAL
@@ -124,6 +125,37 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 /**
+ * Finds the current and next Gameweek IDs and stores them globally.
+ * @param {Object} data - The full data object from FPL bootstrap-static.
+ */
+function determineGameweekIds(data) {
+    let currentEvent = data.events.find(e => e.is_current);
+    let nextEvent = data.events.find(e => e.is_next);
+
+    if (currentEvent) {
+        currentGameweekId = currentEvent.id;
+    } else {
+        // Fallback for current GW: last finished one
+        const finishedEvents = data.events.filter(e => e.finished);
+        if (finishedEvents.length > 0) {
+            finishedEvents.sort((a, b) => b.id - a.id);
+            currentGameweekId = finishedEvents[0].id;
+        }
+    }
+
+    if (nextEvent) {
+        nextGameweekId = nextEvent.id;
+    } else if (currentGameweekId) {
+        // Fallback for next GW: current GW + 1, if it exists
+        const potentialNext = data.events.find(e => e.id === currentGameweekId + 1);
+        if (potentialNext) {
+            nextGameweekId = potentialNext.id;
+        }
+    }
+}
+
+
+/**
  * Fetches FPL bootstrap data, creates maps, and initializes dependent loads.
  */
 async function loadFPLBootstrapData() {
@@ -142,23 +174,12 @@ async function loadFPLBootstrapData() {
             playerMap[player.id] = `${player.first_name} ${player.second_name}`;
         });
 
-        // 2. Determine Current Gameweek ID
-        let currentEvent = data.events.find(e => e.is_current);
-
-        if (!currentEvent) {
-            const finishedEvents = data.events.filter(e => e.finished);
-            if (finishedEvents.length > 0) {
-                finishedEvents.sort((a, b) => b.id - a.id);
-                currentEvent = finishedEvents[0];
-            }
-        }
-
-        if (currentEvent) {
-            currentGameweekId = currentEvent.id;
-        }
+        // 2. Determine Current/Next Gameweek ID
+        determineGameweekIds(data);
 
         // 3. Load dependent lists
         loadCurrentGameweekFixtures();
+        loadNextGameweekFixtures(); // <--- CALL TO THE NEW FUNCTION
         loadPriceChanges(data);
         loadMostTransferred(data);
         loadMostTransferredOut(data);
@@ -169,12 +190,9 @@ async function loadFPLBootstrapData() {
         // 🏆 SIMPLIFIED EPL TABLE CALL
         loadSimpleEPLTable(data); 
         
-        // 🌟 BONUS POINTS CALL
-        loadTopBonusPoints(data);
-
     } catch (err) {
         console.error("Error fetching FPL Bootstrap data:", err);
-        const sections = ["price-changes-list", "most-transferred-list", "most-transferred-out-list", "most-captained-list", "fixtures-list", "status-list", "countdown-timer"];
+        const sections = ["price-changes-list", "most-transferred-list", "most-transferred-out-list", "most-captained-list", "fixtures-list", "next-fixtures-list", "status-list", "countdown-timer"]; // Added new section
         sections.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.textContent = "Failed to load data. Check FPL API/Proxy.";
@@ -255,7 +273,7 @@ async function loadPlayerStatusUpdates(data) {
 }
 
 
-// 📅 CURRENT GAMEWEEK FIXTURES
+// 📅 CURRENT GAMEWEEK FIXTURES (SCORES)
 async function loadCurrentGameweekFixtures() {
     const container = document.getElementById("fixtures-list");
     if (!container) return;
@@ -389,13 +407,87 @@ async function loadCurrentGameweekFixtures() {
     }
 }
 
+// 📅 NEXT GAMEWEEK FIXTURES (FOR PLANNING) 
+async function loadNextGameweekFixtures() {
+    const container = document.getElementById("next-fixtures-list");
+    if (!container) return;
+
+    if (!nextGameweekId) {
+        container.innerHTML = "<h3>Next Gameweek Fixtures</h3><p>Next Gameweek information is not yet available.</p>";
+        return;
+    }
+
+    try {
+        const data = await fetch(
+            proxy + "https://fantasy.premierleague.com/api/fixtures/"
+        ).then((r) => r.json());
+
+        // Filter fixtures specifically for the NEXT Gameweek
+        const nextGWFixtures = data.filter(f => f.event === nextGameweekId);
+
+        if (nextGWFixtures.length === 0) {
+            container.innerHTML = `<h3>GW ${nextGameweekId} Fixtures</h3><p>No fixtures found for Gameweek ${nextGameweekId}.</p>`;
+            return;
+        }
+
+        container.innerHTML = `<h3>GW ${nextGameweekId} Fixtures: Planning Ahead 🗓️</h3>`;
+
+        const list = document.createElement('ul');
+        list.classList.add('fixtures-list-items');
+        list.classList.add('next-fixtures-list'); // Add a class for specific styling
+
+        nextGWFixtures.forEach(fixture => {
+            const homeTeamAbbr = teamMap[fixture.team_h] || `T${fixture.team_h}`;
+            const awayTeamAbbr = teamMap[fixture.team_a] || `T${fixture.team_a}`;
+            
+            // Format the kickoff time for upcoming fixtures
+            const kickoffTime = new Date(fixture.kickoff_time);
+            const timeDisplay = kickoffTime.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            const dateDisplay = kickoffTime.toLocaleDateString([], { 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            const dayDisplay = kickoffTime.toLocaleDateString([], { 
+                weekday: 'short'
+            });
+
+            const listItem = document.createElement('li');
+            listItem.classList.add('match-pending');
+            listItem.innerHTML = `
+                <div class="fixture-summary">
+                    <span class="match-date-day">${dayDisplay} ${dateDisplay}</span>
+                    <span class="fixture-team home-team">
+                        <span class="team-label home-label">${homeTeamAbbr}</span> 
+                    </span> 
+                    <span class="vs-label-time">${timeDisplay}</span>
+                    <span class="fixture-team away-team">
+                        <span class="team-label away-label">${awayTeamAbbr}</span> 
+                    </span>
+                    <span class="match-difficulty-tag">FDR: ${fixture.team_h_difficulty}-${fixture.team_a_difficulty}</span>
+                </div>
+            `;
+
+            list.appendChild(listItem);
+        });
+
+        container.appendChild(list);
+
+    } catch (err) {
+        console.error("Error loading next fixtures:", err);
+        container.textContent = "Failed to load upcoming fixtures data. Check FPL API/Proxy.";
+    }
+}
+
 
 // MINI-LEAGUE STANDINGS
 async function loadStandings() {
     const container = document.getElementById("standings-list");
     if (!container) return;
     try {
-        const leagueID = "101712";
+        const leagueID = "101712"; // Replace with your League ID
         const data = await fetch(
             proxy + `https://fantasy.premierleague.com/api/leagues-classic/${leagueID}/standings/`
         ).then((r) => r.json());
@@ -527,7 +619,11 @@ async function loadMostCaptained(data) {
     const container = document.getElementById("most-captained-list");
     if (!container || !data) return;
 
-    const currentEvent = data.events.find(e => e.is_next || e.is_current);
+    // Use the next gameweek ID if available, otherwise fall back to current.
+    const targetGameweekId = nextGameweekId || currentGameweekId;
+    
+    // Find the event object corresponding to the target Gameweek
+    const currentEvent = data.events.find(e => e.id === targetGameweekId);
 
     if (!currentEvent || !currentEvent.most_captained) {
         container.textContent = "Captain data not yet available for this Gameweek.";
@@ -548,7 +644,7 @@ async function loadMostCaptained(data) {
 
     const teamAbbreviation = teamMap[captain.team] || 'N/A';
 
-    container.innerHTML = "<h3>Most Captained Player (This GW) ©️</h3>";
+    container.innerHTML = `<h3>Most Captained Player (GW ${targetGameweekId}) ©️</h3>`;
 
     const div = document.createElement("div");
     div.textContent = `${captain.first_name} ${captain.second_name} (${teamAbbreviation}) (£${playerPrice}m) - ${captaincyPercentage}%`;
@@ -683,103 +779,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// 🌟 BONUS POINTS SCORERS (Current Gameweek)
-async function loadTopBonusPoints(data) {
-    const container = document.getElementById("bps-list");
-    if (!container || !data) return;
-
-    // Check 1: Ensure we have a Gameweek ID
-    if (!currentGameweekId) {
-        container.innerHTML = "<h3>Bonus Points (Current GW) 🌟</h3><p>Gameweek information is not yet available.</p>";
-        return;
-    }
-    
-    // Clear content and show loader while waiting for the secondary fetch
-    container.innerHTML = `<div style="text-align: center; padding: 20px 0;"><div class="loader"></div><p style="color: var(--subtext); margin-top: 15px; font-size: 14px;">Fetching live GW ${currentGameweekId} bonus data...</p></div>`;
-
-
-    try {
-        const gwDataResponse = await fetch(
-            proxy + `https://fantasy.premierleague.com/api/event/${currentGameweekId}/live/`
-        );
-        
-        // Check 2: Ensure the secondary fetch was successful
-        if (!gwDataResponse.ok) {
-            // Throw an error that is caught by the try/catch block below
-            throw new Error(`API returned status ${gwDataResponse.status}`);
-        }
-        
-        const gwData = await gwDataResponse.json();
-
-        // 1. Get the player stats from the live GW data
-        const playerStats = gwData.elements;
-
-        // 2. Map the element data and FILTER STRICTLY by actual bonus points awarded
-        const bonusPlayers = playerStats
-            .map(stat => {
-                // Find the actual bonus points awarded (0-3)
-                const bonusAwarded = stat.stats.find(s => s.identifier === 'bonus')?.value || 0;
-                
-                // Only include players who received 1, 2, or 3 bonus points
-                if (bonusAwarded > 0) {
-                    const fullPlayer = data.elements.find(p => p.id === stat.id);
-                    if (fullPlayer) {
-                        // Get the raw BPS score for context/sorting
-                        const bpsValue = stat.stats.find(s => s.identifier === 'bps')?.value || 0;
-                        
-                        return {
-                            ...fullPlayer,
-                            gw_bps: bpsValue,
-                            gw_bonus: bonusAwarded
-                        };
-                    }
-                }
-                return null;
-            })
-            .filter(p => p !== null); // Remove players who didn't get bonus points or are null
-
-        // 3. Sort: Primary sort by Bonus (3, 2, 1), Secondary sort by BPS score
-        bonusPlayers.sort((a, b) => {
-            if (b.gw_bonus !== a.gw_bonus) {
-                return b.gw_bonus - a.gw_bonus; 
-            }
-            // Corrected BPS tie-breaker comparison
-            return b.gw_bps - a.gw_bps; 
-        });
-
-        // 4. Render the list
-        container.innerHTML = `<h3>Bonus Points (GW ${currentGameweekId}) 🌟</h3>`;
-
-        if (bonusPlayers.length === 0) {
-            container.innerHTML += `<p>No bonus points have been finalized yet for GW ${currentGameweekId}.</p>`;
-            return;
-        }
-
-        bonusPlayers.forEach((p, index) => {
-            setTimeout(() => {
-                const div = document.createElement("div");
-                const teamAbbreviation = teamMap[p.team] || 'N/A';
-                
-                div.innerHTML = `
-                    <span class="bonus-icon">⭐</span>
-                    <span class="bonus-awarded-value">${p.gw_bonus}</span> 
-                    Pts - 
-                    <strong>${p.first_name} ${p.second_name}</strong> (${teamAbbreviation})
-                    <span class="bps-score">(${p.gw_bps} BPS)</span>
-                `;
-                
-                if (p.gw_bonus === 3) div.classList.add("top-rank"); 
-
-                container.appendChild(div);
-            }, index * 30);
-        });
-
-    } catch (err) {
-        console.error(`Error loading GW ${currentGameweekId} live data:`, err);
-        container.innerHTML = `<h3>Bonus Points (GW ${currentGameweekId}) 🌟</h3><p>Failed to load live Gameweek data. (Network/API Error)</p>`;
-    }
-}
-
 /* -----------------------------------------
     GW DEADLINE DATE/TIME DISPLAY (REPLACES COUNTDOWN)
 ----------------------------------------- */
@@ -808,7 +807,6 @@ function formatDeadlineTime(deadlineTimeString) {
 
 /**
  * Finds the next deadline and displays its date and time statically.
- * This is updated to specifically look for the "is_next" event (GW+1) to avoid showing the current GW's passed deadline.
  */
 function processDeadlineDisplay(data) {
     const countdownTimerEl = document.getElementById("countdown-timer");
@@ -819,8 +817,7 @@ function processDeadlineDisplay(data) {
     // Find the Gameweek that is officially flagged as the next one.
     let nextGameweek = data.events.find(event => event.is_next === true);
 
-    // Fallback: If no event has is_next=true (e.g., season end or early data stage), 
-    // find the first one that hasn't finished.
+    // Fallback: If no event has is_next=true, find the first one that hasn't finished.
     if (!nextGameweek) {
         nextGameweek = data.events.find(event => event.finished === false);
     }
