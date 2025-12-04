@@ -1,149 +1,68 @@
-/* --- 1. Root Variables & Global Reset (No Change) --- */
-:root {
-    --primary-color: #e40046;
-    --accent-color: #00ff87;
-    --background-light: #f5f5f5;
-    --card-background: #ffffff;
-    --nav-background: #ffffff;
-    --border-color: #e0e0e0;
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --border-radius-card: 12px;
-    --border-radius-button: 6px;
-    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-subtle: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --fpl-yellow: #f8c32c;
-    --fpl-orange: #ff9100;
-    --fpl-red: #e40046;
+/* --- Global Styles for Look and Feel --- */
+
+/* Apply the background gradient from the image to the body */
+body {
+    /* Use a color scheme similar to the image's background gradient (Blue, Purple, Pink) */
+    background: linear-gradient(135deg, #7b68ee 0%, #ff69b4 50%, #add8e6 100%);
+    min-height: 100vh; /* Ensure full page coverage */
+    font-family: sans-serif; /* Use a clean font */
+    color: #333; /* Dark text for contrast */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Include padding/border in element's total width/height */
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { 
-    font-family: 'Arial', sans-serif;
-    background-color: var(--background-light);
-    color: var(--text-primary);
-    line-height: 1.6;
-    padding-top: 100px;
-}
-/* ... Navigation styles remain the same ... */
-
-/* --- 3. Main Layout Fix: Introducing a Top-Row Wrapper --- */
-
-/* Wrapper for the three main cards on the top row */
-.top-dashboard-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-    /* FIX: Align all items to the start (top) of the container */
-    align-items: start; 
-}
-
-/* Main content container will now handle everything *below* the top row */
+/* Remove default main padding/margins for edge-to-edge layout */
 main {
-    display: grid;
-    gap: 20px;
-    /* This grid handles the sections below the top cards */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
+    padding: 20px; /* Overall padding for the content area */
+    display: grid; /* Use grid for layout - optional, but helps with side-by-side boxes */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
+    gap: 20px; /* Space between boxes */
 }
 
-/* Universal Card Style */
-.fpl-section {
-    background-color: var(--card-background);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-card);
-    box-shadow: var(--shadow-soft);
-    padding: 20px;
-    position: relative;
-    border-top: 5px solid var(--border-color);
+/* Style the top-level sections as the data boxes */
+section {
+    /* Base Box Style */
+    background-color: #ffffff; /* Solid white/off-white background */
+    border-radius: 12px; /* Rounded corners */
+    padding: 0; /* Important: Remove default padding from the section itself */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
+    overflow: hidden; /* Ensures child elements (like headers) don't escape rounded corners */
 }
 
-/* --- 4. Styling the Top Row Sections for Flexbox --- */
-
-/* Make the top sections flexible children */
-#welcome, #bonus-section, #live-rank-section {
-    flex-grow: 1; /* Allow them to fill the space */
-    width: 33.33%; /* Set a base width */
+/* Style for the header/title area inside the box */
+/* This is an example of how to make the header area look like the 'BONUS POINTS' bar */
+section h2 {
+    background-color: #f0f0f0; /* Light grey/off-white header background */
+    color: #333;
+    padding: 15px 20px; /* Padding for the title, keeping content away from edges */
+    margin-top: 0; /* Remove space above the title */
+    font-size: 1.2em;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-top-left-radius: 12px; /* Match section border radius */
+    border-top-right-radius: 12px;
+    border-bottom: 1px solid #ddd; /* Separator line */
 }
 
-/* Apply specific border colors */
-#welcome {
-    border-top-color: var(--primary-color);
-}
-#deadline-section {
-    border-top-color: var(--accent-color);
+/* Style for the main content inside the box to provide space */
+section p, section ul, section .loader {
+    padding: 0 20px; /* Add padding to inner content, not the section itself */
 }
 
-
-/* --- 5. Component Styling --- */
-
-/* Card Header Icons (Used on all top sections) */
-.card-actions {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-}
-.card-actions i {
-    font-size: 1.2rem;
-    margin-left: 8px;
-    padding: 5px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-button);
-    cursor: pointer;
-    color: var(--text-secondary);
-}
-.card-actions .fa-square-check { color: var(--accent-color); border-color: var(--accent-color); }
-.card-actions .fa-xmark { color: var(--primary-color); border-color: var(--primary-color); }
-
-/* #welcome Feature List & Button */
-#welcome ul { 
-    list-style: none; 
-    padding: 0; 
-    margin: 10px 0 20px 0; 
-}
-/* Styling for the subscribe button */
-.subscribe-btn { background-color: var(--primary-color); color: white; border: none; border-radius: var(--border-radius-button); padding: 10px 15px; font-size: 1rem; cursor: pointer; text-transform: uppercase; font-weight: bold; display: block; width: 100%; margin: 15px 0; }
-
-/* LIVE RANK Section Components */
-.rank-metrics { display: flex; justify-content: space-around; border: 1px solid var(--border-color); border-radius: var(--border-radius-button); overflow: hidden; margin-bottom: 20px; }
-.metric-tab { flex-grow: 1; text-align: center; padding: 10px 5px; font-size: 0.9rem; cursor: pointer; font-weight: bold; border-right: 1px solid var(--border-color); }
-.id-entry-group { display: flex; gap: 10px; margin-bottom: 10px; }
-#live-rank-section input[type="text"] { flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--border-radius-button); font-size: 1rem; }
-.action-btn { padding: 10px 15px; border: none; border-radius: var(--border-radius-button); font-weight: bold; cursor: pointer; }
-.go-btn { background-color: var(--primary-color); color: white; }
-.reset-btn { background-color: var(--background-light); color: var(--text-primary); border: 1px solid var(--border-color); }
-.live-rank-footer { text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary); }
-
-/* --- 6. Lower Dashboard Sections --- */
-
-/* All lower sections (Standings, Cup, Transfers, etc.) */
-#standings, #cup, #current-gw-scores, #price-changes, #most-transferred-in, #most-transferred-out, #most-captained, #team-news {
-    border-top-color: var(--primary-color); 
-    min-height: 150px; 
+/* Clean up list spacing */
+section ul {
+    list-style: none;
+    padding-left: 20px; /* Keep padding for lists */
 }
 
-/* Team News Search Box */
-.search-container { margin-bottom: 20px; }
-#statusSearch {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-button);
-    font-size: 1rem;
+/* Apply padding to the children of the section if they aren't the title, 
+   to maintain the "no spaces in the boxes" look for the box structure, but
+   allow content to breathe. */
+section > :not(h2) {
+    padding-left: 20px;
+    padding-right: 20px;
 }
-
-/* --- 7. Footer --- */
-
-footer {
-    max-width: 1400px;
-    margin: 40px auto 20px auto;
-    padding: 20px;
-    text-align: center;
-    border-top: 1px solid var(--border-color);
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+section > :last-child {
+    padding-bottom: 20px; /* Add padding to the bottom of the last element */
 }
-footer a { color: var(--primary-color); margin: 0 5px; text-decoration: none; }
