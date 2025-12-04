@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOPALA FPL Dashboard</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="icon" type="image/png" href="favicon.png"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+</head>
+<body>
+
+<div id="loading-overlay">
+    <h1>KOPALA FPL</h1>
+    <p>abana FPL 😎...</p>
+    <div class="loader"></div> 
+</div>
+
+<button id="themeToggle">🌙</button>
+
+<div id="top-nav-bar">
+    <div class="nav-container">
+        <div class="social-icons">
+            <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+        </div>
+        <div class="search-login-actions">
+            <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            <button class="signin-btn">Sign up</button>
+        </div>
+    </div>
+</div>
+
+<nav id="bottom-nav-bar">
+    <div class="nav-container">
+        <div class="logo-area">
+            <span class="fpl-logo">KOPALA FPL</span> 
+        </div>
+        
+        <ul class="main-links">
+            <li><a href="#standings">Live Rank</a></li>
+            <li><a href="#fixtures-list">EPL Live</a></li>
+            <li><a href="#price-changes-list">Prices</a></li>
+            <li><a href="#most-transferred-list">Transfers</a></li>
+            <li><a href="#most-captained-list">Captains</a></li>
+            <li><a href="more.html">Tools</a></li>
+        </ul>
+    </div>
+</nav>
+    
+<main>
+    <section id="welcome" class="fpl-section"> 
+        <div class="card-actions">
+            <i class="fa-solid fa-square-check"></i>
+            <i class="fa-solid fa-arrow-up-down"></i>
+            <i class="fa-solid fa-xmark"></i>
+        </div>
+        
+        <h2>PREMIUM FEATURES</h2>
+        
+        <ul>
+            <li><i class="fa-solid fa-circle-xmark"></i> **Hide all ads**</li>
+            <li><i class="fa-solid fa-square-check"></i> **Customise your dashboard**</li>
+            <li><i class="fa-solid fa-square-check"></i> **Weekly Articles**</li>
+            <li><i class="fa-solid fa-square-check"></i> **Predicted line-ups, for all teams**</li>
+            <li><i class="fa-solid fa-star"></i> **Unlock all Premium features**</li>
+        </ul>
+        
+        <p>
+            **Trusted by The FPL Community.**
+        </p>
+        <button class="subscribe-btn">Subscribe</button>
+    </section>
+    
+    
+    <section id="bonus-section" class="fpl-section">
+        <div class="card-actions">
+            <i class="fa-solid fa-square-check"></i>
+            <i class="fa-solid fa-arrow-up-down"></i>
+            <i class="fa-solid fa-xmark"></i>
+        </div>
+        
+        <h2>BONUS</h2>
+        
+        <div class="bonus-controls">
+            </div>
+        
+        <div class="header-strip">
+            Tue 2 December 2025
+        </div>
+        
+        <div class="fixture-row">
+            <span class="team-name">Bournemouth</span>
+            <img src="bournemouth-logo.png" alt="BOU" style="width:20px;margin:0 5px;">
+            <div class="score-box">0</div>
+            <span>|</span>
+            <div class="score-box">1</div>
+            <img src="everton-logo.png" alt="EVE" style="width:20px;margin:0 5px;">
+            <span class="team-name">Everton</span>
+            <span class="bonus-tag">🏆 Bonus</span>
+        </div>
+        
+        <div class="player-score-list">
+            <div class="player-score-row">
+                <div class="player-details">
+                    <span class="rank-indicator rank-1">1</span>
+                    <span class="player-name">Grealish</span>
+                </div>
+                <span class="points-number">35</span>
+            </div>
+             <div class="player-score-row">
+                <div class="player-details">
+                    <span class="rank-indicator rank-2">2</span>
+                    <span class="player-name">Tarkowski</span>
+                </div>
+                <span class="points-number">28</span>
+            </div>
+             <div class="player-score-row">
+                <div class="player-details">
+                    <span class="rank-indicator rank-3">3</span>
+                    <span class="player-name">Pickford</span>
+                </div>
+                <span class="points-number">26</span>
+            </div>
+            </div>
+        
+    </section>
+    
+    
+    <section id="live-rank-section" class="fpl-section">
+        <div class="card-actions">
+            <i class="fa-solid fa-square-check"></i>
+            <i class="fa-solid fa-arrow-up-down"></i>
+            <i class="fa-solid fa-xmark"></i>
+        </div>
+        
+        <h2>LIVE RANK <span class="rank-guide">(GUIDE ⓘ)</span></h2>
+        
+        <p class="team-name-display">Team name (Player name)</p>
+        
+        <div class="rank-metrics">
+            <div class="metric-tab">Net Points</div>
+            <div class="metric-tab">Transfers</div>
+            <div class="metric-tab">Live Rank</div>
+        </div>
+        
+        <div class="id-entry-group">
+            <input type="text" placeholder="Enter ID" aria-label="Enter FPL ID">
+            <button class="action-btn go-btn">Go</button>
+            <button class="action-btn reset-btn">Reset</button>
+        </div>
+        
+        <p class="live-rank-footer">Live rank via <a href="FPLGameweek.com">FPLGameweek.com</a></p>
+    </section>
+    
+    
+    <section id="deadline-section" class="fpl-section">
+        <div class="card-actions">
+            <i class="fa-solid fa-square-check"></i>
+            <i class="fa-solid fa-arrow-up-down"></i>
+            <i class="fa-solid fa-xmark"></i>
+        </div>
+        <h2 class="countdown-title">DEADLINE</h2>
+        
+        <div id="countdown-timer" class="countdown-display">
+            <p>Fetching next deadline time...</p>
+        </div>
+    </section>
+    
+    <section id="standings" class="fpl-section"> 
+        <h2>🏆 Kopala FPL</h2>
+        <div id="standings-list">
+             </div>
+    </section>
+
+    <section id="cup" class="fpl-section"> 
+        <h2>🏆 Kopala FPL CUP</h2>
+        <div id="standings-list">
+             </div>
+    </section>
+
+    </main>
+
+<footer>
+    <p>&copy; 2026 KOPALA FPL</p>
+    <div class="social-links">
+        <a href="https://twitter.com/YourTwitterHandle" target="_blank" aria-label="Follow us on X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="https://facebook.com/YourFacebookPage" target="_blank" aria-label="Follow us on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="mailto: lombeicloud@gmail.com" aria-label="Email us"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+    <p class="disclaimer">Data provided by Fantasy Premier League API and The Sports DB. Not officially affiliated with the Premier League.</p>
+</footer>
+
+<button id="backToTop">🚀</button>
+
+<script src="script.js"></script>
+</body>
+</html>
