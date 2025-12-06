@@ -1,0 +1,8 @@
+[build]
+  functions = "netlify/functions"
+  publish = "build" # Assuming your HTML/CSS/JS is in a 'build' folder, use '.' if they are in the root.
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api-proxy"
+  status = 200
