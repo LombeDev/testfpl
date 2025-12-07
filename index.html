@@ -9,42 +9,29 @@
 <body>
 
     <header>
-        <section id="live-rank-card">
-    <div class="card-header">
-        <h2 id="card-title">LIVE RANK</h2>
-        <div class="header-icons">
-            <i class="fas fa-external-link-alt green-accent-icon" title="View Team"></i>
-            <i class="fas fa-exchange-alt blue-accent-icon" title="View Transfers"></i>
-            <i class="fas fa-times red-accent-icon" title="Close/Clear"></i>
-            <a href="#" class="guide-link" title="Guide">
-                GUIDE <i class="fas fa-info-circle"></i>
-            </a>
-        </div>
-    </div>
-
-    <div id="manager-info">
-        <h3 id="team-manager-name">Team name (Player name)</h3>
-    </div>
-
-    <div class="stats-container">
-        <div class="stat-box">
-            <a href="#" class="stat-label-link">Net Points</a>
-            <div class="stat-value" id="net-points-value">-</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Transfers</div>
-            <div class="stat-value" id="transfers-value">-</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Live Rank</div>
-            <div class="stat-value" id="live-rank-value">-</div>
-        </div>
-    </div>
+       <section id="bonus-points-card">
+    <h2>BONUS POINTS TRACKER</h2>
 
     <div class="input-actions-container">
-        <input type="number" id="fpl-id-input" placeholder="Enter ID">
-        <button id="go-btn" class="action-btn go-btn">Go</button>
-        <button id="reset-btn" class="action-btn reset-btn">Reset</button>
+        <input type="number" id="gw-id-input" placeholder="Enter Gameweek (GW) ID">
+        <button id="gw-go-btn" class="action-btn go-btn">Go</button>
+        <button id="gw-reset-btn" class="action-btn reset-btn">Reset</button>
+    </div>
+
+    <div id="bonus-display-area">
+        <h3 id="bonus-gw-header">Bonus points for Gameweek -</h3>
+        
+        <table id="bonus-points-table">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Team</th>
+                    <th>Bonus (BPS)</th>
+                </tr>
+            </thead>
+            <tbody id="bonus-points-body">
+                </tbody>
+        </table>
     </div>
 </section>
     </main>
