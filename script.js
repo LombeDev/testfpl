@@ -41,7 +41,6 @@ function createTeamMap(bootstrapData) {
 
 /**
  * Transforms the linear fixture list into a structure grouped by team and Gameweek.
- * This is crucial for rendering the horizontal ticker view.
  * @param {Array<object>} fixturesData List of fixtures.
  * @param {Map<number, string>} teamMap Map of team IDs to team names.
  * @returns {Map<string, Array<object>>} Map of Team Name -> List of Fixture Objects.
@@ -57,7 +56,7 @@ function groupFixturesByTeam(fixturesData, teamMap) {
         const awayTeamName = teamMap.get(fixture.team_a);
 
         // Function to safely get the opponent's abbreviation (3 letters)
-        const getOpponentAbbr = (id) => teamMap.get(id).substring(0, 3).toUpperCase();
+        const getOpponentAbbr = (id) => teamMap.get(id) ? teamMap.get(id).substring(0, 3).toUpperCase() : 'N/A';
 
         // 1. Add fixture to the home team's list
         if (!teamFixtures.has(homeTeamName)) {
@@ -100,7 +99,6 @@ async function renderFixtures() {
 
     if (!bootstrapData || !fixturesData) {
         container.innerHTML = '<h2>Error loading FPL data. Please try again.</h2>';
-        // Return early to prevent the ReferenceError in the .then() block
         return; 
     }
     
@@ -161,7 +159,12 @@ async function renderFixtures() {
         </table>
     `;
 
-    container.innerHTML = html;
+    // Wrap the table in a responsive div for mobile scrolling
+    container.innerHTML = `
+        <div class="table-responsive-wrapper">
+            ${html}
+        </div>
+    `;
 }
 
 // --- 3. INTERACTIVITY FUNCTIONS ---
@@ -174,15 +177,11 @@ function setupRemoveTeamListeners() {
 
     removeButtons.forEach(button => {
         button.addEventListener('click', (event) => {
-            // Traverse up the DOM to find the parent table row (<tr>)
             const rowToRemove = event.target.closest('tr');
             
             if (rowToRemove) {
-                // Get the team name for logging/tracking (optional)
                 const teamName = rowToRemove.dataset.teamName;
                 console.log(`Removing team: ${teamName}`);
-                
-                // Actually remove the row from the table
                 rowToRemove.remove();
             }
         });
@@ -195,13 +194,11 @@ function setupRemoveTeamListeners() {
 function setupTeamFilter() {
     const searchInput = document.getElementById('team-search');
     
-    // Check if the search input element exists
     if (!searchInput) {
         console.warn("Search input with ID 'team-search' not found.");
         return;
     }
 
-    // Listen for input changes (typing)
     searchInput.addEventListener('input', (event) => {
         const searchText = event.target.value.toLowerCase().trim();
         const tableRows = document.querySelectorAll('.fixture-ticker tbody tr');
@@ -209,7 +206,6 @@ function setupTeamFilter() {
         tableRows.forEach(row => {
             const teamName = row.dataset.teamName.toLowerCase(); 
 
-            // Show the row if the team name includes the search text, otherwise hide it
             if (teamName.includes(searchText)) {
                 row.style.display = ''; 
             } else {
@@ -224,7 +220,6 @@ function setupTeamFilter() {
 
 // Execute the main function, then set up interactive listeners
 renderFixtures().then(() => {
-    // These functions must be defined above this block to be called here.
     setupRemoveTeamListeners();
     setupTeamFilter(); 
 });
