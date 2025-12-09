@@ -193,3 +193,184 @@ header {
         border-right: 2px solid #ccc; 
     }
 }
+
+
+/* ------------------------------------------------ */
+/* --- NEW DESKTOP TOP NAV STYLES --- */
+/* ------------------------------------------------ */
+
+#new-top-nav-desktop {
+    /* Base styles - similar to your old nav setup */
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 950; /* Higher than old nav bars but lower than modal */
+    background: linear-gradient(to right, #6A5ACD, #483D8B); /* Gradient from your image */
+    padding: 0;
+    height: 80px; /* Taller height for a more prominent bar */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    display: none; /* Default hidden - will be shown in media query */
+}
+
+/* Ensure the container is used for centering content */
+#new-top-nav-desktop .nav-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    padding: 0 20px;
+}
+
+/* Menu and Sign In Buttons */
+.nav-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50px; /* Pill shape */
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s, border-color 0.2s;
+    line-height: 1; /* Helps vertical centering */
+    height: 40px;
+}
+
+.nav-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: #fff;
+}
+
+/* User Profile Orb/Sign In */
+.desktop-user-actions .nav-btn {
+    padding-left: 10px; /* Tighter padding on the left */
+}
+
+.user-profile-orb {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: conic-gradient(red, orange, yellow, green, blue, indigo, violet, red); /* Rainbow gradient from image */
+    margin-right: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Central Logo Icon (The big 'F' in the circle) */
+.desktop-logo-container {
+    position: absolute; /* Allows for easy centering relative to nav bar */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--card-bg); /* White background for the circle */
+    border: 5px solid white; /* The white border around the circle */
+    z-index: 960; /* Higher to overlap the nav bar */
+    top: 50%; /* Center vertically within the 80px nav bar height */
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    
+    /* The large 'F' icon/text */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    font-weight: 900;
+    color: #6A5ACD; /* Example accent color */
+    line-height: 1;
+    text-decoration: none;
+    
+    /* Inner purple circle for the 'F' */
+    background: #6A5ACD; /* Inner purple circle background */
+    
+}
+.desktop-logo-icon {
+    /* Style the actual F/Logo text */
+    color: white !important; 
+    font-size: 40px;
+    padding: 0 !important;
+    text-decoration: none !important;
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #6A5ACD; /* Using a solid color for the central circle's background */
+    border: 5px solid var(--card-bg); /* White inner ring */
+}
+
+/* ------------------------------------------------ */
+/* --- OFF-CANVAS MENU STYLES --- */
+/* ------------------------------------------------ */
+
+.off-canvas-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 300px; /* Width of the menu */
+    height: 100%;
+    background-color: var(--card-bg); /* Use card-bg for menu background */
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
+    transform: translateX(-100%); /* Slide off-screen initially */
+    transition: transform 0.3s ease-out;
+    z-index: 1000; /* Must be above the new nav bar */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.off-canvas-menu.open {
+    transform: translateX(0); /* Slide on-screen */
+}
+
+.off-canvas-menu .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    color: var(--subtext);
+    border: none;
+    font-size: 24px;
+    padding: 0;
+    width: initial;
+    height: initial;
+    line-height: 1;
+}
+
+.off-canvas-menu .nav-links-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 50px;
+    flex-grow: 1;
+}
+
+.off-canvas-menu .nav-links-list a {
+    display: block;
+    padding: 15px 10px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 1.1em;
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s;
+}
+
+.off-canvas-menu .nav-links-list a:hover {
+    background-color: var(--border);
+}
+
+.off-canvas-menu .nav-links-list i {
+    margin-right: 10px;
+    color: var(--accent); /* Use your FPL purple for icons */
+}
+
+.menu-footer {
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
