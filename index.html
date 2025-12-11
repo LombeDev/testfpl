@@ -33,7 +33,7 @@
     .title {
       font-size: 1.875rem;
       font-weight: 700;
-      /* FIX: Changed gradient to solid purple for better contrast */
+      /* Using solid purple for better contrast */
       background: #8b5cf6; 
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -134,7 +134,6 @@
     
     .progress-fill {
       height: 100%;
-      /* FIX: Changed gradient to solid purple for better visibility */
       background: #8b5cf6;
       border-radius: 9999px;
       transition: width 0.5s ease;
@@ -187,8 +186,10 @@
 
   <script>
     // --- API and Utility Constants ---
-    // FIX: Using AllOrigins proxy to bypass client-side CORS restriction for FPL API
-    const FPL_API_URL = 'https://api.allorigins.win/raw?url=https://fantasy.premierleague.com/api/bootstrap-static/';
+    // FIX FOR NETLIFY HOSTING: 
+    // This local path relies on a proxy redirect rule defined in 
+    // your project's root _redirects file to bypass the FPL API's CORS policy.
+    const FPL_API_URL = '/api/bootstrap-static/'; 
     
     const statsGrid = document.getElementById('statsGrid');
     const chipBreakdown = document.getElementById('chipBreakdown');
@@ -312,7 +313,7 @@
         // 1. Most Bought Player (uses transfers_in_event)
         const mostBought = players.reduce((max, p) => p.transfers_in_event > max.transfers_in_event ? p : max);
 
-        // FIX: Top Scorer now uses 'event_points' for accurate Gameweek score
+        // 2. Top Scorer now uses 'event_points' for accurate Gameweek score
         const topScorer = players.reduce((max, p) => p.event_points > max.event_points ? p : max);
         
         // 3. Most Selected/Captained (using selected_by_percent as a proxy for popularity)
@@ -383,7 +384,7 @@
             const processedStats = processFplData(data);
             renderStats(processedStats);
 
-            // 3. Render Mock Chip Data (can be integrated with other API calls later)
+            // 3. Render Mock Chip Data
             const mockChips = [
               { name: "Triple Captain", count: "2.1M", percentage: 45 },
               { name: "Bench Boost", count: "1.4M", percentage: 30 },
@@ -397,7 +398,7 @@
             gameweekBadge.textContent = 'Data Error';
             statsGrid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #f87171;">
                 <p>🚨 Failed to load FPL data. Please check the console for details.</p>
-                <p class="stat-subtitle" style="margin-top: 0.5rem;">The CORS issue was likely bypassed, but the FPL API may be down or under maintenance.</p>
+                <p class="stat-subtitle" style="margin-top: 0.5rem;">Check your **_redirects** file configuration on Netlify.</p>
             </div>`;
             renderChips([]); 
         }
