@@ -1,180 +1,203 @@
-/* --- Global Reset & Base Styles --- */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-  
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #08080a; 
-    color: #fafafa;
-    min-height: 100vh;
-    padding: 2rem 1rem;
+/* Importing a clean, modern font (like Inter or system-ui) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    /* Define primary colors */
+    --color-background: #f8fafc; /* Light gray background */
+    --color-text-primary: #1e293b; /* Dark primary text */
+    --color-text-secondary: #64748b; /* Medium gray secondary text */
+    --color-border: #e2e8f0; /* Light border color */
+    --color-card-background: #ffffff; /* White card background */
+    --color-highlight-text: #0f172a; /* Darkest text for main stats */
+    --color-accent-bar: #334155; /* Dark gray for the progress bars */
+    --color-badge-background: #e0f2f1; /* Light teal/cyan for the badge background */
+    --color-badge-text: #0f766e; /* Dark teal/cyan for the badge text */
 }
-  
-.container { max-width: 900px; margin: 0 auto; }
-  
-/* --- Header Styles --- */
-.header { text-align: center; margin-bottom: 2rem; }
-  
+
+/* Base styles and body setup */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    max-width: 900px;
+    width: 100%;
+}
+
+/* Header Styling */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
 .badge {
     display: inline-block;
-    background: #27272a;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
+    padding: 4px 12px;
+    margin-bottom: 15px;
+    border-radius: 9999px; /* Pill shape */
     font-size: 0.875rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    background-color: var(--color-badge-background);
+    color: var(--color-badge-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-  
+
 .title {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: #a855f7; 
-    margin-bottom: 0.5rem;
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+    color: var(--color-highlight-text);
 }
-  
-.subtitle { 
-    color: #a1a1aa; 
-    font-size: 0.9rem;
+
+.subtitle {
+    font-size: 1.125rem;
+    font-weight: 400;
+    color: var(--color-text-secondary);
 }
-  
-/* --- Grid & Card Styles --- */
+
+/* Stats Grid for the 4 cards */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
 }
-  
+
+/* Individual Card Styling */
 .card {
-    background: rgba(39, 39, 42, 0.7);
-    border: 1px solid rgba(63, 63, 70, 0.7);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    transition: all 0.3s ease;
-    position: relative;
+    background-color: var(--color-card-background);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); /* Soft shadow */
+    display: flex;
+    flex-direction: column;
 }
-  
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-}
-  
-.card-header {
+
+.card-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 10px;
+    height: 30px; /* Consistent height for alignment */
 }
-  
-.icon-wrapper {
-    background: rgba(168, 85, 247, 0.15);
-    color: #a855f7;
-    padding: 0.6rem;
-    border-radius: 0.5rem;
+
+.card-icon {
+    /* Style for the SVG icon container */
+    width: 30px;
+    height: 30px;
+    color: var(--color-text-secondary);
 }
-  
-.icon-wrapper svg { width: 22px; height: 22px; }
-  
-.highlight {
+
+.card-team-badge {
+    /* Style for the smaller badge inside the card */
+    padding: 2px 8px;
+    border-radius: 6px;
     font-size: 0.75rem;
-    border: 1px solid #52525b;
-    padding: 0.125rem 0.6rem;
-    border-radius: 9999px;
-    background-color: rgba(82, 82, 91, 0.3);
-    color: #e4e4e7;
+    font-weight: 500;
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
 }
-  
-.stat-label {
-    font-size: 0.75rem;
-    color: #71717a;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.25rem;
+
+.card-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-highlight-text);
+    margin-bottom: 5px;
 }
-  
-.stat-value { 
-    font-size: 1.6rem; 
-    font-weight: 700; 
-    line-height: 1.2; 
-    color: #ffffff; 
+
+.card-stat-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    white-space: nowrap; /* Prevent label wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-  
-.stat-subtitle { font-size: 0.875rem; color: #a1a1aa; margin-top: 0.25rem; }
-  
-/* --- Chip Section Styles --- */
-.chip-section { 
-    margin-top: 2rem; 
-    padding: 1.5rem;
+
+/* Chip Usage Section Styling */
+.chip-section {
+    padding: 30px; /* Slightly more padding for the main section */
 }
-  
+
 .chip-title {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 1.25rem;
+    color: var(--color-highlight-text);
+    margin-bottom: 25px;
 }
-  
-.chip-title svg { color: #a855f7; }
-  
-.chip-item { margin-bottom: 1rem; }
-  
-.chip-row {
+
+.chip-title svg {
+    margin-right: 10px;
+    color: var(--color-text-secondary);
+}
+
+/* Individual Chip Breakdown Item */
+.chip-item {
+    margin-bottom: 20px;
+}
+
+.chip-item-header {
     display: flex;
     justify-content: space-between;
-    font-size: 0.9rem;
-    margin-bottom: 0.35rem;
+    align-items: center;
+    margin-bottom: 8px;
 }
-  
-.chip-name { font-weight: 500; }
-.chip-count { color: #d4d4d8; font-weight: 600; }
-  
-.progress-bar {
-    height: 0.6rem;
-    background: #3f3f46;
-    border-radius: 9999px;
+
+.chip-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+.chip-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-highlight-text);
+}
+
+.chip-progress-bar-container {
+    background-color: var(--color-border);
+    border-radius: 4px;
+    height: 8px; /* Height of the progress bar */
     overflow: hidden;
 }
-  
-.progress-fill {
+
+.chip-progress-bar {
+    background-color: var(--color-accent-bar);
     height: 100%;
-    background: #a855f7;
-    border-radius: 9999px;
-    transition: width 0.5s ease;
+    transition: width 0.5s ease-out; /* Smooth animation on load */
 }
 
-/* --- Loading State (Skeleton) Styles --- */
-@keyframes pulse {
-    0% { background-color: rgba(63, 63, 70, 0.5); }
-    50% { background-color: rgba(63, 63, 70, 0.7); }
-    100% { background-color: rgba(63, 63, 70, 0.5); }
-}
-
-.skeleton {
-    animation: pulse 1.5s infinite ease-in-out;
-    border-radius: 4px;
-}
-
-.skeleton-line {
-    height: 0.75rem;
-    margin-bottom: 0.5rem;
-}
-
-.skeleton-value {
-    height: 1.5rem;
-    width: 70%;
-    margin-bottom: 0.25rem;
-}
-
-/* --- Media Queries for Mobile Experience --- */
-@media (max-width: 600px) {
-    .header { margin-bottom: 1.5rem; }
-    .title { font-size: 1.5rem; }
-    .subtitle { font-size: 0.8rem; }
-    .stats-grid { 
-        gap: 0.75rem;
-        grid-template-columns: 1fr; 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
     }
-    .card { padding: 1rem; }
-    .stat-value { font-size: 1.4rem; }
-    .chip-title { font-size: 1.1rem; margin-bottom: 1rem; }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr; /* 1 column on very small screens */
+    }
+
+    .title {
+        font-size: 1.75rem;
+    }
 }
