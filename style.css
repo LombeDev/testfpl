@@ -213,3 +213,86 @@ body {
         font-size: 1.75rem;
     }
 }
+
+
+
+/* --- Sidebar Styles --- */
+
+/* Menu Button (Fixed Position) */
+.menu-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000; /* Must be above everything else */
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--color-highlight-text); /* Dark background */
+    color: var(--color-card-background); /* White text */
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.menu-btn:hover {
+    background-color: #334155; /* Slightly lighter on hover */
+}
+
+/* Side Panel Structure */
+.side-panel {
+    height: 100%;
+    width: 250px; /* Width of the panel */
+    position: fixed;
+    z-index: 2000; 
+    top: 0;
+    left: 0;
+    background-color: var(--color-highlight-text); /* Dark background for sidebar */
+    padding-top: 60px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease-in-out;
+    
+    /* Initial state: push off-screen to the left */
+    transform: translateX(-100%);
+}
+
+/* State when the panel is open */
+.side-panel.open {
+    transform: translateX(0);
+}
+
+/* Close Button inside the panel */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 2rem;
+    color: var(--color-border); /* Light color */
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Navigation links inside the panel */
+.side-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+}
+
+.side-nav .nav-link {
+    padding: 15px 25px;
+    text-decoration: none;
+    font-size: 1.1rem;
+    color: var(--color-background); /* Very light text */
+    display: block;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.side-nav .nav-link:hover {
+    background-color: #334155;
+    color: var(--color-card-background);
+}
