@@ -1,0 +1,180 @@
+/* --- Global Reset & Base Styles --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+  
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #08080a; 
+    color: #fafafa;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+  
+.container { max-width: 900px; margin: 0 auto; }
+  
+/* --- Header Styles --- */
+.header { text-align: center; margin-bottom: 2rem; }
+  
+.badge {
+    display: inline-block;
+    background: #27272a;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+  
+.title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #a855f7; 
+    margin-bottom: 0.5rem;
+}
+  
+.subtitle { 
+    color: #a1a1aa; 
+    font-size: 0.9rem;
+}
+  
+/* --- Grid & Card Styles --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+  
+.card {
+    background: rgba(39, 39, 42, 0.7);
+    border: 1px solid rgba(63, 63, 70, 0.7);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+  
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+  
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+  
+.icon-wrapper {
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+    padding: 0.6rem;
+    border-radius: 0.5rem;
+}
+  
+.icon-wrapper svg { width: 22px; height: 22px; }
+  
+.highlight {
+    font-size: 0.75rem;
+    border: 1px solid #52525b;
+    padding: 0.125rem 0.6rem;
+    border-radius: 9999px;
+    background-color: rgba(82, 82, 91, 0.3);
+    color: #e4e4e7;
+}
+  
+.stat-label {
+    font-size: 0.75rem;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+  
+.stat-value { 
+    font-size: 1.6rem; 
+    font-weight: 700; 
+    line-height: 1.2; 
+    color: #ffffff; 
+}
+  
+.stat-subtitle { font-size: 0.875rem; color: #a1a1aa; margin-top: 0.25rem; }
+  
+/* --- Chip Section Styles --- */
+.chip-section { 
+    margin-top: 2rem; 
+    padding: 1.5rem;
+}
+  
+.chip-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+}
+  
+.chip-title svg { color: #a855f7; }
+  
+.chip-item { margin-bottom: 1rem; }
+  
+.chip-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 0.35rem;
+}
+  
+.chip-name { font-weight: 500; }
+.chip-count { color: #d4d4d8; font-weight: 600; }
+  
+.progress-bar {
+    height: 0.6rem;
+    background: #3f3f46;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+  
+.progress-fill {
+    height: 100%;
+    background: #a855f7;
+    border-radius: 9999px;
+    transition: width 0.5s ease;
+}
+
+/* --- Loading State (Skeleton) Styles --- */
+@keyframes pulse {
+    0% { background-color: rgba(63, 63, 70, 0.5); }
+    50% { background-color: rgba(63, 63, 70, 0.7); }
+    100% { background-color: rgba(63, 63, 70, 0.5); }
+}
+
+.skeleton {
+    animation: pulse 1.5s infinite ease-in-out;
+    border-radius: 4px;
+}
+
+.skeleton-line {
+    height: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-value {
+    height: 1.5rem;
+    width: 70%;
+    margin-bottom: 0.25rem;
+}
+
+/* --- Media Queries for Mobile Experience --- */
+@media (max-width: 600px) {
+    .header { margin-bottom: 1.5rem; }
+    .title { font-size: 1.5rem; }
+    .subtitle { font-size: 0.8rem; }
+    .stats-grid { 
+        gap: 0.75rem;
+        grid-template-columns: 1fr; 
+    }
+    .card { padding: 1rem; }
+    .stat-value { font-size: 1.4rem; }
+    .chip-title { font-size: 1.1rem; margin-bottom: 1rem; }
+}
