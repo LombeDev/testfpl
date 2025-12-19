@@ -1,90 +1,288 @@
-<!-- ============================================ -->
-<!--                 Navigation                   -->
-<!-- ============================================ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Team Rating | Fantasy Football Re-engineered</title>
+    <style>
+        :root {
+            --pitch-green: #27ae60;
+            --pitch-line: rgba(255, 255, 255, 0.4);
+            --dark-bg: #1a1a1a;
+            --accent: #3498db;
+            --gold: #f1c40f;
+        }
 
-<header id="cs-navigation">
-    <div class="cs-container">
-        <!--Nav Logo-->
-        <!--Logo is turned white in the css with a filter on dark mode-->
-        <a href="" class="cs-logo" aria-label="back to home">
-            <img src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/Graphics/day-care.svg" alt="logo" width="210" height="29" aria-hidden="true" decoding="async">
-        </a>
-        <!--Navigation List-->
-        <nav class="cs-nav" role="navigation">
-            <!--Mobile Nav Toggle-->
-            <button class="cs-toggle" aria-label="mobile menu toggle">
-                <div class="cs-box" aria-hidden="true">
-                    <span class="cs-line cs-line1" aria-hidden="true"></span>
-                    <span class="cs-line cs-line2" aria-hidden="true"></span>
-                    <span class="cs-line cs-line3" aria-hidden="true"></span>
-                </div>
-            </button>
-            <!-- We need a wrapper div so we can set a fixed height on the cs-ul in case the nav list gets too long from too many dropdowns being opened and needs to have an overflow scroll. This wrapper acts as the background so it can go the full height of the screen and not cut off any overflowing nav items while the cs-ul stops short of the bottom of the screen, which keeps all nav items in view no matter how mnay there are-->
-            <div class="cs-ul-wrapper">
-                <ul id="cs-expanded" class="cs-ul" aria-expanded="false">
-                    <li class="cs-li">
-                        <a href="" class="cs-li-link cs-active">
-                            Home
-                        </a>
-                    </li>
-                    <li class="cs-li">
-                        <a href="" class="cs-li-link">
-                            About
-                        </a>
-                    </li>
-                    <!--Copy and paste this cs-dropdown list item and replace any .cs-li with this cs-dropdown group to make a new dropdown and it will work-->
-                    <li class="cs-li cs-dropdown" tabindex="0">
-                        <span class="cs-li-link">
-                            Services
-                            <img class="cs-drop-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Icons/down-gold.svg" alt="dropdown icon" width="15" height="15" decoding="async" aria-hidden="true">
-                        </span>
-                        <ul class="cs-drop-ul">
-                            <li class="cs-drop-li">
-                                <a href="" class="cs-li-link cs-drop-link">Registration</a>
-                            </li>
-                            <li class="cs-drop-li">
-                                <a href="" class="cs-li-link cs-drop-link">Our Classes</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="cs-li">
-                        <a href="" class="cs-li-link">
-                            Blog
-                        </a>
-                    </li>
-                    <li class="cs-li">
-                        <a href="" class="cs-li-link">
-                            Contact
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <div class="cs-contact-group">
-            <a href="tel:+84 1985 33 999" class="cs-phone">
-                <img class="cs-phone-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Icons/phone-1a.svg" alt="logo" width="24" height="24" aria-hidden="true" decoding="async">
-                +84 1985 33 999
-            </a>
-            <div class="cs-social">
-                <a href="" class="cs-social-link">
-                    <img class="cs-social-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/Icons/facebook-1a.svg" alt="logo" width="12" height="12" aria-hidden="true" decoding="async">
-                </a>
-                <a href="" class="cs-social-link">
-                    <img class="cs-social-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/Icons/twitter-1a.svg" alt="logo" width="12" height="12" aria-hidden="true" decoding="async">
-                </a>
-                <a href="" class="cs-social-link">
-                    <img class="cs-social-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/Icons/instagram1a.svg" alt="logo" width="12" height="12" aria-hidden="true" decoding="async">
-                </a>
-                <a href="" class="cs-social-link">
-                    <img class="cs-social-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/Icons/youtube1a.svg" alt="logo" width="12" height="12" aria-hidden="true" decoding="async">
-                </a>
-            </div>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 5px; color: var(--gold); }
+        p.subtitle { color: #888; margin-bottom: 20px; }
+
+        /* PITCH STYLES */
+        .pitch {
+            background: var(--pitch-green);
+            background-image: 
+                linear-gradient(var(--pitch-line) 2px, transparent 2px),
+                linear-gradient(90deg, var(--pitch-line) 2px, transparent 2px);
+            background-size: 100% 50%, 50% 100%;
+            border: 5px solid white;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 20px 10px;
+            height: 550px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .position-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .player-slot {
+            width: 85px;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 3px solid var(--gold);
+            border-radius: 4px;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .player-slot label {
+            font-size: 10px;
+            font-weight: bold;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+
+        select {
+            width: 100%;
+            background: transparent;
+            color: white;
+            border: none;
+            font-size: 11px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* RESULTS DASHBOARD */
+        .dashboard {
+            margin-top: 30px;
+            padding: 20px;
+            background: #222;
+            border-radius: 15px;
+            border: 1px solid #444;
+        }
+
+        .score-circle {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+        }
+
+        .insight-box {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid var(--accent);
+            font-size: 14px;
+            min-height: 40px;
+        }
+
+        /* BUTTONS */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 25px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-main { background: var(--accent); color: white; }
+        .btn-sec { background: #444; color: white; }
+        button:hover { transform: scale(1.05); }
+        button:active { transform: scale(0.95); }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>AI TEAM RATER</h1>
+    <p class="subtitle">Powered by Predictive Analytics Engine</p>
+
+    <div class="pitch">
+        <div class="position-row">
+            <div class="player-slot" data-pos="GKP"><label>GK</label></div>
         </div>
-        <!--Dark Mode toggle, uncomment button code if you want to enable a dark mode toggle-->
-        <!-- <button id="dark-mode-toggle" aria-label="dark mode toggle">
-            <svg class="cs-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" style="enable-background:new 0 0 480 480" xml:space="preserve"><path d="M459.782 347.328c-4.288-5.28-11.488-7.232-17.824-4.96-17.76 6.368-37.024 9.632-57.312 9.632-97.056 0-176-78.976-176-176 0-58.4 28.832-112.768 77.12-145.472 5.472-3.712 8.096-10.4 6.624-16.832S285.638 2.4 279.078 1.44C271.59.352 264.134 0 256.646 0c-132.352 0-240 107.648-240 240s107.648 240 240 240c84 0 160.416-42.688 204.352-114.176 3.552-5.792 3.04-13.184-1.216-18.496z"/></svg>
-            <img class="cs-sun" aria-hidden="true" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Icons%2Fsun.svg" decoding="async" alt="moon" width="15" height="15">
-        </button> -->
+        <div class="position-row">
+            <div class="player-slot" data-pos="DEF"><label>DEF</label></div>
+            <div class="player-slot" data-pos="DEF"><label>DEF</label></div>
+            <div class="player-slot" data-pos="DEF"><label>DEF</label></div>
+            <div class="player-slot" data-pos="DEF"><label>DEF</label></div>
+        </div>
+        <div class="position-row">
+            <div class="player-slot" data-pos="MID"><label>MID</label></div>
+            <div class="player-slot" data-pos="MID"><label>MID</label></div>
+            <div class="player-slot" data-pos="MID"><label>MID</label></div>
+            <div class="player-slot" data-pos="MID"><label>MID</label></div>
+        </div>
+        <div class="position-row">
+            <div class="player-slot" data-pos="FWD"><label>FWD</label></div>
+            <div class="player-slot" data-pos="FWD"><label>FWD</label></div>
+        </div>
     </div>
-</header>
-                                
+
+    <div class="button-group">
+        <button class="btn-main" onclick="runAITeamRating()">Analyze Team</button>
+        <button class="btn-sec" onclick="resetPitch()">Reset</button>
+    </div>
+
+    <div id="results" class="dashboard hidden">
+        <div id="ai-score" class="score-circle">0</div>
+        <div style="font-size: 12px; color: #888; margin-top: -5px;">AI RATING / 100</div>
+        <p id="predicted-points">Projected: 0 pts</p>
+        <div class="insight-box" id="ai-insight">Selecting players...</div>
+        <button class="btn-sec" style="margin-top:10px; width:100%" onclick="shareRating()">Share Rating</button>
+    </div>
+</div>
+
+<script>
+    // 1. DATA: Player Database
+    const playerDatabase = [
+        { name: "Haaland", pos: "FWD", team: "MCI", xp: 9.5, form: 8.6, fdr: 2, price: 15.2 },
+        { name: "Salah", pos: "MID", team: "LIV", xp: 8.8, form: 7.4, fdr: 3, price: 12.6 },
+        { name: "Saka", pos: "MID", team: "ARS", xp: 7.5, form: 6.2, fdr: 2, price: 10.1 },
+        { name: "Palmer", pos: "MID", team: "CHE", xp: 8.2, form: 9.1, fdr: 3, price: 10.9 },
+        { name: "Foden", pos: "MID", team: "MCI", xp: 7.0, form: 5.5, fdr: 2, price: 9.2 },
+        { name: "Watkins", pos: "FWD", team: "AVL", xp: 6.5, form: 5.2, fdr: 4, price: 9.0 },
+        { name: "Isak", pos: "FWD", team: "NEW", xp: 7.2, form: 7.8, fdr: 3, price: 8.5 },
+        { name: "Gabriel", pos: "DEF", team: "ARS", xp: 4.5, form: 5.0, fdr: 2, price: 6.2 },
+        { name: "Alexander-Arnold", pos: "DEF", team: "LIV", xp: 5.2, form: 4.8, fdr: 3, price: 7.0 },
+        { name: "Gvardiol", pos: "DEF", team: "MCI", xp: 4.8, form: 6.2, fdr: 2, price: 6.0 },
+        { name: "Porro", pos: "DEF", team: "TOT", xp: 4.2, form: 4.5, fdr: 4, price: 5.5 },
+        { name: "Raya", pos: "GKP", team: "ARS", xp: 4.5, form: 6.0, fdr: 2, price: 5.5 },
+        { name: "Onana", pos: "GKP", team: "MUN", xp: 3.8, form: 4.2, fdr: 3, price: 5.0 },
+        { name: "Bowen", pos: "MID", team: "WHU", xp: 5.8, form: 5.0, fdr: 4, price: 7.5 },
+        { name: "Gordon", pos: "MID", team: "NEW", xp: 6.0, form: 5.8, fdr: 3, price: 7.4 },
+        { name: "Saliba", pos: "DEF", team: "ARS", xp: 4.3, form: 5.1, fdr: 2, price: 6.0 },
+        { name: "Burn", pos: "DEF", team: "NEW", xp: 3.5, form: 4.0, fdr: 3, price: 4.5 },
+        { name: "Wood", pos: "FWD", team: "NFO", xp: 5.5, form: 7.2, fdr: 2, price: 6.5 }
+    ];
+
+    // 2. LOGIC: Populate Selects
+    function init() {
+        const slots = document.querySelectorAll('.player-slot');
+        slots.forEach((slot, i) => {
+            const pos = slot.dataset.pos;
+            const select = document.createElement('select');
+            select.id = `slot-${i}`;
+            select.innerHTML = `<option value="">Select...</option>`;
+            
+            playerDatabase.filter(p => p.pos === pos).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.name;
+                opt.textContent = p.name;
+                select.appendChild(opt);
+            });
+            slot.appendChild(select);
+        });
+    }
+
+    // 3. LOGIC: The AI Algorithm
+    function runAITeamRating() {
+        const selects = document.querySelectorAll('.player-slot select');
+        const team = [];
+        
+        selects.forEach(s => {
+            if(s.value) team.push(playerDatabase.find(p => p.name === s.value));
+        });
+
+        if(team.length < 11) {
+            alert("Fill all 11 slots to run AI Analysis!");
+            return;
+        }
+
+        document.getElementById('results').classList.remove('hidden');
+
+        let totalXP = 0;
+        team.forEach(p => {
+            // AI weights: xP modified by form and difficulty
+            const fdrWeight = (6 - p.fdr) / 3; 
+            totalXP += (p.xp * (p.form / 5) * fdrWeight);
+        });
+
+        const rating = Math.min(99.4, (totalXP / 80) * 100).toFixed(1);
+        animateScore(rating);
+        document.getElementById('predicted-points').textContent = `Projected: ${totalXP.toFixed(1)} pts this GW`;
+        document.getElementById('ai-insight').textContent = getInsight(team);
+    }
+
+    function animateScore(target) {
+        let curr = 0;
+        const el = document.getElementById('ai-score');
+        const interval = setInterval(() => {
+            if(curr >= target) clearInterval(interval);
+            el.textContent = curr.toFixed(1);
+            curr += 1.5;
+            if(curr > target) el.textContent = target;
+        }, 20);
+    }
+
+    function getInsight(team) {
+        const avgFdr = team.reduce((acc, p) => acc + p.fdr, 0) / 11;
+        if(avgFdr > 3.2) return "AI Note: Fixtures are tough. Consider using a Wildcard.";
+        if(avgFdr < 2.5) return "AI Note: Elite fixture swing detected. High ceiling this week.";
+        return "AI Note: Solid team balance. Low variance expected.";
+    }
+
+    function resetPitch() {
+        document.querySelectorAll('select').forEach(s => s.value = "");
+        document.getElementById('results').classList.add('hidden');
+    }
+
+    async function shareRating() {
+        const score = document.getElementById('ai-score').textContent;
+        const text = `My Fantasy Team AI Rating is ${score}/100! 🚀`;
+        try {
+            await navigator.clipboard.writeText(text);
+            alert("Score copied to clipboard!");
+        } catch (err) { console.error(err); }
+    }
+
+    init();
+</script>
+
+</body>
+</html>
