@@ -1,0 +1,81 @@
+:root {
+    --fpl-purple: #37003c;
+    --fpl-green: #00ff87;
+    --pitch-green: #38ad70;
+    --text-dark: #1a1a1a;
+    --text-muted: #666;
+    --bg-light: #f5f5f7;
+    --border: #e2e8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, system-ui, sans-serif; background: #fff; color: var(--text-dark); overflow-x: hidden; }
+
+/* NAVBAR */
+.navbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: white; z-index: 1000;
+}
+.brand { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.5px; }
+.brand span { color: var(--fpl-green); }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.icon-btn { background: var(--bg-light); border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; }
+.divider { width: 1px; height: 20px; background: #ddd; margin: 0 4px; }
+.menu-icon { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 5px; }
+.menu-icon span { width: 20px; height: 2px; background: #000; }
+
+/* DRAWER */
+.drawer {
+    position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+    background: white; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+}
+.drawer.open { left: 0; }
+.backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: none; z-index: 1500;
+}
+.backdrop.active { display: block; }
+.drawer-header { display: flex; justify-content: space-between; padding: 20px; border-bottom: 1px solid #eee; }
+.drawer-links { list-style: none; padding: 20px; }
+.drawer-links li { padding: 15px 0; border-bottom: 1px solid #f9f9f9; }
+.drawer-links a { text-decoration: none; color: #333; font-weight: 600; display: flex; gap: 10px; }
+
+/* PITCH & JERSEY */
+.main-container { max-width: 500px; margin: 0 auto; padding: 10px; }
+.pitch-outer-wrap { background: #2d9e63; border-radius: 12px; padding: 15px; box-shadow: inset 0 0 40px rgba(0,0,0,0.1); }
+.pitch {
+    min-height: 420px; display: flex; flex-direction: column; justify-content: space-around;
+    background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 100% 15%;
+}
+.row { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+.slot { display: flex; flex-direction: column; align-items: center; width: 85px; }
+
+.jersey {
+    width: 38px; height: 34px; background: var(--team-color, #fff);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+}
+.jersey.arsenal { --team-color: #EF0107; border-top: 3px solid #fff; }
+.player-name-tag { background: var(--fpl-purple); color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 2px; margin-top: 4px; width: 100%; text-align: center; }
+.player-match-tag { background: white; color: #333; font-size: 9px; font-weight: bold; padding: 1px 4px; border: 1px solid #eee; width: 100%; text-align: center; }
+
+/* STATS GRID (PHOTO 2 MATCH) */
+.stats-summary { display: grid; grid-template-columns: repeat(4, 1fr); margin: 20px 0; padding: 20px 0; border-top: 1px solid var(--border); }
+.stat-box { text-align: center; border-right: 1px solid var(--border); }
+.stat-box:last-child { border-right: none; }
+.stat-label { display: block; font-size: 9px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+.stat-value { display: block; font-size: 26px; font-weight: 900; color: #111; }
+
+/* CONTROLS */
+.btn-main { width: 100%; background: var(--fpl-purple); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; }
+.btn-group { display: flex; gap: 10px; }
+.btn-sec { flex: 2; background: var(--fpl-green); color: var(--fpl-purple); border: none; border-radius: 8px; font-weight: bold; }
+.btn-reset { flex: 1; background: #eee; border: none; padding: 12px; border-radius: 8px; font-weight: bold; }
+
+.ai-card { background: var(--bg-light); border-left: 5px solid var(--fpl-green); padding: 15px; margin-top: 20px; border-radius: 4px; }
+.verdict-label { font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
+
+.ticker { background: #000; color: var(--fpl-green); padding: 8px; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 10px; border-radius: 4px; }
+.status-bar { display: flex; justify-content: space-between; padding: 10px; font-size: 12px; font-weight: bold; background: #f9f9f9; border-radius: 4px; margin-bottom: 10px; }
