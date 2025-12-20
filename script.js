@@ -1,22 +1,25 @@
-document.getElementById('change-id-btn').addEventListener('click', function() {
-    const fplId = document.getElementById('fpl-id').value;
+// Drawer Selectors
+const menuIcon = document.querySelector('.menu-icon');
+const closeBtn = document.getElementById('close-btn');
+const drawer = document.getElementById('side-drawer');
+const backdrop = document.getElementById('backdrop');
 
-    if (fplId.trim() === "") {
-        alert("Please enter a valid FPL ID");
+// Drawer Functions
+const toggleMenu = (isOpen) => {
+    drawer.classList.toggle('open', isOpen);
+    backdrop.classList.toggle('active', isOpen);
+};
+
+menuIcon.addEventListener('click', () => toggleMenu(true));
+closeBtn.addEventListener('click', () => toggleMenu(false));
+backdrop.addEventListener('click', () => toggleMenu(false));
+
+// Form Logic
+document.getElementById('change-id-btn').addEventListener('click', () => {
+    const idVal = document.getElementById('fpl-id').value;
+    if(idVal) {
+        alert("Loading data for FPL ID: " + idVal);
     } else {
-        console.log("Fetching data for ID:", fplId);
-        // Here you would typically redirect or call an FPL API
-        alert("ID Submitted: " + fplId);
+        alert("Please enter an ID first.");
     }
 });
-async function updateRank() {
-    // This typically requires fetching the 'entry' endpoint
-    // and comparing live points against the 'league' standings
-    // For this example, we'll simulate the update
-    document.getElementById('rank-value').innerText = "124,502";
-    document.getElementById('mini-league-pos').innerText = "League Pos: 2nd";
-}
-
-// Update every 60 seconds
-setInterval(updateLiveStats, 60000);
-updateLiveStats();
