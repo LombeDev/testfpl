@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KOPALA FPL | Football Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="football.css"> </head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <button class="menu-icon" id="open-drawer">
+                <span></span><span></span><span></span>
+            </button>
+            <h1 class="brand">KOPALA <span>FPL</span></h1>
+        </div>
+        <div class="nav-right">
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn"><i class="fa-solid fa-user"></i></button>
+        </div>
+    </nav>
+
+    <div class="league-nav-container">
+        <div class="league-nav-bar">
+            <button class="league-btn active" onclick="switchLeague('PL')">EPL</button>
+            <button class="league-btn" onclick="switchLeague('PD')">La Liga</button>
+            <button class="league-btn" onclick="switchLeague('SA')">Serie A</button>
+            <button class="league-btn" onclick="switchLeague('BL1')">Bundesliga</button>
+            <button class="league-btn" onclick="switchLeague('FL1')">Ligue 1</button>
+            <button class="league-btn" onclick="switchLeague('CL')">UCL</button>
+            <button class="league-btn" onclick="switchLeague('DED')">Eredivisie</button>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <h1 id="section-title" class="page-title">English Premier League</h1>
+            
+            <div id="loader">Syncing Live Data...</div>
+
+            <div class="dashboard-grid">
+                <section class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-list-ol"></i> League Table</h2>
+                    </div>
+                    <div class="table-container">
+                        <table id="standings-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Club</th>
+                                    <th>W/D/L</th>
+                                    <th>GD</th>
+                                    <th>PTS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="standings-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-bullseye"></i> Top Scorers</h2>
+                    </div>
+                    <div class="table-container">
+                        <table id="scorers-table">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>G</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scorers-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="card full-width">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-calendar-days"></i> Upcoming Fixtures</h2>
+                    </div>
+                    <div id="fixtures-list" class="fixtures-grid"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <h1 class="logo">KOPALA<span>▲</span>FPL</h1>
+            <p class="tagline">Live Rank, Price Changes, and AI Scouting.</p>
+            
+            <div class="footer-links">
+                <div class="link-column">
+                    <h3>Leagues</h3>
+                    <ul>
+                        <li>EPL Standings</li>
+                        <li>Live Scores</li>
+                    </ul>
+                </div>
+                <div class="link-column">
+                    <h3>Tools</h3>
+                    <ul>
+                        <li>AI Team Analyzer</li>
+                        <li>Price Predictor</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 KOPALA FPL. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="football.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
