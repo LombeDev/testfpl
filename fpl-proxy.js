@@ -1,17 +1,23 @@
-const axios = require('axios'); // You may need to run 'npm install axios'
+// netlify/functions/fpl-proxy.js
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 exports.handler = async function(event, context) {
     try {
-        const response = await axios.get('https://fantasy.premierleague.com/api/event/current/live/');
+        const response = await fetch('https://fantasy.premierleague.com/api/bootstrap-static/');
+        const data = await response.json();
+
         return {
             statusCode: 200,
             headers: {
-                "Access-Control-Allow-Origin": "*", // This allows your frontend to see the data
+                "Access-Control-Allow-Origin": "*", // Allows your frontend to access it
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(response.data)
+            body: JSON.stringify(data)
         };
     } catch (error) {
-        return { statusCode: 500, body: error.toString() };
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Failed fetching FPL data' })
+        };
     }
-};
+}
