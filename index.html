@@ -3,212 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPL Dashboard - Team of the Week</title>
+    <title>FPL Stats Dashboard</title>
     <style>
+        /* CSS Variables for FPL Branding */
         :root {
-            --pitch-green: #2e7d32;
             --fpl-purple: #37003c;
             --fpl-cyan: #00ff85;
+            --fpl-pink: #ff005a;
+            --bg-light: #f8f9fa;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-light);
             margin: 0;
             padding: 20px;
+            color: #333;
         }
 
-        h1, h2 { text-align: center; color: var(--fpl-purple); }
-
-        .dashboard-container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-            max-width: 1200px;
+        .container {
+            max-width: 1000px;
             margin: 0 auto;
         }
 
-        /* Pitch Styles */
-        .pitch {
-            background-color: var(--pitch-green);
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.1) 2px, transparent 2px),
-                linear-gradient(90deg, rgba(255,255,255,0.1) 2px, transparent 2px);
-            background-size: 50px 50px;
-            height: 600px;
-            position: relative;
-            border: 5px solid white;
-            border-radius: 8px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        .player-slot {
-            position: absolute;
-            width: 80px;
+        header {
             text-align: center;
-            transform: translateX(-50%);
-        }
-
-        .player-slot img {
-            width: 50px;
-            height: auto;
-            filter: drop-shadow(2px 4px 6px black);
-        }
-
-        .player-info {
+            padding: 20px 0;
             background: var(--fpl-purple);
             color: white;
-            font-size: 11px;
-            padding: 2px 5px;
-            border-radius: 3px;
-            margin-top: 5px;
+            border-radius: 8px;
+            margin-bottom: 30px;
         }
 
-        /* Sidebar Styles */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
         }
 
+        /* Card Styles */
         .card {
             background: white;
-            padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 25px;
         }
 
+        h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--fpl-cyan);
+            padding-bottom: 10px;
+            color: var(--fpl-purple);
+        }
+
+        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
         }
 
-        th { text-align: left; color: #666; border-bottom: 2px solid var(--fpl-cyan); }
-        td { padding: 8px 0; border-bottom: 1px solid #eee; }
+        th {
+            text-align: left;
+            font-size: 0.8rem;
+            color: #777;
+            text-transform: uppercase;
+            padding: 10px 5px;
+        }
 
-        @media (max-width: 900px) {
-            .dashboard-container { grid-template-columns: 1fr; }
+        td {
+            padding: 12px 5px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95rem;
+        }
+
+        .pos-badge {
+            font-weight: bold;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #eee;
+        }
+
+        .player-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-img {
+            width: 35px;
+            height: 35px;
+            background: #f0f0f0;
+            border-radius: 50%;
+        }
+
+        .points-highlight {
+            font-weight: bold;
+            color: var(--fpl-pink);
+        }
+
+        /* Loading State */
+        #loading {
+            text-align: center;
+            padding: 50px;
+            font-style: italic;
+        }
+
+        @media (max-width: 800px) {
+            .main-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <h1>FPL Insights</h1>
-<section class="card">
-    <h2>Team of the Week (List View)</h2>
-    <table class="totw-list-table">
-        <thead>
-            <tr>
-                <th>Pos</th>
-                <th>Player</th>
-                <th>Team</th>
-                <th>Points</th>
-            </tr>
-        </thead>
-        <tbody id="totw-list-body">
-            </tbody>
-    </table>
-</section>
+<div class="container">
+    <header>
+        <h1>FPL Insight Dashboard</h1>
+        <p>Real-time Fantasy Premier League Data</p>
+    </header>
+
+    <div id="loading">Fetching latest FPL data...</div>
+
+    <div class="main-grid" id="dashboard" style="display: none;">
+        <div class="content-area">
+            <section class="card">
+                <h2>Team of the Week (Top Scorers)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Player</th>
+                            <th>Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="totw-list"></tbody>
+                </table>
+            </section>
+        </div>
 
         <aside class="sidebar">
-            <div class="card">
-                <h3>5 Most Valuable Teams</h3>
-                <table id="teams-table">
-                    <thead><tr><th>Team</th><th>Value</th></tr></thead>
-                    <tbody id="teams-body"></tbody>
+            <section class="card">
+                <h2>Top 5 Most Valuable Teams</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>Strength</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teams-list"></tbody>
                 </table>
-            </div>
+            </section>
 
-            <div class="card">
-                <h3>Top 5 Global Leagues</h3>
-                <table id="leagues-table">
-                    <thead><tr><th>League Name</th><th>Average</th></tr></thead>
-                    <tbody id="leagues-body"></tbody>
+            <section class="card">
+                <h2>Top 5 Leagues</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>League</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leagues-list">
+                        <tr><td>Overall</td><td>High</td></tr>
+                        <tr><td>Supporters</td><td>Med</td></tr>
+                        <tr><td>Public</td><td>Med</td></tr>
+                        <tr><td>H2H</td><td>High</td></tr>
+                        <tr><td>Classic</td><td>High</td></tr>
+                    </tbody>
                 </table>
-            </div>
+            </section>
         </aside>
     </div>
+</div>
 
-    <script>
-        // Note: Using a CORS proxy to bypass FPL's browser restrictions
-        const PROXY = "https://cors-anywhere.herokuapp.com/";
-        const FPL_API = "https://fantasy.premierleague.com/api/bootstrap-static/";
+<script>
+    // FPL API Endpoint via CORS Proxy
+    const API_URL = "https://cors-anywhere.herokuapp.com/https://fantasy.premierleague.com/api/bootstrap-static/";
 
-        async function initDashboard() {
-            try {
-                const response = await fetch(FPL_API);
-                const data = await response.json();
-
-                renderValuableTeams(data.teams);
-                renderTOTW(data.elements);
-                renderTopLeagues(); // Mock data as Leagues requires a separate endpoint
-            } catch (err) {
-                console.error("Error fetching FPL data. If you see a CORS error, you may need to visit https://cors-anywhere.herokuapp.com/corsdemo to activate the temporary demo proxy.", err);
-            }
-        }
-
-        function renderValuableTeams(teams) {
-            // Sorting teams by "strength" as a proxy for value
-            const sorted = [...teams].sort((a, b) => b.strength - a.strength).slice(0, 5);
-            const tbody = document.getElementById('teams-body');
+    async function fetchData() {
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error("Proxy access required");
             
-            sorted.forEach(team => {
-                tbody.innerHTML += `<tr><td>${team.name}</td><td>${team.strength}</td></tr>`;
-            });
-        }
-
-        function renderTOTW(players) {
-            const pitch = document.getElementById('pitch');
+            const data = await response.json();
             
-            // Simplified TOTW logic: pick top scorers by position (Gk:1, Def:4, Mid:4, Fwd:2)
-            const getTop = (type, limit) => players
-                .filter(p => p.element_type === type)
-                .sort((a, b) => b.event_points - a.event_points)
-                .slice(0, limit);
-
-            const totw = [
-                ...getTop(1, 1), // GK
-                ...getTop(2, 4), // DEF
-                ...getTop(3, 4), // MID
-                ...getTop(4, 2)  // FWD
-            ];
-
-            // Define coordinates (x%, y%) for 4-4-2 formation
-            const coords = [
-                {x: 50, y: 85}, // GK
-                {x: 20, y: 65}, {x: 40, y: 65}, {x: 60, y: 65}, {x: 80, y: 65}, // DEF
-                {x: 20, y: 40}, {x: 40, y: 40}, {x: 60, y: 40}, {x: 80, y: 40}, // MID
-                {x: 35, y: 15}, {x: 65, y: 15}  // FWD
-            ];
-
-            totw.forEach((player, i) => {
-                const pos = coords[i];
-                pitch.innerHTML += `
-                    <div class="player-slot" style="left: ${pos.x}%; top: ${pos.y}%">
-                        <img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p${player.code}.png" alt="player">
-                        <div class="player-info">${player.second_name}<br><b>${player.event_points} pts</b></div>
-                    </div>
-                `;
-            });
+            renderTOTW(data.elements);
+            renderValuableTeams(data.teams);
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'grid';
+        } catch (error) {
+            document.getElementById('loading').innerHTML = `
+                <div style="color: red;">
+                    <h3>CORS Access Required</h3>
+                    <p>FPL blocks direct browser requests. Please visit 
+                    <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">CORS Anywhere</a> 
+                    and click "Request temporary access", then refresh this page.</p>
+                </div>`;
         }
+    }
 
-        function renderTopLeagues() {
-            // Mock data: Real league data usually requires specific league IDs 
-            const leagues = [
-                {name: "English Premier League", avg: 65},
-                {name: "La Liga", avg: 58},
-                {name: "Bundesliga", avg: 55},
-                {name: "Serie A", avg: 52},
-                {name: "Ligue 1", avg: 48}
-            ];
-            const tbody = document.getElementById('leagues-body');
-            leagues.forEach(l => {
-                tbody.innerHTML += `<tr><td>${l.name}</td><td>${l.avg}</td></tr>`;
-            });
-        }
+    function renderTOTW(players) {
+        const list = document.getElementById('totw-list');
+        
+        // Sorting players to find the dream team (4-4-2 format)
+        const gk = players.filter(p => p.element_type === 1).sort((a,b) => b.event_points - a.event_points).slice(0, 1);
+        const def = players.filter(p => p.element_type === 2).sort((a,b) => b.event_points - a.event_points).slice(0, 4);
+        const mid = players.filter(p => p.element_type === 3).sort((a,b) => b.event_points - a.event_points).slice(0, 4);
+        const fwd = players.filter(p => p.element_type === 4).sort((a,b) => b.event_points - a.event_points).slice(0, 2);
 
-        initDashboard();
-    </script>
+        const best11 = [...gk, ...def, ...mid, ...fwd];
+        const posLabels = ["GK", "DEF", "DEF", "DEF", "DEF", "MID", "MID", "MID", "MID", "FWD", "FWD"];
+
+        best11.forEach((player, i) => {
+            const row = `
+                <tr>
+                    <td><span class="pos-badge">${posLabels[i]}</span></td>
+                    <td>
+                        <div class="player-row">
+                            <img class="player-img" src="https://resources.premierleague.com/premierleague/photos/players/40x40/p${player.code}.png" onerror="this.src='https://via.placeholder.com/40'">
+                            <span>${player.web_name}</span>
+                        </div>
+                    </td>
+                    <td class="points-highlight">${player.event_points}</td>
+                </tr>
+            `;
+            list.innerHTML += row;
+        });
+    }
+
+    function renderValuableTeams(teams) {
+        const list = document.getElementById('teams-list');
+        // Sorting teams by strength/value
+        const topTeams = [...teams].sort((a,b) => b.strength - a.strength).slice(0, 5);
+
+        topTeams.forEach(team => {
+            list.innerHTML += `
+                <tr>
+                    <td><strong>${team.name}</strong></td>
+                    <td>${team.strength}</td>
+                </tr>
+            `;
+        });
+    }
+
+    // Initialize
+    fetchData();
+</script>
+
 </body>
 </html>
