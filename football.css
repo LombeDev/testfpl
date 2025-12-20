@@ -1,0 +1,185 @@
+/* --- 1. CORE VARIABLES (Matching Previous Pages) --- */
+:root {
+    --bg-light: #ffffff;
+    --fpl-green: #00ff87;
+    --fpl-purple: #37003c;
+    --border-light: #e2e8f0;
+    --text-main: #1a1a1a;
+    --text-muted: #666666;
+    --accent-blue: #007bff;
+}
+
+/* --- 2. GLOBAL FOUNDATION --- */
+html, body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+}
+
+/* --- 3. NAVBAR (OneFootball Style Consistency) --- */
+header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-light);
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.logo { 
+    font-size: 1.2rem; 
+    font-weight: 900; 
+    color: #000; 
+    text-decoration: none;
+}
+.highlight { color: var(--fpl-green); }
+
+/* Hamburger Bars Color Update */
+.bar {
+    width: 100%;
+    height: 2px;
+    background-color: #000;
+    transition: 0.3s;
+}
+
+/* --- 4. GRID & CARDS (Clean White Style) --- */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 20px;
+    /* Soft shadow like OneFootball */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.card h2 {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    color: var(--fpl-purple);
+}
+
+/* --- 5. COMPACT TABLES (FPL List Style) --- */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+thead th {
+    background-color: #f8fafc;
+    padding: 12px 8px;
+    border-bottom: 2px solid var(--border-light);
+    color: var(--text-muted);
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Zebra striping for better readability on mobile */
+tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.pts { 
+    font-weight: 900; 
+    color: var(--text-main); 
+}
+
+/* --- 6. LEAGUE BUTTONS (Horizontal Scroll) --- */
+.league-nav-bar {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 10px 0 20px 0;
+    scrollbar-width: none;
+}
+
+.league-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 90px;
+    padding: 12px;
+    background: #f1f5f9;
+    color: var(--text-main);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    transition: 0.2s;
+}
+
+.league-btn:active, .league-btn.active {
+    background: var(--fpl-purple);
+    color: #fff;
+}
+
+/* --- 7. MOBILE OPTIMIZATION --- */
+@media (max-width: 768px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    
+    table { font-size: 0.75rem; }
+    
+    .team-name {
+        max-width: 110px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+        font-weight: 600;
+    }
+
+    .crest {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* Loader Style */
+#loader { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    color: #fff; 
+    background: var(--fpl-purple); 
+    padding: 8px 16px; 
+    border-radius: 20px; 
+    font-size: 0.75rem;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
