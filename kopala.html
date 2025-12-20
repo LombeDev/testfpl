@@ -3,42 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOPALA FPL | Standings</title>
+    <title>KOPALA FPL PRO</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-      <link rel="stylesheet" href="kopala.css">
 </head>
 <body>
 
     <nav class="navbar">
         <div class="nav-left">
-            <button class="menu-icon"><span></span><span></span><span></span></button>
-            <h1 class="brand">KOPALA <span>FPL</span></h1>
+            <h1 class="brand">KOPALA <span>PRO</span></h1>
         </div>
         <div class="nav-right">
-            <button id="refresh-league" class="icon-btn"><i class="fa-solid fa-rotate"></i></button>
+            <span id="active-gw-label">GW --</span>
+            <button id="refresh-btn" class="icon-btn"><i class="fa-solid fa-sync"></i></button>
         </div>
     </nav>
 
     <main class="main-container">
-        <header class="page-header">
-            <h1 class="page-title">Mini-League Analyzer</h1>
-            <p class="subtitle">Real-time standings for the Kopala FPL Invitational.</p>
-        </header>
-
         <div class="card table-card">
-            <div class="card-header-accent">
-                <span><i class="fa-solid fa-trophy"></i> Kopala FPL Leaderboard</span>
-            </div>
             <div class="table-container">
-                <table id="league-analyzer-table">
+                <table id="league-table">
                     <thead>
                         <tr>
-                            <th data-sort="rank">Rank</th>
-                            <th data-sort="manager">Manager</th>
-                            <th data-sort="team">Team Name</th>
-                            <th data-sort="gw">GW Pts</th>
-                            <th data-sort="total">Total Pts</th>
+                            <th>#</th>
+                            <th>Manager & Team</th>
+                            <th>GW</th>
+                            <th>TOT</th>
+                            <th>CHIP</th>
+                            <th>CAPTAIN</th>
+                            <th>OVR</th>
+                            <th>VAL</th>
                         </tr>
                     </thead>
                     <tbody id="league-body">
@@ -49,12 +43,10 @@
     </main>
 
     <div id="loading-overlay">
-        <div class="loader-content">
-            <div class="fpl-spinner"></div>
-            <p>Syncing Kopala League Data...</p>
-        </div>
+        <div class="fpl-spinner"></div>
+        <p>Analyzing Kopala Managers...</p>
     </div>
 
-    <script src="kopala.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
