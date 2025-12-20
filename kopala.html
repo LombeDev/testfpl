@@ -3,41 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOPALA FPL | League & Deadline</title>
+    <title>KOPALA FPL | Mini League</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="kopala.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="kopala.css">
 </head>
 <body>
 
     <nav class="navbar">
         <div class="nav-left">
-            <button class="menu-icon"><span></span><span></span><span></span></button>
             <h1 class="brand">KOPALA <span>FPL</span></h1>
         </div>
-       
+        <div class="nav-right">
+            <button id="update-analyzer-btn" class="refresh-btn">
+                <i class="fa-solid fa-rotate"></i> Refresh
+            </button>
+        </div>
     </nav>
 
     <main class="main-container">
-        
-        <section class="deadline-section card">
-            <div class="deadline-header">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>Next Deadline Countdown</span>
-            </div>
-            <div id="countdown-timer" class="timer-large">Loading...</div>
-            <p class="timer-sub">Official FPL Transfer Deadline</p>
-        </section>
-
         <div class="section-header">
-            <h2 class="page-title">KOPALA FPL Mini-League</h2>
-            <div class="header-actions">
+            <h2 class="page-title">League Standings</h2>
+            <div class="view-selector">
                 <select id="analyzer-view-filter" class="filter-select">
-                    <option value="current">Overall Standings</option>
-                    <option value="transfers">Transfer Activity</option>
+                    <option value="current">Overall Points</option>
+                    <option value="transfers">Xfer Activity</option>
                     <option value="value">Team Value</option>
                 </select>
-                <button id="update-analyzer-btn" class="icon-btn-round"><i class="fa-solid fa-rotate"></i></button>
             </div>
         </div>
 
@@ -51,9 +43,8 @@
                             <th data-sort="team-name">Team <i class="fa-solid fa-sort"></i></th>
                             <th data-sort="gw-points">GW <i class="fa-solid fa-sort"></i></th>
                             <th data-sort="total-points">Total <i class="fa-solid fa-sort"></i></th>
-                            <th data-sort="transfers">Xfers <i class="fa-solid fa-sort"></i></th>
-                            <th data-sort="value">Value <i class="fa-solid fa-sort"></i></th>
-                            <th data-sort="orank">Overall <i class="fa-solid fa-sort"></i></th>
+                            <th data-sort="transfers">Xfers</th>
+                            <th data-sort="value">Value</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -66,7 +57,7 @@
     <div id="loading-overlay">
         <div class="loader-content">
             <div class="fpl-spinner"></div>
-            <p>Syncing Kopala Data...</p>
+            <p>Fetching Kopala Standings...</p>
         </div>
     </div>
 
