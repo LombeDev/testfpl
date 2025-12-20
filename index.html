@@ -2,30 +2,205 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FPL DEFCON & Live Rank</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Dashboard - Team of the Week</title>
+    <style>
+        :root {
+            --pitch-green: #2e7d32;
+            --fpl-purple: #37003c;
+            --fpl-cyan: #00ff85;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 { text-align: center; color: var(--fpl-purple); }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Pitch Styles */
+        .pitch {
+            background-color: var(--pitch-green);
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.1) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(255,255,255,0.1) 2px, transparent 2px);
+            background-size: 50px 50px;
+            height: 600px;
+            position: relative;
+            border: 5px solid white;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .player-slot {
+            position: absolute;
+            width: 80px;
+            text-align: center;
+            transform: translateX(-50%);
+        }
+
+        .player-slot img {
+            width: 50px;
+            height: auto;
+            filter: drop-shadow(2px 4px 6px black);
+        }
+
+        .player-info {
+            background: var(--fpl-purple);
+            color: white;
+            font-size: 11px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th { text-align: left; color: #666; border-bottom: 2px solid var(--fpl-cyan); }
+        td { padding: 8px 0; border-bottom: 1px solid #eee; }
+
+        @media (max-width: 900px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard">
-        <header>
-            <h1>FPL Real-Time Tracker</h1>
-            <div id="live-indicator">LIVE UPDATING</div>
-        </header>
 
-        <section class="stats-container">
-            <div class="card defcon">
-                <h2>DEFCON Points</h2>
-                <div id="defcon-value">0</div>
-                <p>Recoveries, Tackles, Clearances</p>
-            </div>
+    <h1>FPL Insights</h1>
 
-            <div class="card rank">
-                <h2>Live Rank</h2>
-                <div id="rank-value">Loading...</div>
-                <p id="mini-league-pos">League Pos: --</p>
-            </div>
+    <div class="dashboard-container">
+        <section>
+            <h2>Team of the Week (Top Scorers)</h2>
+            <div class="pitch" id="pitch">
+                </div>
         </section>
+
+        <aside class="sidebar">
+            <div class="card">
+                <h3>5 Most Valuable Teams</h3>
+                <table id="teams-table">
+                    <thead><tr><th>Team</th><th>Value</th></tr></thead>
+                    <tbody id="teams-body"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Top 5 Global Leagues</h3>
+                <table id="leagues-table">
+                    <thead><tr><th>League Name</th><th>Average</th></tr></thead>
+                    <tbody id="leagues-body"></tbody>
+                </table>
+            </div>
+        </aside>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        // Note: Using a CORS proxy to bypass FPL's browser restrictions
+        const PROXY = "https://cors-anywhere.herokuapp.com/";
+        const FPL_API = "https://fantasy.premierleague.com/api/bootstrap-static/";
+
+        async function initDashboard() {
+            try {
+                const response = await fetch(FPL_API);
+                const data = await response.json();
+
+                renderValuableTeams(data.teams);
+                renderTOTW(data.elements);
+                renderTopLeagues(); // Mock data as Leagues requires a separate endpoint
+            } catch (err) {
+                console.error("Error fetching FPL data. If you see a CORS error, you may need to visit https://cors-anywhere.herokuapp.com/corsdemo to activate the temporary demo proxy.", err);
+            }
+        }
+
+        function renderValuableTeams(teams) {
+            // Sorting teams by "strength" as a proxy for value
+            const sorted = [...teams].sort((a, b) => b.strength - a.strength).slice(0, 5);
+            const tbody = document.getElementById('teams-body');
+            
+            sorted.forEach(team => {
+                tbody.innerHTML += `<tr><td>${team.name}</td><td>${team.strength}</td></tr>`;
+            });
+        }
+
+        function renderTOTW(players) {
+            const pitch = document.getElementById('pitch');
+            
+            // Simplified TOTW logic: pick top scorers by position (Gk:1, Def:4, Mid:4, Fwd:2)
+            const getTop = (type, limit) => players
+                .filter(p => p.element_type === type)
+                .sort((a, b) => b.event_points - a.event_points)
+                .slice(0, limit);
+
+            const totw = [
+                ...getTop(1, 1), // GK
+                ...getTop(2, 4), // DEF
+                ...getTop(3, 4), // MID
+                ...getTop(4, 2)  // FWD
+            ];
+
+            // Define coordinates (x%, y%) for 4-4-2 formation
+            const coords = [
+                {x: 50, y: 85}, // GK
+                {x: 20, y: 65}, {x: 40, y: 65}, {x: 60, y: 65}, {x: 80, y: 65}, // DEF
+                {x: 20, y: 40}, {x: 40, y: 40}, {x: 60, y: 40}, {x: 80, y: 40}, // MID
+                {x: 35, y: 15}, {x: 65, y: 15}  // FWD
+            ];
+
+            totw.forEach((player, i) => {
+                const pos = coords[i];
+                pitch.innerHTML += `
+                    <div class="player-slot" style="left: ${pos.x}%; top: ${pos.y}%">
+                        <img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p${player.code}.png" alt="player">
+                        <div class="player-info">${player.second_name}<br><b>${player.event_points} pts</b></div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTopLeagues() {
+            // Mock data: Real league data usually requires specific league IDs 
+            const leagues = [
+                {name: "English Premier League", avg: 65},
+                {name: "La Liga", avg: 58},
+                {name: "Bundesliga", avg: 55},
+                {name: "Serie A", avg: 52},
+                {name: "Ligue 1", avg: 48}
+            ];
+            const tbody = document.getElementById('leagues-body');
+            leagues.forEach(l => {
+                tbody.innerHTML += `<tr><td>${l.name}</td><td>${l.avg}</td></tr>`;
+            });
+        }
+
+        initDashboard();
+    </script>
 </body>
 </html>
