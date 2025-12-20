@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOPALA FPL | AI Analysis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="side-drawer" class="drawer">
+        <div class="drawer-header">
+            <h2 class="brand">KOPALA <span>FPL</span></h2>
+            <button id="close-drawer-btn">&times;</button>
+        </div>
+        <ul class="drawer-links">
+            <li><a href="#"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="#"><i class="fa-solid fa-trophy"></i> Leagues</a></li>
+            <li><a href="#"><i class="fa-solid fa-chart-line"></i> Price Changes</a></li>
+            <li><a href="#"><i class="fa-solid fa-gear"></i> Settings</a></li>
+        </ul>
+    </div>
+    <div id="backdrop" class="backdrop"></div>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="menu-icon" id="open-drawer-btn">
+                <span></span><span></span><span></span>
+            </div>
+            <h1 class="brand">KOPALA <span>FPL</span></h1>
+        </div>
+        <div class="nav-right">
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn"><i class="fa-solid fa-user"></i></button>
+        </div>
+    </nav>
+
+    <main class="main-container">
+        <div class="ticker" id="ticker">🔄 SYNCING LIVE PREMIER LEAGUE DATA...</div>
+        
+        <div class="status-bar">
+            <span>In the bank: <b id="budget-val">£100.0m</b></span>
+            <span id="formation-ticker">Formation: 4-4-2</span>
+        </div>
+
+        <div class="pitch-outer-wrap">
+            <div class="pitch" id="pitch-container">
+                <div class="row">
+                    <div class="slot">
+                        <div class="jersey arsenal"></div>
+                        <div class="player-name-tag">Haaland</div>
+                        <div class="player-match-tag">WHU (A)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bench-area" id="bench-container">
+                </div>
+        </div>
+
+        <section class="stats-summary">
+            <div class="stat-box">
+                <span class="stat-label">AI Team Score</span>
+                <span class="stat-value" id="score-display">58</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Top 1k Avg</span>
+                <span class="stat-value">56.1</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">FPL Avg</span>
+                <span class="stat-value">47.2</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Est. Points</span>
+                <span class="stat-value" id="v-xp">62</span>
+            </div>
+        </section>
+
+        <div class="controls">
+            <button class="btn-main" onclick="runAnalysis()">Run AI analysis</button>
+            <div class="btn-group">
+                <button class="btn-sec" onclick="autoOptimize()">Template Team</button>
+                <button class="btn-reset" onclick="location.reload()">Reset</button>
+            </div>
+        </div>
+
+        <div id="results" class="ai-card">
+            <span class="verdict-label">AI Tactical Recommendation</span>
+            <p id="ai-msg">Build your team to see tactical advice.</p>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
