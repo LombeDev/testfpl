@@ -1,0 +1,41 @@
+:root {
+    --fpl-purple: #37003c;
+    --fpl-green: #00ff87;
+    --rise-bg: #90f090;
+    --fall-bg: #ff9090;
+    --text-main: #1a1a1a;
+    --border: #e2e8f0;
+}
+
+body { font-family: sans-serif; margin: 0; background: #fff; color: var(--text-main); }
+
+/* Header & Timer */
+.predictor-header { text-align: center; padding: 20px; }
+.countdown-bar { background: #1e1e26; color: #fff; padding: 12px 20px; border-radius: 6px; display: inline-block; font-size: 0.9rem; }
+.timer-badge { background: var(--fpl-green); color: #000; padding: 4px 10px; border-radius: 4px; font-weight: 900; margin-left: 10px; }
+.rule-hint { font-size: 0.8rem; color: #666; margin-top: 10px; }
+
+/* Filter UI */
+.predictor-nav { max-width: 1000px; margin: 0 auto; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+.nav-tabs { display: flex; background: #f1f5f9; border-bottom: 1px solid var(--border); }
+.tab-btn { flex: 1; padding: 15px; border: none; font-weight: bold; cursor: pointer; color: #64748b; }
+.tab-btn.active { background: #1e1e26; color: #fff; }
+.filter-row { padding: 15px; display: flex; gap: 10px; background: #fff; }
+.input-field { padding: 10px; border: 1px solid var(--border); border-radius: 6px; flex: 1; }
+
+/* Table Styling */
+.table-card { border-radius: 0; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { background: #1e1e26; color: #fff; text-align: left; padding: 12px; font-size: 0.75rem; }
+td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; }
+
+/* Prediction Highlighting */
+.rise-cell { background: var(--rise-bg); color: #000; font-weight: 800; text-align: center; }
+.fall-cell { background: var(--fall-bg); color: #000; font-weight: 800; text-align: center; }
+.tonight-tag { display: block; font-size: 0.65rem; color: #d00; margin-top: 2px; }
+
+/* Trend Indicator */
+.trend-up { color: #00a839; font-weight: 900; }
+.trend-down { color: #d00; font-weight: 900; }
+
+#loader { text-align: center; padding: 20px; font-weight: bold; color: var(--fpl-purple); }
