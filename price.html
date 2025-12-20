@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Price Predictor | KOPALA FPL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <button class="menu-icon"><span></span><span></span><span></span></button>
+            <h1 class="brand">KOPALA <span>FPL</span></h1>
+        </div>
+        <div class="nav-right">
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn"><i class="fa-solid fa-user"></i></button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <section class="predictor-header">
+                <h1 class="main-title">LiveFPL Price Change Predictor</h1>
+                <div class="countdown-bar">
+                    Next price change countdown: <span id="timer" class="timer-badge">Loading...</span>
+                </div>
+                <p class="rule-hint">+100% means predicted rise, -100% means predicted fall</p>
+            </section>
+
+            <div class="predictor-nav">
+                <div class="nav-tabs">
+                    <button class="tab-btn active">All Players</button>
+                    <button class="tab-btn">Your Team</button>
+                    <button class="tab-btn">Watchlist</button>
+                </div>
+                <div class="filter-row">
+                    <input type="text" id="playerSearch" placeholder="Search for Player..." class="input-field">
+                    <select id="teamFilter" class="input-field">
+                        <option value="All">All Teams</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card table-card">
+                <div class="table-container">
+                    <table id="predictor-table">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Team</th>
+                                <th>Progress Now</th>
+                                <th>Prediction (Tonight)</th>
+                                <th>Progress per hr</th>
+                            </tr>
+                        </thead>
+                        <tbody id="predictor-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="loader">Syncing with FPL API...</div>
+        </div>
+    </main>
+
+    <script src="predictor.js"></script>
+</body>
+</html>
