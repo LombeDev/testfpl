@@ -6,80 +6,82 @@ async function fetchProLeague() {
     loader.classList.remove("hidden");
 
     try {
+        // 1. Get Game Config & Player Names
         const staticRes = await fetch(proxy + encodeURIComponent("https://fantasy.premierleague.com/api/bootstrap-static/"));
         const staticData = await staticRes.json();
-        const playerNames = {};
-        staticData.elements.forEach(p => playerNames[p.id] = p.web_name);
-        
-        const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
-        document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
+        const players = {};
+        staticData.elements.forEach(p => players[p.id] = p.web_name);
+        const curGW = staticData.events.find(e => e.is_current || e.is_next).id;
+        document.getElementById("active-gw-label").textContent = `GW ${curGW}`;
 
+        // 2. Get Standings
         const leagueRes = await fetch(proxy + encodeURIComponent(`https://fantasy.premierleague.com/api/leagues-classic/${LEAGUE_ID}/standings/`));
         const leagueData = await leagueRes.json();
         const managers = leagueData.standings.results;
 
-        const detailedData = await Promise.all(managers.map(async (m) => {
-            const historyRes = await fetch(proxy + encodeURIComponent(`https://fantasy.premierleague.com/api/entry/${m.entry}/history/`));
-            const history = await historyRes.json();
-            const picksRes = await fetch(proxy + encodeURIComponent(`https://fantasy.premierleague.com/api/entry/${m.entry}/event/${currentEvent}/picks/`));
-            const picks = await picksRes.json();
-            
-            const currentGW = history.current[history.current.length - 1];
-            const activeChip = history.chips.find(c => c.event === currentEvent);
-            const captainObj = picks.picks.find(p => p.is_captain);
+        // 3. Batch Fetch Deep Data (History + Picks)
+        const detailed = await Promise.all(managers.map(async (m) => {
+            try {
+                const [hRes, pRes] = await Promise.all([
+                    fetch(proxy + encodeURIComponent(`https://fantasy.premierleague.com/api/entry/${m.entry}/history/`)),
+                    fetch(proxy + encodeURIComponent(`https://fantasy.premierleague.com/api/entry/${m.entry}/event/${curGW}/picks/`))
+                ]);
+                const h = await hRes.json();
+                const p = await pRes.json();
+                
+                const lastH = h.current[h.current.length - 1];
+                const chip = h.chips.find(c => c.event === curGW);
+                const cap = p.picks.find(pk => pk.is_captain);
 
-            return {
-                ...m,
-                overall: currentGW.overall_rank.toLocaleString(),
-                val: (currentGW.value / 10).toFixed(1),
-                chip: activeChip ? activeChip.name : null,
-                captain: playerNames[captainObj.element]
-            };
+                return {
+                    ...m,
+                    ovr: lastH.overall_rank.toLocaleString(),
+                    chip: chip ? chip.name : null,
+                    capName: players[cap.element]
+                };
+            } catch {
+                return { ...m, ovr: "N/A", chip: null, capName: "N/A" };
+            }
         }));
 
-        renderTable(detailedData);
+        renderTable(detailed);
         loader.classList.add("hidden");
     } catch (err) {
+        console.error("Fetch Error");
         loader.classList.add("hidden");
     }
 }
 
 function renderTable(data) {
     const body = document.getElementById("league-body");
-    const chipMeta = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
+    const cMap = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
 
     body.innerHTML = data.map((m, i) => `
-        <tr style="${i === 0 ? 'background:rgba(0,255,135,0.05)' : ''}">
-            <td>${m.rank}</td>
+        <tr style="${i < 3 ? 'background:rgba(0,255,135,0.04)' : ''}">
+            <td style="text-align:center; font-weight:800; color:#6b7280;">${m.rank}</td>
             <td>
-                <div class="manager-info">
-                    <span class="m-name">${m.player_name}</span>
-                    <span class="t-name">${m.entry_name}</span>
-                </div>
+                <span class="m-name">${m.player_name}</span>
+                <span class="t-name">${m.entry_name}</span>
             </td>
-            <td>${m.event_total}</td>
-            <td class="bold-p">${m.total}</td>
-            <td>${m.chip ? `<span class="chip-badge chip-${m.chip}">${chipMeta[m.chip]}</span>` : '—'}</td>
-            <td style="font-weight:700">© ${m.captain}</td>
-            <td style="color:#94a3b8; font-size:9px">#${m.overall}</td>
-            <td><span class="val-tag">£${m.val}</span></td>
+            <td style="font-weight:700;">${m.event_total}</td>
+            <td style="font-weight:800; color:var(--fpl-purple);">${m.total}</td>
+            <td>
+                ${m.chip ? `<span class="chip-badge chip-${m.chip}">${cMap[m.chip]}</span>` : ''}
+                <span class="live-txt">©${m.capName}</span>
+            </td>
+            <td class="ovr-rank">#${m.ovr}</td>
         </tr>
     `).join('');
 }
 
-// Navigation Logic
+// Side Drawer Logic
 const menuBtn = document.getElementById('menu-btn');
 const closeBtn = document.getElementById('close-btn');
 const drawer = document.getElementById('side-drawer');
 const backdrop = document.getElementById('backdrop');
 
-const toggleDrawer = () => {
-    drawer.classList.toggle('open');
-    backdrop.classList.toggle('active');
-};
+const toggle = () => { drawer.classList.toggle('open'); backdrop.classList.toggle('active'); };
+[menuBtn, closeBtn, backdrop].forEach(el => el.addEventListener('click', toggle));
 
-menuBtn.addEventListener('click', toggleDrawer);
-closeBtn.addEventListener('click', toggleDrawer);
-backdrop.addEventListener('click', toggleDrawer);
-
+document.getElementById('refresh-btn').addEventListener('click', fetchProLeague);
 document.addEventListener("DOMContentLoaded", fetchProLeague);
