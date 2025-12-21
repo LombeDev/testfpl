@@ -3,122 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kopala FPL | Welcome</title>
+    <title>Kopala FPL | Live Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-green: #249771;
+            --dark-blue: #0f172a;
+            --text-gray: #4a5568;
+            --bg-light: #f5f5f7;
+            --fpl-pink: #ff2882;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            color: var(--text-gray);
+            line-height: 1.5;
+            background-color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* --- NAVIGATION --- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: 54px;
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 15px; }
+        .menu-icon { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 5px; }
+        .menu-icon span { width: 20px; height: 2px; background: #000; }
+        .brand { font-size: 1.2rem; font-weight: 900; color: #000; margin: 0; }
+        .brand span { color: var(--primary-green); }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+        .icon-btn { 
+            background: var(--bg-light); border: none; border-radius: 50%; 
+            width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; 
+        }
+        .divider { width: 1px; height: 20px; background: #ddd; margin: 0 5px; }
+
+        /* --- DRAWER --- */
+        .drawer {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: white; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 10px 0 20px rgba(0,0,0,0.1);
+        }
+        .drawer.open { left: 0; }
+        .backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; z-index: 1500;
+            backdrop-filter: blur(2px);
+        }
+        .backdrop.active { display: flex; align-items: center; justify-content: center; }
+
+        .drawer-links { list-style: none; padding: 20px; margin: 0; }
+        .drawer-links li { padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+        .drawer-links a { text-decoration: none; color: #333; font-weight: 600; font-size: 0.95rem; }
+
+        /* --- MAIN CONTENT --- */
+        .container { max-width: 500px; margin: 20px auto; padding: 0 20px; min-height: 70vh; }
+        .hidden { display: none !important; }
+
+        /* Welcome Screen Styles */
+        .accent-title { border-left: 6px solid var(--primary-green); padding-left: 15px; margin-bottom: 20px; }
+        .help-link { color: #2563eb; font-size: 0.85rem; text-decoration: none; display: inline-block; margin: 10px 0; }
+        input[type="text"] {
+            width: 100%; padding: 14px; border: 1px solid #ddd; 
+            border-radius: 6px; font-size: 1rem; margin-top: 5px; outline: none;
+        }
+        #change-id-btn {
+            width: 100%; background: var(--primary-green); color: white;
+            border: none; padding: 14px; font-weight: bold; margin-top: 15px; border-radius: 6px; cursor: pointer;
+        }
+
+        /* --- RE-ENGINEERED DASHBOARD --- */
+        .status-banner {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            padding: 18px; border-radius: 12px; margin-bottom: 20px; color: white;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .live-dot {
+            height: 8px; width: 8px; background-color: var(--fpl-pink);
+            border-radius: 50%; display: inline-block; margin-right: 5px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-card {
+            background: white; padding: 15px; border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center;
+        }
+        .stat-card.pink { border-bottom: 4px solid var(--fpl-pink); }
+        .stat-card.green { border-bottom: 4px solid var(--primary-green); }
+        .stat-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; }
+        .stat-value { font-size: 1.6rem; font-weight: 900; color: var(--dark-blue); margin: 5px 0; }
+
+        .bps-module {
+            background: white; border-radius: 12px; padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px;
+        }
+        .bps-header { font-weight: 900; color: var(--dark-blue); border-bottom: 2px solid var(--bg-light); padding-bottom: 10px; margin-bottom: 10px; }
+        .bps-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+
+        /* --- FOOTER --- */
+        footer { background: var(--dark-blue); color: white; padding: 40px 20px; margin-top: 60px; }
+        .logo { font-size: 1.5rem; letter-spacing: 1px; font-weight: 900; }
+        .footer-links { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .link-column h3 { font-size: 0.9rem; color: var(--primary-green); margin-bottom: 10px; }
+        .link-column ul { list-style: none; padding: 0; opacity: 0.7; font-size: 0.85rem; }
+        .link-column li { margin-bottom: 8px; }
+
+        /* --- MODAL --- */
+        #confirm-modal { z-index: 3000; }
+        .modal-card {
+            background: white; width: 85%; max-width: 320px; border-radius: 16px;
+            padding: 25px; text-align: center; animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
 </head>
 <body>
 
     <div id="side-drawer" class="drawer">
-        <div class="drawer-header" style="background: var(--dark-blue); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <h2 class="brand" style="color: white;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:white; font-size: 1.5rem;">&times;</button>
+        <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
+            <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="kopala.html">Kopala FPL</a></li>
             <li><a href="team.html">AI Team</a></li>
             <li><a href="football.html">Football</a></li>
-            <li><a href="price.html">Next price change timer</a></li>
-            <li><a href="#">Effective ownership</a></li>
+            <li><a href="#" class="reset-fpl-id" style="color: var(--fpl-pink);">Clear Team Data</a></li>
             <li><a href="contact.html">Contact Us</a></li>
         </ul>
     </div>
 
-    <div id="backdrop" class="backdrop"></div>
+    <div id="confirm-modal" class="backdrop">
+        <div class="modal-card">
+            <div style="font-size: 2.5rem; margin-bottom: 10px;">👋</div>
+            <h3 style="color: var(--dark-blue); margin: 0 0 10px 0;">Clear Team Data?</h3>
+            <p style="font-size: 0.9rem; color: var(--text-gray); margin-bottom: 25px;">You will be returned to the home screen and your ID will be cleared.</p>
+            <div style="display: flex; gap: 10px;">
+                <button id="cancel-clear" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:8px; background:white; font-weight:700;">Cancel</button>
+                <button id="confirm-clear" style="flex:1; padding:12px; border:none; border-radius:8px; background:var(--fpl-pink); color:white; font-weight:700;">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-backdrop" class="backdrop"></div>
 
     <nav class="navbar">
         <div class="nav-left">
-            <div id="menu-btn" class="menu-icon">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
             <h1 class="brand">KOPALA <span>FPL</span></h1>
         </div>
-
         <div class="nav-right">
-            <button class="icon-btn search-btn">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
             <div class="divider"></div>
-            <button class="icon-btn"><i class="fa-solid fa-user"></i></button>
+            <button class="icon-btn reset-fpl-id"><i class="fa-solid fa-power-off"></i></button>
         </div>
     </nav>
 
     <main class="container">
         <section id="id-entry-section">
             <section class="intro">
-                <p>Welcome to Kopala! Here you can follow your FPL points, overall rank and minileague tables with live bonus and autosubs, all exactly processed in real-time.</p>
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p>Welcome to Kopala! Follow your FPL points, live rank and bonus points exactly processed in real-time.</p>
+                <hr style="border:0; border-top:1px solid #f1f5f9; margin: 20px 0;">
             </section>
 
             <section class="id-input-section">
                 <div class="accent-title">
-                    <h2 style="font-size: 1.1rem; margin: 0;">Please Enter your FPL ID to get started!</h2>
+                    <h2 style="font-size: 1.1rem; margin: 0; color: var(--dark-blue);">Please Enter your FPL ID!</h2>
                 </div>
-                
-                <div class="form-group" style="margin-top: 20px;">
-                    <input type="text" id="fpl-id" placeholder="Enter new ID">
-                    <button id="change-id-btn">Change ID</button>
-                </div>
+                <input type="text" id="fpl-id" placeholder="Enter Team ID (e.g. 12345)">
+                <button id="change-id-btn">Get Started</button>
                 <a href="#" class="help-link">How to get my FPL id?</a>
             </section>
         </section>
 
-        <section id="live-dashboard" class="hidden" style="display: none;">
-            <div class="status-banner" style="background: linear-gradient(90deg, #60efff, #00ff87); padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #0f172a;">
-                <h2 id="manager-name" style="margin:0; font-size: 1.2rem;">Lombe Simakando</h2>
-                <p style="margin:0; font-size: 0.8rem; font-weight: bold; opacity: 0.8;">Gameweek 17 Live</p>
+        <section id="live-dashboard" class="hidden">
+            <div class="status-banner">
+                <div>
+                    <h2 id="disp-name" style="margin:0; font-size: 1.2rem; letter-spacing: -0.5px;">---</h2>
+                    <p style="margin:3px 0 0 0; font-size: 0.75rem; font-weight: 700; opacity: 0.9;">
+                        <span class="live-dot"></span> GAMEWEEK LIVE
+                    </p>
+                </div>
+                <button class="reset-fpl-id" style="background:rgba(255,255,255,0.15); border:none; color:white; padding:6px 12px; border-radius:6px; font-size: 0.7rem; font-weight: 800;">EXIT</button>
             </div>
 
-            <div class="live-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                <div class="stat-box" style="background: white; padding: 15px; border-radius: 8px; border-bottom: 4px solid #ff2882; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <p style="font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin: 0;">Safety Score</p>
-                    <h3 id="safety-score" style="font-size: 1.5rem; margin: 5px 0;">71</h3>
+            <div class="stat-grid">
+                <div class="stat-card pink">
+                    <div class="stat-label">Safety Score</div>
+                    <div class="stat-value" id="disp-safety">--</div>
+                    <div style="font-size: 9px; font-weight: bold; color: var(--fpl-pink);">TO AVOID RED ARROW</div>
                 </div>
-                <div class="stat-box" style="background: white; padding: 15px; border-radius: 8px; border-bottom: 4px solid #249771; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <p style="font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin: 0;">GW Points</p>
-                    <h3 id="gw-points" style="font-size: 1.5rem; margin: 5px 0;">54</h3>
+                <div class="stat-card green">
+                    <div class="stat-label">GW Points</div>
+                    <div class="stat-value" id="disp-gw">0</div>
+                    <div style="font-size: 9px; font-weight: bold; color: var(--primary-green);">LIVE TOTAL: <span id="disp-total">--</span></div>
                 </div>
             </div>
 
-            <div class="bps-card" style="background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <h4 style="margin: 0 0 10px 0; border-bottom: 2px solid #f5f5f7; padding-bottom: 5px;">Live Bonus Points</h4>
+            <div class="bps-module">
+                <div class="bps-header">LIVE BONUS POINTS (BPS)</div>
                 <div id="bps-list">
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-                        <span>Haaland</span>
-                        <span style="font-weight: bold; color: #249771;">+3 Bonus</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-                        <span>Matheus N.</span>
-                        <span style="font-weight: bold; color: #249771;">+2 Bonus</span>
-                    </div>
-                </div>
             </div>
         </section>
     </main>
 
     <footer>
         <div class="footer-content">
-            <h1 class="logo">KOPALA <span style="color: var(--primary-green);">FPL</span></h1>
-            <p class="tagline" style="font-size: 0.85rem; margin-top: 10px; opacity: 0.8;">Get free access to extra tools: AI team, Football, Mini league ranks, Planner, Tracking Favorite Managers and more</p>
-            
+            <h1 class="logo">KOPALA<span>FPL</span></h1>
+            <p style="opacity:0.6; font-size: 0.8rem; margin-top: 10px;">AI team, Football, Mini league ranks, Planner, Tracking Favorite Managers and more.</p>
             <div class="footer-links">
                 <div class="link-column">
                     <h3>Live Tools</h3>
-                    <ul>
-                        <li>Live Rank</li>
-                        <li>AI Team</li>
-                        <li>Football leagues</li>
-                        <li>More</li>
-                    </ul>
+                    <ul><li>Live Rank</li><li>AI Team</li><li>Football</li></ul>
                 </div>
                 <div class="link-column">
                     <h3>Price Changes</h3>
-                    <ul>
-                        <li>Predictor</li>
-                    </ul>
+                    <ul><li>Predictor</li></ul>
                 </div>
             </div>
         </div>
