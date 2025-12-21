@@ -1,99 +1,85 @@
+const proxy = "https://corsproxy.io/?";
 const LEAGUE_ID = "101712";
-const PROXIES = [
-    "https://api.allorigins.win/raw?url=",
-    "https://corsproxy.io/?",
-    "https://thingproxy.freeboard.io/fetch/"
-];
 
-async function smartFetch(url) {
-    for (let proxy of PROXIES) {
-        try {
-            const res = await fetch(proxy + encodeURIComponent(url));
-            if (res.ok) return await res.json();
-        } catch (e) { continue; }
-    }
-    throw new Error("API Connection Failed");
-}
-
-async function initDashboard() {
-    const body = document.getElementById("league-body");
+async function fetchProLeague() {
     const loader = document.getElementById("loading-overlay");
-    const errorBanner = document.getElementById("error-banner");
-
     loader.classList.remove("hidden");
-    errorBanner.classList.add("hidden");
 
     try {
-        // 1. Fetch Basic Data
-        const staticData = await smartFetch("https://fantasy.premierleague.com/api/bootstrap-static/");
+        const staticRes = await fetch(proxy + encodeURIComponent("https://fantasy.premierleague.com/api/bootstrap-static/"));
+        const staticData = await staticRes.json();
         const playerNames = {};
         staticData.elements.forEach(p => playerNames[p.id] = p.web_name);
-        const curGW = staticData.events.find(e => e.is_current || e.is_next).id;
-        document.getElementById("active-gw-label").textContent = `GW ${curGW}`;
+        
+        const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
+        document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
 
-        // 2. Fetch League Standings
-        const leagueData = await smartFetch(`https://fantasy.premierleague.com/api/leagues-classic/${LEAGUE_ID}/standings/`);
+        const leagueRes = await fetch(proxy + encodeURIComponent(`https://fantasy.premierleague.com/api/leagues-classic/${LEAGUE_ID}/standings/`));
+        const leagueData = await leagueRes.json();
         const managers = leagueData.standings.results;
 
-        // 3. Parallel Deep Fetch (Limited to top 50 for speed)
-        const detailed = await Promise.all(managers.slice(0, 50).map(async (m) => {
-            try {
-                const [h, p] = await Promise.all([
-                    smartFetch(`https://fantasy.premierleague.com/api/entry/${m.entry}/history/`),
-                    smartFetch(`https://fantasy.premierleague.com/api/entry/${m.entry}/event/${curGW}/picks/`)
-                ]);
-                const lastH = h.current[h.current.length - 1];
-                const chip = h.chips.find(c => c.event === curGW);
-                const cap = p.picks.find(pk => pk.is_captain);
-                return { 
-                    ...m, 
-                    ovr: lastH.overall_rank.toLocaleString(), 
-                    chip: chip ? chip.name : null, 
-                    cap: playerNames[cap.element] 
-                };
-            } catch { 
-                return { ...m, ovr: "---", chip: null, cap: "---" }; 
-            }
+        const detailedData = await Promise.all(managers.map(async (m) => {
+            const historyRes = await fetch(proxy + encodeURIComponent(`https://fantasy.premierleague.com/api/entry/${m.entry}/history/`));
+            const history = await historyRes.json();
+            const picksRes = await fetch(proxy + encodeURIComponent(`https://fantasy.premierleague.com/api/entry/${m.entry}/event/${currentEvent}/picks/`));
+            const picks = await picksRes.json();
+            
+            const currentGW = history.current[history.current.length - 1];
+            const activeChip = history.chips.find(c => c.event === currentEvent);
+            const captainObj = picks.picks.find(p => p.is_captain);
+
+            return {
+                ...m,
+                overall: currentGW.overall_rank.toLocaleString(),
+                val: (currentGW.value / 10).toFixed(1),
+                chip: activeChip ? activeChip.name : null,
+                captain: playerNames[captainObj.element]
+            };
         }));
 
-        renderTable(detailed);
+        renderTable(detailedData);
         loader.classList.add("hidden");
     } catch (err) {
-        errorBanner.classList.remove("hidden");
         loader.classList.add("hidden");
     }
 }
 
 function renderTable(data) {
     const body = document.getElementById("league-body");
-    const chips = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
+    const chipMeta = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
 
     body.innerHTML = data.map((m, i) => `
-        <tr style="${i < 3 ? 'background:rgba(0,255,135,0.03)' : ''}">
-            <td style="text-align:center; font-weight:800; color:#94a3b8;">${m.rank}</td>
+        <tr style="${i === 0 ? 'background:rgba(0,255,135,0.05)' : ''}">
+            <td>${m.rank}</td>
             <td>
-                <span class="m-name">${m.player_name}</span>
-                <span class="t-name">${m.entry_name}</span>
+                <div class="manager-info">
+                    <span class="m-name">${m.player_name}</span>
+                    <span class="t-name">${m.entry_name}</span>
+                </div>
             </td>
-            <td class="pts-gw">${m.event_total}</td>
-            <td class="pts-tot">${m.total}</td>
-            <td class="live-cell">
-                ${m.chip ? `<span class="chip-badge chip-${m.chip}">${chips[m.chip]}</span>` : ''}
-                <span class="cap-name">©${m.cap}</span>
-            </td>
-            <td class="ovr-rank">#${m.ovr}</td>
+            <td>${m.event_total}</td>
+            <td class="bold-p">${m.total}</td>
+            <td>${m.chip ? `<span class="chip-badge chip-${m.chip}">${chipMeta[m.chip]}</span>` : '—'}</td>
+            <td style="font-weight:700">© ${m.captain}</td>
+            <td style="color:#94a3b8; font-size:9px">#${m.overall}</td>
+            <td><span class="val-tag">£${m.val}</span></td>
         </tr>
     `).join('');
 }
 
-// Side Drawer Logic
+// Navigation Logic
 const menuBtn = document.getElementById('menu-btn');
 const closeBtn = document.getElementById('close-btn');
 const drawer = document.getElementById('side-drawer');
 const backdrop = document.getElementById('backdrop');
 
-const toggle = () => { drawer.classList.toggle('open'); backdrop.classList.toggle('active'); };
-[menuBtn, closeBtn, backdrop].forEach(el => el.addEventListener('click', toggle));
+const toggleDrawer = () => {
+    drawer.classList.toggle('open');
+    backdrop.classList.toggle('active');
+};
 
-document.getElementById('refresh-btn').addEventListener('click', initDashboard);
-document.addEventListener("DOMContentLoaded", initDashboard);
+menuBtn.addEventListener('click', toggleDrawer);
+closeBtn.addEventListener('click', toggleDrawer);
+backdrop.addEventListener('click', toggleDrawer);
+
+document.addEventListener("DOMContentLoaded", fetchProLeague);
