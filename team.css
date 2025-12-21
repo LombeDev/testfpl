@@ -44,44 +44,45 @@ body { font-family: -apple-system, system-ui, sans-serif; background: #fff; colo
 
 /* PITCH & JERSEY */
 .main-container { max-width: 500px; margin: 0 auto; padding: 10px; }
-
-.pitch-outer-wrap { 
-    background: #2d9e63; 
-    border-radius: 8px; 
-    padding: 10px; 
-    box-shadow: inset 0 0 40px rgba(0,0,0,0.1); 
-    border: 3px solid #248a55;
-}
-
+.pitch-outer-wrap { background: #2d9e63; border-radius: 12px; padding: 15px; box-shadow: inset 0 0 40px rgba(0,0,0,0.1); }
 .pitch {
-    min-height: 440px; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: space-around;
-    position: relative;
-    border: 1.5px solid rgba(255, 255, 255, 0.4); /* Touchlines */
-    
-    /* FPL WHITE LINES & MOWING PATTERN */
-    background-image: 
-        /* Halfway Line */
-        linear-gradient(to bottom, transparent 49.7%, rgba(255, 255, 255, 0.4) 49.7%, rgba(255, 255, 255, 0.4) 50.3%, transparent 50.3%),
-        /* Center Circle */
-        radial-gradient(circle at 50% 50%, transparent 12%, rgba(255, 255, 255, 0.4) 12%, rgba(255, 255, 255, 0.4) 13%, transparent 13%),
-        /* Penalty Box (Top) */
-        linear-gradient(to right, transparent 25%, rgba(255, 255, 255, 0.4) 25%, rgba(255, 255, 255, 0.4) 25.5%, transparent 25.5%, transparent 74.5%, rgba(255, 255, 255, 0.4) 74.5%, rgba(255, 255, 255, 0.4) 75%, transparent 75%),
-        linear-gradient(to bottom, transparent 14%, rgba(255, 255, 255, 0.4) 14%, rgba(255, 255, 255, 0.4) 15%, transparent 15%),
-        /* Penalty Box (Bottom) */
-        linear-gradient(to top, transparent 14%, rgba(255, 255, 255, 0.4) 14%, rgba(255, 255, 255, 0.4) 15%, transparent 15%),
-        /* Mowing Strips */
-        linear-gradient(rgba(255, 255, 255, 0.06) 50%, transparent 50%);
-    
-    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 18%;
+    min-height: 420px; display: flex; flex-direction: column; justify-content: space-around;
+    background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 100% 15%;
 }
+.row { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+.slot { display: flex; flex-direction: column; align-items: center; width: 85px; }
 
-.row { display: flex; justify-content: center; gap: 8px; margin-bottom: 5px; z-index: 5; }
-.slot { display: flex; flex-direction: column; align-items: center; width: 80px; }
+.jersey {
+    width: 38px; height: 34px; background: var(--team-color, #fff);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+}
+.jersey.arsenal { --team-color: #EF0107; border-top: 3px solid #fff; }
+.player-name-tag { background: var(--fpl-purple); color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 2px; margin-top: 4px; width: 100%; text-align: center; }
+.player-match-tag { background: white; color: #333; font-size: 9px; font-weight: bold; padding: 1px 4px; border: 1px solid #eee; width: 100%; text-align: center; }
 
-/* JERSEY BASE SHAPE */
+/* STATS GRID (PHOTO 2 MATCH) */
+.stats-summary { display: grid; grid-template-columns: repeat(4, 1fr); margin: 20px 0; padding: 20px 0; border-top: 1px solid var(--border); }
+.stat-box { text-align: center; border-right: 1px solid var(--border); }
+.stat-box:last-child { border-right: none; }
+.stat-label { display: block; font-size: 9px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+.stat-value { display: block; font-size: 26px; font-weight: 900; color: #111; }
+
+/* CONTROLS */
+.btn-main { width: 100%; background: var(--fpl-purple); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; }
+.btn-group { display: flex; gap: 10px; }
+.btn-sec { flex: 2; background: var(--fpl-green); color: var(--fpl-purple); border: none; border-radius: 8px; font-weight: bold; }
+.btn-reset { flex: 1; background: #eee; border: none; padding: 12px; border-radius: 8px; font-weight: bold; }
+
+.ai-card { background: var(--bg-light); border-left: 5px solid var(--fpl-green); padding: 15px; margin-top: 20px; border-radius: 4px; }
+.verdict-label { font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
+
+.ticker { background: #000; color: var(--fpl-green); padding: 8px; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 10px; border-radius: 4px; }
+.status-bar { display: flex; justify-content: space-between; padding: 10px; font-size: 12px; font-weight: bold; background: #f9f9f9; border-radius: 4px; margin-bottom: 10px; }
+
+
+
+/* --- JERSEY BASE SHAPE --- */
 .jersey {
     width: 38px;
     height: 34px;
@@ -92,14 +93,12 @@ body { font-family: -apple-system, system-ui, sans-serif; background: #fff; colo
     );
     margin: 0 auto;
     position: relative;
-    border-bottom: 2px solid rgba(0,0,0,0.1);
+    border-bottom: 2px solid rgba(0,0,0,0.1); /* Subtle shadow for depth */
 }
 
-/* PLAYER TAGS */
-.player-name-tag { background: var(--fpl-purple); color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 2px; margin-top: 4px; width: 100%; text-align: center; }
-.player-match-tag { background: white; color: #333; font-size: 9px; font-weight: bold; padding: 1px 4px; border: 1px solid #eee; width: 100%; text-align: center; }
+/* --- TEAM COLOR MAPPING --- */
+/* These classes match the team names from the JS (lowercase and hyphenated) */
 
-/* TEAM COLOR MAPPING */
 .jersey.arsenal      { --team-main: #EF0107; border-top: 4px solid #fff; }
 .jersey.aston-villa  { --team-main: #95BFE5; border-left: 8px solid #670E36; border-right: 8px solid #670E36; }
 .jersey.bournemouth  { background: linear-gradient(90deg, #000 30%, #e02020 30% 70%, #000 70%); }
@@ -120,23 +119,6 @@ body { font-family: -apple-system, system-ui, sans-serif; background: #fff; colo
 .jersey.spurs        { --team-main: #fff; border-bottom: 4px solid #132257; }
 .jersey.west-ham     { --team-main: #7A263A; border-left: 8px solid #1BB1E7; border-right: 8px solid #1BB1E7; }
 .jersey.wolves       { --team-main: #FDB913; }
-.jersey.default      { --team-main: #00ff87; opacity: 0.6; }
 
-/* STATS GRID */
-.stats-summary { display: grid; grid-template-columns: repeat(4, 1fr); margin: 20px 0; padding: 20px 0; border-top: 1px solid var(--border); }
-.stat-box { text-align: center; border-right: 1px solid var(--border); }
-.stat-box:last-child { border-right: none; }
-.stat-label { display: block; font-size: 9px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-.stat-value { display: block; font-size: 26px; font-weight: 900; color: #111; }
-
-/* CONTROLS */
-.btn-main { width: 100%; background: var(--fpl-purple); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer;}
-.btn-group { display: flex; gap: 10px; }
-.btn-sec { flex: 2; background: var(--fpl-green); color: var(--fpl-purple); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-.btn-reset { flex: 1; background: #eee; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-.ai-card { background: var(--bg-light); border-left: 5px solid var(--fpl-green); padding: 15px; margin-top: 20px; border-radius: 4px; }
-.verdict-label { font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
-
-.ticker { background: #000; color: var(--fpl-green); padding: 8px; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 10px; border-radius: 4px; }
-.status-bar { display: flex; justify-content: space-between; padding: 10px; font-size: 12px; font-weight: bold; background: #f9f9f9; border-radius: 4px; margin-bottom: 10px; }
+/* Fallback for unknown teams */
+.jersey.default { --team-main: #00ff87; opacity: 0.6; }
