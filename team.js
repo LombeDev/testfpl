@@ -3,7 +3,6 @@ let playerDB = [];
 let teamsDB = {}; 
 let selectedSlotId = null;
 
-// Initial empty squad structure
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -25,7 +24,7 @@ let squad = [
 // --- DATA SYNC ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
-    const proxy = 'https://api.allorigins.win/raw?url=';
+    const proxy = 'https://corsproxy.io/?url=';
     const api = 'https://fantasy.premierleague.com/api/bootstrap-static/';
     
     try {
@@ -43,102 +42,17 @@ async function syncData() {
             form: parseFloat(p.form) || 0
         })).sort((a,b) => b.xp - a.xp);
         
-        ticker.textContent = "✅ Connected to FPL Live Data";
+        ticker.textContent = "Get your FPL team rated by AI";
     } catch (e) {
-        ticker.textContent = "⚠️ OFFLINE MODE: Using Dec 2025 Mock Data";
-        // 20 Players per position (Top picks as of Dec 2025)
+        ticker.textContent = "⚠️ OFFLINE MODE: Using Mock Data";
         playerDB = [
-            // GOALKEEPERS
-            { name: "Raya", pos: "GKP", price: 6.0, xp: 5.5, team: "Arsenal" },
-            { name: "Roefs", pos: "GKP", price: 4.8, xp: 5.2, team: "Sunderland" },
-            { name: "Pickford", pos: "GKP", price: 5.5, xp: 4.8, team: "Everton" },
-            { name: "Sánchez", pos: "GKP", price: 4.9, xp: 4.5, team: "Chelsea" },
-            { name: "Donnarumma", pos: "GKP", price: 5.7, xp: 4.3, team: "Man City" },
-            { name: "Vicario", pos: "GKP", price: 4.9, xp: 4.2, team: "Spurs" },
-            { name: "Henderson", pos: "GKP", price: 5.1, xp: 4.1, team: "Crystal Palace" },
-            { name: "Martinez", pos: "GKP", price: 5.1, xp: 4.0, team: "Aston Villa" },
-            { name: "Pope", pos: "GKP", price: 5.1, xp: 3.9, team: "Newcastle" },
-            { name: "Alisson", pos: "GKP", price: 5.4, xp: 3.8, team: "Liverpool" },
-            { name: "Onana", pos: "GKP", price: 4.9, xp: 3.7, team: "Man Utd" },
-            { name: "Flekken", pos: "GKP", price: 4.5, xp: 3.6, team: "Brentford" },
-            { name: "Sels", pos: "GKP", price: 4.7, xp: 3.5, team: "Nott'm Forest" },
-            { name: "Verbruggen", pos: "GKP", price: 4.4, xp: 3.4, team: "Brighton" },
-            { name: "Leno", pos: "GKP", price: 4.9, xp: 3.3, team: "Fulham" },
-            { name: "Areola", pos: "GKP", price: 4.3, xp: 3.2, team: "West Ham" },
-            { name: "Kelleher", pos: "GKP", price: 4.5, xp: 3.1, team: "Brentford" },
-            { name: "Petrović", pos: "GKP", price: 4.5, xp: 3.0, team: "Bournemouth" },
-            { name: "Muric", pos: "GKP", price: 4.4, xp: 2.9, team: "Ipswich" },
-            { name: "Hermansen", pos: "GKP", price: 4.3, xp: 2.8, team: "Leicester" },
-
-            // DEFENDERS
-            { name: "Timber", pos: "DEF", price: 6.5, xp: 6.2, team: "Arsenal" },
-            { name: "Gabriel", pos: "DEF", price: 6.2, xp: 6.0, team: "Arsenal" },
-            { name: "Cucurella", pos: "DEF", price: 6.2, xp: 5.9, team: "Chelsea" },
-            { name: "Gvardiol", pos: "DEF", price: 6.0, xp: 5.8, team: "Man City" },
-            { name: "Muñoz", pos: "DEF", price: 5.9, xp: 5.7, team: "Crystal Palace" },
-            { name: "Virgil", pos: "DEF", price: 5.9, xp: 5.6, team: "Liverpool" },
-            { name: "Saliba", pos: "DEF", price: 5.9, xp: 5.5, team: "Arsenal" },
-            { name: "Calafiori", pos: "DEF", price: 5.7, xp: 5.4, team: "Arsenal" },
-            { name: "Rúben Dias", pos: "DEF", price: 5.7, xp: 5.3, team: "Man City" },
-            { name: "Tarkowski", pos: "DEF", price: 5.5, xp: 5.2, team: "Everton" },
-            { name: "James", pos: "DEF", price: 5.6, xp: 5.1, team: "Chelsea" },
-            { name: "Kerkez", pos: "DEF", price: 5.6, xp: 5.0, team: "Liverpool" },
-            { name: "Chalobah", pos: "DEF", price: 5.5, xp: 4.9, team: "Chelsea" },
-            { name: "Konaté", pos: "DEF", price: 5.4, xp: 4.8, team: "Liverpool" },
-            { name: "Porro", pos: "DEF", price: 5.5, xp: 4.7, team: "Spurs" },
-            { name: "Milenković", pos: "DEF", price: 5.0, xp: 4.6, team: "Nott'm Forest" },
-            { name: "Robinson", pos: "DEF", price: 4.7, xp: 4.5, team: "Fulham" },
-            { name: "Hall", pos: "DEF", price: 4.5, xp: 4.4, team: "Newcastle" },
-            { name: "Dunk", pos: "DEF", price: 4.6, xp: 4.3, team: "Brighton" },
-            { name: "Murillo", pos: "DEF", price: 4.5, xp: 4.2, team: "Nott'm Forest" },
-
-            // MIDFIELDERS
-            { name: "Salah", pos: "MID", price: 14.5, xp: 9.8, team: "Liverpool" },
-            { name: "Palmer", pos: "MID", price: 11.0, xp: 9.2, team: "Chelsea" },
-            { name: "Saka", pos: "MID", price: 10.5, xp: 8.7, team: "Arsenal" },
-            { name: "Foden", pos: "MID", price: 9.3, xp: 7.8, team: "Man City" },
-            { name: "Mbeumo", pos: "MID", price: 8.5, xp: 7.5, team: "Man Utd" },
-            { name: "Wirtz", pos: "MID", price: 8.4, xp: 7.2, team: "Liverpool" },
-            { name: "Fernandes", pos: "MID", price: 9.0, xp: 7.0, team: "Man Utd" },
-            { name: "Gakpo", pos: "MID", price: 7.7, xp: 6.8, team: "Liverpool" },
-            { name: "Semenyo", pos: "MID", price: 7.4, xp: 6.5, team: "Bournemouth" },
-            { name: "Rogers", pos: "MID", price: 7.2, xp: 6.3, team: "Aston Villa" },
-            { name: "Gordon", pos: "MID", price: 7.4, xp: 6.2, team: "Newcastle" },
-            { name: "Kudus", pos: "MID", price: 6.6, xp: 6.1, team: "Spurs" },
-            { name: "Luis Diaz", pos: "MID", price: 8.0, xp: 6.0, team: "Liverpool" },
-            { name: "Bowen", pos: "MID", price: 7.8, xp: 5.9, team: "West Ham" },
-            { name: "Marmoush", pos: "MID", price: 8.5, xp: 5.8, team: "Man City" },
-            { name: "Garnacho", pos: "MID", price: 6.8, xp: 5.7, team: "Man Utd" },
-            { name: "Mitoma", pos: "MID", price: 6.4, xp: 5.6, team: "Brighton" },
-            { name: "Son", pos: "MID", price: 10.0, xp: 5.5, team: "Spurs" },
-            { name: "Minteh", pos: "MID", price: 5.9, xp: 5.4, team: "Brighton" },
-            { name: "Xavi Simons", pos: "MID", price: 7.0, xp: 5.3, team: "Spurs" },
-
-            // FORWARDS
-            { name: "Haaland", pos: "FWD", price: 15.2, xp: 10.5, team: "Man City" },
-            { name: "Ekitiké", pos: "FWD", price: 8.8, xp: 8.2, team: "Liverpool" },
-            { name: "Isak", pos: "FWD", price: 10.5, xp: 7.8, team: "Newcastle" },
-            { name: "Gyokeres", pos: "FWD", price: 9.0, xp: 7.5, team: "Arsenal" },
-            { name: "Watkins", pos: "FWD", price: 8.9, xp: 7.2, team: "Aston Villa" },
-            { name: "Woltemade", pos: "FWD", price: 7.3, xp: 6.8, team: "Newcastle" },
-            { name: "Wood", pos: "FWD", price: 7.5, xp: 6.5, team: "Nott'm Forest" },
-            { name: "Mateta", pos: "FWD", price: 8.1, xp: 6.3, team: "Crystal Palace" },
-            { name: "Joao Pedro", pos: "FWD", price: 7.7, xp: 6.1, team: "Chelsea" },
-            { name: "Jackson", pos: "FWD", price: 7.9, xp: 6.0, team: "Chelsea" },
-            { name: "Solanke", pos: "FWD", price: 8.0, xp: 5.9, team: "Spurs" },
-            { name: "Cunha", pos: "FWD", price: 8.1, xp: 5.8, team: "Man Utd" },
-            { name: "Igor Thiago", pos: "FWD", price: 6.3, xp: 5.7, team: "Brentford" },
-            { name: "Sesko", pos: "FWD", price: 8.5, xp: 5.6, team: "Man Utd" },
-            { name: "Evanilson", pos: "FWD", price: 7.0, xp: 5.5, team: "Bournemouth" },
-            { name: "Wissa", pos: "FWD", price: 6.5, xp: 5.4, team: "Brentford" },
-            { name: "Welbeck", pos: "FWD", price: 6.0, xp: 5.3, team: "Brighton" },
-            { name: "Delap", pos: "FWD", price: 5.5, xp: 5.2, team: "Ipswich" },
-            { name: "Vardy", pos: "FWD", price: 5.5, xp: 5.1, team: "Leicester" },
-            { name: "Strand Larsen", pos: "FWD", price: 6.0, xp: 5.0, team: "Wolves" }
-        ].sort((a,b) => b.xp - a.xp);
+            { name: "Salah", pos: "MID", price: 12.5, xp: 8.5, team: "Liverpool" },
+            { name: "Haaland", pos: "FWD", price: 15.0, xp: 9.2, team: "Man City" },
+            { name: "Saka", pos: "MID", price: 10.0, xp: 7.1, team: "Arsenal" },
+            { name: "Palmer", pos: "MID", price: 10.5, xp: 8.0, team: "Chelsea" }
+        ];
     }
     renderPitch();
-    updateStats();
 }
 
 // --- TEAM LIMIT VALIDATION ---
@@ -152,7 +66,7 @@ function canAddPlayer(playerName) {
     return clubCount < 3;
 }
 
-// --- UI RENDERING ---
+// --- UI RENDERING (Re-engineered for Photo 2 Style) ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
@@ -187,6 +101,7 @@ function createSlotUI(slotData) {
     div.className = `slot ${slotData.isBench ? 'is-bench' : ''} ${selectedSlotId === slotData.id ? 'selected' : ''}`;
     div.onclick = () => handleSwap(slotData.id);
 
+    // Dynamic Jersey Logic
     const player = playerDB.find(p => p.name === slotData.name);
     const teamClass = player ? player.team.toLowerCase().replace(/\s+/g, '-') : 'default';
 
@@ -204,11 +119,11 @@ function createSlotUI(slotData) {
     select.onclick = (e) => e.stopPropagation(); 
     select.innerHTML = `<option value="">-- Pick --</option>`;
     
-    playerDB.filter(p => p.pos === slotData.pos).forEach(p => {
+    playerDB.filter(p => p.pos === slotData.pos).slice(0, 50).forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.name;
         opt.selected = slotData.name === p.name;
-        opt.textContent = `${p.name} (£${p.price}m)`;
+        opt.textContent = `${p.name} £${p.price}`;
         select.appendChild(opt);
     });
 
@@ -229,7 +144,7 @@ function createSlotUI(slotData) {
     return div;
 }
 
-// --- SWAPPING & FORMATION VALIDATION ---
+// --- CORE LOGIC: SWAPPING & VALIDATION ---
 function handleSwap(id) {
     if (selectedSlotId === null) {
         selectedSlotId = id;
@@ -261,7 +176,7 @@ function validateFormation(p1, p2) {
     return (g === 1 && d >= 3 && d <= 5 && m >= 2 && m <= 5 && f >= 1 && f <= 3);
 }
 
-// --- STATS & ANALYSIS ---
+// --- UPDATED STATS FOR SUMMARY GRID ---
 function updateStats() {
     let totalValue = 0;
     let totalXP = 0;
@@ -280,6 +195,7 @@ function updateStats() {
         budgetEl.style.color = bank < 0 ? '#ff005a' : '#05ff80';
     }
 
+    // Push data to the new FPL Grid at bottom
     const scoreDisp = document.getElementById('score-display');
     const vXp = document.getElementById('v-xp');
     if (scoreDisp) scoreDisp.textContent = totalXP.toFixed(0);
@@ -298,6 +214,7 @@ function updateFormationUI() {
 }
 
 function runAnalysis() {
+    const stats = updateStats();
     const resultsArea = document.getElementById('results');
     if (resultsArea) resultsArea.style.display = 'block';
 
@@ -316,5 +233,34 @@ function runAnalysis() {
     const captain = sortedByXP[0];
     document.getElementById('ai-msg').innerHTML = `⭐ <b>AI CAPTAIN:</b> Give the armband to <b>${captain.name}</b> for the best chance at maximum points.`;
 }
+
+function autoOptimize() {
+    squad.forEach(slot => {
+        const choice = playerDB.find(p => 
+            p.pos === slot.pos && 
+            !squad.some(s => s.name === p.name) &&
+            canAddPlayer(p.name)
+        );
+        if (choice) slot.name = choice.name;
+    });
+    renderPitch();
+    updateStats();
+}
+
+// --- DRAWER MENU ---
+const openBtn = document.getElementById('open-drawer-btn');
+const closeBtn = document.getElementById('close-drawer-btn');
+const drawer = document.getElementById('side-drawer');
+const backdrop = document.getElementById('backdrop');
+
+const toggleMenu = (open) => {
+    if(!drawer) return;
+    drawer.classList.toggle('open', open);
+    backdrop.classList.toggle('active', open);
+};
+
+if(openBtn) openBtn.onclick = () => toggleMenu(true);
+if(closeBtn) closeBtn.onclick = () => toggleMenu(false);
+if(backdrop) backdrop.onclick = () => toggleMenu(false);
 
 syncData();
