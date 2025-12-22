@@ -58,6 +58,24 @@
     </nav>
 
     <main class="container">
+
+<div class="container">
+    <div id="loading-overlay">Updating FPL Data...</div>
+
+    <div id="deadline-card" class="card" style="display:none;">
+        <h3>Next Deadline</h3>
+        <div id="countdown-timer"></div>
+    </div>
+
+    <div id="price-card" class="card" style="display:none;">
+        <h3>Price Risers & Fallers</h3>
+        <div id="price-changes-list"></div>
+    </div>
+</div>
+
+
+
+        
         <section id="id-entry-section">
             <section class="intro">
                 <p>Welcome to Kopala! Follow your FPL points, live rank and bonus points exactly processed in real-time.</p>
@@ -106,5 +124,6 @@
     </footer>
 
     <script src="script.js"></script>
+    <script src="deadline.js"></script>
 </body>
                     </html>
