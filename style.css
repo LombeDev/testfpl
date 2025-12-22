@@ -29,7 +29,7 @@ html, body {
     background-color: #fff;
 }
 
-/* --- NAVIGATION (STICKY) --- */
+/* --- NAVBAR (STICKY) --- */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -43,6 +43,23 @@ html, body {
     z-index: 1000;
 }
 
+.nav-left { display: flex; align-items: center; gap: 12px; }
+
+/* HAMBURGER ICON STYLING */
+.menu-icon { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px; 
+    cursor: pointer; 
+    padding: 5px; 
+}
+.menu-icon span { 
+    width: 20px; 
+    height: 2px; 
+    background: #000; 
+    border-radius: 2px;
+}
+
 .brand { font-size: 1.2rem; font-weight: 900; color: #000; margin: 0; }
 .brand span { color: var(--primary-green); }
 
@@ -51,6 +68,7 @@ html, body {
     background: var(--bg-light); border: none; border-radius: 50%; 
     width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; 
 }
+.divider { width: 1px; height: 20px; background: #ddd; margin: 0 4px; }
 
 /* --- DRAWER --- */
 .drawer {
@@ -65,24 +83,24 @@ html, body {
 }
 .backdrop.active { display: block; }
 
-/* --- CONTAINER (EDGE-TO-EDGE FOCUS) --- */
+/* --- CONTAINER (EDGE-TO-EDGE) --- */
 .container { 
     width: 100%;
     max-width: 500px; 
     margin: 20px auto; 
-    padding: 0 5px; /* Brings cards near the edge */
+    padding: 0 5px; 
     min-height: 60vh; 
 }
 
 .card {
     background: var(--card-bg);
     border-radius: 12px;
-    padding: 16px 5px; /* Minimal side padding */
+    padding: 16px 5px; 
     margin-bottom: 15px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* --- THE PITCH (FPL STYLE) --- */
+/* --- THE PITCH (MARKINGS) --- */
 .pitch-outer-wrap { 
     background: #2d9e63; 
     border-radius: 12px; 
@@ -106,7 +124,7 @@ html, body {
     background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 18%;
 }
 
-/* --- PLAYER PRICE LISTS (PROFESSIONAL) --- */
+/* --- PLAYER PRICE LISTS --- */
 .price-row {
     display: flex;
     justify-content: space-between;
@@ -115,32 +133,11 @@ html, body {
     border-bottom: 1px solid #f1f5f9;
 }
 
-.player-name { 
-    font-weight: 800; 
-    font-size: 15px; 
-    color: var(--dark-blue);
-    letter-spacing: -0.3px;
-}
-
-.team-name { 
-    font-size: 11px; 
-    font-weight: 700;
-    color: var(--text-dim);
-    text-transform: uppercase;
-}
-
-.price-data { display: flex; align-items: center; gap: 4px; }
-
-.price-val { 
-    font-weight: 800; 
-    font-size: 16px;
-    color: var(--dark-blue);
-    font-variant-numeric: tabular-nums;
-}
+.player-name { font-weight: 800; font-size: 15px; color: var(--dark-blue); }
+.price-val { font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; }
 
 .change-up { color: #00c853; }
 .change-up::before { content: '\25B2'; font-size: 9px; margin-right: 3px; }
-
 .change-down { color: var(--down); }
 .change-down::before { content: '\25BC'; font-size: 9px; margin-right: 3px; }
 
@@ -152,38 +149,11 @@ html, body {
     font-weight: 900;
     font-size: 32px;
     color: var(--accent);
-    letter-spacing: -1px;
 }
-
-.timer-unit {
-    font-size: 11px;
-    display: block;
-    color: var(--text-dim);
-    font-weight: 700;
-    text-transform: uppercase;
-    text-align: center;
-}
-
-/* --- JERSEY SHAPES --- */
-.jersey {
-    width: 38px; height: 34px;
-    background-color: var(--team-main, #ccc);
-    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
-    margin: 0 auto;
-}
-
-.player-name-tag { background: var(--fpl-purple); color: white; font-size: 10px; font-weight: 800; padding: 2px 4px; border-radius: 2px; margin-top: 4px; text-align: center; width: 100%; }
 
 /* --- FOOTER --- */
-footer { 
-    background: var(--dark-blue); 
-    color: white; 
-    padding: 40px 15px; 
-    margin-top: 60px; 
-    text-align: center; 
-}
+footer { background: var(--dark-blue); color: white; padding: 40px 15px; margin-top: 60px; text-align: center; }
 
-/* --- RESPONSIVE --- */
 @media (min-width: 480px) {
     .container { padding: 0 15px; }
     .card { padding: 20px 15px; }
