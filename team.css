@@ -11,36 +11,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, system-ui, sans-serif; background: #fff; color: var(--text-dark); overflow-x: hidden; }
 
-/* NAVBAR */
-.navbar {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 16px; border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; background: white; z-index: 1000;
-}
-.brand { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.5px; }
-.brand span { color: var(--fpl-green); }
-.nav-right { display: flex; align-items: center; gap: 8px; }
-.icon-btn { background: var(--bg-light); border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; }
-.divider { width: 1px; height: 20px; background: #ddd; margin: 0 4px; }
-.menu-icon { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 5px; }
-.menu-icon span { width: 20px; height: 2px; background: #000; }
 
-/* DRAWER */
-.drawer {
-    position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-    background: white; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-}
-.drawer.open { left: 0; }
-.backdrop {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: none; z-index: 1500;
-}
-.backdrop.active { display: block; }
-.drawer-header { display: flex; justify-content: space-between; padding: 20px; border-bottom: 1px solid #eee; }
-.drawer-links { list-style: none; padding: 20px; }
-.drawer-links li { padding: 15px 0; border-bottom: 1px solid #f9f9f9; }
-.drawer-links a { text-decoration: none; color: #333; font-weight: 600; display: flex; gap: 10px; }
 
 /* PITCH & JERSEY */
 .main-container { max-width: 500px; margin: 0 auto; padding: 10px; }
