@@ -1,3 +1,4 @@
+/* 1. VARIABLES */
 :root {
     --fpl-purple: #37003c;
     --fpl-green: #00ff87;
@@ -7,35 +8,102 @@
     --border: #e2e8f0;
 }
 
-body { font-family: sans-serif; margin: 0; background: #fff; color: var(--text-main); }
+/* 2. BASE STYLES */
+body { 
+    font-family: sans-serif; 
+    margin: 0; 
+    background: #fff; 
+    color: var(--text-main); 
+    line-height: 1.5;
+}
 
-/* Header & Timer */
-.predictor-header { text-align: center; padding: 20px; }
-.countdown-bar { background: #1e1e26; color: #fff; padding: 12px 20px; border-radius: 6px; display: inline-block; font-size: 0.9rem; }
-.timer-badge { background: var(--fpl-green); color: #000; padding: 4px 10px; border-radius: 4px; font-weight: 900; margin-left: 10px; }
-.rule-hint { font-size: 0.8rem; color: #666; margin-top: 10px; }
+/* 3. HEADER & TIMER */
+.predictor-header { 
+    text-align: center; 
+    padding: 20px; 
+}
 
-/* Filter UI */
-.predictor-nav { max-width: 1000px; margin: 0 auto; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
-.nav-tabs { display: flex; background: #f1f5f9; border-bottom: 1px solid var(--border); }
-.tab-btn { flex: 1; padding: 15px; border: none; font-weight: bold; cursor: pointer; color: #64748b; }
-.tab-btn.active { background: #1e1e26; color: #fff; }
-.filter-row { padding: 15px; display: flex; gap: 10px; background: #fff; }
-.input-field { padding: 10px; border: 1px solid var(--border); border-radius: 6px; flex: 1; }
+.countdown-bar { 
+    background: #1e1e26; 
+    color: #fff; 
+    padding: 12px 20px; 
+    border-radius: 6px; 
+    display: inline-block; 
+    font-size: 0.9rem; 
+}
 
-/* Table Styling */
+.timer-badge { 
+    background: var(--fpl-green); 
+    color: #000; 
+    padding: 4px 10px; 
+    border-radius: 4px; 
+    font-weight: 900; 
+    margin-left: 10px; 
+}
+
+.rule-hint { 
+    font-size: 0.8rem; 
+    color: #666; 
+    margin-top: 10px; 
+}
+
+/* 4. FILTER UI */
+.predictor-nav { 
+    max-width: 1000px; 
+    margin: 0 auto 20px auto; 
+    border: 1px solid var(--border); 
+    border-radius: 8px; 
+    overflow: hidden; 
+}
+
+.nav-tabs { 
+    display: flex; 
+    background: #f1f5f9; 
+    border-bottom: 1px solid var(--border); 
+}
+
+.tab-btn { 
+    flex: 1; 
+    padding: 15px; 
+    border: none; 
+    font-weight: bold; 
+    cursor: pointer; 
+    color: #64748b; 
+    transition: 0.2s;
+}
+
+.tab-btn.active { 
+    background: #1e1e26; 
+    color: #fff; 
+}
+
+.filter-row { 
+    padding: 15px; 
+    display: flex; 
+    gap: 10px; 
+    background: #fff; 
+}
+
+.input-field { 
+    padding: 10px; 
+    border: 1px solid var(--border); 
+    border-radius: 6px; 
+    flex: 1; 
+}
+
+/* 5. TABLE STYLING (The Mobile Fix) */
 .table-card { 
     border-radius: 0; 
     border: 1px solid var(--border); 
-    overflow-x: auto; /* This allows horizontal scrolling on small screens */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    overflow-x: auto; /* Enables horizontal swipe on mobile */
+    -webkit-overflow-scrolling: touch; 
 }
 
 table { 
     width: 100%; 
     border-collapse: collapse; 
     font-size: 0.85rem; 
-    min-width: 600px; /* Ensures the table doesn't squish too much */
+    min-width: 650px; /* Ensures table doesn't squish; triggers the scroll instead */
 }
 
 th { 
@@ -44,32 +112,65 @@ th {
     text-align: left; 
     padding: 12px; 
     font-size: 0.75rem; 
-    white-space: nowrap; /* Keeps headers on one line */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 td { 
-    padding: 12px 8px; 
+    padding: 15px 12px; 
     border-bottom: 1px solid #f1f5f9; 
-    white-space: nowrap; /* Prevents text wrapping which makes rows too tall */
 }
 
-/* Mobile Specific Adjustments */
+/* 6. PREDICTION HIGHLIGHTING (Preserving your colors) */
+.rise-cell { 
+    background: var(--rise-bg) !important; 
+    color: #000; 
+    font-weight: 800; 
+    text-align: center; 
+}
+
+.fall-cell { 
+    background: var(--fall-bg) !important; 
+    color: #000; 
+    font-weight: 800; 
+    text-align: center; 
+}
+
+.tonight-tag { 
+    display: block; 
+    font-size: 0.65rem; 
+    color: #d00; 
+    margin-top: 2px; 
+}
+
+/* 7. TREND INDICATORS */
+.trend-up { color: #00a839; font-weight: 900; }
+.trend-down { color: #d00; font-weight: 900; }
+
+#loader { 
+    text-align: center; 
+    padding: 20px; 
+    font-weight: bold; 
+    color: var(--fpl-purple); 
+}
+
+/* 8. MOBILE RESPONSIVE QUERIES */
 @media (max-width: 600px) {
     .filter-row {
         flex-direction: column; /* Stacks search and filters vertically */
     }
-    
-    .input-field {
-        width: 100%;
-        box-sizing: border-box;
+
+    .nav-tabs {
+        flex-wrap: wrap; /* Allows tabs to wrap if they are too wide */
     }
 
-    .predictor-header {
-        padding: 10px;
-    }
-
-    /* Reduce font size slightly for tight fit */
-    table {
+    .tab-btn {
+        padding: 12px 8px;
         font-size: 0.8rem;
+    }
+
+    .countdown-bar {
+        width: 90%;
+        box-sizing: border-box;
     }
 }
