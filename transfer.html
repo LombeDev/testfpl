@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kopala FPL Edge</title>
+    <style>
+        :root {
+            --primary-green: #249771;
+            --dark-blue: #0f172a;
+            --text-gray: #4a5568;
+            --bg-light: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-dim: #718096;
+            --accent: #249771;
+            --down: #e53e3e;
+            --fpl-pink: #ff005a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        html, body { overflow-x: hidden; width: 100%; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-gray);
+            line-height: 1.5;
+            background-color: var(--bg-light);
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand { font-size: 1.2rem; font-weight: 900; color: #000; }
+        .brand span { color: var(--primary-green); }
+
+        /* Loader Overlay */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; display: flex; align-items: center; justify-content: center;
+            z-index: 2000; transition: opacity 0.5s;
+        }
+
+        /* Container & Cards */
+        .container { 
+            width: 100%; 
+            max-width: 500px; 
+            margin: 20px auto; 
+            padding: 0 8px; /* Near edge of screen */
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--dark-blue);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--bg-light);
+            padding-bottom: 8px;
+        }
+
+        /* Row Styles */
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .price-row:last-child { border-bottom: none; }
+
+        .player-info { display: flex; flex-direction: column; }
+        .player-name { font-weight: 700; font-size: 0.95rem; color: #333; }
+        .team-name { font-size: 0.75rem; color: var(--text-dim); }
+
+        .change-up { color: #008a4a; font-weight: 800; font-size: 0.85rem; }
+        .change-down { color: var(--down); font-weight: 800; font-size: 0.85rem; }
+
+        /* Featured Card (Most Captained) */
+        .highlighted { border-left: 5px solid var(--primary-green); }
+        
+        footer {
+            background: var(--dark-blue);
+            color: white;
+            padding: 30px 15px;
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <p>Loading FPL Data...</p>
+    </div>
+
+    <nav class="navbar">
+        <div class="brand">KOPALA<span>EDGE</span></div>
+        <div class="nav-right">
+            <div style="font-size: 0.7rem; font-weight: bold; background: var(--bg-light); padding: 4px 8px; border-radius: 4px;">GW LIVE</div>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <div id="most-captained-list" class="card highlighted">
+            </div>
+
+        <div class="card">
+            <div id="most-transferred-list">
+                </div>
+        </div>
+
+        <div class="card">
+            <div id="most-transferred-out-list">
+                </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Kopala FPL Edge. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const proxy = "https://corsproxy.io/?";
+        let teamMap = {}; 
+
+        async function startFPLDataLoad() {
+            try {
+                const response = await fetch(proxy + "https://fantasy.premierleague.com/api/bootstrap-static/");
+                const data = await response.json();
+
+                // 1. Map Teams
+                data.teams.forEach(t => teamMap[t.id] = t.short_name);
+
+                // 2. Process Features
+                loadMostCaptained(data);
+                loadMostTransferredIn(data);
+                loadMostTransferredOut(data);
+
+                // 3. Remove Loader
+                const overlay = document.getElementById("loading-overlay");
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 500);
+
+            } catch (err) {
+                console.error("Critical loading failed:", err);
+                document.body.innerHTML += "<div style='padding:20px; color:red;'>Failed to load data. Please refresh.</div>";
+            }
+        }
+
+        function loadMostCaptained(data) {
+            const container = document.getElementById("most-captained-list");
+            const currentEvent = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
+            
+            if (currentEvent && currentEvent.most_captained) {
+                const captain = data.elements.find(p => p.id === currentEvent.most_captained);
+                container.innerHTML = `
+                    <h3>Most Captained ©️</h3>
+                    <div class="player-info">
+                        <span class="player-name" style="font-size: 1.1rem;">${captain.first_name} ${captain.second_name}</span>
+                        <span class="team-name">${teamMap[captain.team]} | Selected by ${captain.selected_by_percent}% of Managers</span>
+                    </div>
+                `;
+            }
+        }
+
+        function loadMostTransferredIn(data) {
+            const container = document.getElementById("most-transferred-list");
+            const topIn = data.elements
+                .sort((a, b) => b.transfers_in_event - a.transfers_in_event)
+                .slice(0, 5);
+
+            container.innerHTML = "<h3>Top Transfers In ➡️</h3>";
+            topIn.forEach((p, index) => {
+                const trendIcon = p.cost_change_event > 0 ? "📈" : (p.cost_change_event < 0 ? "📉" : "➖");
+                const row = document.createElement("div");
+                row.className = "price-row";
+                row.innerHTML = `
+                    <div class="player-info">
+                        <span class="player-name">${index + 1}. ${p.second_name} ${trendIcon}</span>
+                        <span class="team-name">${teamMap[p.team]} | £${(p.now_cost/10).toFixed(1)}m</span>
+                    </div>
+                    <div class="price-data">
+                        <span class="change-up">+${p.transfers_in_event.toLocaleString()}</span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function loadMostTransferredOut(data) {
+            const container = document.getElementById("most-transferred-out-list");
+            const topOut = data.elements
+                .sort((a, b) => b.transfers_out_event - a.transfers_out_event)
+                .slice(0, 5);
+
+            container.innerHTML = "<h3>Top Transfers Out ⬅️</h3>";
+            topOut.forEach((p, index) => {
+                const trendIcon = p.cost_change_event < 0 ? "📉" : (p.cost_change_event > 0 ? "📈" : "➖");
+                const row = document.createElement("div");
+                row.className = "price-row";
+                row.innerHTML = `
+                    <div class="player-info">
+                        <span class="player-name">${index + 1}. ${p.second_name} ${trendIcon}</span>
+                        <span class="team-name">${teamMap[p.team]} | £${(p.now_cost/10).toFixed(1)}m</span>
+                    </div>
+                    <div class="price-data">
+                        <span class="change-down">-${p.transfers_out_event.toLocaleString()}</span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // Initialize
+        window.onload = startFPLDataLoad;
+    </script>
+</body>
+</html>
