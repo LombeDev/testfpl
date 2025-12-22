@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPL Minimalist Tracker</title>
+    <title>Gw deadline/Prices</title>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             --bg-color: #ffffff;
@@ -97,7 +99,36 @@
     </style>
 </head>
 <body>
+<div id="side-drawer" class="drawer">
+        <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
+            <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+        </div>
+        <ul class="drawer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="kopala.html">Kopala FPL</a></li>
+            <li><a href="team.html">AI Team</a></li>
+            <li><a href="price.html">Next price change timer</a></li>
+            <li><a href="price.html">Effective ownership</a></li>
+            <li><a href="football.html">Football</a></li>
+            <li><a href="#" class="reset-fpl-id" style="color: var(--fpl-pink);">Clear Team Data</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+    </div>
+<div id="main-backdrop" class="backdrop"></div>
 
+    <nav class="navbar">
+        <div class="nav-left">
+            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
+            <h1 class="brand">KOPALA <span>FPL</span></h1>
+        </div>
+        <div class="nav-right">
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <div class="divider"></div>
+            <button class="icon-btn reset-fpl-id"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+    </nav>
+    
 <div class="container">
     <div id="loading-overlay">Updating FPL Data...</div>
 
@@ -112,6 +143,6 @@
     </div>
 </div>
 
-<script src="script.js"></script>
+<script src="deadline.js"></script>
 </body>
 </html>
