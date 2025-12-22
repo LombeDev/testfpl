@@ -5,206 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KOPALA FPL | AI Analysis</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --fpl-purple: #37003c;
-            --fpl-green: #00ff87;
-            --pitch-green: #38ad70;
-            --text-dark: #1a1a1a;
-            --border: #e2e8f0;
-        }
-
-        body { font-family: sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-        
-        /* Layout */
-        .main-container { max-width: 500px; margin: 0 auto; padding: 15px; background: #fff; min-height: 100vh; }
-        
-        /* Stats Bar */
-        .hub-stats-bar {
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            background: #111827; padding: 15px 5px; border-radius: 12px; margin-bottom: 15px;
-        }
-        .hub-stat { text-align: center; border-right: 1px solid #374151; }
-        .hub-stat:last-child { border-right: none; }
-        .hub-stat .label { display: block; font-size: 8px; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px; }
-        .hub-stat .value { font-size: 16px; font-weight: bold; color: var(--fpl-green); }
-
-        /* Import Section */
-        .import-section { background: #eee; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
-        .input-row { display: flex; gap: 5px; }
-        input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
-        button { cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
-        .btn-import { background: var(--fpl-purple); color: #fff; padding: 0 10px; }
-
-        /* Pitch */
-        .pitch-wrap { background: #2d9e63; border-radius: 12px; padding: 15px; position: relative; }
-        .row { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        .slot { display: flex; flex-direction: column; align-items: center; width: 80px; position: relative; cursor: pointer; }
-        .slot.selected .jersey { filter: drop-shadow(0 0 8px #fff); transform: scale(1.1); }
-
-        /* Player UI */
-        .jersey { 
-            width: 35px; height: 32px; background: #fff; margin-bottom: 5px;
-            clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
-        }
-        .jersey.default { background: #ccc; }
-        .name-tag { background: var(--fpl-purple); color: #fff; font-size: 10px; padding: 2px 5px; width: 100%; text-align: center; border-radius: 2px; }
-        .fdr-tag { font-size: 9px; padding: 1px; width: 100%; text-align: center; font-weight: bold; background: #fff; }
-
-        /* Captain Badges */
-        .badge-c { position: absolute; right: 5px; top: 0; background: #000; color: #fff; font-size: 9px; width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--fpl-green); }
-
-        .ticker { background: #000; color: var(--fpl-green); text-align: center; padding: 5px; font-size: 11px; margin-bottom: 10px; }
-    </style>
+    <link rel="stylesheet" href="team.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="main-container">
-        <div class="ticker" id="ticker">Connecting to FPL...</div>
-
-        <div class="import-section">
-            <div class="input-row">
-                <input type="number" id="fpl-id-input" placeholder="Team ID (e.g. 12345)">
-                <button class="btn-import" onclick="importByTeamID()">Sync</button>
-            </div>
+   
+    <div id="side-drawer" class="drawer">
+        <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
+            <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
         </div>
-
-        <div class="hub-stats-bar">
-            <div class="hub-stat">
-                <span class="label">TEAM RATING</span>
-                <span id="team-rating" class="value">0%</span>
-            </div>
-            <div class="hub-stat">
-                <span class="label">PREDICTED PTS</span>
-                <span id="predicted-points" class="value">0.0</span>
-            </div>
-            <div class="hub-stat">
-                <span class="label">GW RATING</span>
-                <span id="gw-rating" class="value">-</span>
-            </div>
-            <div class="hub-stat">
-                <span class="label">IN THE BANK</span>
-                <span id="budget-val" class="value">£0.0m</span>
-            </div>
-        </div>
-
-        <div class="pitch-wrap">
-            <div id="pitch-container"></div>
-            <div style="color:white; font-size:10px; text-align:center; margin: 10px 0;">BENCH</div>
-            <div id="bench-container"></div>
-        </div>
+        <ul class="drawer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="kopala.html">Kopala FPL</a></li>
+            <li><a href="price.html">Next price change timer</a></li>
+            <li><a href="price.html">Effective ownership</a></li>
+            <li><a href="football.html">Football</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+        </ul>
     </div>
+    <div id="backdrop" class="backdrop"></div>
 
-    <script>
-        let playerDB = [];
-        let teamsDB = {};
-        let fixturesDB = {};
-        let selectedSlotId = null;
+    <nav class="navbar">
+        <div class="nav-left">
+            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
+            <h1 class="brand">KOPALA <span>FPL</span></h1>
+        </div>
+        <div class="nav-right">
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+    </nav>
 
-        let squad = [
-            { id: 0, pos: 'GKP', name: '', isBench: false, isCaptain: false },
-            { id: 1, pos: 'DEF', name: '', isBench: false, isCaptain: false },
-            { id: 2, pos: 'DEF', name: '', isBench: false, isCaptain: false },
-            { id: 3, pos: 'DEF', name: '', isBench: false, isCaptain: false },
-            { id: 4, pos: 'DEF', name: '', isBench: false, isCaptain: false },
-            { id: 5, pos: 'MID', name: '', isBench: false, isCaptain: false },
-            { id: 6, pos: 'MID', name: '', isBench: false, isCaptain: false },
-            { id: 7, pos: 'MID', name: '', isBench: false, isCaptain: false },
-            { id: 8, pos: 'MID', name: '', isBench: false, isCaptain: false },
-            { id: 9, pos: 'FWD', name: '', isBench: false, isCaptain: true },
-            { id: 10, pos: 'FWD', name: '', isBench: false, isCaptain: false },
-            { id: 11, pos: 'GKP', name: '', isBench: true, isCaptain: false },
-            { id: 12, pos: 'DEF', name: '', isBench: true, isCaptain: false },
-            { id: 13, pos: 'MID', name: '', isBench: true, isCaptain: false },
-            { id: 14, pos: 'FWD', name: '', isBench: true, isCaptain: false }
-        ];
 
-        async function syncData() {
-            const proxy = 'https://corsproxy.io/?url=';
-            try {
-                const res = await fetch(proxy + encodeURIComponent('https://fantasy.premierleague.com/api/bootstrap-static/'));
-                const data = await res.json();
-                
-                data.teams.forEach(t => teamsDB[t.id] = t.name);
-                playerDB = data.elements.map(p => ({
-                    name: p.web_name,
-                    team: teamsDB[p.team],
-                    pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
-                    price: p.now_cost / 10,
-                    xp: parseFloat(p.ep_next) || 0
-                }));
+    <main class="main-container">
+        <div class="ticker" id="ticker">...</div>
+        
+        <div class="status-bar">
+            <span>In the bank: <b id="budget-val">£100.0m</b></span>
+            <span id="formation-ticker">Formation: 4-4-2</span>
+        </div>
 
-                document.getElementById('ticker').textContent = "Live FPL Data Loaded";
-                renderPitch();
-                updateStats();
-            } catch (e) {
-                document.getElementById('ticker').textContent = "Offline Mode - Demo Data";
-                playerDB = [{name: "Haaland", team: "Man City", pos: "FWD", price: 15.2, xp: 8.5}, {name: "Salah", team: "Liverpool", pos: "MID", price: 12.8, xp: 7.9}];
-                squad[9].name = "Haaland"; squad[5].name = "Salah";
-                renderPitch();
-                updateStats();
-            }
-        }
+        <div class="pitch-outer-wrap">
+            <div class="pitch" id="pitch-container">
+                <div class="row">
+                    <div class="slot">
+                        <div class="jersey arsenal"></div>
+                        <div class="player-name-tag">Haaland</div>
+                        <div class="player-match-tag">WHU (A)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bench-area" id="bench-container">
+                </div>
+        </div>
 
-        function renderPitch() {
-            const pitch = document.getElementById('pitch-container');
-            const bench = document.getElementById('bench-container');
-            pitch.innerHTML = ''; bench.innerHTML = '';
+        <section class="stats-summary">
+            <div class="stat-box">
+                <span class="stat-label">AI Team Score</span>
+                <span class="stat-value" id="score-display">58</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Top 1k Avg</span>
+                <span class="stat-value">56.1</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">FPL Avg</span>
+                <span class="stat-value">47.2</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Est. Points</span>
+                <span class="stat-value" id="v-xp">62</span>
+            </div>
+        </section>
 
-            const starters = squad.filter(s => !s.isBench);
-            ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-                const row = document.createElement('div');
-                row.className = 'row';
-                starters.filter(p => p.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
-                pitch.appendChild(row);
-            });
+        <div class="controls">
+            <button class="btn-main" onclick="runAnalysis()">Analyse my team</button>
+            <div class="btn-group">
+                <button class="btn-sec" onclick="autoOptimize()">Start with template Team</button>
+                <button class="btn-reset" onclick="location.reload()">Reset</button>
+            </div>
+        </div>
 
-            const bRow = document.createElement('div');
-            bRow.className = 'row';
-            squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
-            bench.appendChild(bRow);
-        }
+        <div id="results" class="ai-card">
+            <span class="verdict-label">AI Recommendation</span>
+            <p id="ai-msg">Build your team to see tactical advice.</p>
+        </div>
+    </main>
 
-        function createSlotUI(slot) {
-            const div = document.createElement('div');
-            div.className = `slot ${selectedSlotId === slot.id ? 'selected' : ''}`;
-            const player = playerDB.find(p => p.name === slot.name);
-            
-            div.innerHTML = `
-                <div class="jersey default"></div>
-                ${slot.isCaptain ? '<div class="badge-c">C</div>' : ''}
-                <div class="name-tag">${slot.name || slot.pos}</div>
-                <div class="fdr-tag">${player ? '£'+player.price : '-'}</div>
-            `;
-            div.onclick = () => {
-                if (selectedSlotId === null) { selectedSlotId = slot.id; } 
-                else {
-                    const p1 = squad.find(s => s.id === selectedSlotId);
-                    if(p1.pos === slot.pos || p1.isBench !== slot.isBench) {
-                        let temp = p1.isBench; p1.isBench = slot.isBench; slot.isBench = temp;
-                    }
-                    selectedSlotId = null;
-                }
-                renderPitch(); updateStats();
-            };
-            return div;
-        }
-
-        function updateStats() {
-            let pts = 0, val = 0;
-            squad.forEach(s => {
-                const p = playerDB.find(x => x.name === s.name);
-                if(p) {
-                    val += p.price;
-                    if(!s.isBench) pts += (s.isCaptain ? p.xp * 2 : p.xp);
-                }
-            });
-            document.getElementById('predicted-points').textContent = pts.toFixed(1);
-            document.getElementById('budget-val').textContent = `£${(100 - val).toFixed(1)}m`;
-            document.getElementById('team-rating').textContent = Math.min(100, (pts/70)*100).toFixed(0) + '%';
-        }
-
-        syncData();
-    </script>
+    <footer>
+        <p>&copy; 2026 Kopala FPL. All rights reserved.</p>
+    </footer>
+    
+    <script src="team.js"></script>
+   <script src="script.js"></script>
 </body>
 </html>
