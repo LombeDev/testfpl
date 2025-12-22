@@ -134,6 +134,16 @@ footer { background: var(--dark-blue); color: white; padding: 40px 20px; margin-
             }
 
 
+
+
+ /* Card Style */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
 .container {
             width: 100%;
             max-width: 500px;
