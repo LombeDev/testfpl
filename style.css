@@ -134,6 +134,11 @@ footer { background: var(--dark-blue); color: white; padding: 40px 20px; margin-
             }
 
 
+.container {
+            width: 100%;
+            max-width: 500px;
+        }
+
   h3 {
             margin-top: 0;
             font-size: 14px;
