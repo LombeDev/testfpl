@@ -10,19 +10,16 @@
 </head>
 <body>
 
-   
     <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
-            <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+        <div style="padding: 20px; background: #00ff85; color: #000; display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:#000; font-size:2rem; cursor:pointer;">&times;</button>
         </div>
         <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Kopala FPL</a></li>
-            <li><a href="price.html">Next price change timer</a></li>
-            <li><a href="price.html">Effective ownership</a></li>
-            <li><a href="football.html">Football</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
+            <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="kopala.html"><i class="fa-solid fa-robot"></i> AI Analyzer</a></li>
+            <li><a href="price.html"><i class="fa-solid fa-clock"></i> Price Changes</a></li>
+            <li><a href="football.html"><i class="fa-solid fa-futbol"></i> Football News</a></li>
         </ul>
     </div>
     <div id="backdrop" class="backdrop"></div>
@@ -33,71 +30,84 @@
             <h1 class="brand">KOPALA <span>FPL</span></h1>
         </div>
         <div class="nav-right">
-            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button class="icon-btn" onclick="document.getElementById('fpl-id-input').focus()"><i class="fa-solid fa-id-card"></i></button>
         </div>
     </nav>
 
-
     <main class="main-container">
-        <div class="ticker" id="ticker">...</div>
-        
-        <div class="status-bar">
-            <span>In the bank: <b id="budget-val">£100.0m</b></span>
-            <span id="formation-ticker">Formation: 4-4-2</span>
+        <div class="import-section">
+            <div class="input-row">
+                <input type="number" id="fpl-id-input" placeholder="Enter FPL Team ID">
+                <button class="btn-import" onclick="importByTeamID()">Sync Team</button>
+            </div>
+            <div class="file-row">
+                <label for="screenshot-input" class="upload-label">
+                    <i class="fa-solid fa-camera"></i> Scan Screenshot
+                </label>
+                <input type="file" id="screenshot-input" accept="image/*" onchange="handleScreenshot(event)" hidden>
+            </div>
         </div>
+
+        <div class="ticker" id="ticker">Ready for analysis...</div>
+        
+        <section class="hub-stats-bar">
+            <div class="hub-stat">
+                <span class="label">TEAM RATING</span>
+                <span id="team-rating" class="value">0%</span>
+            </div>
+            <div class="hub-stat">
+                <span class="label">PREDICTED PTS</span>
+                <span id="predicted-points" class="value">0.0</span>
+            </div>
+            <div class="hub-stat">
+                <span class="label">GW RATING</span>
+                <span id="gw-rating" class="value">-</span>
+            </div>
+            <div class="hub-stat">
+                <span class="label">IN THE BANK</span>
+                <span id="budget-val" class="value">£100.0m</span>
+            </div>
+        </section>
 
         <div class="pitch-outer-wrap">
             <div class="pitch" id="pitch-container">
-                <div class="row">
-                    <div class="slot">
-                        <div class="jersey arsenal"></div>
-                        <div class="player-name-tag">Haaland</div>
-                        <div class="player-match-tag">WHU (A)</div>
-                    </div>
                 </div>
-            </div>
+            
+            <div class="bench-label">BENCH</div>
             <div class="bench-area" id="bench-container">
                 </div>
         </div>
 
         <section class="stats-summary">
             <div class="stat-box">
-                <span class="stat-label">AI Team Score</span>
-                <span class="stat-value" id="score-display">58</span>
-            </div>
-            <div class="stat-box">
                 <span class="stat-label">Top 1k Avg</span>
                 <span class="stat-value">56.1</span>
             </div>
             <div class="stat-box">
-                <span class="stat-label">FPL Avg</span>
-                <span class="stat-value">47.2</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">Est. Points</span>
-                <span class="stat-value" id="v-xp">62</span>
+                <span class="stat-label">Formation</span>
+                <span class="stat-value" id="formation-ticker">4-4-2</span>
             </div>
         </section>
 
         <div class="controls">
-            <button class="btn-main" onclick="runAnalysis()">Analyse my team</button>
+            <button class="btn-main" onclick="runAnalysis()">Run AI Analysis</button>
             <div class="btn-group">
-                <button class="btn-sec" onclick="autoOptimize()">Start with template Team</button>
-                <button class="btn-reset" onclick="location.reload()">Reset</button>
+                <button class="btn-sec" onclick="autoOptimize()">Fill Template</button>
+                <button class="btn-reset" onclick="location.reload()">Clear All</button>
             </div>
         </div>
 
-        <div id="results" class="ai-card">
+        <div id="results" class="ai-card" style="display:none;">
             <span class="verdict-label">AI Recommendation</span>
             <p id="ai-msg">Build your team to see tactical advice.</p>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2026 Kopala FPL. All rights reserved.</p>
+        <p>&copy; 2025 Kopala FPL. Developed by Coding Partner.</p>
     </footer>
     
     <script src="team.js"></script>
-   <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
