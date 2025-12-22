@@ -30,28 +30,12 @@
             background-color: var(--bg-light);
         }
 
-        /* Navbar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            background: #fff;
-            border-bottom: 1px solid #eee;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+       
 
         .brand { font-size: 1.2rem; font-weight: 900; color: #000; }
         .brand span { color: var(--primary-green); }
 
-        /* Loader Overlay */
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; display: flex; align-items: center; justify-content: center;
-            z-index: 2000; transition: opacity 0.5s;
-        }
+       
 
         /* Container & Cards */
         .container { 
@@ -162,101 +146,7 @@
         <p>&copy; 2025 Kopala FPL Edge. All rights reserved.</p>
     </footer>
 
-    <script>
-        const proxy = "https://corsproxy.io/?";
-        let teamMap = {}; 
-
-        async function startFPLDataLoad() {
-            try {
-                const response = await fetch(proxy + "https://fantasy.premierleague.com/api/bootstrap-static/");
-                const data = await response.json();
-
-                // 1. Map Teams
-                data.teams.forEach(t => teamMap[t.id] = t.short_name);
-
-                // 2. Process Features
-                loadMostCaptained(data);
-                loadMostTransferredIn(data);
-                loadMostTransferredOut(data);
-
-                // 3. Remove Loader
-                const overlay = document.getElementById("loading-overlay");
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.remove(), 500);
-
-            } catch (err) {
-                console.error("Critical loading failed:", err);
-                document.body.innerHTML += "<div style='padding:20px; color:red;'>Failed to load data. Please refresh.</div>";
-            }
-        }
-
-        function loadMostCaptained(data) {
-            const container = document.getElementById("most-captained-list");
-            const currentEvent = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
-            
-            if (currentEvent && currentEvent.most_captained) {
-                const captain = data.elements.find(p => p.id === currentEvent.most_captained);
-                container.innerHTML = `
-                    <h3>Most Captained ©️</h3>
-                    <div class="player-info">
-                        <span class="player-name" style="font-size: 1.1rem;">${captain.first_name} ${captain.second_name}</span>
-                        <span class="team-name">${teamMap[captain.team]} | Selected by ${captain.selected_by_percent}% of Managers</span>
-                    </div>
-                `;
-            }
-        }
-
-        function loadMostTransferredIn(data) {
-            const container = document.getElementById("most-transferred-list");
-            const topIn = data.elements
-                .sort((a, b) => b.transfers_in_event - a.transfers_in_event)
-                .slice(0, 5);
-
-            container.innerHTML = "<h3>Top Transfers In ➡️</h3>";
-            topIn.forEach((p, index) => {
-                const trendIcon = p.cost_change_event > 0 ? "📈" : (p.cost_change_event < 0 ? "📉" : "➖");
-                const row = document.createElement("div");
-                row.className = "price-row";
-                row.innerHTML = `
-                    <div class="player-info">
-                        <span class="player-name">${index + 1}. ${p.second_name} ${trendIcon}</span>
-                        <span class="team-name">${teamMap[p.team]} | £${(p.now_cost/10).toFixed(1)}m</span>
-                    </div>
-                    <div class="price-data">
-                        <span class="change-up">+${p.transfers_in_event.toLocaleString()}</span>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        function loadMostTransferredOut(data) {
-            const container = document.getElementById("most-transferred-out-list");
-            const topOut = data.elements
-                .sort((a, b) => b.transfers_out_event - a.transfers_out_event)
-                .slice(0, 5);
-
-            container.innerHTML = "<h3>Top Transfers Out ⬅️</h3>";
-            topOut.forEach((p, index) => {
-                const trendIcon = p.cost_change_event < 0 ? "📉" : (p.cost_change_event > 0 ? "📈" : "➖");
-                const row = document.createElement("div");
-                row.className = "price-row";
-                row.innerHTML = `
-                    <div class="player-info">
-                        <span class="player-name">${index + 1}. ${p.second_name} ${trendIcon}</span>
-                        <span class="team-name">${teamMap[p.team]} | £${(p.now_cost/10).toFixed(1)}m</span>
-                    </div>
-                    <div class="price-data">
-                        <span class="change-down">-${p.transfers_out_event.toLocaleString()}</span>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        // Initialize
-        window.onload = startFPLDataLoad;
-    </script>
+    <script src="transfer.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
