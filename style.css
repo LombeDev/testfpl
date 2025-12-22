@@ -99,7 +99,7 @@ body {
 .card {
     background: var(--card-bg);
     border-radius: 12px;
-    padding: 10px;
+    padding: 8px;
     margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
