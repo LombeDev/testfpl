@@ -1,39 +1,44 @@
 // --- CONFIGURATION & STATE ---
 let playerDB = [];
 let teamsDB = {}; 
+let fixturesDB = {}; 
 let selectedSlotId = null;
 
+// Initial squad structure (15 slots)
 let squad = [
-    { id: 0, pos: 'GKP', name: '', isBench: false },
-    { id: 1, pos: 'DEF', name: '', isBench: false },
-    { id: 2, pos: 'DEF', name: '', isBench: false },
-    { id: 3, pos: 'DEF', name: '', isBench: false },
-    { id: 4, pos: 'DEF', name: '', isBench: false },
-    { id: 5, pos: 'MID', name: '', isBench: false },
-    { id: 6, pos: 'MID', name: '', isBench: false },
-    { id: 7, pos: 'MID', name: '', isBench: false },
-    { id: 8, pos: 'MID', name: '', isBench: false },
-    { id: 9, pos: 'FWD', name: '', isBench: false },
-    { id: 10, pos: 'FWD', name: '', isBench: false },
-    { id: 11, pos: 'GKP', name: '', isBench: true },
-    { id: 12, pos: 'DEF', name: '', isBench: true },
-    { id: 13, pos: 'MID', name: '', isBench: true },
-    { id: 14, pos: 'FWD', name: '', isBench: true }
+    { id: 0, pos: 'GKP', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 1, pos: 'DEF', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 2, pos: 'DEF', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 3, pos: 'DEF', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 4, pos: 'DEF', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 5, pos: 'MID', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 6, pos: 'MID', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 7, pos: 'MID', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 8, pos: 'MID', name: '', isBench: false, isCaptain: false, isVice: false },
+    { id: 9, pos: 'FWD', name: '', isBench: false, isCaptain: true, isVice: false },
+    { id: 10, pos: 'FWD', name: '', isBench: false, isCaptain: false, isVice: true },
+    { id: 11, pos: 'GKP', name: '', isBench: true, isCaptain: false, isVice: false },
+    { id: 12, pos: 'DEF', name: '', isBench: true, isCaptain: false, isVice: false },
+    { id: 13, pos: 'MID', name: '', isBench: true, isCaptain: false, isVice: false },
+    { id: 14, pos: 'FWD', name: '', isBench: true, isCaptain: false, isVice: false }
 ];
 
-// --- DATA SYNC ---
+// --- DATA SYNC (Bootstrap & Fixtures) ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
     const proxy = 'https://corsproxy.io/?url=';
     const api = 'https://fantasy.premierleague.com/api/bootstrap-static/';
+    const fixturesApi = 'https://fantasy.premierleague.com/api/fixtures/?future=1';
     
     try {
+        // 1. Fetch Player and Team Data
         const res = await fetch(proxy + encodeURIComponent(api));
         const data = await res.json();
         
         data.teams.forEach(t => teamsDB[t.id] = t.name);
         
         playerDB = data.elements.map(p => ({
+            id: p.id,
             name: p.web_name,
             team: teamsDB[p.team],
             pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
@@ -41,32 +46,68 @@ async function syncData() {
             xp: parseFloat(p.ep_next) || 0,
             form: parseFloat(p.form) || 0
         })).sort((a,b) => b.xp - a.xp);
+
+        // 2. Fetch Fixtures for FDR
+        const fRes = await fetch(proxy + encodeURIComponent(fixturesApi));
+        const fData = await fRes.json();
+        const nextGW = data.events.find(e => e.is_next).id;
+
+        fData.filter(f => f.event === nextGW).forEach(f => {
+            fixturesDB[teamsDB[f.team_a]] = f.team_a_difficulty;
+            fixturesDB[teamsDB[f.team_h]] = f.team_h_difficulty;
+        });
         
-        ticker.textContent = "Get your FPL team rated by AI";
+        ticker.textContent = "AI Analysis Active";
+        renderPitch();
+        updateStats();
     } catch (e) {
-        ticker.textContent = "⚠️ OFFLINE MODE: Using Mock Data";
-        playerDB = [
-            { name: "Salah", pos: "MID", price: 12.5, xp: 8.5, team: "Liverpool" },
-            { name: "Haaland", pos: "FWD", price: 15.0, xp: 9.2, team: "Man City" },
-            { name: "Saka", pos: "MID", price: 10.0, xp: 7.1, team: "Arsenal" },
-            { name: "Palmer", pos: "MID", price: 10.5, xp: 8.0, team: "Chelsea" }
-        ];
+        ticker.textContent = "⚠️ Sync Error: Check connection";
+        console.error(e);
     }
-    renderPitch();
 }
 
-// --- TEAM LIMIT VALIDATION ---
-function canAddPlayer(playerName) {
-    const newPlayer = playerDB.find(p => p.name === playerName);
-    if (!newPlayer) return true;
-    const clubCount = squad.filter(s => {
-        const p = playerDB.find(x => x.name === s.name);
-        return p && p.team === newPlayer.team;
-    }).length;
-    return clubCount < 3;
+// --- FPL ID IMPORT ---
+async function importByTeamID() {
+    const teamId = document.getElementById('fpl-id-input').value;
+    if (!teamId) return alert("Enter your Team ID first!");
+
+    try {
+        const proxy = 'https://corsproxy.io/?url=';
+        // Get current picks
+        const staticRes = await fetch(proxy + encodeURIComponent('https://fantasy.premierleague.com/api/bootstrap-static/'));
+        const staticData = await staticRes.json();
+        const currentGW = staticData.events.find(e => e.is_current).id;
+
+        const url = `https://fantasy.premierleague.com/api/entry/${teamId}/event/${currentGW}/picks/`;
+        const res = await fetch(proxy + encodeURIComponent(url));
+        const teamData = await res.json();
+
+        // Clear and Map
+        teamData.picks.forEach((pick, index) => {
+            const fplPlayer = staticData.elements.find(p => p.id === pick.element);
+            if (squad[index] && fplPlayer) {
+                squad[index].name = fplPlayer.web_name;
+                squad[index].isCaptain = pick.is_captain;
+                squad[index].isVice = pick.is_vice_captain;
+            }
+        });
+
+        renderPitch();
+        updateStats();
+    } catch (e) {
+        alert("Failed to import team. Verify Team ID.");
+    }
 }
 
-// --- UI RENDERING (Re-engineered for Photo 2 Style) ---
+// --- SCREENSHOT HANDLER (Placeholder) ---
+function handleScreenshot(event) {
+    const file = event.target.files[0];
+    if (file) {
+        alert("Screenshot uploaded! In a production environment, this would be sent to an OCR service. For now, try the FPL ID sync!");
+    }
+}
+
+// --- UI RENDERING ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
@@ -75,89 +116,65 @@ function renderPitch() {
     pitch.innerHTML = ''; 
     bench.innerHTML = '';
 
-    const positions = ['GKP', 'DEF', 'MID', 'FWD'];
     const starters = squad.filter(s => !s.isBench);
-    
-    positions.forEach(pos => {
-        const rowPlayers = starters.filter(p => p.pos === pos);
-        if (rowPlayers.length > 0) {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'row';
-            rowPlayers.forEach(p => rowDiv.appendChild(createSlotUI(p)));
-            pitch.appendChild(rowDiv);
-        }
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        starters.filter(p => p.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
+        pitch.appendChild(row);
     });
 
     const benchRow = document.createElement('div');
     benchRow.className = 'row';
     squad.filter(s => s.isBench).forEach(p => benchRow.appendChild(createSlotUI(p)));
     bench.appendChild(benchRow);
-
-    updateFormationUI();
 }
 
 function createSlotUI(slotData) {
     const div = document.createElement('div');
-    div.className = `slot ${slotData.isBench ? 'is-bench' : ''} ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    div.onclick = () => handleSwap(slotData.id);
-
-    // Dynamic Jersey Logic
+    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
+    
     const player = playerDB.find(p => p.name === slotData.name);
     const teamClass = player ? player.team.toLowerCase().replace(/\s+/g, '-') : 'default';
+    const fdrColor = player ? getFDRColor(fixturesDB[player.team]) : '#ccc';
 
-    const jersey = document.createElement('div');
-    jersey.className = `jersey ${teamClass}`;
-    div.appendChild(jersey);
+    let badges = '';
+    if (slotData.isCaptain) badges = '<span class="badge-c">C</span>';
+    if (slotData.isVice) badges = '<span class="badge-vc">VC</span>';
 
-    const nameTag = document.createElement('div');
-    nameTag.className = 'player-name-tag';
-    nameTag.textContent = slotData.name || slotData.pos;
-    div.appendChild(nameTag);
+    div.innerHTML = `
+        <div class="jersey ${teamClass}"></div>
+        <div class="player-label">
+            <div class="name">${slotData.name || slotData.pos} ${badges}</div>
+            <div class="fdr-tag" style="background:${fdrColor}">${player ? player.xp.toFixed(1) : '-'}</div>
+        </div>
+    `;
 
-    const select = document.createElement('select');
-    select.className = 'player-match-tag';
-    select.onclick = (e) => e.stopPropagation(); 
-    select.innerHTML = `<option value="">-- Pick --</option>`;
-    
-    playerDB.filter(p => p.pos === slotData.pos).slice(0, 50).forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.name;
-        opt.selected = slotData.name === p.name;
-        opt.textContent = `${p.name} £${p.price}`;
-        select.appendChild(opt);
-    });
-
-    select.onchange = (e) => {
-        const selectedName = e.target.value;
-        if (selectedName === "" || canAddPlayer(selectedName) || selectedName === slotData.name) {
-            slotData.name = selectedName;
-            renderPitch();
-            updateStats();
-        } else {
-            const p = playerDB.find(x => x.name === selectedName);
-            alert(`⚠️ Rules Violation: 3 players max from ${p.team}!`);
-            e.target.value = slotData.name;
-        }
+    div.onclick = () => handleSwap(slotData.id);
+    div.oncontextmenu = (e) => {
+        e.preventDefault();
+        setCaptain(slotData.id);
     };
 
-    div.appendChild(select);
     return div;
 }
 
-// --- CORE LOGIC: SWAPPING & VALIDATION ---
+// --- CORE LOGIC ---
 function handleSwap(id) {
     if (selectedSlotId === null) {
         selectedSlotId = id;
     } else {
         const p1 = squad.find(s => s.id === selectedSlotId);
         const p2 = squad.find(s => s.id === id);
-        if (p1.isBench !== p2.isBench) {
-            if (validateFormation(p1, p2)) {
+        
+        if (p1.id !== p2.id) {
+            // If they are different positions and moving from bench to field, validate
+            if (p1.isBench !== p2.isBench && p1.pos !== p2.pos) {
+                alert("Only same-position swaps allowed for different roles!");
+            } else {
                 const tempStatus = p1.isBench;
                 p1.isBench = p2.isBench;
                 p2.isBench = tempStatus;
-            } else {
-                alert("Invalid Swap! FPL rules: 1 GKP, 3-5 DEF, 2-5 MID, 1-3 FWD.");
             }
         }
         selectedSlotId = null;
@@ -166,101 +183,54 @@ function handleSwap(id) {
     updateStats();
 }
 
-function validateFormation(p1, p2) {
-    const starters = squad.filter(s => !s.isBench);
-    const testStarters = starters.map(s => s.id === p1.id ? p2 : (s.id === p2.id ? p1 : s));
-    const d = testStarters.filter(s => s.pos === 'DEF').length;
-    const m = testStarters.filter(s => s.pos === 'MID').length;
-    const f = testStarters.filter(s => s.pos === 'FWD').length;
-    const g = testStarters.filter(s => s.pos === 'GKP').length;
-    return (g === 1 && d >= 3 && d <= 5 && m >= 2 && m <= 5 && f >= 1 && f <= 3);
-}
-
-// --- UPDATED STATS FOR SUMMARY GRID ---
-function updateStats() {
-    let totalValue = 0;
-    let totalXP = 0;
+function setCaptain(id) {
     squad.forEach(s => {
-        const p = playerDB.find(x => x.name === s.name);
-        if (p) {
-            totalValue += p.price;
-            if (!s.isBench) totalXP += p.xp;
-        }
-    });
-
-    const bank = (100 - totalValue).toFixed(1);
-    const budgetEl = document.getElementById('budget-val');
-    if (budgetEl) {
-        budgetEl.textContent = `£${bank}m`;
-        budgetEl.style.color = bank < 0 ? '#ff005a' : '#05ff80';
-    }
-
-    // Push data to the new FPL Grid at bottom
-    const scoreDisp = document.getElementById('score-display');
-    const vXp = document.getElementById('v-xp');
-    if (scoreDisp) scoreDisp.textContent = totalXP.toFixed(0);
-    if (vXp) vXp.textContent = (totalXP * 1.05).toFixed(0);
-
-    return { totalValue, totalXP };
-}
-
-function updateFormationUI() {
-    const starters = squad.filter(s => !s.isBench);
-    const d = starters.filter(s => s.pos === 'DEF').length;
-    const m = starters.filter(s => s.pos === 'MID').length;
-    const f = starters.filter(s => s.pos === 'FWD').length;
-    const el = document.getElementById('formation-ticker');
-    if (el) el.textContent = `FORMATION: ${d}-${m}-${f}`;
-}
-
-function runAnalysis() {
-    const stats = updateStats();
-    const resultsArea = document.getElementById('results');
-    if (resultsArea) resultsArea.style.display = 'block';
-
-    let starters = [];
-    squad.forEach(s => {
-        const p = playerDB.find(x => x.name === s.name);
-        if (p && !s.isBench) starters.push(p);
-    });
-
-    if (starters.length < 11) {
-        document.getElementById('ai-msg').innerHTML = "🚨 <b>SQUAD INCOMPLETE:</b> Pick 11 starters.";
-        return;
-    }
-
-    const sortedByXP = [...starters].sort((a, b) => b.xp - a.xp);
-    const captain = sortedByXP[0];
-    document.getElementById('ai-msg').innerHTML = `⭐ <b>AI CAPTAIN:</b> Give the armband to <b>${captain.name}</b> for the best chance at maximum points.`;
-}
-
-function autoOptimize() {
-    squad.forEach(slot => {
-        const choice = playerDB.find(p => 
-            p.pos === slot.pos && 
-            !squad.some(s => s.name === p.name) &&
-            canAddPlayer(p.name)
-        );
-        if (choice) slot.name = choice.name;
+        s.isCaptain = (s.id === id);
+        if (s.isCaptain) s.isVice = false;
     });
     renderPitch();
     updateStats();
 }
 
-// --- DRAWER MENU ---
-const openBtn = document.getElementById('open-drawer-btn');
-const closeBtn = document.getElementById('close-drawer-btn');
-const drawer = document.getElementById('side-drawer');
-const backdrop = document.getElementById('backdrop');
+function getFDRColor(val) {
+    if (val <= 2) return '#05ff80'; // Green
+    if (val === 3) return '#e1e1e1'; // Grey
+    return '#ff005a'; // Red
+}
 
-const toggleMenu = (open) => {
-    if(!drawer) return;
-    drawer.classList.toggle('open', open);
-    backdrop.classList.toggle('active', open);
-};
+function updateStats() {
+    let totalValue = 0;
+    let starterXP = 0;
+    let totalFDR = 0;
+    let count = 0;
 
-if(openBtn) openBtn.onclick = () => toggleMenu(true);
-if(closeBtn) closeBtn.onclick = () => toggleMenu(false);
-if(backdrop) backdrop.onclick = () => toggleMenu(false);
+    squad.forEach(s => {
+        const p = playerDB.find(x => x.name === s.name);
+        if (p) {
+            totalValue += p.price;
+            if (!s.isBench) {
+                const mult = s.isCaptain ? 2 : 1;
+                starterXP += (p.xp * mult);
+                totalFDR += (fixturesDB[p.team] || 3);
+                count++;
+            }
+        }
+    });
 
+    // Update DOM
+    const bank = (100 - totalValue).toFixed(1);
+    document.getElementById('budget-val').textContent = `£${bank}m`;
+    document.getElementById('predicted-points').textContent = starterXP.toFixed(1);
+    
+    const rating = Math.min(100, (starterXP / 75) * 100).toFixed(0);
+    document.getElementById('team-rating').textContent = `${rating}%`;
+
+    const avgFDR = count > 0 ? totalFDR / count : 3;
+    const gwRatingEl = document.getElementById('gw-rating');
+    if (avgFDR <= 2.5) gwRatingEl.textContent = "A";
+    else if (avgFDR <= 3.2) gwRatingEl.textContent = "B";
+    else gwRatingEl.textContent = "C";
+}
+
+// Initial Run
 syncData();
