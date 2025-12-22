@@ -57,7 +57,29 @@
         </div>
     </nav>
 
-    <main class="container">
+   
+        <section id="id-entry-section">
+            <section class="intro">
+                <p>Welcome to Kopala! Follow your FPL points, live rank and bonus points exactly processed in real-time.</p>
+                <hr style="border:0; border-top:1px solid #f1f5f9; margin: 20px 0;">
+            </section>
+
+            <section class="id-input-section">
+                <div class="accent-title">
+                    <h2 style="font-size: 1.1rem; margin: 0; color: var(--dark-blue);">Please Enter your FPL ID!</h2>
+                </div>
+                <input type="text" id="fpl-id" placeholder="Enter Team ID (e.g. 12345)">
+                <button id="change-id-btn">Get Started</button>
+                <a href="#" class="help-link">How to get my FPL id?</a>
+            </section>
+
+
+            <div id="price-card" class="card" style="display:none;">
+        <h3>Price Risers & Fallers</h3>
+        <div id="price-changes-list"></div>
+    </div>
+</div>
+
 
 <div class="container">
     <div id="loading-overlay">Updating FPL Data...</div>
@@ -83,27 +105,6 @@
         </div>
     
         
-        <section id="id-entry-section">
-            <section class="intro">
-                <p>Welcome to Kopala! Follow your FPL points, live rank and bonus points exactly processed in real-time.</p>
-                <hr style="border:0; border-top:1px solid #f1f5f9; margin: 20px 0;">
-            </section>
-
-            <section class="id-input-section">
-                <div class="accent-title">
-                    <h2 style="font-size: 1.1rem; margin: 0; color: var(--dark-blue);">Please Enter your FPL ID!</h2>
-                </div>
-                <input type="text" id="fpl-id" placeholder="Enter Team ID (e.g. 12345)">
-                <button id="change-id-btn">Get Started</button>
-                <a href="#" class="help-link">How to get my FPL id?</a>
-            </section>
-
-
-            <div id="price-card" class="card" style="display:none;">
-        <h3>Price Risers & Fallers</h3>
-        <div id="price-changes-list"></div>
-    </div>
-</div>
 
                         
         </section>
