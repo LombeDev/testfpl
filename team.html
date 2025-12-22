@@ -39,7 +39,7 @@
 
 
     <main class="main-container">
-        <div class="ticker" id="ticker">🔄 SYNCING LIVE PREMIER LEAGUE DATA...</div>
+        <div class="ticker" id="ticker">...</div>
         
         <div class="status-bar">
             <span>In the bank: <b id="budget-val">£100.0m</b></span>
@@ -80,15 +80,15 @@
         </section>
 
         <div class="controls">
-            <button class="btn-main" onclick="runAnalysis()">Run AI analysis</button>
+            <button class="btn-main" onclick="runAnalysis()">Analyse my team</button>
             <div class="btn-group">
-                <button class="btn-sec" onclick="autoOptimize()">Template Team</button>
+                <button class="btn-sec" onclick="autoOptimize()">Start with template Team</button>
                 <button class="btn-reset" onclick="location.reload()">Reset</button>
             </div>
         </div>
 
         <div id="results" class="ai-card">
-            <span class="verdict-label">AI Tactical Recommendation</span>
+            <span class="verdict-label">AI Recommendation</span>
             <p id="ai-msg">Build your team to see tactical advice.</p>
         </div>
     </main>
