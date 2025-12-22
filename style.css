@@ -17,9 +17,6 @@
     padding: 0;
 }
 
-/* FIX: Removed overflow-x: hidden from html/body. 
-   'Sticky' fails if any parent has overflow: hidden.
-*/
 html, body {
     width: 100%;
 }
@@ -30,6 +27,15 @@ body {
     color: var(--text-gray);
     line-height: 1.5;
     background-color: #fff;
+    /* Smooth scrolling for anchor links */
+    scroll-behavior: smooth;
+}
+
+/* --- PERFORMANCE OPTIMIZATION (Lazy Rendering) --- */
+/* This speeds up initial load by skipping off-screen rendering */
+.card, .edge-card, footer {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 200px; /* Provides a placeholder size to prevent scrollbar jumping */
 }
 
 /* --- NAVBAR (NOW STICKY) --- */
@@ -38,9 +44,9 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 10px 10px;
-    background: #ffffff; /* Solid background so content doesn't show through */
+    background: #ffffff; 
     border-bottom: 1px solid #eee;
-    position: -webkit-sticky; /* Safari support */
+    position: -webkit-sticky; 
     position: sticky;
     top: 0;
     width: 100%;
@@ -80,9 +86,6 @@ body {
 .drawer-links a:active { color: var(--primary-green); }
 
 /* --- MAIN CONTENT / CONTAINER --- */
-/* We wrap the content in main-content to handle overflow-x 
-   without breaking the sticky navbar.
-*/
 .main-content {
     overflow-x: hidden;
     width: 100%;
