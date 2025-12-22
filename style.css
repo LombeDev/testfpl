@@ -1,4 +1,4 @@
-/* --- GLOBAL VARIABLES --- */
+/* --- GLOBAL FIXES --- */
 :root {
     --primary-green: #249771;
     --dark-blue: #0f172a;
@@ -9,103 +9,63 @@
     --accent: #249771;
     --down: #e53e3e;
     --fpl-pink: #ff005a;
-    --fpl-purple: #37003c;
 }
 
-/* --- RESET & BASE --- */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    -webkit-tap-highlight-color: transparent;
 }
 
+/* FIX: Removed overflow-x: hidden from html/body. 
+   'Sticky' fails if any parent has overflow: hidden.
+*/
 html, body {
     width: 100%;
+}
+
+body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
     color: var(--text-gray);
     line-height: 1.5;
     background-color: #fff;
-    overflow-x: hidden;
 }
 
-/* --- NAVBAR (STICKY & CENTERED LOGO) --- */
+/* --- NAVBAR (NOW STICKY) --- */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
-    background: #ffffff;
+    padding: 10px 10px;
+    background: #ffffff; /* Solid background so content doesn't show through */
     border-bottom: 1px solid #eee;
+    position: -webkit-sticky; /* Safari support */
     position: sticky;
     top: 0;
     width: 100%;
-    height: 60px;
     z-index: 1000;
 }
 
-/* LEFT SIDE: Hamburger */
-.nav-left { 
-    display: flex; 
-    align-items: center; 
-    z-index: 1001; 
-}
+.nav-left { display: flex; align-items: center; gap: 15px; }
 
-.menu-icon { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 4px; 
-    cursor: pointer; 
-    padding: 8px; 
-}
-.menu-icon span { 
-    width: 20px; 
-    height: 2px; 
-    background: #000; 
-    border-radius: 2px;
-}
+.menu-icon { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 5px; }
+.menu-icon span { width: 20px; height: 2px; background: #000; }
 
-/* CENTERED BRAND */
-.brand { 
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.1rem; 
-    font-weight: 900; 
-    color: #000; 
-    margin: 0; 
-    white-space: nowrap;
-    text-transform: uppercase;
-    letter-spacing: -0.5px;
-}
+.brand { font-size: 1.2rem; font-weight: 900; color: #000; margin: 0; }
 .brand span { color: var(--primary-green); }
 
-/* RIGHT SIDE: Icons */
-.nav-right { 
-    display: flex; 
-    align-items: center; 
-    gap: 6px; 
-    z-index: 1001; 
-}
-
+.nav-right { display: flex; align-items: center; gap: 8px; }
 .icon-btn { 
-    background: var(--bg-light); 
-    border: none; 
-    border-radius: 50%; 
-    width: 36px; 
-    height: 36px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: var(--dark-blue);
+    background: var(--bg-light); border: none; border-radius: 50%; 
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; color: var(--dark-blue);
 }
-.divider { width: 1px; height: 18px; background: #ddd; margin: 0 2px; }
+.divider { width: 1px; height: 20px; background: #ddd; margin: 0 5px; }
 
 /* --- DRAWER & BACKDROP --- */
 .drawer {
     position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
     background: white; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 10px 0 20px rgba(0,0,0,0.1);
 }
 .drawer.open { left: 0; }
 .backdrop {
@@ -114,139 +74,120 @@ html, body {
 }
 .backdrop.active { display: block; }
 
-/* --- MAIN CONTAINER (EDGE-TO-EDGE) --- */
+.drawer-links { list-style: none; padding: 20px; margin: 0; }
+.drawer-links li { padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+.drawer-links a { text-decoration: none; color: #333; font-weight: 600; transition: 0.2s; }
+.drawer-links a:active { color: var(--primary-green); }
+
+/* --- MAIN CONTENT / CONTAINER --- */
+/* We wrap the content in main-content to handle overflow-x 
+   without breaking the sticky navbar.
+*/
+.main-content {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 .container { 
     width: 100%;
     max-width: 500px; 
-    margin: 20px auto; 
-    padding: 0 6px; 
+    margin: 30px auto; 
+    padding: 0 5px;
     min-height: 60vh; 
 }
 
 .card {
     background: var(--card-bg);
     border-radius: 12px;
-    padding: 16px 4px; /* Tight horizontal padding for edge-to-edge look */
-    margin-bottom: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    padding: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.accent-title { 
-    border-left: 4px solid var(--primary-green); 
-    padding-left: 12px; 
-    margin-bottom: 15px;
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: var(--dark-blue);
+.accent-title { border-left: 6px solid var(--primary-green); padding-left: 15px; }
+
+/* --- KOPALA EDGE STYLES --- */
+.edge-container { margin-top: 40px; }
+.edge-title { 
+    font-size: 0.9rem; font-weight: 900; letter-spacing: 2px; 
+    color: var(--dark-blue); margin-bottom: 20px; 
+    display: flex; align-items: center; gap: 10px;
+}
+.edge-title::after { content: ""; flex: 1; height: 2px; background: #eee; }
+
+.edge-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+
+.edge-card {
+    background: #fff; border: 1px solid #f0f0f0; border-radius: 12px;
+    padding: 25px; transition: 0.3s; position: relative;
 }
 
-/* --- PRICE RISE/FALL ROWS --- */
-.price-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 10px;
-    border-bottom: 1px solid #f1f5f9;
-}
-.price-row:last-child { border-bottom: none; }
+.edge-card h3 { font-size: 1rem; color: var(--dark-blue); margin: 15px 0 8px 0; font-weight: 800; }
+.edge-card p { font-size: 0.85rem; color: var(--text-gray); margin: 0; line-height: 1.4; }
 
-.player-info { display: flex; flex-direction: column; }
-.player-name { font-weight: 800; font-size: 15px; color: var(--dark-blue); letter-spacing: -0.3px; }
-.team-name { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
+.highlighted { border-left: 4px solid var(--primary-green); }
 
-.price-data { display: flex; align-items: center; gap: 4px; }
-.price-val { font-weight: 800; font-size: 16px; color: var(--dark-blue); font-variant-numeric: tabular-nums; }
+/* --- GEOMETRIC ICONS --- */
+.geo-icon { width: 30px; height: 30px; position: relative; }
+.circle-split { background: linear-gradient(90deg, var(--primary-green) 50%, var(--fpl-pink) 50%); border-radius: 50%; }
+.square-stack::before { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--primary-green); }
+.square-stack::after { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--fpl-pink); top: 5px; left: 5px; }
+.triangle-point { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 25px solid var(--primary-green); }
+.bars-minimal { border-left: 6px solid #ddd; border-right: 6px solid var(--primary-green); height: 25px; }
+.circle-dot { border: 3px solid var(--dark-blue); border-radius: 50%; }
+.circle-dot::after { content: ''; position: absolute; width: 8px; height: 8px; background: var(--fpl-pink); top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; }
+.strike-line { background: var(--fpl-pink); height: 4px; top: 13px; transform: rotate(-45deg); width: 30px; }
 
-/* Dynamic Arrow Classes */
-.change-up { color: #00c853; }
-.change-up::before { content: '\25B2'; font-size: 9px; margin-right: 3px; }
-
-.change-down { color: var(--down); }
-.change-down::before { content: '\25BC'; font-size: 9px; margin-right: 3px; }
-
-/* --- COUNTDOWN TIMER --- */
-.timer-header {
-    text-align: center;
-    font-size: 12px;
+/* --- COUNTDOWN & PRICE DATA --- */
+h3.timer-header {
+    margin-top: 0;
+    font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--text-dim);
-    margin-bottom: 10px;
 }
+
+#countdown-timer { text-align: center; }
 
 .timer-grid {
     display: flex;
     justify-content: center;
-    gap: 22px;
-    font-weight: 900;
-    font-size: 32px;
+    gap: 15px;
+    font-weight: 800;
+    font-size: 24px;
     color: var(--accent);
-    letter-spacing: -1px;
 }
 
 .timer-unit {
     font-size: 10px;
     display: block;
     color: var(--text-dim);
-    font-weight: 700;
-    text-transform: uppercase;
-    text-align: center;
-    margin-top: -4px;
+    font-weight: 400;
 }
 
-/* --- PITCH & PLAYERS --- */
-.pitch-outer-wrap { 
-    background: #2d9e63; 
-    border-radius: 12px; 
-    padding: 8px; 
-    border: 3px solid #248a55;
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eeeeee;
 }
+.price-row:last-child { border-bottom: none; }
 
-.pitch {
-    min-height: 420px; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: space-around;
-    position: relative;
-    border: 1.5px solid rgba(255, 255, 255, 0.35);
-    background-image: 
-        linear-gradient(to bottom, transparent 49.7%, rgba(255, 255, 255, 0.35) 49.7%, rgba(255, 255, 255, 0.35) 50.3%, transparent 50.3%),
-        radial-gradient(circle at 50% 50%, transparent 12%, rgba(255, 255, 255, 0.35) 12%, rgba(255, 255, 255, 0.35) 13%, transparent 13%),
-        linear-gradient(rgba(255, 255, 255, 0.05) 50%, transparent 50%);
-    background-size: 100% 100%, 100% 100%, 100% 18%;
-}
-
-.jersey {
-    width: 36px; height: 32px;
-    background-color: #ddd;
-    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
-    margin: 0 auto;
-}
-
-.player-name-tag { 
-    background: var(--fpl-purple); 
-    color: white; 
-    font-size: 10px; 
-    font-weight: 800; 
-    padding: 2px 4px; 
-    border-radius: 2px; 
-    margin-top: 4px; 
-    text-align: center; 
-}
+.player-info { display: flex; flex-direction: column; }
+.player-name { font-weight: 600; font-size: 15px; color: var(--dark-blue); }
+.team-name { font-size: 12px; color: var(--text-dim); }
+.price-data { text-align: right; }
+.price-val { font-weight: 700; color: var(--dark-blue); }
+.change-up { color: #008a4a; font-weight: bold; }
+.change-down { color: var(--down); font-weight: bold; }
 
 /* --- FOOTER --- */
-footer { 
-    background: var(--dark-blue); 
-    color: white; 
-    padding: 40px 15px; 
-    margin-top: 60px; 
-    text-align: center; 
-    font-size: 0.85rem;
-}
+footer { background: var(--dark-blue); color: white; padding: 40px 15px; margi
+n-top: 60px; text-align: center; }
 
 /* --- DESKTOP ADJUSTMENT --- */
 @media (min-width: 480px) {
-    .container { padding: 0 15px; }
-    .card { padding: 20px 15px; }
-    .brand { font-size: 1.3rem; }
+    .edge-grid { grid-template-columns: 1fr 1fr; }
+    .container { padding: 0 20px; }
 }
