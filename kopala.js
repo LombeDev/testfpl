@@ -6,40 +6,33 @@ async function fetchProLeague() {
     loader.classList.remove("hidden");
 
     try {
-        // 1. Fetch Static Data
-        const staticRes = await fetch(`${API_BASE}bootstrap-static/`);
+        const [staticRes, leagueRes] = await Promise.all([
+            fetch(`${API_BASE}bootstrap-static/`),
+            fetch(`${API_BASE}leagues-classic/${LEAGUE_ID}/standings/`)
+        ]);
+
         const staticData = await staticRes.json();
-        
+        const leagueData = await leagueRes.json();
+
         const playerNames = {};
         staticData.elements.forEach(p => playerNames[p.id] = p.web_name);
-        
         const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
+
         document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
-
-        // 2. Fetch League Standings
-        const leagueRes = await fetch(`${API_BASE}leagues-classic/${LEAGUE_ID}/standings/`);
-        const leagueData = await leagueRes.json();
-        const managers = leagueData.standings.results;
-
-        // 3. Render Table Structure
-        renderTable(managers);
-
-        // 4. "Smart Load" Captains and Chips (One by one to avoid 403/429 errors)
-        for (const manager of managers) {
-            await fetchManagerExtras(manager.entry, currentEvent, playerNames);
-        }
-
+        renderTable(leagueData.standings.results, currentEvent, playerNames);
         loader.classList.add("hidden");
     } catch (err) {
-        console.error("FPL API Error:", err);
+        console.error("Fetch Error:", err);
         loader.classList.add("hidden");
     }
 }
 
-function renderTable(data) {
+function renderTable(managers, currentEvent, playerNames) {
     const body = document.getElementById("league-body");
-    body.innerHTML = data.map((m, i) => `
-        <tr style="${i === 0 ? 'background:rgba(0,255,135,0.05)' : ''}">
+    const playerNamesStr = JSON.stringify(playerNames).replace(/"/g, '&quot;');
+
+    body.innerHTML = managers.map((m) => `
+        <tr onmouseenter="loadAndCacheManager(${m.entry}, ${currentEvent}, ${playerNamesStr})">
             <td>${m.rank}</td>
             <td>
                 <div class="manager-info">
@@ -49,33 +42,48 @@ function renderTable(data) {
             </td>
             <td>${m.event_total}</td>
             <td class="bold-p">${m.total}</td>
-            <td id="chip-${m.entry}"><span class="loading-small">...</span></td>
-            <td id="cap-${m.entry}" style="font-weight:700; font-size: 11px;">—</td>
+            <td id="chip-${m.entry}">...</td>
+            <td id="cap-${m.entry}">—</td>
         </tr>
     `).join('');
 }
 
-async function fetchManagerExtras(entryId, currentEvent, playerNames) {
+async function loadAndCacheManager(entryId, currentEvent, playerNames) {
+    const cacheKey = `fpl_entry_${entryId}_gw${currentEvent}`;
+    const cached = localStorage.getItem(cacheKey);
+
+    // 1. Check if we already have this manager's data for this week
+    if (cached) {
+        updateRow(entryId, JSON.parse(cached), playerNames);
+        return;
+    }
+
+    // 2. Prevent duplicate fetches if moving mouse quickly
+    const capCell = document.getElementById(`cap-${entryId}`);
+    if (capCell.innerText === "loading...") return;
+    capCell.innerText = "loading...";
+
     try {
-        // This single call gives us BOTH the Captain and the Chip
         const res = await fetch(`${API_BASE}entry/${entryId}/event/${currentEvent}/picks/`);
         const data = await res.json();
 
-        const chipMeta = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
-        const activeChip = data.active_chip;
-        const captainObj = data.picks.find(p => p.is_captain);
+        const managerData = {
+            chip: data.active_chip,
+            capId: data.picks.find(p => p.is_captain).element
+        };
 
-        // Update Chip Cell
-        const chipCell = document.getElementById(`chip-${entryId}`);
-        chipCell.innerHTML = activeChip ? `<span class="chip-badge chip-${activeChip}">${chipMeta[activeChip] || activeChip}</span>` : '—';
-
-        // Update Captain Cell
-        const capCell = document.getElementById(`cap-${entryId}`);
-        capCell.innerHTML = `© ${playerNames[captainObj.element]}`;
-
-    } catch (err) {
-        console.warn(`Could not load details for ${entryId}`);
+        // 3. Save to localStorage
+        localStorage.setItem(cacheKey, JSON.stringify(managerData));
+        updateRow(entryId, managerData, playerNames);
+    } catch (e) {
+        capCell.innerText = "Error";
     }
+}
+
+function updateRow(entryId, data, playerNames) {
+    const chipMeta = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
+    document.getElementById(`chip-${entryId}`).innerHTML = data.chip ? `<span class="chip-badge">${chipMeta[data.chip] || data.chip}</span>` : '—';
+    document.getElementById(`cap-${entryId}`).innerHTML = `<strong>© ${playerNames[data.capId]}</strong>`;
 }
 
 document.addEventListener("DOMContentLoaded", fetchProLeague);
