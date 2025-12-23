@@ -78,3 +78,16 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
 .jersey.liverpool { --team-main: #c8102e; }
 .jersey.chelsea { --team-main: #034694; }
 .jersey.default { --team-main: #ccc; opacity: 0.5; }
+
+#gw-rating {
+    background: var(--fpl-purple);
+    color: var(--fpl-green);
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.ai-card {
+    border-top: 4px solid var(--fpl-green);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
