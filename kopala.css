@@ -214,3 +214,64 @@ td { padding: 5px 2px; border-bottom: 1px solid #f3f4f6; overflow: hidden; white
 .total-value { font-size: 22px; font-weight: 900; color: #37003c; }
 
 .close-btn { background: none; border: none; font-size: 24px; color: #cbd5e1; cursor: pointer; }
+
+
+
+/* Container to allow horizontal scrolling */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    background: white;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px; /* Ensures columns don't crush */
+}
+
+/* Sticky Manager Column */
+.manager-col {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 10;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+/* Data Tags */
+.chip-tag {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: #37003c;
+    color: #00ff87;
+    text-transform: uppercase;
+}
+
+.val-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+}
+
+.diff-tag-list, .trans-tag-list {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap; /* Keep them in a row */
+}
+
+.mini-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.tag-diff { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+.tag-in { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+.tag-out { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
