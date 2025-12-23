@@ -1,130 +1,94 @@
 /**
- * KOPALA FPL - Price Changes & Countdown Logic
+ * KOPALA FPL - Smart Sync Engine
+ * Handles: 429 Blocking, 10min Cache, and UI Updates
  */
 
-const API_BASE = "/fpl-api/"; 
+const API_BASE = "/fpl-api/"; // Ensure your proxy/server is mapped here
 let teamMap = {};
 
-async function init() {
+async function syncData() {
+    const ticker = document.getElementById('ticker');
     const loader = document.getElementById("loading-overlay");
+    const LOCK_KEY = 'fpl_api_blocked_until';
+    const CACHE_KEY = 'fpl_bootstrap_cache';
     
-    try {
-        // 1. Check Cache for Bootstrap Data (Expires in 10 mins)
-        const cacheKey = "fpl_bootstrap_cache";
-        const cached = localStorage.getItem(cacheKey);
-        let data;
-
-        if (cached) {
-            const parsed = JSON.parse(cached);
-            if (Date.now() - parsed.timestamp < 10 * 60 * 1000) {
-                data = parsed.content;
-            }
-        }
-
-        // 2. Fetch if no cache
-        if (!data) {
-            const response = await fetch(`${API_BASE}bootstrap-static/`);
-            data = await response.json();
-            // Save to cache
-            localStorage.setItem(cacheKey, JSON.stringify({
-                timestamp: Date.now(),
-                content: data
-            }));
-        }
-
-        // 3. Build Team Map
-        data.teams.forEach(t => teamMap[t.id] = t.short_name);
-
-        // 4. Handle UI Components
-        renderDeadline(data.events);
-        renderPrices(data.elements);
-
-        if (loader) loader.style.display = 'none';
-
-    } catch (err) {
-        console.error("Initialization failed:", err);
-        if (loader) loader.textContent = "Error loading data. Check your connection.";
-    }
-}
-
-function renderDeadline(events) {
-    const nextGW = events.find(e => !e.finished && new Date(e.deadline_time) > new Date());
-    if (!nextGW) return;
-
-    const el = document.getElementById("countdown-timer");
-    const card = document.getElementById("deadline-card");
-    if (card) card.style.display = 'block';
-
-    const deadline = new Date(nextGW.deadline_time).getTime();
-
-    const update = () => {
-        const now = new Date().getTime();
-        const diff = deadline - now;
-
-        if (diff <= 0) {
-            if (el) el.innerHTML = "Deadline Passed";
-            return;
-        }
-
-        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-        if (el) {
-            el.innerHTML = `
-                <div class="timer-grid">
-                    <div>${d}<span class="timer-unit">DAYS</span></div>
-                    <div>${h}<span class="timer-unit">HRS</span></div>
-                    <div>${m}<span class="timer-unit">MIN</span></div>
-                    <div>${s}<span class="timer-unit">SEC</span></div>
-                </div>
-                <div style="margin-top:10px; font-size:12px; font-weight:600; color: #37003c;">Gameweek ${nextGW.id}</div>
-            `;
-        }
-    };
-
-    update();
-    setInterval(update, 1000);
-}
-
-function renderPrices(players) {
-    const list = document.getElementById("price-changes-list");
-    const card = document.getElementById("price-card");
-    if (!list || !card) return;
-    
-    // Filter for players who had a price change today
-    const risersFallers = players
-        .filter(p => p.cost_change_event !== 0)
-        .sort((a, b) => b.cost_change_event - a.cost_change_event);
-
-    if (risersFallers.length === 0) {
-        list.innerHTML = `<p style="text-align:center; padding: 20px; color: #666;">No price changes in the last 24 hours.</p>`;
-        card.style.display = 'block';
+    // 1. HARD BLOCK CHECK: If we hit a 429 recently, don't even try to fetch
+    const blockedUntil = localStorage.getItem(LOCK_KEY);
+    if (blockedUntil && Date.now() < parseInt(blockedUntil)) {
+        const remainingMin = Math.ceil((parseInt(blockedUntil) - Date.now()) / 60000);
+        if (ticker) ticker.innerHTML = `⚠️ <span style="color:#ff4d4d">API Locked: Try in ${remainingMin}m</span>`;
+        loadFromCacheOnly(); // Silently keep the app running with old data
         return;
     }
 
-    card.style.display = 'block';
+    // 2. SOFT CACHE CHECK: Don't fetch if data is less than 10 mins old
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+        const parsed = JSON.parse(cached);
+        const age = Date.now() - parsed.timestamp;
+        if (age < 10 * 60 * 1000) {
+            console.log("Data is fresh. Using cache.");
+            processFPLData(parsed.content);
+            if (ticker) ticker.innerHTML = "✅ <span style='color:#00ff87'>Mode: Smart Cache</span>";
+            return;
+        }
+    }
 
-    list.innerHTML = risersFallers.map(p => {
-        const change = p.cost_change_event / 10;
-        const colorClass = change > 0 ? 'change-up' : 'change-down';
-        const sign = change > 0 ? '+' : '';
+    try {
+        if (ticker) ticker.textContent = "Checking for price changes...";
+        
+        const response = await fetch(`${API_BASE}bootstrap-static/`);
 
-        return `
-            <div class="price-row">
-                <div class="player-info">
-                    <span class="player-name">${p.web_name}</span>
-                    <span class="team-name">${teamMap[p.team]}</span>
-                </div>
-                <div class="price-data">
-                    <span class="price-val">£${(p.now_cost / 10).toFixed(1)}m</span><br>
-                    <span class="${colorClass}" style="font-weight:bold;">${sign}${change.toFixed(1)}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
+        // 3. HANDLE RATE LIMITS (429)
+        if (response.status === 429) {
+            const coolDownTime = Date.now() + (30 * 60 * 1000); // 30 min ban
+            localStorage.setItem(LOCK_KEY, coolDownTime.toString());
+            throw new Error("Rate limit reached. App locked for 30m.");
+        }
+
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+        const data = await response.json();
+
+        // 4. SAVE SUCCESSFUL FETCH
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            timestamp: Date.now(),
+            content: data
+        }));
+
+        processFPLData(data);
+        if (ticker) ticker.innerHTML = "🔄 <span style='color:#00ff87'>Data Updated</span>";
+        if (loader) loader.style.display = 'none';
+
+    } catch (err) {
+        console.error("Sync failed:", err.message);
+        if (ticker) ticker.innerHTML = `📡 <span style="color:orange">Offline Mode</span>`;
+        loadFromCacheOnly(); 
+    }
 }
 
-// Kick off the script
-init();
+/** * Helper: Processes the raw FPL JSON into your app's variables 
+ */
+function processFPLData(data) {
+    // Build the team name map (e.g., 1 -> "ARS")
+    data.teams.forEach(t => teamMap[t.id] = t.short_name);
+    
+    // Call your specific UI renderers
+    if (typeof renderDeadline === "function") renderDeadline(data.events);
+    if (typeof renderPrices === "function") renderPrices(data.elements);
+}
+
+/** * Helper: Fallback to use whatever is in LocalStorage 
+ */
+function loadFromCacheOnly() {
+    const cached = localStorage.getItem('fpl_bootstrap_cache');
+    if (cached) {
+        const parsed = JSON.parse(cached);
+        processFPLData(parsed.content);
+        const loader = document.getElementById("loading-overlay");
+        if (loader) loader.style.display = 'none';
+    }
+}
+
+// Initial Kick-off
+syncData();
