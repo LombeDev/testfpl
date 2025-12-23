@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - Core Logic (v3.8)
- * Features: Deadline Timer, Vertical Price Scroll, & GW Live King
+ * KOPALA FPL - Ultimate Home Dashboard (v4.0)
+ * Features: Timer, Vertical Price Scroll, Live King, & The Scout (Value)
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -66,6 +66,7 @@ function processAndRender(data) {
     renderDeadline(data.events);
     renderPrices(data.elements);
     renderLiveKing(data.elements);
+    renderScout(data.elements);
 }
 
 function loadFromCacheOnly() {
@@ -79,7 +80,7 @@ function loadFromCacheOnly() {
 }
 
 /**
- * COUNTDOWN TIMER
+ * 1. COUNTDOWN TIMER
  */
 function renderDeadline(events) {
     const nextGW = events.find(e => !e.finished && new Date(e.deadline_time) > new Date());
@@ -123,7 +124,7 @@ function renderDeadline(events) {
 }
 
 /**
- * VERTICAL PRICE SCROLL
+ * 2. VERTICAL PRICE SCROLL
  */
 function renderPrices(players) {
     const risersList = document.getElementById("risers-list");
@@ -163,7 +164,7 @@ function renderPrices(players) {
 }
 
 /**
- * LIVE KING - Displays top performer of the GW
+ * 3. LIVE KING - Displays top performer of the current GW
  */
 function renderLiveKing(players) {
     const container = document.getElementById("live-king-content");
@@ -191,6 +192,40 @@ function renderLiveKing(players) {
             </div>
         </div>
     `;
+    card.style.display = 'block';
+}
+
+/**
+ * 4. THE SCOUT - Highlights top 3 budget enablers (Points per Million)
+ */
+function renderScout(players) {
+    const container = document.getElementById("scout-list");
+    const card = document.getElementById("scout-card");
+    if (!container || !card) return;
+
+    const bestValue = players
+        .filter(p => parseFloat(p.value_form) > 0)
+        .sort((a, b) => parseFloat(b.value_form) - parseFloat(a.value_form))
+        .slice(0, 3);
+
+    if (bestValue.length === 0) {
+        card.style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = bestValue.map(p => `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f0fdf4; border-radius: 8px; margin-bottom: 8px; border: 1px solid #dcfce7;">
+            <div>
+                <div style="font-weight: 800; color: #166534; font-size: 13px;">${p.web_name}</div>
+                <div style="font-size: 11px; color: #15803d;">${teamMap[p.team]} | £${(p.now_cost/10).toFixed(1)}m</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 9px; font-weight: 700; color: #166534; text-transform: uppercase;">Value Form</div>
+                <div style="font-size: 16px; font-weight: 900; color: #166534;">${p.value_form}</div>
+            </div>
+        </div>
+    `).join('');
+
     card.style.display = 'block';
 }
 
