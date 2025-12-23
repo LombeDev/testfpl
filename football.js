@@ -1,18 +1,4 @@
-// --- 1. Navigation & Drawer Logic ---
-const openBtn = document.getElementById('open-drawer');
-const drawer = document.getElementById('side-drawer');
-const backdrop = document.getElementById('backdrop');
-
-// Toggle Drawer (Re-using logic from AI page for consistency)
-const toggleMenu = (open) => {
-    if (drawer) drawer.classList.toggle('open', open);
-    if (backdrop) backdrop.classList.toggle('active', open);
-};
-
-if (openBtn) openBtn.onclick = () => toggleMenu(true);
-if (backdrop) backdrop.onclick = () => toggleMenu(false);
-
-// --- 2. League Configuration ---
+// --- 1. Configuration & State ---
 const LEAGUE_MAP = {
     'PL': 'English Premier League',
     'PD': 'La Liga',
@@ -25,36 +11,47 @@ const LEAGUE_MAP = {
 };
 
 let activeLeague = 'PL';
+let rawStandingsData = [];
+let currentView = 'total';
+let lastFetchTime = null;
 
-// --- 3. The Switcher Function ---
-async function switchLeague(leagueId) {
-    activeLeague = leagueId;
+// --- 2. Navigation & Drawer ---
+const menuBtn = document.getElementById('menu-btn');
+const closeBtn = document.getElementById('close-btn');
+const drawer = document.getElementById('side-drawer');
+const backdrop = document.getElementById('backdrop');
 
-    // Update Header Text
-    const titleElement = document.getElementById('section-title');
-    if (titleElement) titleElement.innerText = LEAGUE_MAP[leagueId];
+const toggleDrawer = (open) => {
+    if (drawer) drawer.classList.toggle('open', open);
+    if (backdrop) backdrop.classList.toggle('active', open);
+};
 
-    // Update Active Button UI
-    document.querySelectorAll('.league-btn').forEach(btn => {
-        btn.classList.remove('active');
-        // Check if the button's text or attribute matches
-        if (btn.innerText.includes(leagueId) || btn.outerHTML.includes(`'${leagueId}'`)) {
-            btn.classList.add('active');
-        }
-    });
+if(menuBtn) menuBtn.onclick = () => toggleDrawer(true);
+if(closeBtn) closeBtn.onclick = () => toggleDrawer(false);
+if(backdrop) backdrop.onclick = () => toggleDrawer(false);
 
-    // Reset view and fetch new data
-    init();
-}
-
-// --- 4. API & Data Fetching ---
+// --- 3. Core Initialization & Caching ---
 async function init() {
-    const loader = document.getElementById('loader');
-    if (loader) loader.style.display = 'block';
+    const loader = document.getElementById('loading-overlay');
+    if (loader) loader.classList.remove('hidden');
 
-    // Note: Update this URL to match your server/proxy environment
-    const PROXY_URL = `/api/competitions/${activeLeague}/`; 
-    
+    const PROXY_URL = `/api/competitions/${activeLeague}/`;
+    const CACHE_KEY = `football_data_${activeLeague}`;
+    const CACHE_EXPIRY = 60 * 60 * 1000; // 1 Hour
+
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        const now = Date.now();
+
+        if (now - parsed.timestamp < CACHE_EXPIRY) {
+            lastFetchTime = parsed.timestamp;
+            renderAllSections(parsed.data, parsed.timestamp);
+            if (loader) loader.classList.add('hidden');
+            return;
+        }
+    }
+
     try {
         const [standingsRes, scorersRes, fixturesRes] = await Promise.all([
             fetch(`${PROXY_URL}standings`),
@@ -62,100 +59,129 @@ async function init() {
             getFixtures(PROXY_URL)
         ]);
 
-        const sData = await standingsRes.json();
-        const scData = await scorersRes.json();
-        const fData = await fixturesRes.json();
+        const data = {
+            standings: await standingsRes.json(),
+            scorers: await scorersRes.json(),
+            fixtures: await fixturesRes.json()
+        };
 
-        // Render sections
-        if (sData.standings) {
-            // Standard leagues use index 0; CL may require group logic
-            renderStandings(sData.standings[0].table);
-        }
-        
-        if (scData.scorers) renderScorers(scData.scorers);
-        if (fData.matches) renderFixtures(fData.matches);
+        lastFetchTime = Date.now();
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            timestamp: lastFetchTime,
+            data: data
+        }));
 
+        renderAllSections(data, lastFetchTime);
     } catch (err) {
-        console.error("Dashboard Sync Error:", err);
+        console.error("Sync Error:", err);
     } finally {
-        if (loader) loader.style.display = 'none';
+        if (loader) loader.classList.add('hidden');
     }
 }
 
 async function getFixtures(url) {
-    const today = new Date().toISOString().split('T')[0];
-    const nextWeek = new Date();
-    nextWeek.setDate(nextWeek.getDate() + 10);
-    return fetch(`${url}matches?dateFrom=${today}&dateTo=${nextWeek.toISOString().split('T')[0]}`);
+    const start = new Date();
+    start.setDate(start.getDate() - 3); // 3 days ago for results
+    const end = new Date();
+    end.setDate(end.getDate() + 7); // 7 days ahead
+    return fetch(`${url}matches?dateFrom=${start.toISOString().split('T')[0]}&dateTo=${end.toISOString().split('T')[0]}`);
 }
 
-// --- 5. Updated Render Functions (Clean White Style) ---
+// --- 4. Rendering Logic ---
+function renderAllSections(data, timestamp) {
+    if (data.standings.standings) {
+        renderStandings(data.standings.standings[0].table, currentView);
+    }
+    if (data.scorers.scorers) renderScorers(data.scorers.scorers);
+    if (data.fixtures.matches) renderFixtures(data.fixtures.matches);
+    updateTimestampUI(timestamp);
+}
 
-function renderStandings(data) {
+function renderStandings(tableData, view = 'total') {
     const body = document.getElementById('standings-body');
     if (!body) return;
-    
-    body.innerHTML = data.map(team => `
-        <tr>
-            <td style="font-weight:bold; color:#666;">${team.position}</td>
-            <td>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <img src="${team.team.crest}" class="crest" style="width:20px; height:20px;"> 
-                    <span class="team-name">${team.team.shortName}</span>
-                </div>
-            </td>
-            <td style="color:#666;">${team.won}/${team.draw}/${team.lost}</td>
-            <td style="color:#666;">${team.goalDifference > 0 ? '+' + team.goalDifference : team.goalDifference}</td>
-            <td class="pts" style="font-weight:900; color:var(--fpl-purple);">${team.points}</td>
-        </tr>
-    `).join('');
-}
+    rawStandingsData = tableData;
 
-function renderScorers(data) {
-    const body = document.getElementById('scorers-body');
-    if (!body) return;
-    
-    body.innerHTML = data.slice(0, 10).map(s => `
-        <tr>
-            <td>
-                <div style="font-weight:bold;">${s.player.name}</div>
-                <div style="font-size:0.7rem; color:var(--text-muted);">${s.team.name}</div>
-            </td>
-            <td class="pts" style="text-align:right; font-weight:900;">${s.goals}</td>
-        </tr>
-    `).join('');
+    body.innerHTML = tableData.map(team => {
+        const stats = view === 'home' ? team.home : (view === 'away' ? team.away : team);
+        const formHtml = team.form ? team.form.split(',').map(res => {
+            const color = res === 'W' ? '#00ff87' : (res === 'D' ? '#ffaa00' : '#ff005a');
+            return `<span class="form-dot" style="background:${color}"></span>`;
+        }).join('') : '';
+
+        return `
+            <tr>
+                <td style="font-weight:bold;">${team.position}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <img src="${team.team.crest}" style="width:18px;"> 
+                        <span>${team.team.shortName}</span>
+                    </div>
+                </td>
+                <td style="text-align:center;">${stats.played}</td>
+                <td style="text-align:right; font-weight:900;">${stats.points}</td>
+                <td><div class="form-container">${formHtml}</div></td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function renderFixtures(matches) {
     const list = document.getElementById('fixtures-list');
     if (!list) return;
-    
-    if (!matches || matches.length === 0) {
-        list.innerHTML = '<p style="padding:20px; text-align:center; color:#999;">No upcoming matches.</p>';
-        return;
-    }
 
     list.innerHTML = matches.map(m => {
-        const dateObj = new Date(m.utcDate);
-        const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const date = dateObj.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
-        
+        const date = new Date(m.utcDate).toLocaleDateString([], {day:'numeric', month:'short'});
+        const time = new Date(m.utcDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        const isFinished = m.status === 'FINISHED';
+        const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+
+        let scoreDisplay = `<div style="width:40px; text-align:center; color:#ccc;">VS</div>`;
+        if (isFinished || isLive) {
+            scoreDisplay = `<div class="score-pill ${isLive ? 'live' : ''}">${m.score.fullTime.home} - ${m.score.fullTime.away}</div>`;
+        }
+
         return `
-            <div class="fixture-row" style="display:flex; align-items:center; padding:15px 0; border-bottom:1px solid #f1f5f9;">
-                <div style="width:70px; font-size:0.7rem; color:var(--text-muted); font-weight:bold;">
-                    ${date}<br>${time}
-                </div>
-                <div style="flex:1; text-align:right; font-weight:700;">
-                    ${m.homeTeam.shortName} <img src="${m.homeTeam.crest}" style="width:18px; margin-left:5px; vertical-align:middle;">
-                </div>
-                <div style="width:40px; text-align:center; font-size:0.7rem; color:#ccc;">VS</div>
-                <div style="flex:1; text-align:left; font-weight:700;">
-                    <img src="${m.awayTeam.crest}" style="width:18px; margin-right:5px; vertical-align:middle;"> ${m.awayTeam.shortName}
-                </div>
+            <div class="fixture-row">
+                <div class="f-date">${date}<br>${time}</div>
+                <div class="f-team right">${m.homeTeam.shortName} <img src="${m.homeTeam.crest}"></div>
+                ${scoreDisplay}
+                <div class="f-team left"><img src="${m.awayTeam.crest}"> ${m.awayTeam.shortName}</div>
             </div>
         `;
     }).join('');
 }
 
-// Initial Run
-init();
+// --- 5. Interactive UI Helpers ---
+function toggleStandings(view) {
+    renderStandings(rawStandingsData, view);
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+    });
+}
+
+async function forceRefresh() {
+    const icon = document.querySelector('.search-btn i');
+    if (icon) icon.classList.add('fa-spin');
+    localStorage.removeItem(`football_data_${activeLeague}`);
+    await init();
+    if (icon) icon.classList.remove('fa-spin');
+}
+
+function updateTimestampUI(timestamp) {
+    const el = document.getElementById('last-updated');
+    if (!el) return;
+    const mins = Math.floor((Date.now() - timestamp) / 60000);
+    el.innerHTML = `<i class="fas fa-history"></i> ${mins === 0 ? 'Just now' : mins + 'm ago'}`;
+}
+
+async function switchLeague(leagueId) {
+    activeLeague = leagueId;
+    const title = document.getElementById('active-gw-label');
+    if (title) title.innerText = leagueId;
+    toggleDrawer(false);
+    init();
+}
+
+// Initialize
+document.addEventListener("DOMContentLoaded", init);
