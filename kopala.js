@@ -6,7 +6,7 @@ async function fetchProLeague() {
     loader.classList.remove("hidden");
 
     try {
-        // 1. Get Static Data (for player names & current GW)
+        // 1. Fetch Static Data
         const staticRes = await fetch(`${API_BASE}bootstrap-static/`);
         const staticData = await staticRes.json();
         
@@ -16,26 +16,30 @@ async function fetchProLeague() {
         const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
         document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
 
-        // 2. Get League Standings
+        // 2. Fetch League Standings
         const leagueRes = await fetch(`${API_BASE}leagues-classic/${LEAGUE_ID}/standings/`);
         const leagueData = await leagueRes.json();
         const managers = leagueData.standings.results;
 
-        // Render the basic table first
-        renderTable(managers, currentEvent, playerNames);
-        loader.classList.add("hidden");
+        // 3. Render Table Structure
+        renderTable(managers);
 
+        // 4. "Smart Load" Captains and Chips (One by one to avoid 403/429 errors)
+        for (const manager of managers) {
+            await fetchManagerExtras(manager.entry, currentEvent, playerNames);
+        }
+
+        loader.classList.add("hidden");
     } catch (err) {
-        console.error("FPL Fetch Error:", err);
+        console.error("FPL API Error:", err);
         loader.classList.add("hidden");
     }
 }
 
-function renderTable(data, currentEvent, playerNames) {
+function renderTable(data) {
     const body = document.getElementById("league-body");
-    
-    body.innerHTML = data.map((m) => `
-        <tr id="row-${m.entry}" class="manager-row">
+    body.innerHTML = data.map((m, i) => `
+        <tr style="${i === 0 ? 'background:rgba(0,255,135,0.05)' : ''}">
             <td>${m.rank}</td>
             <td>
                 <div class="manager-info">
@@ -45,40 +49,32 @@ function renderTable(data, currentEvent, playerNames) {
             </td>
             <td>${m.event_total}</td>
             <td class="bold-p">${m.total}</td>
-            <td id="chip-${m.entry}"><button class="load-btn" onclick="fetchManagerDetails(${m.entry}, ${currentEvent}, Object.assign({}, ${JSON.stringify(playerNames)}))">Load Details</button></td>
-            <td id="cap-${m.entry}">—</td>
-            <td id="rank-${m.entry}">...</td>
-            <td id="val-${m.entry}">...</td>
+            <td id="chip-${m.entry}"><span class="loading-small">...</span></td>
+            <td id="cap-${m.entry}" style="font-weight:700; font-size: 11px;">—</td>
         </tr>
     `).join('');
 }
 
-async function fetchManagerDetails(entryId, currentEvent, playerNames) {
-    const chipCell = document.getElementById(`chip-${entryId}`);
-    chipCell.innerHTML = "loading...";
-
+async function fetchManagerExtras(entryId, currentEvent, playerNames) {
     try {
-        const [historyRes, picksRes] = await Promise.all([
-            fetch(`${API_BASE}entry/${entryId}/history/`),
-            fetch(`${API_BASE}entry/${entryId}/event/${currentEvent}/picks/`)
-        ]);
+        // This single call gives us BOTH the Captain and the Chip
+        const res = await fetch(`${API_BASE}entry/${entryId}/event/${currentEvent}/picks/`);
+        const data = await res.json();
 
-        const history = await historyRes.json();
-        const picks = await picksRes.json();
-
-        const currentGW = history.current[history.current.length - 1];
-        const activeChip = history.chips.find(c => c.event === currentEvent);
-        const captainObj = picks.picks.find(p => p.is_captain);
         const chipMeta = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
+        const activeChip = data.active_chip;
+        const captainObj = data.picks.find(p => p.is_captain);
 
-        // Update the specific cells in the row
-        document.getElementById(`chip-${entryId}`).innerHTML = activeChip ? `<span class="chip-badge chip-${activeChip.name}">${chipMeta[activeChip.name]}</span>` : '—';
-        document.getElementById(`cap-${entryId}`).innerHTML = `<strong>© ${playerNames[captainObj.element]}</strong>`;
-        document.getElementById(`rank-${entryId}`).innerHTML = `<span style="color:#94a3b8; font-size:9px">#${currentGW.overall_rank.toLocaleString()}</span>`;
-        document.getElementById(`val-${entryId}`).innerHTML = `<span class="val-tag">£${(currentGW.value / 10).toFixed(1)}</span>`;
+        // Update Chip Cell
+        const chipCell = document.getElementById(`chip-${entryId}`);
+        chipCell.innerHTML = activeChip ? `<span class="chip-badge chip-${activeChip}">${chipMeta[activeChip] || activeChip}</span>` : '—';
+
+        // Update Captain Cell
+        const capCell = document.getElementById(`cap-${entryId}`);
+        capCell.innerHTML = `© ${playerNames[captainObj.element]}`;
 
     } catch (err) {
-        chipCell.innerHTML = "Error";
+        console.warn(`Could not load details for ${entryId}`);
     }
 }
 
