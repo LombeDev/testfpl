@@ -58,15 +58,19 @@
         </div>
 
         <section class="stats-summary">
-            <div class="stat-box">
-                <span class="stat-label">AI SQUAD SCORE</span>
-                <span class="stat-value" id="score-display">0</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">EST. GW POINTS</span>
-                <span class="stat-value" id="v-xp">0</span>
-            </div>
-        </section>
+    <div class="stat-box">
+        <span class="stat-label">Team Rating</span>
+        <span class="stat-value" id="team-rating">0%</span>
+    </div>
+    <div class="stat-box">
+        <span class="stat-label">Predicted Points</span>
+        <span class="stat-value" id="v-xp">0</span>
+    </div>
+    <div class="stat-box">
+        <span class="stat-label">GW Rating</span>
+        <span class="stat-value" id="gw-rating">A+</span>
+    </div>
+</section>
 
         <div class="controls">
             <button class="btn-main" onclick="runAnalysis()">
@@ -79,10 +83,14 @@
             </div>
         </div>
 
-        <div id="results" class="ai-card" style="display:none;">
-            <span class="verdict-label">AI RECOMMENDATION</span>
-            <p id="ai-msg">Analyzing your squad composition...</p>
-        </div>
+        <div id="results" class="ai-card" style="display:block;">
+    <span class="verdict-label"><i class="fa-solid fa-bolt"></i> Transfer Recommendations</span>
+    <div id="transfer-list">
+        <p id="ai-msg">Fill your squad to see transfer logic.</p>
+    </div>
+</div>
+
+        
     </main>
 
     <script src="team.js"></script>
