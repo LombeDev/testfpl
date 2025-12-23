@@ -1,5 +1,5 @@
 /**
- * KOPALA FPL - Navigation & Sidebar Logic
+ * KOPALA FPL - Hamburger Menu & Sidebar Logic
  */
 document.addEventListener('DOMContentLoaded', () => {
     const menuBtn = document.getElementById('menu-btn');
@@ -7,21 +7,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawer = document.getElementById('side-drawer');
     const backdrop = document.getElementById('main-backdrop');
 
-    // Function to open/close navigation
-    const toggleNavigation = () => {
-        const isOpen = drawer.classList.toggle('open');
+    // Function to toggle the drawer
+    const toggleDrawer = () => {
+        // Toggle the 'open' class on the drawer
+        drawer.classList.toggle('open');
         
-        // Handle backdrop visibility and animation
+        // Toggle the 'active' class on the backdrop
         if (backdrop) {
             backdrop.classList.toggle('active');
-            backdrop.style.display = isOpen ? 'block' : 'none';
+            
+            // Explicitly handle display for safety
+            if (drawer.classList.contains('open')) {
+                backdrop.style.display = 'block';
+            } else {
+                backdrop.style.display = 'none';
+            }
         }
     };
 
-    // Attach listeners to Menu icon, Close 'X', and the dark Backdrop
-    [menuBtn, closeBtn, backdrop].forEach(element => {
-        if (element) {
-            element.addEventListener('click', toggleNavigation);
-        }
+    // Close drawer when clicking a link (optional but recommended for UX)
+    const navLinks = document.querySelectorAll('.drawer-links a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            drawer.classList.remove('open');
+            backdrop.classList.remove('active');
+            backdrop.style.display = 'none';
+        });
     });
+
+    // Event Listeners
+    if (menuBtn) menuBtn.addEventListener('click', toggleDrawer);
+    if (closeBtn) closeBtn.addEventListener('click', toggleDrawer);
+    if (backdrop) backdrop.addEventListener('click', toggleDrawer);
 });
