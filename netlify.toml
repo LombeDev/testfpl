@@ -4,3 +4,15 @@
   status = 200
   force = true
   headers = {X-Auth-Token = "c24eb6d142cc4b42a529bed2b380d7db"}
+
+
+  [[redirects]]
+  from = "/fpl-api/*"
+  to = "https://fantasy.premierleague.com/api/:splat"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/fpl-api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
