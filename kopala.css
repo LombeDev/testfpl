@@ -151,3 +151,66 @@ td { padding: 5px 2px; border-bottom: 1px solid #f3f4f6; overflow: hidden; white
     pointer-events: none; /* Prevents clicking background while modal is open */
     transition: filter 0.3s ease;
 }
+
+
+
+/* 1. Modal Overlay & Blur Effect */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px); /* The Blur */
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal-content {
+    background: white; width: 90%; max-width: 340px;
+    border-radius: 16px; padding: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    max-height: 85vh; overflow-y: auto;
+}
+
+/* 2. List Styling */
+.squad-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+}
+
+.p-pos {
+    font-size: 9px; font-weight: 800; padding: 2px 6px;
+    border-radius: 4px; margin-right: 10px; min-width: 35px;
+    text-align: center; text-transform: uppercase;
+}
+
+/* Position Colors */
+.bg-pos-1 { background: #ebff00; color: #000; } /* GKP */
+.bg-pos-2 { background: #00ff87; color: #000; } /* DEF */
+.bg-pos-3 { background: #05f0ff; color: #000; } /* MID */
+.bg-pos-4 { background: #e90052; color: #fff; } /* FWD */
+
+.p-name { font-size: 14px; font-weight: 700; color: #37003c; }
+
+.p-team-code {
+    font-size: 10px; font-weight: 700; color: #64748b;
+    background: #f1f5f9; padding: 1px 4px; border-radius: 3px;
+    margin-left: 6px;
+}
+
+.p-pts { font-size: 15px; font-weight: 900; color: #249771; }
+
+.c-star { color: #fbbf24; margin-left: 4px; font-size: 14px; }
+
+/* 3. Footer */
+.modal-footer {
+    margin-top: 15px; padding-top: 15px;
+    border-top: 2px solid #f1f5f9;
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.total-label { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+.total-value { font-size: 22px; font-weight: 900; color: #37003c; }
+
+.close-btn { background: none; border: none; font-size: 24px; color: #cbd5e1; cursor: pointer; }
