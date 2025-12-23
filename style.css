@@ -191,3 +191,56 @@ n-top: 60px; text-align: center; }
     .edge-grid { grid-template-columns: 1fr 1fr; }
     .container { padding: 0 20px; }
 }
+
+
+/* --- HORIZONTAL PRICE SCROLL --- */
+.price-scroll-wrapper {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 10px 5px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+
+.price-scroll-wrapper::-webkit-scrollbar {
+    display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+.price-card-mini {
+    flex: 0 0 88%; /* Show 88% so the next card is visible (peeking) */
+    scroll-snap-align: center;
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.riser-border { border-top: 4px solid var(--primary-green); }
+.faller-border { border-top: 4px solid var(--down); }
+
+.mini-header {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Compact Rows inside the Scroll */
+.price-row-mini {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f9f9f9;
+}
+
+.price-row-mini:last-child { border-bottom: none; }
+
+.mini-name { font-weight: 700; font-size: 0.85rem; color: var(--dark-blue); }
+.mini-team { font-size: 0.7rem; color: var(--text-dim); }
+.mini-val { font-weight: 800; font-size: 0.85rem; }
