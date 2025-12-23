@@ -1,5 +1,5 @@
 /**
- * KOPALA FPL - Team AI & Pitch Logic
+ * KOPALA FPL - Team AI & Pitch Logic (With Persistent Save)
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -25,6 +25,18 @@ let squad = [
     { id: 13, pos: 'MID', name: '', isBench: true },
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
+
+// --- STORAGE LOGIC ---
+function saveSquad() {
+    localStorage.setItem('kopala_saved_squad', JSON.stringify(squad));
+}
+
+function loadSquad() {
+    const saved = localStorage.getItem('kopala_saved_squad');
+    if (saved) {
+        squad = JSON.parse(saved);
+    }
+}
 
 // --- NAVIGATION LOGIC ---
 function initNav() {
@@ -79,6 +91,8 @@ async function syncData() {
         })).sort((a,b) => b.xp - a.xp);
         
         if (ticker) ticker.innerHTML = "✅ <span style='color:var(--fpl-green)'>Connected to FPL Live</span>";
+        
+        loadSquad(); // Load previous team before rendering
         renderPitch();
     } catch (e) {
         if (ticker) ticker.textContent = "⚠️ Connection Error";
@@ -120,7 +134,6 @@ function createSlotUI(slotData) {
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
     
     const player = playerDB.find(p => p.name === slotData.name);
-    // Format team name for CSS: "Man City" -> "man-city"
     const teamClass = player ? player.team.toLowerCase().replace(/\s+/g, '-').replace(/'/g, '') : 'default';
 
     div.innerHTML = `
@@ -139,6 +152,7 @@ function createSlotUI(slotData) {
 function updatePlayer(slotId, name) {
     const slot = squad.find(s => s.id === slotId);
     slot.name = name;
+    saveSquad(); // Save every time a player is picked
     renderPitch();
 }
 
@@ -153,6 +167,7 @@ function handleSwap(id) {
             const temp = p1.isBench;
             p1.isBench = p2.isBench;
             p2.isBench = temp;
+            saveSquad(); // Save after swapping starters/bench
         }
         selectedSlotId = null;
     }
@@ -170,8 +185,14 @@ function updateStats() {
         }
     });
     
-    if(document.getElementById('budget-val')) document.getElementById('budget-val').textContent = `£${(100 - totalValue).toFixed(1)}m`;
+    const budgetVal = (100 - totalValue).toFixed(1);
+    if(document.getElementById('budget-val')) {
+        const el = document.getElementById('budget-val');
+        el.textContent = `£${budgetVal}m`;
+        el.style.color = budgetVal < 0 ? '#ff005a' : '#05ff80';
+    }
     if(document.getElementById('score-display')) document.getElementById('score-display').textContent = totalXP.toFixed(0);
+    if(document.getElementById('v-xp')) document.getElementById('v-xp').textContent = (totalXP * 1.05).toFixed(0);
 }
 
 // Initialize
