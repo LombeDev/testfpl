@@ -226,3 +226,59 @@ function initNav() {
 }
 
 document.addEventListener('DOMContentLoaded', () => { initNav(); syncData(); });
+
+
+function runAIWildcard() {
+    // 1. Safety Check: Is the data ready?
+    if (!playerDB || playerDB.length === 0) {
+        alert("AI is still syncing data from FPL servers. Please wait a few seconds.");
+        return;
+    }
+
+    if (!confirm("AI will rebuild your team for max points within £100m. This will clear your current picks. Proceed?")) return;
+
+    // 2. Clear current names to ensure a fresh start
+    squad.forEach(slot => slot.name = "");
+
+    let currentBudget = 100.0;
+    const selectedNames = [];
+    
+    // 3. Sort players by Predicted Points (XP)
+    const sorted = [...playerDB].sort((a, b) => b.xp - a.xp);
+
+    // 4. Optimization Loop
+    squad.forEach((slot, index) => {
+        // Reserve a small buffer for the remaining slots (avg £4.3m per player)
+        const reserveCount = squad.length - 1 - index;
+        const budgetBuffer = reserveCount * 4.3; 
+        
+        // Find best player for this specific position
+        const bestChoice = sorted.find(p => 
+            p.pos === slot.pos && 
+            !selectedNames.includes(p.name) && 
+            parseFloat(p.price) <= (currentBudget - budgetBuffer)
+        );
+
+        // Fallback: If no high-XP player fits, grab the absolute cheapest player in that position
+        const choice = bestChoice || sorted
+            .filter(p => p.pos === slot.pos && !selectedNames.includes(p.name))
+            .sort((a,b) => a.price - b.price)[0];
+
+        if (choice) {
+            slot.name = choice.name;
+            selectedNames.push(choice.name);
+            currentBudget -= parseFloat(choice.price);
+        }
+    });
+
+    // 5. CRITICAL: Save and Re-render
+    saveSquad();      // Saves to LocalStorage
+    renderPitch();    // Physically updates the HTML on your screen
+    
+    // Optional UI Feedback
+    const ticker = document.getElementById('ticker');
+    if (ticker) {
+        ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Wildcard Draft Complete!</span>";
+        setTimeout(() => syncData(), 500); // Small delay to refresh fixture colors
+    }
+}
