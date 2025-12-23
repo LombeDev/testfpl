@@ -1,15 +1,15 @@
 /**
- * KOPALA FPL - Total Efficiency Engine
- * Features: Live API Sync, Team Persistence, AI Ratings, and Fixture Cards
+ * KOPALA FPL - AI Master Engine (v2.1)
+ * Features: Offline-First Caching, AI Wildcard, Render Fixes
  */
 
 const API_BASE = "/fpl-api/"; 
 let playerDB = [];
 let teamsDB = {}; 
-let fixturesDB = []; // Global store for upcoming matches
+let fixturesDB = [];
 let selectedSlotId = null;
 
-// Initial squad structure
+// Initial Squad Structure
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -28,21 +28,20 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC & FIXTURE MAPPING ---
+// --- 1. DATA SYNC (WITH CACHING) ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
     try {
-        // Fetch Teams and Players
-        const res = await fetch(`${API_BASE}bootstrap-static/`);
-        const data = await res.json();
+        const [bootRes, fixRes] = await Promise.all([
+            fetch(`${API_BASE}bootstrap-static/`),
+            fetch(`${API_BASE}fixtures/`)
+        ]);
         
-        // Fetch Fixtures
-        const fixRes = await fetch(`${API_BASE}fixtures/`);
+        const data = await bootRes.json();
         fixturesDB = await fixRes.json();
 
-        // Map Team Short Names (e.g., 1 -> ARS)
+        // Build Database
         data.teams.forEach(t => teamsDB[t.id] = t.short_name);
-        
         playerDB = data.elements.map(p => ({
             id: p.id,
             name: p.web_name,
@@ -53,213 +52,62 @@ async function syncData() {
             xp: parseFloat(p.ep_next) || 0,
             form: parseFloat(p.form) || 0
         })).sort((a,b) => b.xp - a.xp);
-        
-        if (ticker) ticker.innerHTML = "✅ <span style='color:var(--fpl-green)'>Sync Complete: Live Fixtures Loaded</span>";
+
+        // Save for Offline Use
+        localStorage.setItem('kopala_player_cache', JSON.stringify(playerDB));
+        localStorage.setItem('kopala_teams_cache', JSON.stringify(teamsDB));
         
         loadSquad();
         renderPitch();
+        if (ticker) ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Engine Online</span>";
     } catch (e) {
-        if (ticker) ticker.textContent = "⚠️ Connection Error";
+        console.warn("Sync failed, attempting cache recovery...");
+        const cachedPlayers = localStorage.getItem('kopala_player_cache');
+        const cachedTeams = localStorage.getItem('kopala_teams_cache');
+        
+        if (cachedPlayers) {
+            playerDB = JSON.parse(cachedPlayers);
+            teamsDB = JSON.parse(cachedTeams);
+            loadSquad();
+            renderPitch();
+            if (ticker) ticker.innerHTML = "📡 <span style='color:orange'>Offline Mode (Cached Data)</span>";
+        } else {
+            if (ticker) ticker.textContent = "⚠️ Connect once to download players.";
+        }
     }
 }
 
-function getNextFixtures(teamId, limit = 3) {
-    return fixturesDB
-        .filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
-        .slice(0, limit)
-        .map(f => {
-            const isHome = f.team_h === teamId;
-            const oppId = isHome ? f.team_a : f.team_h;
-            const difficulty = isHome ? f.team_h_difficulty : f.team_a_difficulty;
-            return {
-                opponent: teamsDB[oppId],
-                location: isHome ? 'H' : 'A',
-                diff: difficulty
-            };
-        });
-}
-
-// --- 2. STORAGE & INTERACTION ---
-function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
-function loadSquad() {
-    const saved = localStorage.getItem('kopala_saved_squad');
-    if (saved) squad = JSON.parse(saved);
-}
-
-function updatePlayer(slotId, name) {
-    const slot = squad.find(s => s.id === slotId);
-    slot.name = name;
-    saveSquad();
-    renderPitch();
-}
-
-function handleSwap(id) {
-    if (selectedSlotId === null) {
-        selectedSlotId = id;
-    } else {
-        const p1 = squad.find(s => s.id === selectedSlotId);
-        const p2 = squad.find(s => s.id === id);
-        if (p1.isBench !== p2.isBench) {
-            const temp = p1.isBench;
-            p1.isBench = p2.isBench;
-            p2.isBench = temp;
-            saveSquad();
-        }
-        selectedSlotId = null;
-    }
-    renderPitch();
-}
-
-// --- 3. UI RENDERING ---
-function createSlotUI(slotData) {
-    const div = document.createElement('div');
-    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    
-    const player = playerDB.find(p => p.name === slotData.name);
-    const teamClass = player ? player.teamShort.toLowerCase() : 'default';
-    const fixtures = player ? getNextFixtures(player.teamId) : [];
-
-    div.innerHTML = `
-        <div class="jersey ${teamClass}" onclick="handleSwap(${slotData.id})"></div>
-        <div class="player-card">
-            <div class="card-header">
-                <span class="p-name">${slotData.name || slotData.pos}</span>
-                <span class="p-price">${player ? player.price + 'm' : ''}</span>
-            </div>
-            <div class="card-fixtures">
-                ${fixtures.length > 0 ? fixtures.map(f => `
-                    <div class="fix-item diff-${f.diff}">
-                        <span class="opp-text">${f.opponent}</span>
-                        <span class="loc-text">${f.location}</span>
-                    </div>
-                `).join('') : '<div class="fix-item">TBC</div>'}
-            </div>
-        </div>
-        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
-            <option value="">-- Pick --</option>
-            ${playerDB.filter(p => p.pos === slotData.pos).map(p => `
-                <option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>
-            `).join('')}
-        </select>
-    `;
-    return div;
-}
-
-function renderPitch() {
-    const pitch = document.getElementById('pitch-container');
-    const bench = document.getElementById('bench-container');
-    if(!pitch || !bench) return;
-    pitch.innerHTML = ''; bench.innerHTML = '';
-
-    const positions = ['GKP', 'DEF', 'MID', 'FWD'];
-    const starters = squad.filter(s => !s.isBench);
-    
-    positions.forEach(pos => {
-        const rowPlayers = starters.filter(p => p.pos === pos);
-        if (rowPlayers.length > 0) {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'row';
-            rowPlayers.forEach(p => rowDiv.appendChild(createSlotUI(p)));
-            pitch.appendChild(rowDiv);
-        }
-    });
-
-    const benchRow = document.createElement('div');
-    benchRow.className = 'row';
-    squad.filter(s => s.isBench).forEach(p => benchRow.appendChild(createSlotUI(p)));
-    bench.appendChild(benchRow);
-    
-    updateStats();
-}
-
-// --- 4. ANALYTICS ---
-function updateStats() {
-    let totalXP = 0, totalValue = 0, squadPlayers = [];
-    squad.forEach(s => {
-        const p = playerDB.find(x => x.name === s.name);
-        if (p) {
-            totalValue += parseFloat(p.price);
-            squadPlayers.push({ ...p, isBench: s.isBench });
-            if (!s.isBench) totalXP += p.xp;
-        }
-    });
-
-    document.getElementById('v-xp').textContent = totalXP.toFixed(1);
-    const budgetVal = (100 - totalValue).toFixed(1);
-    const budgetEl = document.getElementById('budget-val');
-    budgetEl.textContent = `£${budgetVal}m`;
-    budgetEl.style.color = budgetVal < 0 ? '#ff005a' : '#05ff80';
-
-    const ratingScore = Math.min(100, (totalXP / 70) * 100);
-    document.getElementById('team-rating').textContent = `${ratingScore.toFixed(0)}%`;
-    
-    let grade = ratingScore > 75 ? "A+" : (ratingScore > 50 ? "B" : "C");
-    document.getElementById('gw-rating').textContent = grade;
-
-    renderTransferRecs(squadPlayers);
-}
-
-function renderTransferRecs(squadPlayers) {
-    const list = document.getElementById('transfer-list');
-    if (!list || squadPlayers.length < 11) return;
-
-    const sell = [...squadPlayers].sort((a,b) => a.xp - b.xp).slice(0, 2);
-    const currentNames = squadPlayers.map(p => p.name);
-    const buy = playerDB.filter(p => !currentNames.includes(p.name)).sort((a,b) => b.xp - a.xp).slice(0, 2);
-
-    list.innerHTML = sell.map((p, i) => `
-        <div class="transfer-row">
-            <span>SELL: <b>${p.name}</b></span>
-            <i class="fa-solid fa-arrow-right"></i>
-            <span>BUY: <b>${buy[i].name}</b></span>
-        </div>
-    `).join('');
-}
-
-function initNav() {
-    const toggle = () => {
-        document.getElementById('side-drawer').classList.toggle('open');
-        document.getElementById('backdrop').classList.toggle('active');
-    };
-    document.getElementById('menu-btn').onclick = toggle;
-    document.getElementById('close-btn').onclick = toggle;
-}
-
-document.addEventListener('DOMContentLoaded', () => { initNav(); syncData(); });
-
-
+// --- 2. AI WILDCARD (OFFLINE & RE-RENDER FIX) ---
 function runAIWildcard() {
-    // 1. Safety Check: Is the data ready?
+    // Check if playerDB is empty and try to restore from cache
     if (!playerDB || playerDB.length === 0) {
-        alert("AI is still syncing data from FPL servers. Please wait a few seconds.");
+        const cache = localStorage.getItem('kopala_player_cache');
+        if (cache) playerDB = JSON.parse(cache);
+    }
+
+    if (!playerDB || playerDB.length === 0) {
+        alert("No player data available. Please connect to the internet to sync.");
         return;
     }
 
-    if (!confirm("AI will rebuild your team for max points within £100m. This will clear your current picks. Proceed?")) return;
-
-    // 2. Clear current names to ensure a fresh start
-    squad.forEach(slot => slot.name = "");
+    if (!confirm("AI will rebuild your team for £100m using Predicted Points. Continue?")) return;
 
     let currentBudget = 100.0;
     const selectedNames = [];
-    
-    // 3. Sort players by Predicted Points (XP)
     const sorted = [...playerDB].sort((a, b) => b.xp - a.xp);
 
-    // 4. Optimization Loop
     squad.forEach((slot, index) => {
-        // Reserve a small buffer for the remaining slots (avg £4.3m per player)
+        // Reserve £4.2m per remaining player to ensure budget isn't blown early
         const reserveCount = squad.length - 1 - index;
-        const budgetBuffer = reserveCount * 4.3; 
+        const budgetBuffer = reserveCount * 4.2; 
         
-        // Find best player for this specific position
         const bestChoice = sorted.find(p => 
             p.pos === slot.pos && 
             !selectedNames.includes(p.name) && 
             parseFloat(p.price) <= (currentBudget - budgetBuffer)
         );
 
-        // Fallback: If no high-XP player fits, grab the absolute cheapest player in that position
+        // Fallback to absolute cheapest if no XP player fits
         const choice = bestChoice || sorted
             .filter(p => p.pos === slot.pos && !selectedNames.includes(p.name))
             .sort((a,b) => a.price - b.price)[0];
@@ -271,14 +119,157 @@ function runAIWildcard() {
         }
     });
 
-    // 5. CRITICAL: Save and Re-render
-    saveSquad();      // Saves to LocalStorage
-    renderPitch();    // Physically updates the HTML on your screen
-    
-    // Optional UI Feedback
-    const ticker = document.getElementById('ticker');
-    if (ticker) {
-        ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Wildcard Draft Complete!</span>";
-        setTimeout(() => syncData(), 500); // Small delay to refresh fixture colors
-    }
+    saveSquad();
+    renderPitch(); // This re-draws the UI
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// --- 3. UI RENDERING ---
+function createSlotUI(slotData) {
+    const div = document.createElement('div');
+    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
+    const player = playerDB.find(p => p.name === slotData.name);
+    const fixtures = player ? getNextFixtures(player.teamId) : [];
+
+    div.innerHTML = `
+        <div class="jersey ${player ? player.teamShort.toLowerCase() : 'default'}" onclick="handleSwap(${slotData.id})"></div>
+        <div class="player-card">
+            <div class="card-header">
+                <span class="p-name">${slotData.name || slotData.pos}</span>
+                <span class="p-price">${player ? player.price + 'm' : ''}</span>
+            </div>
+            <div class="card-fixtures">
+                ${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}<br>${f.loc}</div>`).join('')}
+            </div>
+        </div>
+        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
+            <option value="">-- Pick --</option>
+            ${playerDB.filter(p => p.pos === slotData.pos).map(p => `<option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>`).join('')}
+        </select>
+    `;
+    return div;
+}
+
+function getNextFixtures(teamId) {
+    if (!fixturesDB.length) return [];
+    return fixturesDB.filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
+        .slice(0, 3).map(f => {
+            const isHome = f.team_h === teamId;
+            return {
+                opp: teamsDB[isHome ? f.team_a : f.team_h],
+                loc: isHome ? 'H' : 'A',
+                diff: isHome ? f.team_h_difficulty : f.team_a_difficulty
+            };
+        });
+}
+
+// --- 4. CORE ENGINE FUNCTIONS ---
+function renderPitch() {
+    const pitch = document.getElementById('pitch-container');
+    const bench = document.getElementById('bench-container');
+    if(!pitch || !bench) return;
+    pitch.innerHTML = ''; bench.innerHTML = '';
+
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
+        pitch.appendChild(row);
+    });
+
+    const bRow = document.createElement('div');
+    bRow.className = 'row';
+    squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
+    bench.appendChild(bRow);
+    updateStats();
+}
+
+function updateStats() {
+    let xp = 0, val = 0, players = [];
+    squad.forEach(s => {
+        const p = playerDB.find(x => x.name === s.name);
+        if (p) {
+            val += parseFloat(p.price);
+            players.push(p);
+            if (!s.isBench) xp += p.xp;
+        }
+    });
+
+    document.getElementById('v-xp').textContent = xp.toFixed(1);
+    const rating = Math.min(100, (xp / 70) * 100);
+    document.getElementById('team-rating').textContent = rating.toFixed(0) + '%';
+    
+    const budgetEl = document.getElementById('budget-val');
+    const itb = (100 - val).toFixed(1);
+    budgetEl.textContent = `£${itb}m`;
+    budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
+
+    renderTransferRecs(players, (100 - val));
+}
+
+function renderTransferRecs(squadPlayers, itb) {
+    const list = document.getElementById('transfer-list');
+    if (!list) return;
+    if (squadPlayers.length < 11) {
+        list.innerHTML = `<p style="padding:10px; opacity:0.5;">Add more players to see AI tips...</p>`;
+        return;
+    }
+
+    const sellCands = [...squadPlayers].sort((a, b) => a.xp - a.xp).slice(0, 2);
+    const names = squadPlayers.map(p => p.name);
+
+    list.innerHTML = sellCands.map((sellP) => {
+        const limit = parseFloat(sellP.price) + parseFloat(itb);
+        const bestBuy = playerDB.find(p => p.pos === sellP.pos && !names.includes(p.name) && parseFloat(p.price) <= limit);
+
+        return bestBuy ? `
+            <div class="transfer-row">
+                <div>
+                    <span class="status-badge-sell">SELL ${sellP.pos}</span>
+                    <span class="player-name-small">${sellP.name}</span>
+                </div>
+                <i class="fa-solid fa-arrow-right"></i>
+                <div style="text-align: right;">
+                    <span class="status-badge-buy">BUY ${bestBuy.pos}</span>
+                    <span class="player-name-small">${bestBuy.name}</span>
+                </div>
+            </div>
+        ` : '';
+    }).join('');
+}
+
+function updatePlayer(id, name) { 
+    squad.find(s => s.id === id).name = name; 
+    saveSquad(); 
+    renderPitch(); 
+}
+
+function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
+
+function loadSquad() {
+    const saved = localStorage.getItem('kopala_saved_squad');
+    if (saved) squad = JSON.parse(saved);
+}
+
+function handleSwap(id) {
+    if (selectedSlotId === null) { selectedSlotId = id; } 
+    else {
+        const p1 = squad.find(s => s.id === selectedSlotId);
+        const p2 = squad.find(s => s.id === id);
+        if (p1.id !== p2.id && p1.pos === p2.pos) {
+            const tempName = p1.name;
+            p1.name = p2.name;
+            p2.name = tempName;
+            saveSquad();
+        }
+        selectedSlotId = null;
+    }
+    renderPitch();
+}
+
+// --- 5. INITIALIZE ---
+document.addEventListener('DOMContentLoaded', () => {
+    syncData();
+    const wcBtn = document.getElementById('wildcard-btn');
+    if (wcBtn) wcBtn.onclick = runAIWildcard;
+});
