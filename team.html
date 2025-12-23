@@ -3,27 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOPALA FPL | AI team</title>
+    <title>KOPALA FPL | AI Team Picker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="team.css">
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-   
     <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
-            <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+        <div class="drawer-header">
+            <h2 class="brand">KOPALA <span>FPL</span></h2>
+            <button id="close-btn">&times;</button>
         </div>
         <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Kopala FPL</a></li>
-            <li><a href="price.html">Next price change timer</a></li>
-            <li><a href="transfer.html">Transfers</a></li>
-            <li><a href="">Effective ownership</a></li>
-            <li><a href="football.html">Football</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
+            <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="kopala.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="price.html"><i class="fa-solid fa-clock"></i> Price Changes</a></li>
+            <li><a href="transfer.html"><i class="fa-solid fa-repeat"></i> Transfers</a></li>
+            <li><a href="football.html"><i class="fa-solid fa-futbol"></i> Football News</a></li>
+            <li><a href="contact.html"><i class="fa-solid fa-envelope"></i> Contact Us</a></li>
         </ul>
     </div>
     <div id="backdrop" class="backdrop"></div>
@@ -34,71 +31,60 @@
             <h1 class="brand">KOPALA <span>FPL</span></h1>
         </div>
         <div class="nav-right">
-            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button class="icon-btn"><i class="fa-solid fa-robot"></i></button>
         </div>
     </nav>
 
-
     <main class="main-container">
-        <div class="ticker" id="ticker">...</div>
+        <div class="ticker" id="ticker">Connecting to FPL servers...</div>
         
         <div class="status-bar">
-            <span>In the bank: <b id="budget-val">£100.0m</b></span>
-            <span id="formation-ticker">Formation: 4-4-2</span>
+            <span>BANK: <b id="budget-val">£100.0m</b></span>
+            <span id="formation-ticker">FORMATION: 4-4-2</span>
         </div>
 
         <div class="pitch-outer-wrap">
-            <div class="pitch" id="pitch-container">
-                <div class="row">
-                    <div class="slot">
-                        <div class="jersey arsenal"></div>
-                        <div class="player-name-tag">Haaland</div>
-                        <div class="player-match-tag">WHU (A)</div>
-                    </div>
-                </div>
+            <div class="pitch-labels">
+                <span>ATTACK</span>
+                <span>MIDFIELD</span>
+                <span>DEFENCE</span>
+                <span>GOALKEEPER</span>
             </div>
+            <div class="pitch" id="pitch-container">
+                </div>
+            <div class="bench-divider">SUBSTITUTES</div>
             <div class="bench-area" id="bench-container">
                 </div>
         </div>
 
         <section class="stats-summary">
             <div class="stat-box">
-                <span class="stat-label">AI Team Score</span>
-                <span class="stat-value" id="score-display">58</span>
+                <span class="stat-label">AI SQUAD SCORE</span>
+                <span class="stat-value" id="score-display">0</span>
             </div>
             <div class="stat-box">
-                <span class="stat-label">Top 1k Avg</span>
-                <span class="stat-value">56.1</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">FPL Avg</span>
-                <span class="stat-value">47.2</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">Est. Points</span>
-                <span class="stat-value" id="v-xp">62</span>
+                <span class="stat-label">EST. GW POINTS</span>
+                <span class="stat-value" id="v-xp">0</span>
             </div>
         </section>
 
         <div class="controls">
-            <button class="btn-main" onclick="runAnalysis()">Analyse my team</button>
+            <button class="btn-main" onclick="runAnalysis()">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ANALYSE TEAM
+            </button>
             <div class="btn-group">
-                <button class="btn-sec" onclick="autoOptimize()">Start with template team</button>
-                <button class="btn-reset" onclick="location.reload()">Reset team</button>
+                <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
+                    <i class="fa-solid fa-trash"></i> RESET
+                </button>
             </div>
         </div>
 
-        <div id="results" class="ai-card">
-            <span class="verdict-label">AI Recommendations</span>
-            <p id="ai-msg">Build your team to see tactical advice.</p>
+        <div id="results" class="ai-card" style="display:none;">
+            <span class="verdict-label">AI RECOMMENDATION</span>
+            <p id="ai-msg">Analyzing your squad composition...</p>
         </div>
     </main>
 
-    <footer>
-        <p>&copy; 2026 Kopala FPL. All rights reserved.</p>
-    </footer>
-    
     <script src="team.js"></script>
-   <script src="script.js"></script>
 </body>
 </html>
