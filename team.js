@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.1)
- * Features: Offline-First Caching, AI Wildcard, Render Fixes
+ * KOPALA FPL - AI Master Engine (v2.2)
+ * Features: 24-Hour Smart Cache, AI Wildcard, Render Fixes
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -28,10 +28,33 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC (WITH CACHING) ---
+// --- 1. DATA SYNC (WITH 24-HOUR SMART CACHING) ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
+    const CACHE_KEY = 'kopala_player_cache';
+    const TIME_KEY = 'kopala_cache_timestamp';
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; 
+
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    const cachedTime = localStorage.getItem(TIME_KEY);
+    const isCacheFresh = cachedTime && (Date.now() - cachedTime < TWENTY_FOUR_HOURS);
+
+    // STEP A: Try to load from Cache first for speed
+    if (cachedData) {
+        playerDB = JSON.parse(cachedData);
+        teamsDB = JSON.parse(localStorage.getItem('kopala_teams_cache') || '{}');
+        loadSquad();
+        renderPitch();
+        if (isCacheFresh && ticker) {
+            ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh (Cached)</span>";
+            return; // Exit if cache is still valid
+        }
+    }
+
+    // STEP B: Fetch fresh data if cache is old or missing
     try {
+        if (ticker) ticker.textContent = "Syncing live FPL data...";
+        
         const [bootRes, fixRes] = await Promise.all([
             fetch(`${API_BASE}bootstrap-static/`),
             fetch(`${API_BASE}fixtures/`)
@@ -40,7 +63,6 @@ async function syncData() {
         const data = await bootRes.json();
         fixturesDB = await fixRes.json();
 
-        // Build Database
         data.teams.forEach(t => teamsDB[t.id] = t.short_name);
         playerDB = data.elements.map(p => ({
             id: p.id,
@@ -53,53 +75,38 @@ async function syncData() {
             form: parseFloat(p.form) || 0
         })).sort((a,b) => b.xp - a.xp);
 
-        // Save for Offline Use
-        localStorage.setItem('kopala_player_cache', JSON.stringify(playerDB));
+        // Update Cache
+        localStorage.setItem(CACHE_KEY, JSON.stringify(playerDB));
         localStorage.setItem('kopala_teams_cache', JSON.stringify(teamsDB));
+        localStorage.setItem(TIME_KEY, Date.now().toString());
         
         loadSquad();
         renderPitch();
-        if (ticker) ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Engine Online</span>";
+        if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine Online (Live)</span>";
     } catch (e) {
-        console.warn("Sync failed, attempting cache recovery...");
-        const cachedPlayers = localStorage.getItem('kopala_player_cache');
-        const cachedTeams = localStorage.getItem('kopala_teams_cache');
-        
-        if (cachedPlayers) {
-            playerDB = JSON.parse(cachedPlayers);
-            teamsDB = JSON.parse(cachedTeams);
-            loadSquad();
-            renderPitch();
-            if (ticker) ticker.innerHTML = "📡 <span style='color:orange'>Offline Mode (Cached Data)</span>";
-        } else {
-            if (ticker) ticker.textContent = "⚠️ Connect once to download players.";
+        console.warn("Network sync failed. Using last known data.");
+        if (ticker && playerDB.length > 0) {
+            ticker.innerHTML = "📡 <span style='color:orange'>Offline: Using Cached Data</span>";
         }
     }
 }
 
-// --- 2. AI WILDCARD (OFFLINE & RE-RENDER FIX) ---
+// --- 2. AI WILDCARD (BUDGET-OPTIMIZED) ---
 function runAIWildcard() {
-    // Check if playerDB is empty and try to restore from cache
     if (!playerDB || playerDB.length === 0) {
-        const cache = localStorage.getItem('kopala_player_cache');
-        if (cache) playerDB = JSON.parse(cache);
-    }
-
-    if (!playerDB || playerDB.length === 0) {
-        alert("No player data available. Please connect to the internet to sync.");
+        alert("No player data available. Please check your connection.");
         return;
     }
 
-    if (!confirm("AI will rebuild your team for £100m using Predicted Points. Continue?")) return;
+    if (!confirm("AI will rebuild your team for £100m. This replaces your current squad. Proceed?")) return;
 
     let currentBudget = 100.0;
     const selectedNames = [];
     const sorted = [...playerDB].sort((a, b) => b.xp - a.xp);
 
     squad.forEach((slot, index) => {
-        // Reserve £4.2m per remaining player to ensure budget isn't blown early
         const reserveCount = squad.length - 1 - index;
-        const budgetBuffer = reserveCount * 4.2; 
+        const budgetBuffer = reserveCount * 4.3; // Reserves cash for remaining positions
         
         const bestChoice = sorted.find(p => 
             p.pos === slot.pos && 
@@ -107,7 +114,7 @@ function runAIWildcard() {
             parseFloat(p.price) <= (currentBudget - budgetBuffer)
         );
 
-        // Fallback to absolute cheapest if no XP player fits
+        // Fallback to budget picks if AI picks are too expensive
         const choice = bestChoice || sorted
             .filter(p => p.pos === slot.pos && !selectedNames.includes(p.name))
             .sort((a,b) => a.price - b.price)[0];
@@ -120,11 +127,11 @@ function runAIWildcard() {
     });
 
     saveSquad();
-    renderPitch(); // This re-draws the UI
+    renderPitch();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// --- 3. UI RENDERING ---
+// --- 3. UI GENERATION ---
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
@@ -163,7 +170,7 @@ function getNextFixtures(teamId) {
         });
 }
 
-// --- 4. CORE ENGINE FUNCTIONS ---
+// --- 4. ENGINE CORE ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
@@ -195,14 +202,18 @@ function updateStats() {
         }
     });
 
-    document.getElementById('v-xp').textContent = xp.toFixed(1);
-    const rating = Math.min(100, (xp / 70) * 100);
-    document.getElementById('team-rating').textContent = rating.toFixed(0) + '%';
-    
+    const xpEl = document.getElementById('v-xp');
+    const ratingEl = document.getElementById('team-rating');
     const budgetEl = document.getElementById('budget-val');
-    const itb = (100 - val).toFixed(1);
-    budgetEl.textContent = `£${itb}m`;
-    budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
+
+    if(xpEl) xpEl.textContent = xp.toFixed(1);
+    if(ratingEl) ratingEl.textContent = Math.min(100, (xp / 70) * 100).toFixed(0) + '%';
+    
+    if(budgetEl) {
+        const itb = (100 - val).toFixed(1);
+        budgetEl.textContent = `£${itb}m`;
+        budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
+    }
 
     renderTransferRecs(players, (100 - val));
 }
@@ -211,11 +222,12 @@ function renderTransferRecs(squadPlayers, itb) {
     const list = document.getElementById('transfer-list');
     if (!list) return;
     if (squadPlayers.length < 11) {
-        list.innerHTML = `<p style="padding:10px; opacity:0.5;">Add more players to see AI tips...</p>`;
+        list.innerHTML = `<p style="padding:10px; opacity:0.5;">Fill team to see AI recommendations...</p>`;
         return;
     }
 
-    const sellCands = [...squadPlayers].sort((a, b) => a.xp - a.xp).slice(0, 2);
+    // Sort by actual XP ascending to find worst performers
+    const sellCands = [...squadPlayers].sort((a, b) => a.xp - b.xp).slice(0, 2);
     const names = squadPlayers.map(p => p.name);
 
     list.innerHTML = sellCands.map((sellP) => {
@@ -238,14 +250,13 @@ function renderTransferRecs(squadPlayers, itb) {
     }).join('');
 }
 
+// --- 5. HELPERS ---
 function updatePlayer(id, name) { 
     squad.find(s => s.id === id).name = name; 
     saveSquad(); 
     renderPitch(); 
 }
-
 function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
-
 function loadSquad() {
     const saved = localStorage.getItem('kopala_saved_squad');
     if (saved) squad = JSON.parse(saved);
@@ -267,7 +278,7 @@ function handleSwap(id) {
     renderPitch();
 }
 
-// --- 5. INITIALIZE ---
+// --- 6. INITIALIZE ---
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
     const wcBtn = document.getElementById('wildcard-btn');
