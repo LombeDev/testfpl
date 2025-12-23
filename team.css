@@ -148,3 +148,115 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     margin-top: -20px;
     cursor: pointer;
 }
+
+
+
+/* --- AI WILDCARD BUTTON --- */
+.ai-action-btn {
+    grid-column: span 2; /* Spans across both columns in the stats grid */
+    background: linear-gradient(135deg, #37003c 0%, #00ff87 100%);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0, 255, 135, 0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-top: 10px;
+}
+
+.ai-action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 255, 135, 0.5);
+    filter: brightness(1.1);
+}
+
+.ai-action-btn i {
+    font-size: 18px;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
+}
+
+/* --- TRANSFER RECOMMENDATIONS CARD --- */
+.ai-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+}
+
+.verdict-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--fpl-purple);
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.verdict-label i {
+    color: #ff005a; /* Bolt icon color */
+}
+
+/* --- INDIVIDUAL TRANSFER ROWS --- */
+.transfer-row {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    border: 1px solid #edf2f7;
+    transition: all 0.2s;
+}
+
+.transfer-row:hover {
+    border-color: var(--fpl-green);
+    background: #fff;
+}
+
+.status-badge-sell {
+    color: #ff005a;
+    font-size: 9px;
+    font-weight: 900;
+    display: block;
+}
+
+.status-badge-buy {
+    color: #00ff87;
+    font-size: 9px;
+    font-weight: 900;
+    display: block;
+}
+
+.player-name-small {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--fpl-purple);
+}
+
+.transfer-row i.fa-arrow-right {
+    color: #cbd5e0;
+    font-size: 14px;
+}
+
+/* Fix for the nested stats-summary in your HTML */
+.stats-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 15px 0;
+}
