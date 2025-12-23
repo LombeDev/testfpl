@@ -1,130 +1,154 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.6)
- * PROTECTION: Anti-Rate-Limit Cache + ETag Validation
+ * KOPALA FPL - Transfers & Market Logic
+ * Features: 6-Hour Smart Cache, 429 Protection, Auto-Fallback
  */
 
-const API_BASE = "/fpl-api/"; 
-let playerDB = [], teamsDB = {}, fixturesDB = [];
-let selectedSlotId = null;
+const API_BASE = "/fpl-api/";
+const CACHE_KEY = "kopala_transfer_cache";
+const REFRESH_INTERVAL = 6 * 60 * 60 * 1000; // 6 Hours in milliseconds
 
-// --- 1. SMART SYNC ENGINE ---
-async function syncData() {
-    const ticker = document.getElementById('ticker');
-    const CACHE_KEY = 'kopala_master_data';
-    const ETAG_KEY = 'kopala_fpl_etag';
-    const TIMESTAMP_KEY = 'kopala_last_check';
-    
-    // Rate limit buffer: 10 minutes (600,000 ms)
-    const REFRESH_THRESHOLD = 10 * 60 * 1000; 
+async function initTransfers() {
+    const loader = document.getElementById('most-transferred-list');
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    let apiData = null;
 
-    // A. Load from LocalStorage immediately (Instant UI)
-    const cached = localStorage.getItem(CACHE_KEY);
-    const lastCheck = localStorage.getItem(TIMESTAMP_KEY);
-    const savedETag = localStorage.getItem(ETAG_KEY);
+    // 1. INSTANT UI LOAD (From Cache)
+    if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        apiData = parsed.data;
+        renderAll(apiData);
 
-    if (cached) {
-        const parsed = JSON.parse(cached);
-        playerDB = parsed.players;
-        fixturesDB = parsed.fixtures;
-        teamsDB = parsed.teams;
-        loadSquad();
-        renderPitch();
-        if (ticker) ticker.innerHTML = "✅ <span style='color:#00ff87'>Mode: Smart Cache</span>";
+        // Check if cache is still fresh
+        const isFresh = (Date.now() - parsed.timestamp) < REFRESH_INTERVAL;
+        if (isFresh) {
+            console.log("Kopala Engine: Data is fresh. Skipping API call.");
+            return; 
+        }
     }
 
-    // B. Rate Limit Guard: Don't even hit the server if we checked recently
-    const timeSinceLastCheck = Date.now() - (parseInt(lastCheck) || 0);
-    if (cached && timeSinceLastCheck < REFRESH_THRESHOLD) {
-        console.log(`Rate limit protection: Next check in ${Math.round((REFRESH_THRESHOLD - timeSinceLastCheck)/1000)}s`);
-        return; 
-    }
-
+    // 2. BACKGROUND SYNC (If Stale or No Cache)
     try {
-        if (ticker) ticker.textContent = "Checking for price changes...";
+        console.log("Kopala Engine: Syncing live market data...");
+        const response = await fetch(`${API_BASE}bootstrap-static/`);
+        
+        if (response.status === 429) throw new Error("Rate limit hit");
+        if (!response.ok) throw new Error("API Connection Issue");
 
-        // C. Conditional Fetch: Uses If-None-Match to save bandwidth/hits
-        const headers = savedETag ? { 'If-None-Match': savedETag } : {};
-        const bootRes = await fetch(`${API_BASE}bootstrap-static/`, { headers });
+        const freshData = await response.json();
 
-        // If status is 304, nothing changed. Just update the timestamp.
-        if (bootRes.status === 304) {
-            localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
-            if (ticker) ticker.innerHTML = "✅ <span style='color:#00ff87'>Prices Verified (No Change)</span>";
-            return;
+        // Save to cache with new timestamp
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            timestamp: Date.now(),
+            data: freshData
+        }));
+
+        renderAll(freshData);
+    } catch (err) {
+        console.warn("Kopala Engine: Sync failed. Using fallback cache.", err.message);
+        // If we hit a rate limit and have no cache at all, show error
+        if (!apiData && loader) {
+            loader.innerHTML = `<div style="padding:20px; text-align:center;">⚠️ API Limit Reached. Please try in 30 mins.</div>`;
         }
-
-        if (bootRes.ok) {
-            const data = await bootRes.json();
-            const fixRes = await fetch(`${API_BASE}fixtures/`);
-            const rawFixtures = await fixRes.json();
-
-            // D. Process and Slugify Teams (Matches your CSS classes)
-            const newTeams = {};
-            data.teams.forEach(t => {
-                let slug = t.name.toLowerCase().replace(/\s+/g, '_');
-                if (slug.includes('man_city')) slug = 'man_city';
-                if (slug.includes('man_utd')) slug = 'man_utd';
-                newTeams[t.id] = slug;
-            });
-
-            const newPlayers = data.elements.map(p => ({
-                id: p.id,
-                name: p.web_name,
-                teamId: p.team,
-                teamShort: newTeams[p.team] || 'default',
-                pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
-                price: (p.now_cost / 10).toFixed(1),
-                xp: parseFloat(p.ep_next) || 0
-            })).sort((a,b) => b.xp - a.xp);
-
-            // E. Update Master Cache
-            const masterData = { players: newPlayers, teams: newTeams, fixtures: rawFixtures };
-            localStorage.setItem(CACHE_KEY, JSON.stringify(masterData));
-            localStorage.setItem(ETAG_KEY, bootRes.headers.get('ETag') || '');
-            localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
-
-            playerDB = newPlayers; teamsDB = newTeams; fixturesDB = rawFixtures;
-            renderPitch();
-            if (ticker) ticker.innerHTML = "🔄 <span style='color:#00ff87'>Data Updated (New Prices)</span>";
-        }
-    } catch (e) {
-        console.warn("Network error. Using cache.");
-        if (ticker) ticker.innerHTML = "📡 <span style='color:orange'>Mode: Offline Cache</span>";
     }
 }
 
-// --- 2. UI LOGIC (JERSEY COLORS) ---
-function createSlotUI(slotData) {
-    const div = document.createElement('div');
-    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    
-    const player = playerDB.find(p => p.name === slotData.name);
-    
-    // Jersey logic: Use teamShort slug if player exists, else default
-    let jerseyClass = 'default';
-    if (player) {
-        jerseyClass = (player.pos === 'GKP') ? 'gkp_color' : player.teamShort;
-    }
+// --- RENDERING CORE ---
 
-    const fixtures = player ? getNextFixtures(player.teamId) : [];
+function renderAll(data) {
+    if (!data || !data.elements) return;
 
-    div.innerHTML = `
-        <div class="jersey ${jerseyClass}" onclick="handleSwap(${slotData.id})"></div>
-        <div class="player-card">
-            <div class="card-header">
-                <span class="p-name">${slotData.name || slotData.pos}</span>
-                <span class="p-price">${player ? player.price + 'm' : ''}</span>
+    // Create a quick lookup for team short names (e.g., 1 -> "ARS")
+    const teams = {};
+    data.teams.forEach(t => teams[t.id] = t.short_name);
+
+    renderMostCaptained(data.elements, teams);
+    renderTransfersIn(data.elements, teams);
+    renderTransfersOut(data.elements, teams);
+}
+
+function renderMostCaptained(players, teams) {
+    const container = document.getElementById('most-captained-list');
+    if (!container) return;
+
+    // Most Owned (Proxy for Captaincy in this API view)
+    const top = [...players].sort((a, b) => parseFloat(b.selected_by_percent) - parseFloat(a.selected_by_percent))[0];
+
+    container.innerHTML = `
+        <h3><i class="fa-solid fa-crown" style="color:#ffd700"></i> Popular Pick</h3>
+        <div class="price-row">
+            <div class="player-info">
+                <span class="player-name">${top.web_name}</span>
+                <span class="team-name">${teams[top.team]}</span>
             </div>
-            <div class="card-fixtures">
-                ${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}<br>${f.loc}</div>`).join('')}
-            </div>
+            <div class="change-up">${top.selected_by_percent}% Owned</div>
         </div>
-        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
-            <option value="">-- Pick --</option>
-            ${playerDB.filter(p => p.pos === slotData.pos).map(p => `<option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>`).join('')}
-        </select>
     `;
-    return div;
 }
 
-// ... rest of the helper functions (renderPitch, handleSwap, getNextFixtures) remain the same as the previous version ...
+function renderTransfersIn(players, teams) {
+    const container = document.getElementById('most-transferred-list');
+    if (!container) return;
+
+    const sorted = [...players]
+        .filter(p => p.transfers_in_event > 0)
+        .sort((a, b) => b.transfers_in_event - a.transfers_in_event)
+        .slice(0, 5);
+
+    container.innerHTML = `<h3><i class="fa-solid fa-trending-up" style="color:var(--primary-green)"></i> Market Risers (In)</h3>` + 
+    sorted.map(p => `
+        <div class="price-row">
+            <div class="player-info">
+                <span class="player-name">${p.web_name}</span>
+                <span class="team-name">${teams[p.team]}</span>
+            </div>
+            <div class="change-up">+${(p.transfers_in_event / 1000).toFixed(1)}k</div>
+        </div>
+    `).join('');
+}
+
+function renderTransfersOut(players, teams) {
+    const container = document.getElementById('most-transferred-out-list');
+    if (!container) return;
+
+    const sorted = [...players]
+        .filter(p => p.transfers_out_event > 0)
+        .sort((a, b) => b.transfers_out_event - a.transfers_out_event)
+        .slice(0, 5);
+
+    container.innerHTML = `<h3><i class="fa-solid fa-trending-down" style="color:var(--down)"></i> Market Fallers (Out)</h3>` + 
+    sorted.map(p => `
+        <div class="price-row">
+            <div class="player-info">
+                <span class="player-name">${p.web_name}</span>
+                <span class="team-name">${teams[p.team]}</span>
+            </div>
+            <div class="change-down">-${(p.transfers_out_event / 1000).toFixed(1)}k</div>
+        </div>
+    `).join('');
+}
+
+// --- DRAWER NAVIGATION LOGIC ---
+
+function initDrawer() {
+    const menuBtn = document.getElementById('menu-btn');
+    const drawer = document.getElementById('side-drawer');
+    const backdrop = document.getElementById('main-backdrop');
+    const closeBtn = document.getElementById('close-btn');
+
+    if (!menuBtn || !drawer) return;
+
+    const toggle = () => {
+        drawer.classList.toggle('active');
+        backdrop.classList.toggle('active');
+    };
+
+    menuBtn.addEventListener('click', toggle);
+    closeBtn.addEventListener('click', toggle);
+    backdrop.addEventListener('click', toggle);
+}
+
+// Kick off
+document.addEventListener('DOMContentLoaded', () => {
+    initTransfers();
+    initDrawer();
+});
