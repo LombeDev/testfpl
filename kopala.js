@@ -1,27 +1,9 @@
-const API_BASE = "/fpl-api/"; 
+const API_BASE = "/fpl-api/";
 const LEAGUE_ID = "101712";
 
-// --- NAVIGATION LOGIC ---
-const menuBtn = document.getElementById('menu-btn');
-const closeBtn = document.getElementById('close-btn');
-const drawer = document.getElementById('side-drawer');
-const backdrop = document.getElementById('backdrop');
-
-const toggleDrawer = () => {
-    drawer.classList.toggle('open');
-    backdrop.classList.toggle('active');
-};
-
-// Add listeners safely
-if(menuBtn) menuBtn.addEventListener('click', toggleDrawer);
-if(closeBtn) closeBtn.addEventListener('click', toggleDrawer);
-if(backdrop) backdrop.addEventListener('click', toggleDrawer);
-
-
-// --- FPL DATA LOGIC ---
 async function fetchProLeague() {
     const loader = document.getElementById("loading-overlay");
-    loader.classList.remove("hidden");
+    if (loader) loader.classList.remove("hidden");
 
     try {
         const [staticRes, leagueRes] = await Promise.all([
@@ -32,76 +14,134 @@ async function fetchProLeague() {
         const staticData = await staticRes.json();
         const leagueData = await leagueRes.json();
 
-        const playerNames = {};
-        staticData.elements.forEach(p => playerNames[p.id] = p.web_name);
-        const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
+        // Map for Player Details (Name + Live Points)
+        const playerMap = {};
+        staticData.elements.forEach(p => {
+            playerMap[p.id] = { name: p.web_name, points: p.event_points, team: p.team };
+        });
 
+        const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
         document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
-        renderTable(leagueData.standings.results, currentEvent, playerNames);
+
+        // Render Table Shell
+        renderTable(leagueData.standings.results, currentEvent, playerMap);
         
-        loader.classList.add("hidden");
+        // Deep Load Manager Details (Transfers, Differentials, Projections)
+        loadLeagueIntelligence(leagueData.standings.results, currentEvent, playerMap);
+
     } catch (err) {
         console.error("Fetch Error:", err);
-        loader.classList.add("hidden");
+    } finally {
+        if (loader) loader.classList.add("hidden");
     }
 }
 
-function renderTable(managers, currentEvent, playerNames) {
+function renderTable(managers, currentEvent, playerMap) {
     const body = document.getElementById("league-body");
-    const playerNamesStr = JSON.stringify(playerNames).replace(/"/g, '&quot;');
-
-    body.innerHTML = managers.map((m) => `
-        <tr onmouseenter="loadAndCacheManager(${m.entry}, ${currentEvent}, ${playerNamesStr})" 
-            onclick="loadAndCacheManager(${m.entry}, ${currentEvent}, ${playerNamesStr})">
-            <td>${m.rank}</td>
-            <td>
-                <div class="manager-info">
-                    <span class="m-name">${m.player_name}</span>
-                    <span class="t-name">${m.entry_name}</span>
-                </div>
+    body.innerHTML = managers.map((m) => {
+        const rankDiff = m.last_rank - m.rank;
+        const moveClass = rankDiff > 0 ? 'up' : rankDiff < 0 ? 'down' : 'same';
+        
+        return `
+        <tr id="row-${m.entry}">
+            <td class="rank-col">
+                <div class="curr-rank">${m.rank}</div>
+                <div class="rank-move ${moveClass}">${rankDiff > 0 ? '▲' : rankDiff < 0 ? '▼' : '—'}</div>
             </td>
-            <td>${m.event_total}</td>
-            <td class="bold-p">${m.total}</td>
-            <td id="chip-${m.entry}">...</td>
-            <td id="cap-${m.entry}">—</td>
+            <td class="manager-col">
+                <div class="m-name">${m.player_name}</div>
+                <div class="t-name">${m.entry_name}</div>
+            </td>
+            <td class="pts-col">
+                <div id="live-gw-${m.entry}" class="live-pts">${m.event_total}</div>
+                <div id="hits-${m.entry}" class="hits"></div>
+            </td>
+            <td class="total-col">
+                <div class="bold-p">${m.total}</div>
+                <div id="proj-${m.entry}" class="proj-val"></div>
+            </td>
+            <td id="cap-${m.entry}" class="cap-col">—</td>
+            <td id="diffs-${m.entry}" class="diff-col">...</td>
+            <td id="transfers-${m.entry}" class="trans-col">...</td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
-async function loadAndCacheManager(entryId, currentEvent, playerNames) {
-    const cacheKey = `fpl_entry_${entryId}_gw${currentEvent}`;
-    const cached = localStorage.getItem(cacheKey);
+async function loadLeagueIntelligence(managers, currentEvent, playerMap) {
+    const ownership = {};
+    const fullData = [];
 
-    if (cached) {
-        updateRow(entryId, JSON.parse(cached), playerNames);
-        return;
-    }
+    // Parallel fetch for all manager details
+    const promises = managers.map(async (m) => {
+        try {
+            const [picksRes, transRes] = await Promise.all([
+                fetch(`${API_BASE}entry/${m.entry}/event/${currentEvent}/picks/`),
+                fetch(`${API_BASE}entry/${m.entry}/transfers/`)
+            ]);
+            const picksData = await picksRes.json();
+            const transData = await transRes.json();
 
-    const capCell = document.getElementById(`cap-${entryId}`);
-    if (capCell.innerText === "loading...") return;
-    capCell.innerText = "loading...";
+            const squadIds = picksData.picks.map(p => p.element);
+            squadIds.forEach(id => ownership[id] = (ownership[id] || 0) + 1);
 
-    try {
-        const res = await fetch(`${API_BASE}entry/${entryId}/event/${currentEvent}/picks/`);
-        const data = await res.json();
+            return {
+                id: m.entry,
+                picks: picksData,
+                transfers: transData.filter(t => t.event === currentEvent),
+                squad: squadIds
+            };
+        } catch (e) { return null; }
+    });
 
-        const managerData = {
-            chip: data.active_chip,
-            capId: data.picks.find(p => p.is_captain).element
-        };
+    const results = await Promise.all(promises);
 
-        localStorage.setItem(cacheKey, JSON.stringify(managerData));
-        updateRow(entryId, managerData, playerNames);
-    } catch (e) {
-        capCell.innerText = "Error";
-    }
+    results.forEach(res => {
+        if (!res) return;
+        const chipMeta = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
+        
+        // 1. Captain & Chip
+        const cap = picksDataToCap(res.picks, playerMap);
+        const chip = res.picks.active_chip;
+        document.getElementById(`cap-${res.id}`).innerHTML = `
+            <div class="cap-box">${cap} ${chip ? `<span class="c-badge">${chipMeta[chip]}</span>` : ''}</div>
+        `;
+
+        // 2. Transfers & Hits
+        const hits = res.picks.entry_history.event_transfer_cost;
+        if (hits > 0) document.getElementById(`hits-${res.id}`).innerText = `-${hits} hit`;
+        
+        const transHTML = res.transfers.map(t => `<div class="in-out">in: ${playerMap[t.element_in].name}</div>`).join('');
+        document.getElementById(`transfers-${res.id}`).innerHTML = transHTML || '<span class="none">None</span>';
+
+        // 3. Differentials
+        const diffs = res.squad.filter(id => ownership[id] === 1);
+        document.getElementById(`diffs-${res.id}`).innerHTML = diffs.map(id => 
+            `<span class="d-tag">${playerMap[id].name}</span>`).join('') || '<span class="none">Template</span>';
+
+        // 4. Live Projections
+        const liveGW = res.picks.entry_history.points - hits;
+        const projTotal = (managers.find(m => m.entry === res.id).total - managers.find(m => m.entry === res.id).event_total) + liveGW;
+        document.getElementById(`proj-${res.id}`).innerText = `Proj: ${projTotal}`;
+    });
+
+    updateMatchCenter(ownership, playerMap);
 }
 
-function updateRow(entryId, data, playerNames) {
-    const chipMeta = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
-    document.getElementById(`chip-${entryId}`).innerHTML = data.chip ? `<span class="chip-badge">${chipMeta[data.chip] || data.chip}</span>` : '—';
-    document.getElementById(`cap-${entryId}`).innerHTML = `<strong>© ${playerNames[data.capId]}</strong>`;
+function picksDataToCap(picks, playerMap) {
+    const capObj = picks.picks.find(p => p.is_captain);
+    return playerMap[capObj.element].name;
 }
 
-// Initialize
+function updateMatchCenter(ownership, playerMap) {
+    const center = document.getElementById("match-center-content");
+    if (!center) return;
+    const topDiffs = Object.entries(ownership)
+        .filter(([id, count]) => count === 1 && playerMap[id].points > 2)
+        .map(([id]) => playerMap[id].name);
+    
+    center.innerHTML = topDiffs.length > 0 ? 
+        `<strong>Live Differentials Popping:</strong> ${topDiffs.join(' • ')}` : 
+        `<strong>Notice:</strong> No major differential scores yet.`;
+}
+
 document.addEventListener("DOMContentLoaded", fetchProLeague);
