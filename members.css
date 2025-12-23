@@ -1,0 +1,13 @@
+.scroll-nav { gap: 10px; border-bottom: 1px solid #eee; }
+.tab-btn { background: #fff; border: 1px solid #ddd; padding: 8px 16px; border-radius: 20px; font-weight: 700; color: var(--text-gray); font-size: 0.8rem; }
+.tab-btn.active { background: var(--dark-blue); color: white; border-color: var(--dark-blue); }
+
+.kopala-table { width: 100%; border-collapse: collapse; }
+.kopala-table th { background: #f8f9fa; padding: 12px; font-size: 0.7rem; text-align: left; color: var(--text-gray); }
+.kopala-table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+
+.gw-pill { background: var(--fpl-green); color: var(--dark-blue); padding: 2px 8px; border-radius: 10px; font-weight: 800; }
+
+.tab-content { display: none; }
+.active-tab { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
