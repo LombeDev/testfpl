@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.4)
- * Features: Offline Jersey Logic, 24hr Smart Cache, AI Wildcard
+ * KOPALA FPL - AI Master Engine (v2.5)
+ * FIX: Persistent Fixture Caching & Offline Kits
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -9,7 +9,6 @@ let teamsDB = {};
 let fixturesDB = [];
 let selectedSlotId = null;
 
-// Initial Squad Structure
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -28,30 +27,33 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC (With Persistent Jersey Slugs) ---
+// --- 1. DATA SYNC (NOW CACHING FIXTURES TOO) ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
-    const CACHE_KEY = 'kopala_player_cache';
     const TIME_KEY = 'kopala_cache_timestamp';
     const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; 
 
-    const cachedData = localStorage.getItem(CACHE_KEY);
+    const cachedPlayers = localStorage.getItem('kopala_player_cache');
+    const cachedFixtures = localStorage.getItem('kopala_fixtures_cache');
+    const cachedTeams = localStorage.getItem('kopala_teams_cache');
     const cachedTime = localStorage.getItem(TIME_KEY);
+    
     const isCacheFresh = cachedTime && (Date.now() - cachedTime < TWENTY_FOUR_HOURS);
 
-    // STEP A: Load from Cache immediately (Supports Offline Colors)
-    if (cachedData) {
-        playerDB = JSON.parse(cachedData);
-        teamsDB = JSON.parse(localStorage.getItem('kopala_teams_cache') || '{}');
+    // Load from Cache immediately (Supports Offline Fixtures)
+    if (cachedPlayers && cachedFixtures) {
+        playerDB = JSON.parse(cachedPlayers);
+        fixturesDB = JSON.parse(cachedFixtures);
+        teamsDB = JSON.parse(cachedTeams || '{}');
         loadSquad();
         renderPitch();
+        
         if (isCacheFresh && ticker) {
             ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh (Cached)</span>";
             return; 
         }
     }
 
-    // STEP B: Fetch fresh data
     try {
         if (ticker) ticker.textContent = "Syncing live FPL data...";
         
@@ -61,16 +63,14 @@ async function syncData() {
         ]);
         
         const data = await bootRes.json();
-        fixturesDB = await fixRes.json();
+        const rawFixtures = await fixRes.json();
 
-        // Map Teams and create CSS Slugs (e.g., "Man Utd" -> "man_utd")
+        // Process Teams for Slugs
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-            // Manual overrides for API variations
             if (slug.includes('man_city')) slug = 'man_city';
             if (slug.includes('man_utd')) slug = 'man_utd';
             if (slug.includes('spurs') || slug.includes('tottenham')) slug = 'tottenham';
-            
             teamsDB[t.id] = slug;
         });
 
@@ -78,15 +78,17 @@ async function syncData() {
             id: p.id,
             name: p.web_name,
             teamId: p.team,
-            teamShort: teamsDB[p.team] || 'default', // Matches your CSS classes
+            teamShort: teamsDB[p.team] || 'default',
             pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
             price: (p.now_cost / 10).toFixed(1),
-            xp: parseFloat(p.ep_next) || 0,
-            form: parseFloat(p.form) || 0
+            xp: parseFloat(p.ep_next) || 0
         })).sort((a,b) => b.xp - a.xp);
 
-        // Update Cache
-        localStorage.setItem(CACHE_KEY, JSON.stringify(playerDB));
+        fixturesDB = rawFixtures;
+
+        // SAVE ALL DATA TO CACHE
+        localStorage.setItem('kopala_player_cache', JSON.stringify(playerDB));
+        localStorage.setItem('kopala_fixtures_cache', JSON.stringify(fixturesDB));
         localStorage.setItem('kopala_teams_cache', JSON.stringify(teamsDB));
         localStorage.setItem(TIME_KEY, Date.now().toString());
         
@@ -94,21 +96,19 @@ async function syncData() {
         renderPitch();
         if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine Online (Live)</span>";
     } catch (e) {
-        console.warn("Network sync failed. Offline mode active.");
+        console.warn("Sync failed. Using cached fixtures.");
         if (ticker && playerDB.length > 0) {
-            ticker.innerHTML = "📡 <span style='color:orange'>Offline: Using Cached Kits</span>";
+            ticker.innerHTML = "📡 <span style='color:orange'>Offline: Fixtures Cached</span>";
         }
     }
 }
 
-// --- 2. DYNAMIC UI GENERATION ---
+// --- 2. UI GENERATION ---
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
     
     const player = playerDB.find(p => p.name === slotData.name);
-    
-    // Logic: Goalies always use goalie kit, others use their team kit class
     let jerseyClass = 'default';
     if (player) {
         jerseyClass = (player.pos === 'GKP') ? 'gkp_color' : player.teamShort;
@@ -124,7 +124,10 @@ function createSlotUI(slotData) {
                 <span class="p-price">${player ? player.price + 'm' : ''}</span>
             </div>
             <div class="card-fixtures">
-                ${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}<br>${f.loc}</div>`).join('')}
+                ${fixtures.length > 0 ? fixtures.map(f => `
+                    <div class="fix-item diff-${f.diff}">
+                        ${f.opp}<br>${f.loc}
+                    </div>`).join('') : '<div class="fix-item">---</div>'}
             </div>
         </div>
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
@@ -135,6 +138,27 @@ function createSlotUI(slotData) {
     return div;
 }
 
+function getNextFixtures(teamId) {
+    if (!fixturesDB || fixturesDB.length === 0) return [];
+    
+    return fixturesDB
+        .filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
+        .slice(0, 3)
+        .map(f => {
+            const isHome = f.team_h === teamId;
+            const opponentId = isHome ? f.team_a : f.team_h;
+            
+            // Get the 3-letter code or short name
+            let oppName = teamsDB[opponentId] ? teamsDB[opponentId].substring(0, 3).toUpperCase() : "TBD";
+            
+            return {
+                opp: oppName,
+                loc: isHome ? 'H' : 'A',
+                diff: isHome ? f.team_h_difficulty : f.team_a_difficulty
+            };
+        });
+}
+
 // --- 3. CORE LOGIC ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
@@ -142,7 +166,6 @@ function renderPitch() {
     if(!pitch || !bench) return;
     pitch.innerHTML = ''; bench.innerHTML = '';
 
-    // Main Field
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
         const row = document.createElement('div');
         row.className = 'row';
@@ -150,7 +173,6 @@ function renderPitch() {
         pitch.appendChild(row);
     });
 
-    // Bench
     const bRow = document.createElement('div');
     bRow.className = 'row';
     squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
@@ -175,23 +197,10 @@ function updateStats() {
         budgetEl.textContent = `£${itb}m`;
         budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
     }
-
-    document.getElementById('v-xp').textContent = xp.toFixed(1);
-    document.getElementById('team-rating').textContent = Math.min(100, (xp / 70) * 100).toFixed(0) + '%';
-}
-
-// --- 4. ENGINE HELPERS ---
-function getNextFixtures(teamId) {
-    if (!fixturesDB.length) return [];
-    return fixturesDB.filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
-        .slice(0, 3).map(f => {
-            const isHome = f.team_h === teamId;
-            return {
-                opp: teamsDB[isHome ? f.team_a : f.team_h]?.toUpperCase().substring(0,3) || 'TBD',
-                loc: isHome ? 'H' : 'A',
-                diff: isHome ? f.team_h_difficulty : f.team_a_difficulty
-            };
-        });
+    const xpDisplay = document.getElementById('v-xp');
+    const rateDisplay = document.getElementById('team-rating');
+    if(xpDisplay) xpDisplay.textContent = xp.toFixed(1);
+    if(rateDisplay) rateDisplay.textContent = Math.min(100, (xp / 70) * 100).toFixed(0) + '%';
 }
 
 function updatePlayer(id, name) { 
@@ -245,7 +254,6 @@ function loadSquad() {
     if (saved) squad = JSON.parse(saved);
 }
 
-// --- 5. INITIALIZE ---
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
     const wcBtn = document.getElementById('wildcard-btn');
