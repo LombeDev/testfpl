@@ -5,58 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Members Area 2.0 | Kopala FPL</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="members.css">
-<link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="members.css">
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
 
-    <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
-            <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
-        </div>
-        <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Kopala FPL</a></li>
-            <li><a href="team.html">My team by AI</a></li>
-            <li><a href="price.html">Price change timer</a></li>
-            <li><a href="transfer.html">Top transfers</a></li>
-            <li><a href="members.html" style="color:var(--fpl-green)">Members area 2.0</a></li>
-            <li><a href="football.html">Football Leagues</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-        </ul>
-    </div>
-    <div id="main-backdrop" class="backdrop"></div>
-
-    <nav class="navbar">
-        <div class="nav-left">
-            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
-            <h1 class="brand">KOPALA <span>FPL</span></h1>
-        </div>
-        <div class="nav-right">
-            <div id="auth-header-btn"></div>
-        </div>
-    </nav>
-
-    <main class="container">
-        <div id="auth-overlay">
-            <div class="card" style="text-align: center; padding: 40px 20px; margin-top: 20px;">
-                <h1 style="color: var(--dark-blue); font-size: 1.5rem;">KOPALA <span style="color:var(--fpl-pink)">PRO</span></h1>
-                <p style="color: var(--text-gray); margin: 15px 0;">Access Live Standings, Captain Points, and Rival Transfer Alerts.</p>
-                <button onclick="netlifyIdentity.open()" class="btn-primary" style="background:var(--fpl-pink); color:white; border:none; padding:12px 25px; border-radius:8px; font-weight:800; width:100%;">MEMBER LOGIN</button>
+    <div id="auth-overlay">
+        <div class="card" style="text-align: center; padding: 60px 20px; margin: 50px auto; max-width: 450px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🛡️</div>
+            <h1 style="color: var(--dark-blue); font-size: 1.8rem; letter-spacing: -1px;">KOPALA <span style="color:var(--fpl-pink)">PRO</span></h1>
+            <p style="color: var(--text-gray); margin: 15px 0 30px; line-height: 1.6;">
+                Access the War Room, Live Bonus predictors, and exclusive Rival Transfer alerts.
+            </p>
+            <button onclick="netlifyIdentity.open()" class="btn-primary" style="background:var(--fpl-pink); color:white; border:none; padding:16px 30px; border-radius:12px; font-weight:800; width:100%; cursor:pointer;">SIGN IN TO UNLOCK</button>
+            <div style="margin-top: 20px;">
+                <a href="index.html" style="color: var(--text-gray); font-size: 0.9rem; text-decoration: none;">← Back to Home</a>
             </div>
         </div>
+    </div>
 
-        <div id="app" style="display: none;">
-            <div class="scroll-nav" style="display:flex; gap:10px; overflow-x:auto; padding: 15px 0;">
-                <button class="tab-btn active" data-tab="members">League Standings</button>
+    <div id="app" style="display: none;">
+        
+        <div id="side-drawer" class="drawer">
+            <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
+                <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
+                <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+            </div>
+            <ul class="drawer-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="kopala.html">Kopala FPL</a></li>
+                <li><a href="team.html">My team by AI</a></li>
+                <li><a href="price.html">Price change timer</a></li>
+                <li><a href="transfer.html">Top transfers</a></li>
+                <li><a href="members.html" style="color:var(--fpl-green)">Members area 2.0</a></li>
+                <li><a href="football.html">Football Leagues</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
+                <li style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <a href="#" onclick="netlifyIdentity.logout()" style="color: var(--fpl-pink)">Logout Session</a>
+                </li>
+            </ul>
+        </div>
+        <div id="main-backdrop" class="backdrop"></div>
+
+        <nav class="navbar">
+            <div class="nav-left">
+                <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
+                <h1 class="brand">KOPALA <span>FPL</span></h1>
+            </div>
+            <div class="nav-right">
+                <span class="badge" style="background: var(--fpl-green); color: var(--dark-blue);">PRO</span>
+            </div>
+        </nav>
+
+        <main class="container" style="margin-top: 80px;">
+            <div class="scroll-nav" style="display:flex; gap:10px; overflow-x:auto; padding: 10px 0;">
+                <button class="tab-btn active" data-tab="members">Standings</button>
                 <button class="tab-btn" data-tab="liveBonus">Live Bonus</button>
                 <button class="tab-btn" data-tab="transfers">Scout Tool</button>
             </div>
 
             <section id="members" class="tab-content active-tab">
-                <div class="loader">Scouting League Data...</div>
+                <div class="loader">Fetching Pro Data...</div>
             </section>
             
             <section id="liveBonus" class="tab-content">
@@ -69,10 +79,10 @@
                     <div id="plannerOutput"></div>
                 </div>
             </section>
-        </div>
-    </main>
+        </main>
+    </div>
 
-    <script src="menu.js"></script>
+    <script src="script.js"></script>
     <script src="members-logic.js"></script>
 </body>
 </html>
