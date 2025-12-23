@@ -1,14 +1,15 @@
 /**
- * KOPALA FPL - AI Team Logic & Performance Engine
- * Version: 2.1 (Dec 2025)
+ * KOPALA FPL - Total Efficiency Engine
+ * Features: Live API Sync, Team Persistence, AI Ratings, and Fixture Cards
  */
 
 const API_BASE = "/fpl-api/"; 
 let playerDB = [];
 let teamsDB = {}; 
+let fixturesDB = []; // Global store for upcoming matches
 let selectedSlotId = null;
 
-// 1. INITIAL SQUAD STRUCTURE
+// Initial squad structure
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -27,116 +28,64 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 2. DATA SYNC & CACHING ---
+// --- 1. DATA SYNC & FIXTURE MAPPING ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
-    const cacheKey = "fpl_bootstrap_cache";
-    
     try {
-        const cached = localStorage.getItem(cacheKey);
-        let data;
-
-        // Efficiency: Use cache for 15 mins to avoid unnecessary API hits
-        if (cached) {
-            const parsed = JSON.parse(cached);
-            if (Date.now() - parsed.timestamp < 15 * 60 * 1000) {
-                data = parsed.content;
-            }
-        }
-
-        if (!data) {
-            const res = await fetch(`${API_BASE}bootstrap-static/`);
-            data = await res.json();
-            localStorage.setItem(cacheKey, JSON.stringify({
-                timestamp: Date.now(),
-                content: data
-            }));
-        }
+        // Fetch Teams and Players
+        const res = await fetch(`${API_BASE}bootstrap-static/`);
+        const data = await res.json();
         
-        // Build database
-        data.teams.forEach(t => teamsDB[t.id] = t.name);
+        // Fetch Fixtures
+        const fixRes = await fetch(`${API_BASE}fixtures/`);
+        fixturesDB = await fixRes.json();
+
+        // Map Team Short Names (e.g., 1 -> ARS)
+        data.teams.forEach(t => teamsDB[t.id] = t.short_name);
+        
         playerDB = data.elements.map(p => ({
+            id: p.id,
             name: p.web_name,
-            team: teamsDB[p.team],
+            teamId: p.team,
+            teamShort: teamsDB[p.team],
             pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
-            price: p.now_cost / 10,
+            price: (p.now_cost / 10).toFixed(1),
             xp: parseFloat(p.ep_next) || 0,
             form: parseFloat(p.form) || 0
         })).sort((a,b) => b.xp - a.xp);
         
-        if (ticker) ticker.innerHTML = "✅ <span style='color:var(--fpl-green)'>Sync Complete: Dec 2025</span>";
+        if (ticker) ticker.innerHTML = "✅ <span style='color:var(--fpl-green)'>Sync Complete: Live Fixtures Loaded</span>";
         
-        loadSquad(); 
+        loadSquad();
         renderPitch();
     } catch (e) {
-        if (ticker) ticker.textContent = "⚠️ Server Busy. Using offline mode.";
-        console.error("FPL API Error:", e);
+        if (ticker) ticker.textContent = "⚠️ Connection Error";
     }
 }
 
-// --- 3. STORAGE LOGIC ---
-function saveSquad() {
-    localStorage.setItem('kopala_saved_squad', JSON.stringify(squad));
+function getNextFixtures(teamId, limit = 3) {
+    return fixturesDB
+        .filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
+        .slice(0, limit)
+        .map(f => {
+            const isHome = f.team_h === teamId;
+            const oppId = isHome ? f.team_a : f.team_h;
+            const difficulty = isHome ? f.team_h_difficulty : f.team_a_difficulty;
+            return {
+                opponent: teamsDB[oppId],
+                location: isHome ? 'H' : 'A',
+                diff: difficulty
+            };
+        });
 }
 
+// --- 2. STORAGE & INTERACTION ---
+function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
 function loadSquad() {
     const saved = localStorage.getItem('kopala_saved_squad');
     if (saved) squad = JSON.parse(saved);
 }
 
-// --- 4. UI RENDERING ---
-function renderPitch() {
-    const pitch = document.getElementById('pitch-container');
-    const bench = document.getElementById('bench-container');
-    if(!pitch || !bench) return;
-    
-    pitch.innerHTML = ''; 
-    bench.innerHTML = '';
-
-    const positions = ['GKP', 'DEF', 'MID', 'FWD'];
-    const starters = squad.filter(s => !s.isBench);
-    
-    // Render Pitch Rows
-    positions.forEach(pos => {
-        const rowPlayers = starters.filter(p => p.pos === pos);
-        if (rowPlayers.length > 0) {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'row';
-            rowPlayers.forEach(p => rowDiv.appendChild(createSlotUI(p)));
-            pitch.appendChild(rowDiv);
-        }
-    });
-
-    // Render Bench
-    const benchRow = document.createElement('div');
-    benchRow.className = 'row';
-    squad.filter(s => s.isBench).forEach(p => benchRow.appendChild(createSlotUI(p)));
-    bench.appendChild(benchRow);
-    
-    updateStats();
-}
-
-function createSlotUI(slotData) {
-    const div = document.createElement('div');
-    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    
-    const player = playerDB.find(p => p.name === slotData.name);
-    const teamClass = player ? player.team.toLowerCase().replace(/\s+/g, '-').replace(/'/g, '') : 'default';
-
-    div.innerHTML = `
-        <div class="jersey ${teamClass}" onclick="handleSwap(${slotData.id})"></div>
-        <div class="player-name-tag">${slotData.name || slotData.pos}</div>
-        <select class="player-match-tag" onchange="updatePlayer(${slotData.id}, this.value)">
-            <option value="">-- Pick --</option>
-            ${playerDB.filter(p => p.pos === slotData.pos).map(p => `
-                <option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>
-            `).join('')}
-        </select>
-    `;
-    return div;
-}
-
-// --- 5. LOGIC & MATH ENGINE ---
 function updatePlayer(slotId, name) {
     const slot = squad.find(s => s.id === slotId);
     slot.name = name;
@@ -150,8 +99,6 @@ function handleSwap(id) {
     } else {
         const p1 = squad.find(s => s.id === selectedSlotId);
         const p2 = squad.find(s => s.id === id);
-        
-        // Swap Bench/Pitch status
         if (p1.isBench !== p2.isBench) {
             const temp = p1.isBench;
             p1.isBench = p2.isBench;
@@ -163,117 +110,119 @@ function handleSwap(id) {
     renderPitch();
 }
 
-function updateStats() {
-    let totalXP = 0;
-    let totalValue = 0;
-    let squadPlayers = [];
+// --- 3. UI RENDERING ---
+function createSlotUI(slotData) {
+    const div = document.createElement('div');
+    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
+    
+    const player = playerDB.find(p => p.name === slotData.name);
+    const teamClass = player ? player.teamShort.toLowerCase() : 'default';
+    const fixtures = player ? getNextFixtures(player.teamId) : [];
 
+    div.innerHTML = `
+        <div class="jersey ${teamClass}" onclick="handleSwap(${slotData.id})"></div>
+        <div class="player-card">
+            <div class="card-header">
+                <span class="p-name">${slotData.name || slotData.pos}</span>
+                <span class="p-price">${player ? player.price + 'm' : ''}</span>
+            </div>
+            <div class="card-fixtures">
+                ${fixtures.length > 0 ? fixtures.map(f => `
+                    <div class="fix-item diff-${f.diff}">
+                        <span class="opp-text">${f.opponent}</span>
+                        <span class="loc-text">${f.location}</span>
+                    </div>
+                `).join('') : '<div class="fix-item">TBC</div>'}
+            </div>
+        </div>
+        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
+            <option value="">-- Pick --</option>
+            ${playerDB.filter(p => p.pos === slotData.pos).map(p => `
+                <option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>
+            `).join('')}
+        </select>
+    `;
+    return div;
+}
+
+function renderPitch() {
+    const pitch = document.getElementById('pitch-container');
+    const bench = document.getElementById('bench-container');
+    if(!pitch || !bench) return;
+    pitch.innerHTML = ''; bench.innerHTML = '';
+
+    const positions = ['GKP', 'DEF', 'MID', 'FWD'];
+    const starters = squad.filter(s => !s.isBench);
+    
+    positions.forEach(pos => {
+        const rowPlayers = starters.filter(p => p.pos === pos);
+        if (rowPlayers.length > 0) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'row';
+            rowPlayers.forEach(p => rowDiv.appendChild(createSlotUI(p)));
+            pitch.appendChild(rowDiv);
+        }
+    });
+
+    const benchRow = document.createElement('div');
+    benchRow.className = 'row';
+    squad.filter(s => s.isBench).forEach(p => benchRow.appendChild(createSlotUI(p)));
+    bench.appendChild(benchRow);
+    
+    updateStats();
+}
+
+// --- 4. ANALYTICS ---
+function updateStats() {
+    let totalXP = 0, totalValue = 0, squadPlayers = [];
     squad.forEach(s => {
         const p = playerDB.find(x => x.name === s.name);
         if (p) {
-            totalValue += p.price;
+            totalValue += parseFloat(p.price);
             squadPlayers.push({ ...p, isBench: s.isBench });
             if (!s.isBench) totalXP += p.xp;
         }
     });
-    
-    // Update Predicted Points
-    if(document.getElementById('v-xp')) document.getElementById('v-xp').textContent = totalXP.toFixed(1);
 
-    // Update Budget
+    document.getElementById('v-xp').textContent = totalXP.toFixed(1);
     const budgetVal = (100 - totalValue).toFixed(1);
     const budgetEl = document.getElementById('budget-val');
-    if(budgetEl) {
-        budgetEl.textContent = `£${budgetVal}m`;
-        budgetEl.style.color = budgetVal < 0 ? '#ff005a' : '#05ff80';
-    }
+    budgetEl.textContent = `£${budgetVal}m`;
+    budgetEl.style.color = budgetVal < 0 ? '#ff005a' : '#05ff80';
 
-    // Update Team Rating (0-100%)
     const ratingScore = Math.min(100, (totalXP / 70) * 100);
-    const ratingEl = document.getElementById('team-rating');
-    if(ratingEl) {
-        ratingEl.textContent = `${ratingScore.toFixed(0)}%`;
-        ratingEl.style.color = ratingScore > 80 ? '#00ff87' : (ratingScore > 60 ? '#f39c12' : '#ff005a');
-    }
-
-    // Update GW Rating (Grade System)
-    const gwRatingEl = document.getElementById('gw-rating');
-    if(gwRatingEl) {
-        let grade = "E";
-        if (ratingScore > 85) grade = "S";
-        else if (ratingScore > 75) grade = "A+";
-        else if (ratingScore > 65) grade = "B";
-        else if (ratingScore > 50) grade = "C";
-        gwRatingEl.textContent = grade;
-    }
-
-    // Update Formation Label
-    const starters = squad.filter(s => !s.isBench);
-    const d = starters.filter(s => s.pos === 'DEF').length;
-    const m = starters.filter(s => s.pos === 'MID').length;
-    const f = starters.filter(s => s.pos === 'FWD').length;
-    if(document.getElementById('formation-ticker')) {
-        document.getElementById('formation-ticker').textContent = `FORMATION: ${d}-${m}-${f}`;
-    }
+    document.getElementById('team-rating').textContent = `${ratingScore.toFixed(0)}%`;
+    
+    let grade = ratingScore > 75 ? "A+" : (ratingScore > 50 ? "B" : "C");
+    document.getElementById('gw-rating').textContent = grade;
 
     renderTransferRecs(squadPlayers);
 }
 
 function renderTransferRecs(squadPlayers) {
     const list = document.getElementById('transfer-list');
-    if (!list) return;
+    if (!list || squadPlayers.length < 11) return;
 
-    if (squadPlayers.length < 11) {
-        list.innerHTML = `<p style="font-size:12px; color:#666;">Complete your starting XI to see AI Transfer Logic.</p>`;
-        return;
-    }
-
-    // Logic: Identify 2 lowest XP players to SELL
-    const sellCandidates = [...squadPlayers]
-        .sort((a, b) => a.xp - b.xp)
-        .slice(0, 2);
-
-    // Logic: Identify 2 highest XP players NOT in squad to BUY
+    const sell = [...squadPlayers].sort((a,b) => a.xp - b.xp).slice(0, 2);
     const currentNames = squadPlayers.map(p => p.name);
-    const buyTargets = playerDB
-        .filter(p => !currentNames.includes(p.name))
-        .sort((a, b) => b.xp - a.xp)
-        .slice(0, 2);
+    const buy = playerDB.filter(p => !currentNames.includes(p.name)).sort((a,b) => b.xp - a.xp).slice(0, 2);
 
-    list.innerHTML = sellCandidates.map((p, i) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding:10px; background:white; border:1px solid #eee; border-radius:6px;">
-            <div style="flex:1">
-                <span style="color:#ff005a; font-size:9px; font-weight:900;">SELL</span><br>
-                <b style="font-size:12px;">${p.name}</b>
-            </div>
-            <div style="padding: 0 10px;"><i class="fa-solid fa-arrow-right-long" style="color:#37003c;"></i></div>
-            <div style="flex:1; text-align:right;">
-                <span style="color:#00ff87; font-size:9px; font-weight:900;">BUY</span><br>
-                <b style="font-size:12px;">${buyTargets[i].name}</b>
-            </div>
+    list.innerHTML = sell.map((p, i) => `
+        <div class="transfer-row">
+            <span>SELL: <b>${p.name}</b></span>
+            <i class="fa-solid fa-arrow-right"></i>
+            <span>BUY: <b>${buy[i].name}</b></span>
         </div>
     `).join('');
 }
 
-// --- 6. NAVIGATION BOOTSTRAP ---
 function initNav() {
-    const menuBtn = document.getElementById('menu-btn');
-    const closeBtn = document.getElementById('close-btn');
-    const drawer = document.getElementById('side-drawer');
-    const backdrop = document.getElementById('backdrop');
-
     const toggle = () => {
-        drawer.classList.toggle('open');
-        backdrop.classList.toggle('active');
+        document.getElementById('side-drawer').classList.toggle('open');
+        document.getElementById('backdrop').classList.toggle('active');
     };
-
-    if(menuBtn) menuBtn.onclick = toggle;
-    if(closeBtn) closeBtn.onclick = toggle;
-    if(backdrop) backdrop.onclick = toggle;
+    document.getElementById('menu-btn').onclick = toggle;
+    document.getElementById('close-btn').onclick = toggle;
 }
 
-// Kickoff
-document.addEventListener('DOMContentLoaded', () => {
-    initNav();
-    syncData();
-});
+document.addEventListener('DOMContentLoaded', () => { initNav(); syncData(); });
