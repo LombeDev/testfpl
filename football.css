@@ -11,9 +11,7 @@
 }
 
 /* --- 2. GLOBAL RESET & SAFETY --- */
-* {
-    box-sizing: border-box; /* Critical: Includes padding in width */
-}
+* { box-sizing: border-box; }
 
 html, body {
     margin: 0;
@@ -21,102 +19,94 @@ html, body {
     background-color: var(--gray-bg);
     color: var(--text-main);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    overflow-x: hidden; /* Prevents horizontal wiggle */
+    overflow-x: hidden;
     width: 100%;
 }
 
-/* --- 3. NAVBAR & LAYOUT --- */
-.navbar {
-    background: #ffffff;
-    border-bottom: 1px solid var(--border-light);
-    padding: 10px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
+/* --- 3. CENTERED LAYOUT --- */
 .main-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers cards in the main view */
 }
 
 .dashboard-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 16px;
+    gap: 15px;
+    width: 100%;
 }
 
 @media (max-width: 900px) {
     .dashboard-grid { grid-template-columns: 1fr; }
 }
 
-/* --- 4. CARDS & TABLES (Screen-Safe) --- */
+/* --- 4. CENTERED CARDS & SMALL CONTENT --- */
 .card {
     background: #ffffff;
     border-radius: 12px;
-    padding: 12px;
+    padding: 12px 8px; /* Narrower padding for mobile */
     border: 1px solid var(--border-light);
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     width: 100%;
-    overflow: hidden; /* Contains children */
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 8px;
-}
-
-.card h2 {
-    font-size: 0.85rem;
-    font-weight: 800;
-    margin: 0;
-    text-transform: uppercase;
-    color: var(--fpl-purple);
+    margin-bottom: 15px;
 }
 
 .table-container {
     width: 100%;
-    overflow-x: auto; /* Safety scroll for tables */
-    -webkit-overflow-scrolling: touch;
+    display: flex;
+    justify-content: center; /* Centers the table within the container */
+    overflow-x: auto;
 }
 
 table {
     width: 100%;
+    max-width: 100%;
     border-collapse: collapse;
-    font-size: 0.8rem;
+    font-size: 0.75rem; /* Smaller font for mobile */
+    table-layout: fixed; /* Helps keep columns aligned */
 }
+
+/* Column Widths */
+thead th:nth-child(1) { width: 30px; } /* # */
+thead th:nth-child(2) { width: auto; } /* Club */
+thead th:nth-child(3) { width: 60px; } /* W/D/L */
+thead th:nth-child(4) { width: 40px; } /* GD */
+thead th:nth-child(5) { width: 45px; } /* PTS */
 
 thead th {
     background-color: var(--gray-bg);
-    padding: 8px 4px;
+    padding: 6px 2px;
     color: var(--text-muted);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
+    text-align: center;
 }
 
 td {
-    padding: 10px 4px;
+    padding: 8px 2px;
     border-bottom: 1px solid #f1f5f9;
+    text-align: center; /* Centers numerical data */
+}
+
+/* Left Align Team Names Only */
+td:nth-child(2) {
+    text-align: left;
 }
 
 .team-cell { 
     display: flex; 
     align-items: center; 
-    gap: 6px; 
+    gap: 5px; 
+    overflow: hidden;
 }
 
 .crest { 
-    width: 18px; 
-    height: 18px; 
-    object-fit: contain;
+    width: 15px; /* Smaller crests */
+    height: 15px; 
     flex-shrink: 0; 
 }
 
@@ -124,161 +114,58 @@ td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 90px; /* Prevents name from pushing screen width */
     font-weight: 600;
+    font-size: 0.75rem;
 }
 
-/* --- 5. FIXTURES & LIVE SCORES --- */
-.fixtures-grid {
-    display: flex;
-    flex-direction: column;
-}
-
+/* --- 5. FIXTURES (CENTERED & COMPACT) --- */
 .fixture-row {
     display: grid;
-    /* Time: 55px, Score: 55px, Teams share the rest */
-    grid-template-columns: 55px 1fr 55px 1fr;
+    grid-template-columns: 50px 1fr 45px 1fr; /* Tighter columns */
     align-items: center;
-    padding: 12px 0;
+    padding: 10px 0;
     border-bottom: 1px solid #f1f5f9;
     width: 100%;
 }
 
 .f-time { 
-    font-size: 0.6rem; 
+    font-size: 0.55rem; 
     color: var(--text-muted); 
-    line-height: 1.2;
+    text-align: center;
+}
+
+.f-home, .f-away { 
+    font-size: 0.7rem; 
     font-weight: 700;
-}
-
-.f-home { 
-    text-align: right; 
-    font-weight: 700; 
-    display: flex; 
-    align-items: center; 
-    justify-content: flex-end; 
+    display: flex;
+    align-items: center;
     gap: 4px;
-    font-size: 0.75rem;
 }
-
-.f-away { 
-    text-align: left; 
-    font-weight: 700; 
-    display: flex; 
-    align-items: center; 
-    justify-content: flex-start; 
-    gap: 4px;
-    font-size: 0.75rem;
-}
-
-.f-home img, .f-away img {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-}
+.f-home { justify-content: flex-end; text-align: right; }
+.f-away { justify-content: flex-start; text-align: left; }
 
 .score-pill {
     background: var(--fpl-purple);
     color: #fff;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 900;
-    padding: 3px 0;
+    padding: 2px 0;
     border-radius: 4px;
     text-align: center;
-    width: 48px;
+    width: 40px;
     margin: 0 auto;
 }
 
-.score-pill.live {
-    background: var(--fpl-pink);
-    animation: livePulse 2s infinite;
-}
+/* --- 6. TOP SCORERS SMALL VIEW --- */
+#scorers-table thead th:nth-child(1) { width: auto; text-align: left; }
+#scorers-table thead th:nth-child(2) { width: 40px; text-align: right; }
 
-@keyframes livePulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
+.player-name { font-weight: 700; font-size: 0.75rem; }
+.player-team { font-size: 0.6rem; color: var(--text-muted); }
 
-/* --- 6. LEAGUE NAV (Horizontal Scroll) --- */
-.league-nav-container {
-    background: #fff;
-    border-bottom: 1px solid var(--border-light);
-    padding: 8px 0;
-    width: 100%;
-}
-
-.league-nav-bar {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 0 16px;
-    scrollbar-width: none; /* Firefox */
-}
-.league-nav-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-
-.league-btn {
-    padding: 6px 14px;
-    background: var(--gray-bg);
-    border: 1px solid var(--border-light);
-    border-radius: 20px;
-    white-space: nowrap;
-    font-size: 0.75rem;
-    font-weight: 700;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.league-btn.active {
-    background: var(--fpl-purple);
-    color: #fff;
-    border-color: var(--fpl-purple);
-}
-
-/* --- 7. UI ELEMENTS --- */
-.toggle-btn {
-    border: none;
-    background: none;
-    padding: 4px 8px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-radius: 6px;
-}
-
-.toggle-btn.active {
-    background: #fff;
-    color: var(--fpl-purple);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.view-toggles {
-    display: flex;
-    background: #f1f5f9;
-    padding: 2px;
-    border-radius: 8px;
-}
-
-#loader {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    background: var(--fpl-purple);
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.fa-spin { animation: spin 1s infinite linear; }
-@keyframes spin { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
-
-/* --- 8. MOBILE-SPECIFIC TWEAKS --- */
-@media (max-width: 480px) {
-    .t-name { max-width: 70px; } /* Even tighter for small phones */
-    .f-home, .f-away { font-size: 0.7rem; }
-    .card { padding: 10px; }
+/* --- 7. MOBILE OVERRIDES --- */
+@media (max-width: 380px) {
+    .t-name { max-width: 65px; }
+    .f-home, .f-away { font-size: 0.65rem; }
+    .fixture-row { grid-template-columns: 45px 1fr 40px 1fr; }
 }
