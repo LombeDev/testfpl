@@ -193,54 +193,30 @@ n-top: 60px; text-align: center; }
 }
 
 
-/* --- HORIZONTAL PRICE SCROLL --- */
-.price-scroll-wrapper {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding: 10px 5px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Hide scrollbar Firefox */
+/* Vertical Scroll Container */
+.price-list-vertical {
+    max-height: 250px; /* Limits how many players show before scrolling */
+    overflow-y: auto;  /* Enables vertical scroll */
+    padding-right: 5px;
 }
 
-.price-scroll-wrapper::-webkit-scrollbar {
-    display: none; /* Hide scrollbar Chrome/Safari */
+/* Custom Scrollbar for a clean look */
+.price-list-vertical::-webkit-scrollbar {
+    width: 4px;
+}
+.price-list-vertical::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
 }
 
-.price-card-mini {
-    flex: 0 0 88%; /* Show 88% so the next card is visible (peeking) */
-    scroll-snap-align: center;
-    background: #fff;
-    border: 1px solid #f0f0f0;
-    border-radius: 12px;
-    padding: 12px;
-}
-
-.riser-border { border-top: 4px solid var(--primary-green); }
-.faller-border { border-top: 4px solid var(--down); }
-
-.mini-header {
-    font-size: 0.75rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Compact Rows inside the Scroll */
 .price-row-mini {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #f9f9f9;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-.price-row-mini:last-child { border-bottom: none; }
-
-.mini-name { font-weight: 700; font-size: 0.85rem; color: var(--dark-blue); }
-.mini-team { font-size: 0.7rem; color: var(--text-dim); }
-.mini-val { font-weight: 800; font-size: 0.85rem; }
+.riser-text { color: #008a4a; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; margin-top: 10px; }
+.faller-text { color: #e53e3e; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; margin-top: 10px; }
+.divider { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
