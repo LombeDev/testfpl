@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
- <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
+    <div id="side-drawer" class="drawer">
+        <div style="padding: 20px; background: #37003c; color: white; display: flex; justify-content: space-between; align-items: center;">
             <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
@@ -24,7 +24,7 @@
         </ul>
     </div>
 
-  <div id="main-backdrop" class="backdrop"></div>
+    <div id="main-backdrop" class="backdrop"></div>
 
     <nav class="navbar">
         <div class="nav-left">
@@ -32,44 +32,54 @@
             <h1 class="brand">KOPALA <span>FPL</span></h1>
         </div>
         <div class="nav-right">
-            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
-           
+            <button class="icon-btn search-btn" onclick="forceRefresh()" title="Refresh Live Scores">
+                <i class="fa-solid fa-sync-alt"></i>
+            </button>
         </div>
     </nav>
 
-
     <div class="league-nav-container">
         <div class="league-nav-bar">
-            <button class="league-btn active" onclick="switchLeague('PL')">EPL</button>
-            <button class="league-btn" onclick="switchLeague('PD')">La Liga</button>
-            <button class="league-btn" onclick="switchLeague('SA')">Serie A</button>
-            <button class="league-btn" onclick="switchLeague('BL1')">Bundesliga</button>
-            <button class="league-btn" onclick="switchLeague('FL1')">Ligue 1</button>
-            <button class="league-btn" onclick="switchLeague('CL')">UCL</button>
-            <button class="league-btn" onclick="switchLeague('DED')">Eredivisie</button>
+            <button class="league-btn active" data-id="PL" onclick="switchLeague('PL')">EPL</button>
+            <button class="league-btn" data-id="PD" onclick="switchLeague('PD')">La Liga</button>
+            <button class="league-btn" data-id="SA" onclick="switchLeague('SA')">Serie A</button>
+            <button class="league-btn" data-id="BL1" onclick="switchLeague('BL1')">Bundesliga</button>
+            <button class="league-btn" data-id="FL1" onclick="switchLeague('FL1')">Ligue 1</button>
+            <button class="league-btn" data-id="CL" onclick="switchLeague('CL')">UCL</button>
+            <button class="league-btn" data-id="DED" onclick="switchLeague('DED')">Eredivisie</button>
         </div>
     </div>
 
     <main class="main-content">
         <div class="container">
-            <h1 id="section-title" class="page-title">English Premier League</h1>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px;">
+                <h1 id="section-title" class="page-title" style="margin:0;">English Premier League</h1>
+                <span id="last-updated" style="font-size: 10px; color: #888; background: #fff; padding: 2px 8px; border-radius: 12px; border: 1px solid #eee;">
+                    <i class="fas fa-history"></i> Syncing...
+                </span>
+            </div>
             
             <div id="loader">Syncing Live Data...</div>
 
             <div class="dashboard-grid">
                 <section class="card">
-                    <div class="card-header">
-                        <h2><i class="fa-solid fa-list-ol"></i> League Table</h2>
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2><i class="fa-solid fa-list-ol"></i> Table</h2>
+                        <div class="view-toggles" style="display: flex; background: #eee; padding: 2px; border-radius: 6px;">
+                            <button class="toggle-btn active" data-view="total" onclick="toggleStandings('total')">All</button>
+                            <button class="toggle-btn" data-view="home" onclick="toggleStandings('home')">Home</button>
+                            <button class="toggle-btn" data-view="away" onclick="toggleStandings('away')">Away</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table id="standings-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Club</th>
-                                    <th>W/D/L</th>
-                                    <th>GD</th>
+                                    <th style="text-align:left;">Club</th>
+                                    <th>PL</th>
                                     <th>PTS</th>
+                                    <th style="text-align:left;">FORM</th>
                                 </tr>
                             </thead>
                             <tbody id="standings-body"></tbody>
@@ -85,8 +95,8 @@
                         <table id="scorers-table">
                             <thead>
                                 <tr>
-                                    <th>Player</th>
-                                    <th>G</th>
+                                    <th style="text-align:left;">Player</th>
+                                    <th style="text-align:right;">G</th>
                                 </tr>
                             </thead>
                             <tbody id="scorers-body"></tbody>
@@ -96,7 +106,7 @@
 
                 <section class="card full-width">
                     <div class="card-header">
-                        <h2><i class="fa-solid fa-calendar-days"></i> Upcoming Fixtures</h2>
+                        <h2><i class="fa-solid fa-calendar-days"></i> Fixtures & Results</h2>
                     </div>
                     <div id="fixtures-list" class="fixtures-grid"></div>
                 </section>
