@@ -72,12 +72,47 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
 .player-name-tag { background: var(--fpl-purple); color: white; font-size: 10px; font-weight: 700; padding: 2px 4px; width: 100%; text-align: center; margin-top: 4px; }
 .player-match-tag { width: 100%; font-size: 9px; border: none; background: white; text-align: center; font-weight: bold; padding: 2px; }
 
-/* JERSEY COLORS (ABBREVIATED) */
-.jersey.arsenal { --team-main: #ef0107; border-top: 4px solid white; }
-.jersey.man-city { --team-main: #6cabdd; }
-.jersey.liverpool { --team-main: #c8102e; }
-.jersey.chelsea { --team-main: #034694; }
-.jersey.default { --team-main: #ccc; opacity: 0.5; }
+/* --- ENHANCED JERSEY COLORS --- */
+
+/* BIG SIX */
+.jersey.arsenal    { --team-main: #ef0107; border-top: 5px solid #fff; } /* White Shoulders */
+.jersey.man_city   { --team-main: #6cabdd; border-right: 4px solid #fff; } 
+.jersey.liverpool  { --team-main: #c8102e; border-bottom: 3px solid #f6eb61; } /* Gold accent */
+.jersey.man_utd    { --team-main: #da291c; border-bottom: 4px solid #000; }
+.jersey.chelsea    { --team-main: #034694; }
+.jersey.tottenham  { --team-main: #ffffff; border: 1px solid #ddd; border-top: 5px solid #132257; }
+
+/* THE REST OF THE PREM */
+.jersey.aston_villa { --team-main: #95bfe5; border-left: 10px solid #670e36; border-right: 10px solid #670e36; }
+.jersey.newcastle   { --team-main: #000000; background-image: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px 100%; } /* Stripes! */
+.jersey.brighton    { --team-main: #0057b8; background-image: linear-gradient(90deg, #0057b8 50%, #fff 50%); background-size: 10px 100%; }
+.jersey.west_ham    { --team-main: #7a263a; border-top: 5px solid #1bb1e7; }
+.jersey.brentford   { --team-main: #e30613; background-image: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px 100%; }
+.jersey.everton     { --team-main: #003399; }
+.jersey.crystal_p   { --team-main: #1b458f; border-right: 15px solid #c4122e; }
+.jersey.fulham      { --team-main: #ffffff; border: 1px solid #ddd; border-right: 10px solid #000; }
+.jersey.bournemouth { --team-main: #da291c; background-image: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 10px 100%; }
+.jersey.wolves      { --team-main: #fdb913; border-bottom: 4px solid #231f20; }
+.jersey.nottm_forest { --team-main: #dd0000; }
+.jersey.leicester   { --team-main: #003090; border-top: 4px solid #fdbe11; }
+.jersey.ipswich     { --team-main: #00529b; border-top: 4px solid #fff; }
+.jersey.southampton { --team-main: #d71920; border-left: 10px solid #fff; border-right: 10px solid #fff; }
+
+/* SPECIAL TYPES */
+.jersey.default { --team-main: #ccc; opacity: 0.6; }
+.jersey.gkp_color { --team-main: #e1ff00; color: #000; } /* Neon Goalie Green */
+
+/* Fix for jerseys with stripes to keep the shape */
+.jersey {
+    width: 42px;
+    height: 38px;
+    cursor: pointer;
+    background-color: var(--team-main, #eee);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+    transition: 0.3s;
+    position: relative;
+    border: none; /* Reset borders to use them for kit designs */
+}
 
 #gw-rating {
     background: var(--fpl-purple);
