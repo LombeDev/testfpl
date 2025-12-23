@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - Price Changes & Countdown Logic (v3.0)
- * Optimized for Horizontal Scroll & Mobile Performance
+ * KOPALA FPL - Core Logic (v3.8)
+ * Features: Deadline Timer, Vertical Price Scroll, & GW Live King
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -8,20 +8,18 @@ let teamMap = {};
 
 async function init() {
     const loader = document.getElementById("loading-overlay");
-    const LOCK_KEY = 'fpl_api_blocked_until';
     const CACHE_KEY = "fpl_bootstrap_cache";
+    const LOCK_KEY = 'fpl_api_blocked_until';
 
     // 1. Rate Limit Guard
     const blockedUntil = localStorage.getItem(LOCK_KEY);
     if (blockedUntil && Date.now() < parseInt(blockedUntil)) {
-        const remainingMin = Math.ceil((parseInt(blockedUntil) - Date.now()) / 60000);
-        console.warn(`API locked. Waiting ${remainingMin}m`);
         loadFromCacheOnly(); 
         return;
     }
 
     try {
-        // 2. Cache Logic (10-minute fresh window)
+        // 2. Cache Logic (10-minute window)
         const cached = localStorage.getItem(CACHE_KEY);
         let data;
 
@@ -29,21 +27,20 @@ async function init() {
             const parsed = JSON.parse(cached);
             if (Date.now() - parsed.timestamp < 10 * 60 * 1000) {
                 data = parsed.content;
-                console.log("Using fresh cache.");
             }
         }
 
-        // 3. Fetch fresh data if cache is old or missing
+        // 3. Fetch Data
         if (!data) {
             const response = await fetch(`${API_BASE}bootstrap-static/`);
 
             if (response.status === 429) {
                 const coolDownTime = Date.now() + (30 * 60 * 1000); 
                 localStorage.setItem(LOCK_KEY, coolDownTime.toString());
-                throw new Error("API Limit reached.");
+                throw new Error("429");
             }
 
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             data = await response.json();
             
@@ -62,20 +59,15 @@ async function init() {
     }
 }
 
-/**
- * Shared Processing Logic
- */
 function processAndRender(data) {
-    // Build Team Map for short names (LIV, MCI, etc)
+    // Build Team Map (ID -> Short Name)
     data.teams.forEach(t => teamMap[t.id] = t.short_name);
 
     renderDeadline(data.events);
     renderPrices(data.elements);
+    renderLiveKing(data.elements);
 }
 
-/**
- * Fallback Logic
- */
 function loadFromCacheOnly() {
     const cached = localStorage.getItem("fpl_bootstrap_cache");
     const loader = document.getElementById("loading-overlay");
@@ -83,13 +75,11 @@ function loadFromCacheOnly() {
         const parsed = JSON.parse(cached);
         processAndRender(parsed.content);
         if (loader) loader.style.display = 'none';
-    } else {
-        if (loader) loader.textContent = "Offline: No cache found.";
     }
 }
 
 /**
- * Deadline Countdown Logic
+ * COUNTDOWN TIMER
  */
 function renderDeadline(events) {
     const nextGW = events.find(e => !e.finished && new Date(e.deadline_time) > new Date());
@@ -110,10 +100,10 @@ function renderDeadline(events) {
             return;
         }
 
-        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
 
         if (el) {
             el.innerHTML = `
@@ -123,7 +113,7 @@ function renderDeadline(events) {
                     <div>${m}<span class="timer-unit">MIN</span></div>
                     <div>${s}<span class="timer-unit">SEC</span></div>
                 </div>
-                <div style="margin-top:10px; font-size:12px; font-weight:800; color: #37003c;">GAMEWEEK ${nextGW.id}</div>
+                <div style="margin-top:10px; font-size:12px; font-weight:800; color: #37003c;">GW ${nextGW.id} DEADLINE</div>
             `;
         }
     };
@@ -133,7 +123,7 @@ function renderDeadline(events) {
 }
 
 /**
- * PRICE CHANGES - Scrollable Side-by-Side Logic
+ * VERTICAL PRICE SCROLL
  */
 function renderPrices(players) {
     const risersList = document.getElementById("risers-list");
@@ -142,47 +132,66 @@ function renderPrices(players) {
 
     if (!risersList || !fallersList || !card) return;
 
-    // Filter into Risers (pos) and Fallers (neg)
-    const risers = players.filter(p => p.cost_change_event > 0)
-                          .sort((a, b) => b.cost_change_event - a.cost_change_event);
-    
-    const fallers = players.filter(p => p.cost_change_event < 0)
-                           .sort((a, b) => a.cost_change_event - b.cost_change_event);
+    const risers = players.filter(p => p.cost_change_event > 0).sort((a,b) => b.cost_change_event - a.cost_change_event);
+    const fallers = players.filter(p => p.cost_change_event < 0).sort((a,b) => a.cost_change_event - b.cost_change_event);
 
-    const createMiniRow = (p) => {
+    const createRow = (p) => {
         const change = p.cost_change_event / 10;
-        const colorClass = change > 0 ? 'change-up' : 'change-down';
-        const sign = change > 0 ? '+' : '';
+        const isRiser = change > 0;
+        const colorClass = isRiser ? 'change-up' : 'change-down';
 
         return `
             <div class="price-row-mini">
                 <div class="player-info">
-                    <span class="mini-name">${p.web_name}</span>
-                    <span class="mini-team">${teamMap[p.team] || '---'}</span>
+                    <span class="mini-name" style="font-weight:700; display:block;">${p.web_name}</span>
+                    <span class="mini-team" style="font-size:11px; color:#666;">${teamMap[p.team] || ''}</span>
                 </div>
-                <div class="price-data" style="text-align:right">
-                    <div class="mini-val">£${(p.now_cost / 10).toFixed(1)}</div>
-                    <div class="${colorClass}" style="font-size:10px; font-weight:bold;">
-                        ${sign}${change.toFixed(1)}
+                <div style="text-align:right;">
+                    <div style="font-weight:800; font-size:14px;">£${(p.now_cost / 10).toFixed(1)}</div>
+                    <div class="${colorClass}" style="font-size:11px; font-weight:bold;">
+                        ${isRiser ? '▲' : '▼'} ${Math.abs(change).toFixed(1)}
                     </div>
                 </div>
             </div>
         `;
     };
 
-    // Render Risers
-    risersList.innerHTML = risers.length > 0 
-        ? risers.map(createMiniRow).join('') 
-        : '<p style="font-size:11px; color:#999; padding:10px;">No risers today</p>';
+    risersList.innerHTML = risers.length > 0 ? risers.map(createRow).join('') : '<p style="padding:10px; font-size:11px; color:#999;">No risers today</p>';
+    fallersList.innerHTML = fallers.length > 0 ? fallers.map(createRow).join('') : '<p style="padding:10px; font-size:11px; color:#999;">No fallers today</p>';
 
-    // Render Fallers
-    fallersList.innerHTML = fallers.length > 0 
-        ? fallers.map(createMiniRow).join('') 
-        : '<p style="font-size:11px; color:#999; padding:10px;">No fallers today</p>';
-
-    // Show the section
     card.style.display = 'block';
 }
 
-// Kick off the app
+/**
+ * LIVE KING - Displays top performer of the GW
+ */
+function renderLiveKing(players) {
+    const container = document.getElementById("live-king-content");
+    const card = document.getElementById("live-king-card");
+    if (!container || !card) return;
+
+    const king = players.reduce((prev, current) => 
+        (prev.event_points > current.event_points) ? prev : current
+    );
+
+    if (king.event_points <= 0) {
+        card.style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
+            <div>
+                <div style="font-size: 1.1rem; font-weight: 900; color: #0f172a; line-height: 1;">${king.web_name}</div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">${teamMap[king.team]} | ${king.selected_by_percent}% Owned</div>
+            </div>
+            <div style="text-align: center; background: white; padding: 5px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 1.6rem; font-weight: 900; color: #249771; line-height: 1;">${king.event_points}</div>
+                <div style="font-size: 0.6rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Points</div>
+            </div>
+        </div>
+    `;
+    card.style.display = 'block';
+}
+
 document.addEventListener('DOMContentLoaded', init);
