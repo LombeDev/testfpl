@@ -41,3 +41,65 @@ td { padding: 5px 2px; border-bottom: 1px solid #f3f4f6; overflow: hidden; white
 .hidden { display: none !important; }
 
 .icon-btn { background: none; border: none; color: white; cursor: pointer; font-size: 14px; }
+
+
+
+/* Modal Overlay with Blur */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Dim the background */
+    backdrop-filter: blur(8px);    /* Blur the background */
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.squad-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-top: 15px;
+}
+
+.squad-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
