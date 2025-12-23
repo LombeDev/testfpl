@@ -3,26 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Members Area | Kopala FPL</title>
+    <title>Kopala Pro | Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="members.css">
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
-<body class="auth-page">
+<body class="gate-active">
 
     <div id="logged-out-view">
-        <div class="auth-nav">
-            <h1 class="brand">KOPALA <span>FPL</span></h1>
-            <a href="index.html" class="back-link">← Back</a>
-        </div>
-        
-        <div class="auth-container">
+        <div class="pro-gate-content">
             <div class="auth-card">
-                <div class="pro-tag">PRO</div>
-                <h2>Unlock the War Room</h2>
-                <p>Access Live Standings, Captain Points, and Rival Transfer Alerts in real-time.</p>
-                <button onclick="netlifyIdentity.open()" class="login-btn">MEMBER LOGIN</button>
+                <h1>KOPALA <span class="pink-text">PRO</span></h1>
+                <p>Access Live Standings, Captain Points, and Rival Transfer Alerts.</p>
+                <button onclick="netlifyIdentity.open()" class="member-btn">MEMBER LOGIN</button>
+                <a href="index.html" class="home-link">Return to Home</a>
             </div>
         </div>
     </div>
@@ -30,37 +24,25 @@
     <div id="app" style="display: none;">
         <div id="side-drawer" class="drawer">
             <div class="drawer-header">
-                <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
+                <h2 class="brand">KOPALA <span>FPL</span></h2>
                 <button id="close-btn">&times;</button>
             </div>
             <ul class="drawer-links">
                 <li><a href="index.html">Home</a></li>
-                <li><a href="members.html" class="active">Members area 2.0</a></li>
                 <li><a href="#" onclick="netlifyIdentity.logout()">Logout</a></li>
             </ul>
         </div>
         <div id="main-backdrop" class="backdrop"></div>
 
         <nav class="navbar">
-            <div class="nav-left">
-                <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
-                <h1 class="brand">KOPALA <span>FPL</span></h1>
-            </div>
+            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
+            <h1 class="brand">KOPALA <span>PRO</span></h1>
         </nav>
 
         <main class="container">
-            <div class="scroll-nav">
-                <button class="tab-btn active" data-tab="members">Standings</button>
-                <button class="tab-btn" data-tab="liveBonus">Live Bonus</button>
+            <div class="pro-dashboard">
+                <div id="members-list"></div>
             </div>
-
-            <section id="members" class="tab-content active-tab">
-                <div class="loader">Loading Live Data...</div>
-            </section>
-            
-            <section id="liveBonus" class="tab-content">
-                <div id="bonusContainer"></div>
-            </section>
         </main>
     </div>
 
