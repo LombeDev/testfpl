@@ -65,3 +65,86 @@ h2 { font-size: 1.2rem; color: var(--fpl-navy); margin-bottom: 20px; border-left
 .tab-content { display: none; }
 .active-tab { display: block; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+
+/* Auth Page Background */
+.auth-page {
+    background: linear-gradient(135deg, #021431 0%, #1a365d 100%);
+    min-height: 100vh;
+}
+
+/* Custom Auth Nav */
+.auth-nav {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.back-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* The Professional Card */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    padding: 20px;
+}
+
+.auth-card {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.pro-tag {
+    background: #ff005a;
+    color: white;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-weight: 900;
+    font-size: 0.7rem;
+    margin-bottom: 15px;
+}
+
+.auth-card h2 {
+    color: #021431;
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+}
+
+.auth-card p {
+    color: #718096;
+    line-height: 1.5;
+    margin-bottom: 30px;
+}
+
+.login-btn {
+    background: #ff005a;
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+}
