@@ -1,80 +1,89 @@
 /**
- * KOPALA FPL - AI Master Engine (v4.3.0)
- * INTEGRATED WITH YOUR HTML
+ * KOPALA FPL - AI Master Engine (v4.4.0)
+ * FIXED: Mobile CORS Bypass & 4-Hour Smart Cache
  */
 
 const PROXY = "https://corsproxy.io/?";
 const API_BASE = "https://fantasy.premierleague.com/api/"; 
+const CACHE_TIME = 4 * 60 * 60 * 1000; // 4 Hours in milliseconds
 
 let playerDB = [];
 let teamsDB = {}; 
-let fixturesDB = [];
-let selectedSlotId = null;
-
-// Initial 15-man squad structure
-let squad = [
-    { id: 0, pos: 'GKP', name: '', isBench: false },
-    { id: 1, pos: 'DEF', name: '', isBench: false },
-    { id: 2, pos: 'DEF', name: '', isBench: false },
-    { id: 3, pos: 'DEF', name: '', isBench: false },
-    { id: 4, pos: 'DEF', name: '', isBench: false },
-    { id: 5, pos: 'MID', name: '', isBench: false },
-    { id: 6, pos: 'MID', name: '', isBench: false },
-    { id: 7, pos: 'MID', name: '', isBench: false },
-    { id: 8, pos: 'MID', name: '', isBench: false },
-    { id: 9, pos: 'FWD', name: '', isBench: false },
-    { id: 10, pos: 'FWD', name: '', isBench: false },
-    { id: 11, pos: 'GKP', name: '', isBench: true },
-    { id: 12, pos: 'DEF', name: '', isBench: true },
-    { id: 13, pos: 'MID', name: '', isBench: true },
+let squad = JSON.parse(localStorage.getItem('kopala_squad')) || [
+    { id: 0, pos: 'GKP', name: '', isBench: false }, { id: 1, pos: 'DEF', name: '', isBench: false },
+    { id: 2, pos: 'DEF', name: '', isBench: false }, { id: 3, pos: 'DEF', name: '', isBench: false },
+    { id: 4, pos: 'DEF', name: '', isBench: false }, { id: 5, pos: 'MID', name: '', isBench: false },
+    { id: 6, pos: 'MID', name: '', isBench: false }, { id: 7, pos: 'MID', name: '', isBench: false },
+    { id: 8, pos: 'MID', name: '', isBench: false }, { id: 9, pos: 'FWD', name: '', isBench: false },
+    { id: 10, pos: 'FWD', name: '', isBench: false }, { id: 11, pos: 'GKP', name: '', isBench: true },
+    { id: 12, pos: 'DEF', name: '', isBench: true }, { id: 13, pos: 'MID', name: '', isBench: true },
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- INITIALIZATION ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
-    try {
-        const [bootRes, fixRes] = await Promise.all([
-            fetch(`${PROXY}${API_BASE}bootstrap-static/`),
-            fetch(`${PROXY}${API_BASE}fixtures/`)
-        ]);
-        
-        const data = await bootRes.json();
-        fixturesDB = await fixRes.json();
+    const cachedData = localStorage.getItem('fpl_data_cache');
+    const cacheTimestamp = localStorage.getItem('fpl_cache_time');
 
-        // Process Teams
-        data.teams.forEach(t => { 
-            teamsDB[t.id] = { name: t.name.toLowerCase().replace(/\s+/g, '_'), short: t.short_name }; 
-        });
-        
-        // Process Players
-        playerDB = data.elements.map(p => ({
-            id: p.id,
-            name: p.web_name,
-            teamId: p.team,
-            teamShort: teamsDB[p.team]?.name || 'default',
-            teamCode: teamsDB[p.team]?.short || 'N/A',
-            pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
-            price: (p.now_cost / 10).toFixed(1),
-            xp: parseFloat(p.ep_next) || 0,
-            fdr: p.difficulty || 2
-        })).sort((a,b) => b.xp - a.xp);
-
-        ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Engine Online</span>";
-        loadSquad();
+    // 1. Check if we have fresh data in the cache (Mobile fix)
+    if (cachedData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TIME)) {
+        console.log("🚀 Loading from Cache");
+        processData(JSON.parse(cachedData));
+        ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Online (Cached)</span>";
         renderPitch();
-    } catch (e) { 
-        ticker.innerHTML = "⚠️ <span style='color:#ff4444'>CORS Blocked: Try using a local server</span>";
+        return;
+    }
+
+    // 2. If no cache or cache expired, fetch from API
+    ticker.innerHTML = "⏳ Refreshing Live Data...";
+    try {
+        const res = await fetch(`${PROXY}${API_BASE}bootstrap-static/`);
+        if (!res.ok) throw new Error("Proxy Error");
+        const data = await res.json();
+
+        // Save to cache for next time
+        localStorage.setItem('fpl_data_cache', JSON.stringify(data));
+        localStorage.setItem('fpl_cache_time', Date.now());
+
+        processData(data);
+        ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Engine Online</span>";
+        renderPitch();
+    } catch (e) {
+        console.error("Fetch failed:", e);
+        if (cachedData) {
+            ticker.innerHTML = "⚠️ <span style='color:orange'>Using Old Data (Offline)</span>";
+            processData(JSON.parse(cachedData));
+            renderPitch();
+        } else {
+            ticker.innerHTML = "❌ <span style='color:#ff4444'>Connection Error</span>";
+        }
     }
 }
 
-// --- CORE FUNCTIONS ---
+function processData(data) {
+    // Map Teams
+    data.teams.forEach(t => { 
+        teamsDB[t.id] = { name: t.name.toLowerCase().replace(/\s+/g, '_'), short: t.short_name }; 
+    });
+    
+    // Map Players
+    playerDB = data.elements.map(p => ({
+        name: p.web_name,
+        teamShort: teamsDB[p.team]?.name || 'default',
+        teamCode: teamsDB[p.team]?.short || 'N/A',
+        pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
+        price: (p.now_cost / 10).toFixed(1),
+        xp: parseFloat(p.ep_next) || 0
+    })).sort((a,b) => b.xp - a.xp);
+}
+
+// --- UI Logic ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
+    if(!pitch || !bench) return;
     pitch.innerHTML = ''; bench.innerHTML = '';
 
-    // Sort squad into rows by position
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
         const row = document.createElement('div');
         row.className = 'row';
@@ -82,20 +91,17 @@ function renderPitch() {
         pitch.appendChild(row);
     });
 
-    // Render Bench
     const bRow = document.createElement('div');
     bRow.className = 'row';
     squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
     bench.appendChild(bRow);
-    
     updateStats();
 }
 
 function createSlotUI(slotData) {
     const div = document.createElement('div');
-    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
+    div.className = `slot`;
     const p = playerDB.find(x => x.name === slotData.name);
-    
     const jerseyClass = p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamShort) : 'default';
 
     div.innerHTML = `
@@ -106,85 +112,41 @@ function createSlotUI(slotData) {
         </div>`;
 
     div.onclick = () => {
-        selectedSlotId = slotData.id;
-        renderPitch();
-        renderPlayerList(slotData.pos);
+        const idx = squad.findIndex(s => s.id === slotData.id);
+        const search = prompt(`Enter player name for ${slotData.pos}:`, slotData.name);
+        if (search) {
+            const found = playerDB.find(pl => pl.name.toLowerCase().includes(search.toLowerCase()) && pl.pos === slotData.pos);
+            if (found) {
+                squad[idx].name = found.name;
+                localStorage.setItem('kopala_squad', JSON.stringify(squad));
+                renderPitch();
+            } else {
+                alert("Player not found in that position!");
+            }
+        }
     };
     return div;
 }
 
-function renderPlayerList(filterPos = 'ALL') {
-    const container = document.getElementById('player-list-results');
-    const search = document.getElementById('player-search').value.toLowerCase();
-    
-    let filtered = playerDB.filter(p => p.name.toLowerCase().includes(search));
-    if (filterPos !== 'ALL') filtered = filtered.filter(p => p.pos === filterPos);
-
-    container.innerHTML = filtered.slice(0, 25).map(p => `
-        <div class="list-item" onclick="selectPlayer('${p.name}')">
-            <div><b>${p.name}</b><br><small>${p.teamCode} | ${p.pos}</small></div>
-            <div style="text-align:right"><b>£${p.price}m</b><br><small>${p.xp} XP</small></div>
-        </div>`).join('');
-}
-
-function selectPlayer(name) {
-    if (selectedSlotId === null) return;
-    squad[selectedSlotId].name = name;
-    saveSquad();
-    renderPitch();
-}
-
 function updateStats() {
-    let totalXp = 0, spent = 0;
-    const starters = squad.filter(s => !s.isBench);
-    
+    let xp = 0, spent = 0;
     squad.forEach(s => {
         const p = playerDB.find(x => x.name === s.name);
         if (p) {
             spent += parseFloat(p.price);
-            if (!s.isBench) totalXp += p.xp;
+            if (!s.isBench) xp += p.xp;
         }
     });
-
     document.getElementById('budget-val').textContent = `£${(100 - spent).toFixed(1)}m`;
-    document.getElementById('v-xp').textContent = totalXp.toFixed(1);
-    
-    // Auto-detect formation
-    const def = starters.filter(s => s.pos === 'DEF' && s.name).length;
-    const mid = starters.filter(s => s.pos === 'MID' && s.name).length;
-    const fwd = starters.filter(s => s.pos === 'FWD' && s.name).length;
-    document.getElementById('formation-ticker').textContent = `FORMATION: ${def}-${mid}-${fwd}`;
+    document.getElementById('v-xp').textContent = xp.toFixed(1);
 }
 
-// --- UTILS & AI ---
 function resetSquad() {
-    if(confirm("Clear your team?")) {
+    if(confirm("Reset Team?")) {
         squad.forEach(s => s.name = "");
-        saveSquad();
+        localStorage.setItem('kopala_squad', JSON.stringify(squad));
         renderPitch();
     }
 }
-
-function saveSquad() { localStorage.setItem('kopala_squad', JSON.stringify(squad)); }
-function loadSquad() {
-    const saved = localStorage.getItem('kopala_squad');
-    if (saved) squad = JSON.parse(saved);
-}
-
-// Attach Wildcard button
-document.getElementById('wildcard-btn').onclick = () => {
-    alert("AI is calculating the best 100m squad...");
-    const limits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
-    squad.forEach(s => s.name = "");
-    
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        const best = playerDB.filter(p => p.pos === pos).slice(0, limits[pos]);
-        best.forEach((p, i) => {
-            const slot = squad.find(s => s.pos === pos && s.name === "");
-            if (slot) slot.name = p.name;
-        });
-    });
-    renderPitch();
-};
 
 document.addEventListener('DOMContentLoaded', syncData);
