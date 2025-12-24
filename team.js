@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.6)
- * UPDATED: Multi-position Swapping, Formation Logic & Cached AI Picks
+ * KOPALA FPL - AI Master Engine (v2.7)
+ * UPDATED: Fixture-Weighted AI, Transfer Insights, and Value Logic
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -27,7 +27,7 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC (STAYS THE SAME) ---
+// --- 1. DATA SYNC ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
     const TIME_KEY = 'kopala_cache_timestamp';
@@ -98,7 +98,7 @@ async function syncData() {
     }
 }
 
-// --- 2. ADVANCED SWAP LOGIC (Bench & Formation) ---
+// --- 2. ADVANCED SWAP LOGIC ---
 function handleSwap(id) {
     if (selectedSlotId === null) {
         selectedSlotId = id;
@@ -107,11 +107,9 @@ function handleSwap(id) {
         const p2 = squad.find(s => s.id === id);
 
         if (p1.id !== p2.id) {
-            // Rule 1: GKP can only swap with GKP
             if ((p1.pos === 'GKP' || p2.pos === 'GKP') && p1.pos !== p2.pos) {
                 alert("Goalkeepers can only be swapped with other Goalkeepers.");
             } else {
-                // Perform the swap
                 const tempName = p1.name;
                 const tempPos = p1.pos;
 
@@ -120,10 +118,8 @@ function handleSwap(id) {
                 p2.name = tempName;
                 p2.pos = tempPos;
 
-                // Rule 2: Validate Formation (Min: 3 DEF, 2 MID, 1 FWD)
                 if (!isValidFormation()) {
                     alert("Invalid Formation! FPL requires at least 3 Defenders, 2 Midfielders, and 1 Forward.");
-                    // Revert the swap
                     p2.name = p1.name;
                     p2.pos = p1.pos;
                     p1.name = tempName;
@@ -146,44 +142,106 @@ function isValidFormation() {
     return defs >= 3 && mids >= 2 && fwds >= 1;
 }
 
-// --- 3. AI RECOMMENDER (Works with Cache) ---
+// --- 3. AI RECOMMENDER & WILDCARD ---
 function runAIWildcard() {
-    // Check if playerDB is populated (either from Live or Cache)
     if (!playerDB || playerDB.length === 0) {
         alert("Data not loaded. Please wait for sync.");
         return;
     }
 
-    if (!confirm("AI will rebuild your squad based on current expected points. Continue?")) return;
+    if (!confirm("AI will rebuild your squad based on fixture difficulty and expected points. Continue?")) return;
 
     let budget = 100.0;
-    const used = [];
-    // Reset squad to default positions first to ensure clean formation
-    squad.forEach((s, i) => {
-        if (i === 0 || i === 11) s.pos = 'GKP';
-        else if (i <= 4 || i === 12) s.pos = 'DEF';
-        else if (i <= 8 || i === 13) s.pos = 'MID';
-        else s.pos = 'FWD';
-    });
+    const newSquad = [];
+    const usedIds = new Set();
+    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
 
-    squad.forEach((slot, i) => {
-        const buffer = (squad.length - 1 - i) * 4.5;
-        const choice = playerDB.find(p => 
-            p.pos === slot.pos && 
-            !used.includes(p.name) && 
-            parseFloat(p.price) <= (budget - buffer)
-        ) || playerDB.filter(p => p.pos === slot.pos && !used.includes(p.name))
-                     .sort((a,b) => a.price - b.price)[0];
+    // Rank players by Score (XP adjusted by next 3 fixtures)
+    const rankedPlayers = playerDB.map(p => {
+        const fixtures = getNextFixtures(p.teamId);
+        const avgDiff = fixtures.reduce((acc, f) => acc + (5 - f.diff), 0) / (fixtures.length || 1);
+        return { ...p, score: p.xp * (1 + (avgDiff / 10)) };
+    }).sort((a, b) => b.score - a.score);
 
-        if (choice) {
-            slot.name = choice.name;
-            used.push(choice.name);
-            budget -= parseFloat(choice.price);
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        for (let i = 0; i < posLimits[pos]; i++) {
+            const buffer = 4.3 * (15 - newSquad.length); // Safety buffer for remaining slots
+            const choice = rankedPlayers.find(p => 
+                p.pos === pos && 
+                !usedIds.has(p.id) && 
+                parseFloat(p.price) <= (budget - buffer)
+            ) || rankedPlayers.find(p => p.pos === pos && !usedIds.has(p.id));
+
+            if (choice) {
+                newSquad.push({ 
+                    id: newSquad.length, 
+                    pos: pos, 
+                    name: choice.name, 
+                    isBench: false 
+                });
+                usedIds.add(choice.id);
+                budget -= parseFloat(choice.price);
+            }
         }
     });
 
+    // Smart benching: Put lowest scored players on bench (except one GKP)
+    newSquad.sort((a, b) => {
+        const pA = playerDB.find(p => p.name === a.name);
+        const pB = playerDB.find(p => p.name === b.name);
+        return (pA?.xp || 0) - (pB?.xp || 0);
+    });
+    
+    let benched = 0;
+    newSquad.forEach(s => {
+        if (benched < 4 && (s.pos !== 'GKP' || benched === 0)) {
+            s.isBench = true;
+            benched++;
+        }
+    });
+
+    squad = newSquad;
     saveSquad();
     renderPitch();
+}
+
+function displayRecommendations() {
+    const recList = document.getElementById('recommendation-list');
+    if (!recList) return;
+
+    const valEl = document.getElementById('budget-val');
+    const currentITB = valEl ? parseFloat(valEl.textContent.replace('£', '').replace('m', '')) : 0;
+    let recs = [];
+
+    squad.forEach(slot => {
+        if (!slot.name) return;
+        const currentP = playerDB.find(p => p.name === slot.name);
+        if (!currentP) return;
+
+        const bestUpgrade = playerDB.find(p => 
+            p.pos === slot.pos && 
+            p.name !== currentP.name &&
+            parseFloat(p.price) <= (parseFloat(currentP.price) + currentITB) &&
+            !squad.some(s => s.name === p.name) &&
+            p.xp > currentP.xp
+        );
+
+        if (bestUpgrade) {
+            recs.push({
+                old: currentP.name,
+                new: bestUpgrade.name,
+                gain: (bestUpgrade.xp - currentP.xp).toFixed(1),
+                cost: bestUpgrade.price
+            });
+        }
+    });
+
+    recs.sort((a, b) => b.gain - a.gain);
+    recList.innerHTML = recs.length ? recs.slice(0, 3).map(r => `
+        <div class="rec-card">
+            <div class="rec-swap"><span class="out">${r.old}</span> ➔ <span class="in">${r.new}</span></div>
+            <div class="rec-meta">Gain: <span class="gain">+${r.gain} xP</span> | Cost: £${r.cost}m</div>
+        </div>`).join('') : "<p>Squad is optimized!</p>";
 }
 
 // --- 4. RENDERERS & UTILS ---
@@ -229,7 +287,6 @@ function renderPitch() {
     if(!pitch || !bench) return;
     pitch.innerHTML = ''; bench.innerHTML = '';
 
-    // Render Starting XI by position rows
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
         const row = document.createElement('div');
         row.className = 'row';
@@ -237,7 +294,6 @@ function renderPitch() {
         pitch.appendChild(row);
     });
 
-    // Render Bench
     const bRow = document.createElement('div');
     bRow.className = 'row';
     squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
@@ -271,14 +327,19 @@ function updateStats() {
             if (!s.isBench) xp += p.xp;
         }
     });
+
     const budgetEl = document.getElementById('budget-val');
     if(budgetEl) {
         const itb = (100 - val).toFixed(1);
         budgetEl.textContent = `£${itb}m`;
         budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
     }
+
     const xpDisplay = document.getElementById('v-xp');
     if(xpDisplay) xpDisplay.textContent = xp.toFixed(1);
+
+    // Trigger AI Recommendations
+    displayRecommendations();
 }
 
 function updatePlayer(id, name) { 
