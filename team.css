@@ -278,3 +278,120 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
         padding-bottom: 10px;
     }
 }
+
+
+/* --- PLAYER SELECTION SCROLL (MOBILE) --- */
+@media (max-width: 768px) {
+    .player-list-container {
+        max-height: 320px; /* Small scrollable window */
+        overflow-y: auto;
+        background: #fdfdfd;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 5px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Keep the action buttons (Cancel/Remove) at the top of the scroll */
+    .selection-actions {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+}
+
+/* --- COMPACT DASHBOARD STYLES --- */
+.compact-dashboard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 12px 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-top: 20px;
+}
+
+.dash-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-item small {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.dash-item span {
+    font-size: 1rem;
+    color: #37003c;
+    font-weight: 800;
+}
+
+.dash-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* --- MINI BUTTON STYLES --- */
+.mini-ai-btn {
+    background: #00ff87;
+    color: #37003c;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.mini-ai-btn:active { transform: scale(0.95); }
+
+.mini-reset-btn {
+    background: #fee2e2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.mini-reset-btn:hover { background: #fecaca; }
+.mini-reset-btn:active { transform: scale(0.9); }
+
+/* --- PITCH SLOT HIGHLIGHT --- */
+.slot.selected {
+    outline: 3px solid #00ff87;
+    background: rgba(0, 255, 135, 0.1);
+    box-shadow: 0 0 15px rgba(0, 255, 135, 0.6);
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.sub-button {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #37003c;
+    color: #00ff87;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #00ff87;
+    pointer-events: none; /* Let the click pass to the slot */
+}
