@@ -395,3 +395,82 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     border: 1.5px solid #00ff87;
     pointer-events: none; /* Let the click pass to the slot */
 }
+
+
+/* --- AI RECOMMENDATION CARD --- */
+.ai-recommendation-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    margin-top: 25px;
+    overflow: hidden;
+    border: 1px solid #f1f5f9;
+}
+
+.ai-recommendation-card .card-header {
+    background: #37003c; /* FPL Purple */
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.verdict-label {
+    color: #00ff87; /* FPL Green */
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.update-tag {
+    background: rgba(0, 255, 135, 0.2);
+    color: #00ff87;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    font-weight: bold;
+}
+
+.recommendation-content {
+    padding: 20px;
+}
+
+.recommendation-content h4 {
+    margin: 0 0 15px 0;
+    color: #1e293b;
+    font-size: 1.1rem;
+}
+
+/* Empty State Styling */
+.empty-state {
+    text-align: center;
+    padding: 30px 10px;
+    color: #64748b;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.3;
+}
+
+#ai-msg {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* When Transfer Items are added via JS */
+.transfer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.transfer-out { color: #ef4444; font-weight: bold; }
+.transfer-arrow { color: #94a3b8; }
+.transfer-in { color: #22c55e; font-weight: bold; }
