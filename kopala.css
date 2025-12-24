@@ -644,3 +644,48 @@ table {
 .jersey.west_ham     { --team-main: #7a263a; border-top: 4px solid #1bb1e7; }
 .jersey.wolves       { --team-main: #fdb913; border-bottom: 4px solid #231f20; }
 .jersey.gkp_color    { --team-main: #e1ff00; } /* Goalkeeper */
+
+
+/* Refined Kit Details */
+.jersey.arsenal      { --team-main: #ef0107; border-top: 5px solid #fff; }
+.jersey.man_city     { --team-main: #6cabdd; border-right: 4px solid #fff; }
+.jersey.liverpool    { --team-main: #c8102e; border-bottom: 3px solid #f6eb61; }
+.jersey.man_utd      { --team-main: #da291c; border-bottom: 4px solid #000; }
+.jersey.newcastle    { --team-main: #000; background-image: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px 100%; }
+.jersey.brentford    { --team-main: #e30613; background-image: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px 100%; }
+.jersey.wolves       { --team-main: #fdb913; border-bottom: 4px solid #231f20; }
+.jersey.crystal_p    { --team-main: #1b458f; border-right: 15px solid #c4122e; }
+.jersey.tottenham    { --team-main: #ffffff; border-top: 5px solid #132257; box-shadow: inset 0 0 2px #ccc; }
+
+
+/* Visual Pitch Container - Hardcoded Green */
+.modal-pitch {
+    background: #2d9e63 !important; /* Grass Green */
+    background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(0,0,0,0.05) 30px, rgba(0,0,0,0.05) 60px),
+        linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+    padding: 20px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-top: 4px solid #1f7a4a; /* Darker green "edge" */
+}
+
+/* Bench Section - "Dugout" Style */
+.bench-wrap {
+    background: #334155 !important; /* Slate/Dugout Grey */
+    border-top: 2px dashed rgba(255, 255, 255, 0.3);
+    padding: 12px 5px;
+    margin: 10px -5px -20px -5px; /* Pulls to edges of modal */
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.bench-label {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
