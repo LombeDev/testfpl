@@ -117,3 +117,31 @@ body, html {
     .main-container { padding: 8px; }
     .pitch-outer-wrap { padding: 10px 4px; }
 }
+
+
+
+/* Fixture Difficulty Colors */
+.card-fixtures {
+    display: flex;
+    background: #fff;
+    border-top: 1px solid #eee;
+}
+.fix-item {
+    flex: 1;
+    font-size: 7px;
+    padding: 2px 0;
+    text-align: center;
+    font-weight: 800;
+    color: white;
+}
+.fdr-1, .fdr-2 { background: #00ff87; color: #37003c; } /* Easy */
+.fdr-3 { background: #e2e8f0; color: #333; }            /* Moderate */
+.fdr-4 { background: #ff7600; }                         /* Tough */
+.fdr-5 { background: #ff005a; }                         /* Extreme */
+
+/* Ensure the card fits fixtures */
+.player-card {
+    min-height: 28px;
+    display: flex;
+    flex-direction: column;
+}
