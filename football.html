@@ -5,21 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KOPALA FPL | Football Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="football.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="football.css">
+    <style>
+        /* Site-Wide Light Theme Navbar Consistency */
+        :root {
+            --link-blue: #0000ee;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #eeeeee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #000000 !important;
+            text-transform: uppercase;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .brand span {
+            color: var(--link-blue);
+            margin-left: 5px;
+        }
+
+        /* Desktop Navigation Links */
+        .nav-links {
+            display: none; /* Mobile first: hidden */
+            list-style: none;
+            margin: 0 0 0 30px;
+            padding: 0;
+            gap: 20px;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links li a:hover {
+            color: var(--link-blue);
+        }
+
+        /* Desktop View Breakpoint */
+        @media screen and (min-width: 768px) {
+            #menu-btn { display: none !important; }
+            .nav-links { display: flex; align-items: center; }
+        }
+
+        /* Circular Light Search/Refresh Button */
+        .search-btn-round {
+            background: #f0f0f0;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .search-btn-round i { color: #333; }
+    </style>
 </head>
 <body>
     <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: #37003c; color: white; display: flex; justify-content: space-between; align-items: center;">
-            <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+        <div style="padding: 20px; background: #ffffff; color: #333; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+            <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:#333; font-size:1.5rem; cursor:pointer;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="kopala.html">Kopala FPL</a></li>
             <li><a href="team.html">My team (AI)</a></li>
-            <li><a href="price.html">Next price change timer</a></li>
-            <li><a href="transfer.html">Top transfers in&out</a></li>
+            <li><a href="price.html">Price Timer</a></li>
             <li><a href="contact.html">Contact Us</a></li>
         </ul>
     </div>
@@ -27,12 +102,21 @@
     <div id="main-backdrop" class="backdrop"></div>
 
     <nav class="navbar">
-        <div class="nav-left">
+        <div class="nav-left" style="display: flex; align-items: center;">
             <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
-            <h1 class="brand">KOPALA <span>FPL</span></h1>
+            <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="kopala.html">Kopala FPL</a></li>
+                <li><a href="team.html">My Team by AI</a></li>
+                <li><a href="price.html">Price Timer</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
+            </ul>
         </div>
+        
         <div class="nav-right">
-            <button class="icon-btn search-btn" onclick="forceRefresh()" title="Refresh Live Scores">
+            <button class="search-btn-round" onclick="forceRefresh()" title="Refresh Live Scores">
                 <i class="fa-solid fa-sync-alt"></i>
             </button>
         </div>
