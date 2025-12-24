@@ -448,3 +448,60 @@ table {
     padding: 1px 3px;
     white-space: nowrap;
 }
+
+
+
+
+/* 1. Force the Table Layout */
+#league-table { 
+    font-size: 9px; 
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed; /* This is the key to forcing the 15px width */
+}
+
+/* 2. Space Elimination for Rank (15px) */
+#league-table th:first-child, 
+#league-table td:first-child {
+    width: 15px !important;
+    padding: 4px 0 !important;
+    text-align: center;
+}
+
+/* 3. Space Elimination for Data Columns */
+.pts-col, .total-col { 
+    width: 32px !important; /* Extremely tight for scores */
+    padding: 4px 0 !important;
+    text-align: center;
+}
+
+.cap-col { 
+    width: 60px !important; /* Forced narrow for Captain */
+    padding: 4px 2px !important;
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+}
+
+.diff-col, .trans-col { 
+    width: 75px !important; /* Forced narrow for scrolling tags */
+    padding: 4px 2px !important;
+}
+
+/* 4. Vertical Density (Line Height) */
+#league-table td {
+    line-height: 1.0; 
+    vertical-align: middle;
+}
+
+.m-info-wrapper { line-height: 1.0; }
+.m-name { font-size: 10px; font-weight: 700; margin: 0; }
+.t-name { font-size: 8px; color: #666; }
+.val-text { font-size: 8px; font-weight: bold; }
+
+/* 5. Tag Shrinkage */
+.mini-tag {
+    font-size: 7.5px;
+    padding: 1px 3px;
+    border-radius: 2px;
+}
