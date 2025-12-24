@@ -568,6 +568,36 @@ table {
 /* KIT DESIGNS (Add any missing ones from your AI CSS) */
 .jersey.arsenal     { --team-main: #ef0107; border-top: 4px solid #fff; }
 .jersey.man_city    { --team-main: #6cabdd; }
+
+
+
+/* BENCH STYLING */
+.bench-wrap {
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 2px dashed rgba(255, 255, 255, 0.4);
+    padding: 10px 5px;
+    margin-top: 10px;
+    border-radius: 0 0 12px 12px;
+}
+
+.bench-label {
+    text-align: center;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+/* Ensure jerseys fit 4-across on small screens */
+.modal-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 10px;
+}
 .jersey.liverpool   { --team-main: #c8102e; }
 .jersey.man_utd     { --team-main: #da291c; border-bottom: 3px solid #000; }
 .jersey.newcastle   { --team-main: #000; background-image: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 8px 100%; }
