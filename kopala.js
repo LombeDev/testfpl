@@ -5,6 +5,9 @@ let playerMap = {};
 let teamMap = {};
 let managerSquads = {}; 
 
+/**
+ * Initialization & Data Fetching
+ */
 async function fetchProLeague() {
     const loader = document.getElementById("loading-overlay");
     if (loader) loader.classList.remove("hidden");
@@ -18,9 +21,15 @@ async function fetchProLeague() {
         const staticData = await staticRes.json();
         const leagueData = await leagueRes.json();
 
+        // Map Teams and Players
         staticData.teams.forEach(t => teamMap[t.id] = t.short_name);
         staticData.elements.forEach(p => {
-            playerMap[p.id] = { name: p.web_name, points: p.event_points, team: p.team, pos: p.element_type };
+            playerMap[p.id] = { 
+                name: p.web_name, 
+                points: p.event_points, 
+                team: p.team, 
+                pos: p.element_type 
+            };
         });
 
         const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
@@ -29,9 +38,14 @@ async function fetchProLeague() {
         renderTable(leagueData.standings.results);
         loadLeagueIntelligence(leagueData.standings.results, currentEvent);
 
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+        console.error("Error fetching FPL data:", err); 
+    }
 }
 
+/**
+ * Maps Team IDs to CSS Classes for Jersey Kits
+ */
 function getTeamClass(teamId) {
     const mapping = {
         1: 'arsenal', 2: 'aston_villa', 3: 'bournemouth', 4: 'brentford', 5: 'brighton', 
@@ -42,11 +56,14 @@ function getTeamClass(teamId) {
     return mapping[teamId] || 'default';
 }
 
+/**
+ * Renders the Main League Table
+ */
 function renderTable(managers) {
     const body = document.getElementById("league-body");
     body.innerHTML = managers.map((m) => `
         <tr id="row-${m.entry}">
-            <td>${m.rank}</td>
+            <td class="rank-col">${m.rank}</td>
             <td class="manager-col" onclick="handleManagerClick(${m.entry}, '${m.player_name}')">
                 <div class="m-info-wrapper">
                     <span class="m-name">${m.player_name}</span>
@@ -54,8 +71,13 @@ function renderTable(managers) {
                     <span id="val-${m.entry}" class="val-text">£--.-m</span>
                 </div>
             </td>
-            <td class="pts-col"><div class="live-pts">${m.event_total}</div><div id="hits-${m.entry}" style="font-size:7px; color:red;"></div></td>
-            <td class="total-col"><div class="bold-p">${m.total}</div></td>
+            <td class="pts-col">
+                <div class="live-pts" style="font-weight:900;">${m.event_total}</div>
+                <div id="hits-${m.entry}" style="font-size:7px; color:#ff2882; font-weight:bold;"></div>
+            </td>
+            <td class="total-col">
+                <div class="bold-p" style="font-weight:900;">${m.total}</div>
+            </td>
             <td id="cap-${m.entry}" class="cap-col">—</td>
             <td class="diff-col"><div id="diffs-${m.entry}" class="diff-col-scroll"></div></td>
             <td class="trans-col"><div id="trans-${m.entry}" class="trans-col-scroll"></div></td>
@@ -63,6 +85,9 @@ function renderTable(managers) {
     `).join('');
 }
 
+/**
+ * Fetches individual manager details (Picks & Transfers)
+ */
 async function loadLeagueIntelligence(managers, eventId) {
     const ownership = {};
     const managerDetails = {};
@@ -75,33 +100,67 @@ async function loadLeagueIntelligence(managers, eventId) {
             ]);
             const picks = await picksRes.json();
             const trans = await transRes.json();
-            managerDetails[m.entry] = { picks, trans: trans.filter(t => t.event === eventId) };
+            
+            managerDetails[m.entry] = { 
+                picks, 
+                trans: trans.filter(t => t.event === eventId) 
+            };
             managerSquads[m.entry] = picks;
-            picks.picks.forEach(p => ownership[p.element] = (ownership[p.element] || 0) + 1);
-        } catch (e) { console.warn(e); }
+            
+            // Track ownership for Differential logic
+            picks.picks.forEach(p => {
+                ownership[p.element] = (ownership[p.element] || 0) + 1;
+            });
+        } catch (e) { console.warn(`Failed to fetch manager ${m.entry}:`, e); }
     }));
 
     managers.forEach(m => {
         const data = managerDetails[m.entry];
         if (!data) return;
 
-        document.getElementById(`val-${m.entry}`).innerText = `£${(data.picks.entry_history.value / 10).toFixed(1)}m`;
+        // Update Value
+        const valSpan = document.getElementById(`val-${m.entry}`);
+        if(valSpan) valSpan.innerText = `£${(data.picks.entry_history.value / 10).toFixed(1)}m`;
+
+        // Update Captain & Active Chips
         const cap = data.picks.picks.find(p => p.is_captain);
         const chip = data.picks.active_chip;
-        document.getElementById(`cap-${m.entry}`).innerHTML = `
-            ${playerMap[cap.element].name} ${chip ? `<span class="chip-badge chip-wildcard">${chip.toUpperCase()}</span>` : ''}
-        `;
+        const capCell = document.getElementById(`cap-${m.entry}`);
+        if(capCell) {
+            capCell.innerHTML = `
+                ${playerMap[cap.element].name} 
+                ${chip ? `<span class="chip-badge chip-wildcard">${chip.toUpperCase()}</span>` : ''}
+            `;
+        }
 
+        // Update Differentials (Owned by only 1 person in the viewable table)
         const diffs = data.picks.picks.filter(p => ownership[p.element] === 1);
-        document.getElementById(`diffs-${m.entry}`).innerHTML = diffs.map(p => 
-            `<span class="mini-tag tag-diff">${playerMap[p.element].name}</span>`).join('') || '—';
+        const diffDiv = document.getElementById(`diffs-${m.entry}`);
+        if(diffDiv) {
+            diffDiv.innerHTML = diffs.map(p => 
+                `<span class="mini-tag tag-diff">${playerMap[p.element].name}</span>`).join('') || '—';
+        }
 
-        document.getElementById(`trans-${m.entry}`).innerHTML = data.trans.map(t => 
-            `<span class="mini-tag tag-in">${playerMap[t.element_in].name}</span>`).join('') || 'None';
+        // Update Transfers In
+        const transDiv = document.getElementById(`trans-${m.entry}`);
+        if(transDiv) {
+            transDiv.innerHTML = data.trans.map(t => 
+                `<span class="mini-tag tag-in">${playerMap[t.element_in].name}</span>`).join('') || 'None';
+        }
+
+        // Update Transfer Hits (Cost)
+        const hitsDiv = document.getElementById(`hits-${m.entry}`);
+        const hits = data.picks.entry_history.event_transfer_cost;
+        if(hitsDiv && hits > 0) hitsDiv.innerText = `-${hits}`;
     });
-    document.getElementById("loading-overlay").classList.add("hidden");
+
+    const loader = document.getElementById("loading-overlay");
+    if (loader) loader.classList.add("hidden");
 }
 
+/**
+ * Handles Click on Manager Name to show the Jersey Pitch Modal
+ */
 function handleManagerClick(id, name) {
     const data = managerSquads[id];
     if (!data) return;
@@ -142,17 +201,48 @@ function handleManagerClick(id, name) {
             <div class="modal-row">${starters[3].join('')}</div>
             <div class="modal-row">${starters[4].join('')}</div>
             <div class="bench-wrap">
-                <div class="bench-label">Bench</div>
+                <div class="bench-label">Substitutes</div>
                 <div class="modal-row">${bench.join('')}</div>
             </div>
         </div>
         <div class="modal-footer">
-            <span class="total-label">GW Total</span>
-            <span class="total-value">${squadTotal}</span>
+            <span class="total-label">Live Score</span>
+            <span class="total-value">${squadTotal} PTS</span>
         </div>
     `;
     modal.classList.remove("hidden");
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
 }
 
-document.getElementById("close-modal").onclick = () => document.getElementById("team-modal").classList.add("hidden");
-document.addEventListener("DOMContentLoaded", fetchProLeague);
+/**
+ * UI Utility: Swipe Hint handling
+ */
+function initSwipeHint() {
+    const hint = document.getElementById('scroll-hint');
+    const tableWrapper = document.querySelector('.table-wrapper');
+
+    if (!hint || !tableWrapper) return;
+
+    // Hide hint if user scrolls the table
+    tableWrapper.addEventListener('scroll', () => {
+        hint.classList.add('hidden-hint');
+    }, { once: true });
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        hint.classList.add('hidden-hint');
+    }, 5000);
+}
+
+/**
+ * Event Listeners
+ */
+document.getElementById("close-modal").onclick = () => {
+    document.getElementById("team-modal").classList.add("hidden");
+    document.body.style.overflow = ''; // Restore background scroll
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    fetchProLeague();
+    initSwipeHint();
+});
