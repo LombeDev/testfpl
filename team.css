@@ -145,3 +145,66 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     .column-right { position: static; max-height: none; width: 100%; }
     .main-container { max-width: 500px; }
 }
+
+/* --- TWO COLUMN LAYOUT LOGIC --- */
+.main-container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 20px; 
+}
+
+.desktop-layout-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.column-left {
+    flex: 1.4;
+    min-width: 0;
+}
+
+/* Sidebar: Only visible on desktop */
+.column-right {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    display: flex; /* Default to visible */
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* MOBILE RESPONSIVE SWITCH */
+@media (max-width: 900px) {
+    .desktop-layout-wrapper {
+        display: block; /* Stack vertically */
+    }
+
+    .column-right {
+        display: none; /* Hide the sidebar market on mobile */
+    }
+
+    .main-container {
+        max-width: 500px;
+        padding: 10px;
+    }
+
+    /* Show the original select picker on mobile */
+    .hidden-picker {
+        display: block !important;
+        opacity: 1 !important;
+        position: relative !important;
+        margin-top: 5px !important;
+    }
+}
+
+/* DESKTOP SPECIFIC: Hide the select picker if the sidebar is active */
+@media (min-width: 901px) {
+    .hidden-picker {
+        display: none !important;
+    }
+}
