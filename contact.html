@@ -7,10 +7,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* --- GLOBAL & THEME VARIABLES (Matching your UI) --- */
+        /* Shared Light Theme Navbar Consistency */
         :root {
             --fpl-purple: #37003c;
             --fpl-green: #00ff87;
+            --link-blue: #0000ee;
             --bg-light: #ffffff;
             --bg-alt: #f8fafc;
             --text-main: #1a1a1a;
@@ -27,12 +28,71 @@
             line-height: 1.6;
         }
 
-       
-        .menu-icon {
-            background: none; border: none; cursor: pointer;
-            display: flex; flex-direction: column; gap: 4px;
+        /* --- Site-Wide Navbar --- */
+        .navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #eeeeee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .menu-icon span { width: 20px; height: 2px; background: black; }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #000000 !important;
+            text-transform: uppercase;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .brand span {
+            color: var(--link-blue);
+            margin-left: 5px;
+        }
+
+        .nav-links {
+            display: none;
+            list-style: none;
+            margin: 0 0 0 30px;
+            padding: 0;
+            gap: 20px;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links li a:hover {
+            color: var(--link-blue);
+        }
+
+        @media screen and (min-width: 768px) {
+            #menu-btn { display: none !important; }
+            .nav-links { display: flex; align-items: center; }
+        }
+
+        .search-btn-round {
+            background: #f0f0f0;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
 
         /* --- PAGE CONTENT --- */
         .main-container {
@@ -56,7 +116,6 @@
             margin-bottom: 30px;
         }
 
-        /* --- CONTACT CARD --- */
         .card {
             background: #fff;
             border: 1px solid var(--border);
@@ -74,19 +133,8 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 2rem;
             margin: 0 auto 20px auto;
-            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.2);
         }
 
-        .card h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; }
-        
-        .email-display {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 10px;
-            font-weight: 600;
-        }
-
-        /* --- WHATSAPP BUTTON --- */
         .whatsapp-btn {
             display: inline-flex;
             align-items: center;
@@ -109,7 +157,6 @@
             box-shadow: 0 12px 24px rgba(37, 211, 102, 0.3);
         }
 
-        /* --- FEEDBACK LIST --- */
         .feedback-box {
             background: var(--bg-alt);
             border-radius: 12px;
@@ -122,26 +169,19 @@
             font-size: 0.8rem;
             color: var(--fpl-purple);
             text-transform: uppercase;
-            letter-spacing: 1px;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .feedback-box ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
+        .feedback-box ul { list-style: none; padding: 0; margin: 0; }
         .feedback-box li {
             font-size: 0.95rem;
             padding: 10px 0;
             border-bottom: 1px solid #eef2f6;
             color: #334155;
             display: flex;
-            align-items: flex-start;
             gap: 10px;
         }
 
@@ -150,59 +190,44 @@
             color: var(--fpl-green);
             font-weight: bold;
         }
-
-        .feedback-box li:last-child { border-bottom: none; }
-
-        .footer-sig {
-            margin-top: 40px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        .footer-sig strong { color: var(--fpl-purple); }
-
-        /* --- FOOTER (Unified Dark) --- */
-        .main-footer {
-            background: #0f172a;
-            color: white;
-            padding: 40px 20px;
-            margin-top: 60px;
-            text-align: center;
-        }
-        .main-footer .logo { font-size: 1.2rem; margin-bottom: 10px; }
-        .main-footer .logo span { color: var(--fpl-green); }
-        .footer-bottom { font-size: 0.8rem; opacity: 0.6; margin-top: 20px; }
-
     </style>
 </head>
 <body>
 
     <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: var(--dark-blue); color: white; display: flex; justify-content: space-between;">
-            <h2 class="brand" style="color: white; margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+        <div style="padding: 20px; background: #ffffff; color: #333; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+            <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:#333; font-size:1.5rem; cursor:pointer;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="kopala.html">Kopala FPL</a></li>
             <li><a href="team.html">My team by AI</a></li>
-            <li><a href="price.html">Next price change timer</a></li>
-            <li><a href="transfer.html">Top transfers in&out</a></li>
+            <li><a href="price.html">Price Timer</a></li>
             <li><a href="football.html">Football</a></li>
-          
         </ul>
     </div>
 
     <div id="main-backdrop" class="backdrop"></div>
 
     <nav class="navbar">
-        <div class="nav-left">
-            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
-            <h1 class="brand">KOPALA <span>FPL</span></h1>
+        <div class="nav-left" style="display: flex; align-items: center;">
+            <div id="menu-btn" class="menu-icon">
+                <span></span><span></span><span></span>
+            </div>
+            <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="kopala.html">Kopala FPL</a></li>
+                <li><a href="team.html">My Team by AI</a></li>
+                <li><a href="price.html">Price Timer</a></li>
+                <li><a href="football.html">Football</a></li>
+            </ul>
         </div>
+        
         <div class="nav-right">
-            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
-            
+            <button class="search-btn-round"><i class="fa-solid fa-magnifying-glass"></i></button>
         </div>
     </nav>
 
@@ -218,14 +243,11 @@
             <h2>Chat with us</h2>
             <p>Have questions or suggestions? Reach out instantly via WhatsApp.</p>
 
-            <a href="Let's chat on WhatsApp! It's a fast, simple, and secure app we can use to message and call each other for free. Get it at https://whatsapp.com/dl/
-
-" 
-               class="whatsapp-btn">
+            <a href="https://wa.me/YOUR_PHONE_NUMBER" class="whatsapp-btn">
                 Open WhatsApp Chat
             </a>
 
-            <div class="email-display">
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; font-weight: 600;">
                 Or email us: lombeicloud@gmail.com
             </div>
 
@@ -233,20 +255,21 @@
                 <h3><i class="fa-solid fa-comments"></i> We welcome all feedback</h3>
                 <ul>
                     <li>Which features would you like to see added?</li>
-               
+                    <li>Found a bug or incorrect data?</li>
                 </ul>
             </div>
 
-            <p class="footer-sig">
+            <p style="margin-top: 40px; font-size: 0.9rem; color: var(--text-muted);">
                 Best regards,<br>
                 <strong>Kopala FPL</strong>
             </p>
         </section>
     </main>
-<footer>
+
+    <footer style="text-align: center; padding: 20px; font-size: 0.9rem; border-top: 1px solid #eee; margin-top: 40px;">
         <p>&copy; 2026 Kopala FPL. All rights reserved.</p>
     </footer>
-<script src="script.js"></script>
-<script src="script.js"></script>
+
+    <script src="script.js"></script>
 </body>
 </html>
