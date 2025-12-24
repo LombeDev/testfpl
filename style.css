@@ -52,7 +52,7 @@ body {
 .menu-icon { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 5px; }
 .menu-icon span { width: 20px; height: 2px; background: #000; }
 
-.brand { font-size: 1.2rem; font-weight: 900; color: #000; margin: 0; }
+.brand { font-size: 1.2rem; font-weight: 900; color: #ffffff; margin: 0; }
 .brand span { color: var(--primary-green); }
 
 .nav-right { display: flex; align-items: center; gap: 8px; }
