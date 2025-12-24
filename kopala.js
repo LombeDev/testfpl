@@ -32,6 +32,16 @@ async function fetchProLeague() {
     } catch (err) { console.error(err); }
 }
 
+function getTeamClass(teamId) {
+    const mapping = {
+        1: 'arsenal', 2: 'aston_villa', 3: 'bournemouth', 4: 'brentford', 5: 'brighton', 
+        6: 'chelsea', 7: 'crystal_p', 8: 'everton', 9: 'fulham', 10: 'ipswich', 
+        11: 'leicester', 12: 'liverpool', 13: 'man_city', 14: 'man_utd', 15: 'newcastle', 
+        16: 'nottm_forest', 17: 'southampton', 18: 'tottenham', 19: 'west_ham', 20: 'wolves'
+    };
+    return mapping[teamId] || 'default';
+}
+
 function renderTable(managers) {
     const body = document.getElementById("league-body");
     body.innerHTML = managers.map((m) => `
@@ -41,20 +51,14 @@ function renderTable(managers) {
                 <div class="m-info-wrapper">
                     <span class="m-name">${m.player_name}</span>
                     <span class="t-name">${m.entry_name}</span>
-                    <span id="val-${m.entry}" class="val-text">£--.-m Value</span>
+                    <span id="val-${m.entry}" class="val-text">£--.-m</span>
                 </div>
             </td>
-            <td>
-                <div class="live-pts">${m.event_total}</div>
-                <div id="hits-${m.entry}" class="hits"></div>
-            </td>
-            <td>
-                <div class="bold-p">${m.total}</div>
-                <div id="proj-${m.entry}" style="font-size:8px; color:#007bff;"></div>
-            </td>
-            <td id="cap-${m.entry}">—</td>
-            <td><div id="diffs-${m.entry}" class="diff-col-scroll">...</div></td>
-            <td><div id="trans-${m.entry}" class="trans-col-scroll">...</div></td>
+            <td class="pts-col"><div class="live-pts">${m.event_total}</div><div id="hits-${m.entry}" style="font-size:7px; color:red;"></div></td>
+            <td class="total-col"><div class="bold-p">${m.total}</div></td>
+            <td id="cap-${m.entry}" class="cap-col">—</td>
+            <td class="diff-col"><div id="diffs-${m.entry}" class="diff-col-scroll"></div></td>
+            <td class="trans-col"><div id="trans-${m.entry}" class="trans-col-scroll"></div></td>
         </tr>
     `).join('');
 }
@@ -81,74 +85,21 @@ async function loadLeagueIntelligence(managers, eventId) {
         const data = managerDetails[m.entry];
         if (!data) return;
 
-        // Team Value Update
-        const value = (data.picks.entry_history.value / 10).toFixed(1);
-        document.getElementById(`val-${m.entry}`).innerText = `£${value}m Value`;
-
-        // Captain & Chip
+        document.getElementById(`val-${m.entry}`).innerText = `£${(data.picks.entry_history.value / 10).toFixed(1)}m`;
         const cap = data.picks.picks.find(p => p.is_captain);
         const chip = data.picks.active_chip;
         document.getElementById(`cap-${m.entry}`).innerHTML = `
-            ${playerMap[cap.element].name} ${chip ? `<span class="c-badge">${chip.toUpperCase()}</span>` : ''}
+            ${playerMap[cap.element].name} ${chip ? `<span class="chip-badge chip-wildcard">${chip.toUpperCase()}</span>` : ''}
         `;
 
-        // Diffs
         const diffs = data.picks.picks.filter(p => ownership[p.element] === 1);
         document.getElementById(`diffs-${m.entry}`).innerHTML = diffs.map(p => 
             `<span class="mini-tag tag-diff">${playerMap[p.element].name}</span>`).join('') || '—';
 
-        // Transfers
         document.getElementById(`trans-${m.entry}`).innerHTML = data.trans.map(t => 
             `<span class="mini-tag tag-in">${playerMap[t.element_in].name}</span>`).join('') || 'None';
-            
-        // Hits
-        const hits = data.picks.entry_history.event_transfer_cost;
-        if (hits > 0) document.getElementById(`hits-${m.entry}`).innerText = `-${hits}pt`;
     });
-
-    if (document.getElementById("loading-overlay")) document.getElementById("loading-overlay").classList.add("hidden");
-}
-
-function handleManagerClick(id, name) {
-    const data = managerSquads[id];
-    if (!data) return;
-    const modal = document.getElementById("team-modal");
-    const list = document.getElementById("modal-squad-list");
-    document.getElementById("modal-manager-name").innerText = name;
-    
-    const sortedPicks = [...data.picks].sort((a, b) => playerMap[a.element].pos - playerMap[b.element].pos);
-    let totalLive = 0;
-    
-    list.innerHTML = sortedPicks.map(p => {
-        const player = playerMap[p.element];
-        const pts = player.points * p.multiplier;
-        totalLive += pts;
-        return `
-        <div style="display:flex; justify-content:space-between; padding:6px; border-bottom:1px solid #eee; font-size:11px;">
-            <span>${player.name} (${teamMap[player.team]}) ${p.is_captain ? '★' : ''}</span>
-            <span style="font-weight:800;">${pts}</span>
-        </div>`;
-    }).join('') + `<div style="padding:10px; text-align:right; font-weight:900; font-size:16px;">Total: ${totalLive}</div>`;
-    
-    modal.classList.remove("hidden");
-}
-
-document.getElementById("close-modal").onclick = () => document.getElementById("team-modal").classList.add("hidden");
-document.addEventListener("DOMContentLoaded", fetchProLeague);
-
-
-
-
-// Helper to map team ID to CSS class
-function getTeamClass(teamId) {
-    const mapping = {
-        1: 'arsenal', 2: 'aston_villa', 3: 'bournemouth', 4: 'brentford', 
-        5: 'brighton', 6: 'chelsea', 7: 'crystal_p', 8: 'everton', 
-        9: 'fulham', 10: 'ipswich', 11: 'leicester', 12: 'liverpool', 
-        13: 'man_city', 14: 'man_utd', 15: 'newcastle', 16: 'nottm_forest', 
-        17: 'southampton', 18: 'tottenham', 19: 'west_ham', 20: 'wolves'
-    };
-    return mapping[teamId] || 'default';
+    document.getElementById("loading-overlay").classList.add("hidden");
 }
 
 function handleManagerClick(id, name) {
@@ -159,44 +110,49 @@ function handleManagerClick(id, name) {
     const list = document.getElementById("modal-squad-list");
     document.getElementById("modal-manager-name").innerText = name;
 
-    // Separate players by position
-    const positions = { 1: [], 2: [], 3: [], 4: [] };
+    const starters = { 1: [], 2: [], 3: [], 4: [] };
+    const bench = [];
     let squadTotal = 0;
 
     data.picks.forEach(p => {
         const player = playerMap[p.element];
         const pts = player.points * p.multiplier;
-        squadTotal += pts;
+        if (p.multiplier > 0) squadTotal += pts;
         
-        const isGkp = player.pos === 1;
-        const kitClass = isGkp ? 'gkp_color' : getTeamClass(player.team);
+        const kitClass = player.pos === 1 ? 'gkp_color' : getTeamClass(player.team);
 
         const playerHTML = `
-            <div class="slot" style="width: 70px;">
+            <div class="slot" style="width: 65px; display:flex; flex-direction:column; align-items:center; position:relative;">
+                ${p.is_captain ? '<div class="cap-star-pitch">★</div>' : ''}
                 <div class="jersey ${kitClass}"></div>
                 <div class="modal-player-tag">
-                    <span class="m-p-name">${p.is_captain ? 'Ⓒ ' : ''}${player.name}</span>
-                    <span class="m-p-pts">${pts}</span>
+                    <span class="m-p-name">${player.name}</span>
+                    <span class="m-p-pts">${player.points}${p.multiplier > 1 ? ' (x'+p.multiplier+')' : ''}</span>
                 </div>
             </div>`;
         
-        positions[player.pos].push(playerHTML);
+        if (p.position > 11) bench.push(playerHTML);
+        else starters[player.pos].push(playerHTML);
     });
 
-    // Build the visual pitch
     list.innerHTML = `
         <div class="modal-pitch">
-            <div class="modal-row">${positions[1].join('')}</div>
-            <div class="modal-row">${positions[2].join('')}</div>
-            <div class="modal-row">${positions[3].join('')}</div>
-            <div class="modal-row">${positions[4].join('')}</div>
+            <div class="modal-row">${starters[1].join('')}</div>
+            <div class="modal-row">${starters[2].join('')}</div>
+            <div class="modal-row">${starters[3].join('')}</div>
+            <div class="modal-row">${starters[4].join('')}</div>
+            <div class="bench-wrap">
+                <div class="bench-label">Bench</div>
+                <div class="modal-row">${bench.join('')}</div>
+            </div>
         </div>
-        <div style="padding:15px 0 5px 0; text-align:right; font-weight:900; font-size:18px; color:#37003c; border-top:2px solid #f0f0f0; margin-top:10px;">
-            <small style="font-size:10px; color:#999; text-transform:uppercase;">Live Squad Total</small><br>
-            ${squadTotal} <small style="font-size:11px;">PTS</small>
+        <div class="modal-footer">
+            <span class="total-label">GW Total</span>
+            <span class="total-value">${squadTotal}</span>
         </div>
     `;
-
     modal.classList.remove("hidden");
-    document.body.style.overflow = 'hidden';
 }
+
+document.getElementById("close-modal").onclick = () => document.getElementById("team-modal").classList.add("hidden");
+document.addEventListener("DOMContentLoaded", fetchProLeague);
