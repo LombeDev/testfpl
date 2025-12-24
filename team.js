@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI Master Engine (v3.0)
- * FEATURES: Bouncy Animations, Auto-Formation, FPL Subs, 3-GW Projections
+ * KOPALA FPL - AI Master Engine (v2.8)
+ * FEATURES: Bouncy Animations, Auto-Formation, FPL Subs, AI Wildcard
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -8,6 +8,7 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
+let managerSquads = {}; // Used for the League Table side if applicable
 
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
@@ -38,6 +39,8 @@ async function syncData() {
     const cachedTeams = localStorage.getItem('kopala_teams_cache');
     const cachedTime = localStorage.getItem(TIME_KEY);
     
+    const isCacheFresh = cachedTime && (Date.now() - cachedTime < TWENTY_FOUR_HOURS);
+
     if (cachedPlayers && cachedFixtures) {
         playerDB = JSON.parse(cachedPlayers);
         fixturesDB = JSON.parse(cachedFixtures);
@@ -45,8 +48,11 @@ async function syncData() {
         loadSquad();
         renderPitch();
         triggerLineupBounce();
-        if (ticker) ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Loaded</span>";
-        if (cachedTime && (Date.now() - cachedTime < TWENTY_FOUR_HOURS)) return; 
+        
+        if (isCacheFresh && ticker) {
+            ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh (Cached)</span>";
+            return; 
+        }
     }
 
     try {
@@ -77,37 +83,22 @@ async function syncData() {
         })).sort((a,b) => b.xp - a.xp);
 
         fixturesDB = rawFixtures;
+
         localStorage.setItem('kopala_player_cache', JSON.stringify(playerDB));
         localStorage.setItem('kopala_fixtures_cache', JSON.stringify(fixturesDB));
         localStorage.setItem('kopala_teams_cache', JSON.stringify(teamsDB));
         localStorage.setItem(TIME_KEY, Date.now().toString());
         
+        loadSquad();
         renderPitch();
-    } catch (e) { console.error("Sync Error", e); }
+        triggerLineupBounce();
+        if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine Online (Live)</span>";
+    } catch (e) {
+        console.warn("Sync failed.");
+    }
 }
 
-// --- 2. THE PROJECTION ENGINE ---
-function calculateProjectedPoints(player) {
-    if (!player || isNaN(player.xp)) return 0;
-    const fixtures = getNextFixtures(player.teamId);
-    
-    // Start with Game 1 (Official FPL EP)
-    let total3GW = player.xp;
-
-    // Estimate Game 2 and 3 based on Fixture Difficulty (FDR)
-    fixtures.slice(1, 3).forEach(f => {
-        let modifier = 1.0;
-        if (f.diff <= 2) modifier = 1.25; // Easy Fixture Bonus
-        if (f.diff >= 4) modifier = 0.70; // Hard Fixture Penalty
-        
-        // Decay factor (uncertainty increases the further out we look)
-        total3GW += (player.xp * modifier * 0.85); 
-    });
-
-    return total3GW;
-}
-
-// --- 3. FORMATION & SUBSTITUTION LOGIC ---
+// --- 2. ADVANCED SUBSTITUTION & FORMATION LOGIC ---
 function handleSwap(id) {
     if (selectedSlotId === null) {
         selectedSlotId = id;
@@ -116,19 +107,24 @@ function handleSwap(id) {
         const p2 = squad.find(s => s.id === id);
 
         if (p1.id !== p2.id) {
+            // Rule 1: GKP can only swap with GKP
             if ((p1.pos === 'GKP' || p2.pos === 'GKP') && p1.pos !== p2.pos) {
                 alert("Goalkeepers can only be swapped with other Goalkeepers.");
             } else {
-                const s1Orig = { ...p1 };
-                const s2Orig = { ...p2 };
+                // Store original state
+                const s1Orig = { name: p1.name, pos: p1.pos, isBench: p1.isBench };
+                const s2Orig = { name: p2.name, pos: p2.pos, isBench: p2.isBench };
 
-                // Execute logical swap
+                // Execute Swap
                 p1.name = s2Orig.name; p1.pos = s2Orig.pos; p1.isBench = s2Orig.isBench;
                 p2.name = s1Orig.name; p2.pos = s1Orig.pos; p2.isBench = s1Orig.isBench;
 
+                // Rule 2: Validate Formation
                 if (!isValidFormation()) {
                     alert("Invalid Formation! Min: 3 DEF, 2 MID, 1 FWD.");
-                    Object.assign(p1, s1Orig); Object.assign(p2, s2Orig); // Revert
+                    // Revert
+                    p1.name = s1Orig.name; p1.pos = s1Orig.pos; p1.isBench = s1Orig.isBench;
+                    p2.name = s2Orig.name; p2.pos = s2Orig.pos; p2.isBench = s2Orig.isBench;
                 } else {
                     saveSquad();
                     triggerLineupBounce();
@@ -142,13 +138,67 @@ function handleSwap(id) {
 
 function isValidFormation() {
     const active = squad.filter(s => !s.isBench);
+    const gkps = active.filter(s => s.pos === 'GKP').length;
     const defs = active.filter(s => s.pos === 'DEF').length;
     const mids = active.filter(s => s.pos === 'MID').length;
     const fwds = active.filter(s => s.pos === 'FWD').length;
-    return active.length === 11 && defs >= 3 && mids >= 2 && fwds >= 1;
+    return gkps === 1 && defs >= 3 && mids >= 2 && fwds >= 1;
 }
 
-// --- 4. UI RENDERERS ---
+// --- 3. UI ANIMATIONS ---
+function triggerLineupBounce() {
+    const pitchWrap = document.querySelector('.pitch-outer-wrap');
+    if (!pitchWrap) return;
+    pitchWrap.classList.remove('animate-bounce');
+    void pitchWrap.offsetWidth; // Force Reflow
+    pitchWrap.classList.add('animate-bounce');
+}
+
+function initSwipeHint() {
+    const hint = document.getElementById('scroll-hint');
+    const tableWrapper = document.querySelector('.table-wrapper');
+    if (!hint || !tableWrapper) return;
+    tableWrapper.addEventListener('scroll', () => hint.classList.add('hidden-hint'), { once: true });
+    setTimeout(() => hint.classList.add('hidden-hint'), 5000);
+}
+
+// --- 4. RENDERERS ---
+function createSlotUI(slotData) {
+    const div = document.createElement('div');
+    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
+    
+    const player = playerDB.find(p => p.name === slotData.name);
+    let jerseyClass = 'default';
+    if (player) {
+        jerseyClass = (player.pos === 'GKP') ? 'gkp_color' : player.teamShort;
+    }
+
+    const fixtures = player ? getNextFixtures(player.teamId) : [];
+
+    div.innerHTML = `
+        <div class="jersey ${jerseyClass}" onclick="handleSwap(${slotData.id})"></div>
+        <div class="player-card">
+            <div class="card-header">
+                <span class="p-name">${slotData.name || slotData.pos}</span>
+                <span class="p-price">${player ? player.price + 'm' : ''}</span>
+            </div>
+            <div class="card-fixtures">
+                ${fixtures.length > 0 ? fixtures.map(f => `
+                    <div class="fix-item diff-${f.diff}">
+                        ${f.opp}<br>${f.loc}
+                    </div>`).join('') : '<div class="fix-item">---</div>'}
+            </div>
+        </div>
+        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
+            <option value="">-- Pick --</option>
+            ${playerDB.filter(p => p.pos === slotData.pos).map(p => 
+                `<option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>`
+            ).join('')}
+        </select>
+    `;
+    return div;
+}
+
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
@@ -158,8 +208,10 @@ function renderPitch() {
 
     const active = squad.filter(s => !s.isBench);
     
+    // Update Formation Text (e.g., 4-4-2)
     if(formationLabel) {
-        formationLabel.textContent = `${active.filter(s=>s.pos==='DEF').length}-${active.filter(s=>s.pos==='MID').length}-${active.filter(s=>s.pos==='FWD').length}`;
+        const f = `${active.filter(s=>s.pos==='DEF').length}-${active.filter(s=>s.pos==='MID').length}-${active.filter(s=>s.pos==='FWD').length}`;
+        formationLabel.textContent = f;
     }
 
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
@@ -177,80 +229,70 @@ function renderPitch() {
     updateStats();
 }
 
-function createSlotUI(slotData) {
-    const div = document.createElement('div');
-    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    
-    const player = playerDB.find(p => p.name === slotData.name);
-    let jerseyClass = 'default';
-    if (player) jerseyClass = (player.pos === 'GKP') ? 'gkp_color' : player.teamShort;
-
-    const fixtures = player ? getNextFixtures(player.teamId) : [];
-    const proj3 = player ? calculateProjectedPoints(player).toFixed(1) : '0.0';
-
-    div.innerHTML = `
-        <div class="jersey ${jerseyClass}" onclick="handleSwap(${slotData.id})"></div>
-        <div class="player-card">
-            <div class="card-header">
-                <span class="p-name">${slotData.name || slotData.pos}</span>
-                <span class="p-price">${player ? player.price + 'm' : ''}</span>
-            </div>
-            <div class="card-fixtures">
-                ${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}<br>${f.loc}</div>`).join('')}
-            </div>
-            <div class="projected-badge">${proj3} pts (3-GW)</div>
-        </div>
-    `;
-    return div;
-}
-
-// --- 5. HELPERS ---
-function updateStats() {
-    let xp1 = 0, xp3 = 0, val = 0;
-    squad.forEach(s => {
-        const p = playerDB.find(x => x.name === s.name);
-        if (p) {
-            val += parseFloat(p.price);
-            if (!s.isBench) {
-                xp1 += p.xp;
-                xp3 += calculateProjectedPoints(p);
-            }
-        }
-    });
-
-    const budgetEl = document.getElementById('budget-val');
-    if(budgetEl) {
-        const itb = (100 - val).toFixed(1);
-        budgetEl.textContent = `£${itb}m`;
-        budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
-    }
-
-    const xpDisplay = document.getElementById('v-xp');
-    if(xpDisplay) {
-        xpDisplay.innerHTML = `${xp1.toFixed(1)} <small style="color:#aaa; font-size:12px; margin-left:5px;">Next GW</small> 
-                               <br><span style="color:#00ff87">${xp3.toFixed(0)}</span> <small style="color:#aaa; font-size:12px;">Next 3 GWs</small>`;
-    }
-}
-
+// --- 5. UTILS & HANDLERS ---
 function getNextFixtures(teamId) {
-    if (!fixturesDB.length) return [];
-    return fixturesDB.filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
-        .slice(0, 3).map(f => {
+    if (!fixturesDB || fixturesDB.length === 0) return [];
+    return fixturesDB
+        .filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
+        .slice(0, 3)
+        .map(f => {
             const isHome = f.team_h === teamId;
+            const oppId = isHome ? f.team_a : f.team_h;
             return {
-                opp: (teamsDB[isHome ? f.team_a : f.team_h] || "???").substring(0,3).toUpperCase(),
+                opp: (teamsDB[oppId] || "???").substring(0,3).toUpperCase(),
                 loc: isHome ? 'H' : 'A',
                 diff: isHome ? f.team_h_difficulty : f.team_a_difficulty
             };
         });
 }
 
-function triggerLineupBounce() {
-    const wrap = document.querySelector('.pitch-outer-wrap');
-    if (!wrap) return;
-    wrap.classList.remove('animate-bounce');
-    void wrap.offsetWidth; 
-    wrap.classList.add('animate-bounce');
+function updateStats() {
+    let xp = 0, val = 0;
+    squad.forEach(s => {
+        const p = playerDB.find(x => x.name === s.name);
+        if (p) {
+            val += parseFloat(p.price);
+            if (!s.isBench) xp += p.xp;
+        }
+    });
+    const budgetEl = document.getElementById('budget-val');
+    if(budgetEl) {
+        const itb = (100 - val).toFixed(1);
+        budgetEl.textContent = `£${itb}m`;
+        budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
+    }
+    const xpDisplay = document.getElementById('v-xp');
+    if(xpDisplay) xpDisplay.textContent = xp.toFixed(1);
+}
+
+function runAIWildcard() {
+    if (!playerDB.length) return;
+    if (!confirm("AI will rebuild your squad for max points. Continue?")) return;
+
+    let budget = 100.0;
+    const used = [];
+    squad.forEach((slot, i) => {
+        const buffer = (squad.length - 1 - i) * 4.5;
+        const choice = playerDB.find(p => 
+            p.pos === slot.pos && !used.includes(p.name) && parseFloat(p.price) <= (budget - buffer)
+        ) || playerDB.filter(p => p.pos === slot.pos && !used.includes(p.name))
+                     .sort((a,b) => a.price - b.price)[0];
+
+        if (choice) {
+            slot.name = choice.name;
+            used.push(choice.name);
+            budget -= parseFloat(choice.price);
+        }
+    });
+    saveSquad();
+    renderPitch();
+    triggerLineupBounce();
+}
+
+function updatePlayer(id, name) { 
+    squad.find(s => s.id === id).name = name; 
+    saveSquad(); 
+    renderPitch(); 
 }
 
 function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
@@ -259,8 +301,21 @@ function loadSquad() {
     if (saved) squad = JSON.parse(saved);
 }
 
+// --- 6. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
+    initSwipeHint();
+    
+    const wcBtn = document.getElementById('wildcard-btn');
+    if (wcBtn) wcBtn.onclick = runAIWildcard;
+
     const resetBtn = document.querySelector('.btn-reset');
-    if (resetBtn) resetBtn.onclick = () => { localStorage.removeItem('kopala_saved_squad'); location.reload(); };
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if(confirm("Reset Squad?")) {
+                localStorage.removeItem('kopala_saved_squad');
+                location.reload();
+            }
+        });
+    }
 });
