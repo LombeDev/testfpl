@@ -689,3 +689,62 @@ table {
     letter-spacing: 1px;
     margin-bottom: 8px;
 }
+
+
+
+
+/* 1. The Container that prevents screen break */
+.card { 
+    background: white; 
+    margin: 5px; 
+    border-radius: 8px; 
+    overflow: hidden; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Allows swiping left/right */
+    -webkit-overflow-scrolling: touch;
+}
+
+#league-table { 
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Crucial for forced widths */
+    min-width: 480px; /* Minimum width to prevent text crushing */
+}
+
+/* 2. Column Forcing (Ultra Compact) */
+.rank-col { width: 18px !important; text-align: center; padding: 4px 0 !important; }
+
+/* Manager Column stays flexible but doesn't grow too large */
+.manager-col { 
+    width: 100px !important; 
+    padding-left: 4px !important;
+}
+
+.pts-col, .total-col { width: 32px !important; text-align: center; }
+.cap-col { width: 60px !important; }
+.diff-col, .trans-col { width: 75px !important; }
+
+/* 3. Global Text Shrink for Mobile */
+#league-table td {
+    font-size: 9px;
+    padding: 6px 2px;
+    border-bottom: 1px solid #f3f4f6;
+    line-height: 1.1;
+}
+
+.m-name { font-size: 9.5px; font-weight: 800; white-space: nowrap; }
+.t-name { font-size: 8px; color: #6b7280; }
+
+/* 4. Scrolling Tags (Inside the cells) */
+.diff-col-scroll, .trans-col-scroll {
+    display: flex;
+    gap: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.diff-col-scroll::-webkit-scrollbar { display: none; }
