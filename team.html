@@ -5,8 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KOPALA FPL | My team by AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="team.css">
-     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Ensuring internal consistency for the Light Theme Header */
+        :root {
+            --link-blue: #0000ee;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #eeeeee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #000000 !important;
+            text-transform: uppercase;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .brand span {
+            color: var(--link-blue);
+            margin-left: 5px;
+        }
+
+        /* Desktop Navigation Links */
+        .nav-links {
+            display: none; /* Mobile first: hidden */
+            list-style: none;
+            margin: 0 0 0 30px;
+            padding: 0;
+            gap: 20px;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links li a:hover {
+            color: var(--link-blue);
+        }
+
+        /* Desktop Switch */
+        @media screen and (min-width: 768px) {
+            #menu-btn { display: none !important; }
+            .nav-links { display: flex; align-items: center; }
+        }
+
+        /* Circular Light Search Button */
+        .search-btn-round {
+            background: #f0f0f0;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .search-btn-round i { color: #333; }
+    </style>
 </head>
 <body>
 
@@ -16,22 +92,32 @@
             <button id="close-btn">&times;</button>
         </div>
         <ul class="drawer-links">
-            <li><a href="index.html"><i class=""></i> Home</a></li>
-            <li><a href="kopala.html"><i class=""></i> Kopala FPL</a></li>
-             <li><a href="price.html"><i class=""></i> Next price change timer</a></li>
-            <li><a href="football.html"><i class=""></i> Football Leagues</a></li>
-            <li><a href="contact.html"><i class=""></i> Contact Us</a></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="kopala.html">Kopala FPL</a></li>
+            <li><a href="price.html">Price Timer</a></li>
+            <li><a href="football.html">Football</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
         </ul>
     </div>
+    
     <div id="backdrop" class="backdrop"></div>
 
     <nav class="navbar">
-        <div class="nav-left">
+        <div class="nav-left" style="display: flex; align-items: center;">
             <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
-            <h1 class="brand">KOPALA <span>FPL</span></h1>
+            <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="kopala.html">Kopala FPL</a></li>
+                <li><a href="price.html">Price Timer</a></li>
+                <li><a href="football.html">Football</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
+            </ul>
         </div>
+        
         <div class="nav-right">
-            <button class="icon-btn"><i class="fa fa-search"></i></button>
+            <button class="search-btn-round"><i class="fa fa-search"></i></button>
         </div>
     </nav>
 
@@ -48,46 +134,40 @@
                 <span>GOALKEEPER</span>
                 <span>DEFENCE</span>
                 <span>MIDFIELD</span>
-                 <span>ATTACK</span>
-                
+                <span>ATTACK</span>
             </div>
-            <div class="pitch" id="pitch-container">
-                </div>
+            <div class="pitch" id="pitch-container"></div>
             <div class="bench-divider">SUBSTITUTES</div>
-            <div class="bench-area" id="bench-container">
-                </div>
+            <div class="bench-area" id="bench-container"></div>
         </div>
 
-       <section class="stats-summary">
-    <div class="stat-box">
-        <span class="stat-label">Team Rating</span>
-        <span class="stat-value" id="team-rating">0%</span>
-    </div>
-    <div class="stat-box">
-        <span class="stat-label">Predicted Points</span>
-        <span class="stat-value" id="v-xp">0</span>
-    </div>
-    
-    <button id="wildcard-btn" class="ai-action-btn">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Wildcard
-    </button>
-</section>
-
-            <div class="btn-group">
-                <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
-                    <i class="fa-solid fa-trash"></i> RESET
-                </button>
+        <section class="stats-summary">
+            <div class="stat-box">
+                <span class="stat-label">Team Rating</span>
+                <span class="stat-value" id="team-rating">0%</span>
             </div>
+            <div class="stat-box">
+                <span class="stat-label">Predicted Points</span>
+                <span class="stat-value" id="v-xp">0</span>
+            </div>
+            
+            <button id="wildcard-btn" class="ai-action-btn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI Wildcard
+            </button>
+        </section>
+
+        <div class="btn-group">
+            <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
+                <i class="fa-solid fa-trash"></i> RESET SQUAD
+            </button>
         </div>
 
         <div id="results" class="ai-card" style="display:block;">
-    <span class="verdict-label"><i class="fa-solid fa-bolt"></i> Transfer Recommendations</span>
-    <div id="transfer-list">
-        <p id="ai-msg">Fill your squad to see transfer logic.</p>
-    </div>
-</div>
-
-        
+            <span class="verdict-label"><i class="fa-solid fa-bolt"></i> Transfer Recommendations</span>
+            <div id="transfer-list">
+                <p id="ai-msg">Fill your squad to see transfer logic.</p>
+            </div>
+        </div>
     </main>
 
     <script src="team.js"></script>
