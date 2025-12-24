@@ -101,12 +101,24 @@
             </div>
         </section>
 
-        <div id="results" class="ai-card">
-            <span class="verdict-label"><i class="fa-solid fa-bolt"></i> Transfer Recommendations</span>
-            <div id="transfer-list">
-                <p id="ai-msg">Fill your squad to see transfer logic.</p>
+        <div id="results" class="ai-recommendation-card">
+    <div class="card-header">
+        <span class="verdict-label">
+            <i class="fa-solid fa-bolt"></i> AI INSIGHTS
+        </span>
+        <span class="update-tag">LIVE</span>
+    </div>
+    
+    <div class="recommendation-content">
+        <h4 id="recommendation-title">Transfer Recommendations</h4>
+        <div id="transfer-list" class="transfer-grid">
+            <div class="empty-state">
+                <i class="fa-solid fa- robot"></i>
+                <p id="ai-msg">Build your starting 11 to unlock AI transfer logic.</p>
             </div>
         </div>
+    </div>
+</div>
     </main>
 
     <script src="team.js"></script>
