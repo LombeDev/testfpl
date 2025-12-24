@@ -6,7 +6,7 @@
     <title>KOPALA FPL | My team by AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="team.css">
-     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -16,12 +16,12 @@
             <button id="close-btn">&times;</button>
         </div>
         <ul class="drawer-links">
-            <li><a href="index.html"><i class=""></i> Home</a></li>
-            <li><a href="kopala.html"><i class=""></i> Kopala FPL</a></li>
-             <li><a href="price.html"><i class=""></i> Next price change timer</a></li>
-            <li><a href="transfer.html"><i class=""></i> Top Transfers in&out</a></li>
-            <li><a href="football.html"><i class=""></i> Football Leagues</a></li>
-            <li><a href="contact.html"><i class=""></i> Contact Us</a></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="kopala.html">Kopala FPL</a></li>
+            <li><a href="price.html">Next price change timer</a></li>
+            <li><a href="transfer.html">Top Transfers in&out</a></li>
+            <li><a href="football.html">Football Leagues</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
         </ul>
     </div>
     <div id="backdrop" class="backdrop"></div>
@@ -39,55 +39,79 @@
     <main class="main-container">
         <div class="ticker" id="ticker">Connecting to FPL servers...</div>
         
-        <div class="status-bar">
-            <span>BANK: <b id="budget-val">£100.0m</b></span>
-            <span id="formation-ticker">FORMATION: 4-4-2</span>
-        </div>
+        <div class="desktop-layout-wrapper">
+            
+            <div class="column-left">
+                <div class="status-bar">
+                    <span>BANK: <b id="budget-val">£100.0m</b></span>
+                    <span id="formation-ticker">FORMATION: 4-4-2</span>
+                </div>
 
-        <div class="pitch-outer-wrap">
-            <div class="pitch-labels">
-                <span>GOALKEEPER</span>
-                <span>DEFENCE</span>
-                <span>MIDFIELD</span>
-                 <span>ATTACK</span>
+                <div class="pitch-outer-wrap">
+                    <div class="pitch-labels">
+                        <span>GOALKEEPER</span>
+                        <span>DEFENCE</span>
+                        <span>MIDFIELD</span>
+                        <span>ATTACK</span>
+                    </div>
+                    <div class="pitch" id="pitch-container">
+                        </div>
+                    <div class="bench-divider">SUBSTITUTES</div>
+                    <div class="bench-area" id="bench-container">
+                        </div>
+                </div>
+            </div>
+
+            <aside class="column-right">
+                <div class="selection-header">
+                    <h3>Player Selection</h3>
+                    <div class="search-box">
+                        <i class="fa fa-search"></i>
+                        <input type="text" id="player-search" placeholder="Search by player or team name" oninput="renderPlayerList()">
+                    </div>
+                </div>
                 
-            </div>
-            <div class="pitch" id="pitch-container">
+                <div class="filter-tabs">
+                    <button id="tab-ALL" onclick="renderPlayerList('ALL')" class="active">All</button>
+                    <button id="tab-GKP" onclick="renderPlayerList('GKP')">GK</button>
+                    <button id="tab-DEF" onclick="renderPlayerList('DEF')">DEF</button>
+                    <button id="tab-MID" onclick="renderPlayerList('MID')">MID</button>
+                    <button id="tab-FWD" onclick="renderPlayerList('FWD')">FWD</button>
                 </div>
-            <div class="bench-divider">SUBSTITUTES</div>
-            <div class="bench-area" id="bench-container">
+
+                <div id="player-list-results" class="player-list-container">
+                    <p class="empty-msg">Select a position on the pitch to pick a player</p>
                 </div>
+            </aside>
         </div>
 
-       <section class="stats-summary">
-    <div class="stat-box">
-        <span class="stat-label">Team Rating</span>
-        <span class="stat-value" id="team-rating">0%</span>
-    </div>
-    <div class="stat-box">
-        <span class="stat-label">Predicted Points</span>
-        <span class="stat-value" id="v-xp">0</span>
-    </div>
-    
-    <button id="wildcard-btn" class="ai-action-btn">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Wildcard
-    </button>
-</section>
-
-            <div class="btn-group">
-                <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
-                    <i class="fa-solid fa-trash"></i> RESET
-                </button>
+        <section class="stats-summary">
+            <div class="stat-box">
+                <span class="stat-label">Team Rating</span>
+                <span class="stat-value" id="team-rating">87%</span>
             </div>
+            <div class="stat-box">
+                <span class="stat-label">Predicted Points</span>
+                <span class="stat-value" id="v-xp">0</span>
+            </div>
+            
+            <button id="wildcard-btn" class="ai-action-btn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI Wildcard
+            </button>
+        </section>
+
+        <div class="btn-group">
+            <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
+                <i class="fa-solid fa-trash"></i> RESET SQUAD
+            </button>
         </div>
 
-        <div id="results" class="ai-card" style="display:block;">
-    <span class="verdict-label"><i class="fa-solid fa-bolt"></i> Transfer Recommendations</span>
-    <div id="transfer-list">
-        <p id="ai-msg">Fill your squad to see transfer logic.</p>
-    </div>
-</div>
-
+        <div id="results" class="ai-card" style="display:block; margin-top: 20px;">
+            <span class="verdict-label"><i class="fa-solid fa-bolt"></i> Transfer Recommendations</span>
+            <div id="transfer-list">
+                <p id="ai-msg">Fill your squad to see transfer logic.</p>
+            </div>
+        </div>
         
     </main>
 
