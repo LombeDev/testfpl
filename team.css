@@ -7,160 +7,291 @@
     --border: #e2e8f0;
 }
 
-/* --- 1. BASE RESET & BODY --- */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body, html { 
-    overflow-x: hidden; 
-    width: 100%; 
-    font-family: 'Segoe UI', Roboto, sans-serif; 
-    background: var(--bg-light); 
-    color: #1a1a1a; 
-}
+body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light); color: #1a1a1a; }
 
-/* --- 2. NAVIGATION & STATUS --- */
+/* NAVBAR & DRAWER */
 .navbar { background: var(--fpl-purple); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-.brand { font-weight: 900; letter-spacing: -1px; font-size: 1.1rem; }
+.brand { font-weight: 900; letter-spacing: -1px; font-size: 1.2rem; }
 .brand span { color: var(--fpl-green); }
 
+.drawer { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 1001; transition: 0.3s ease-in-out; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+.drawer.open { left: 0; }
+.drawer-header { padding: 20px; background: var(--fpl-purple); color: white; display: flex; justify-content: space-between; }
+.drawer-links { list-style: none; padding: 20px; }
+.drawer-links li a { text-decoration: none; color: #333; display: block; padding: 12px; font-weight: 600; border-bottom: 1px solid #eee; }
+.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
+.backdrop.active { display: block; }
+
+/* TICKER & STATUS */
 .ticker { background: #000; color: var(--fpl-green); padding: 8px; font-size: 11px; font-weight: bold; text-align: center; }
-.status-bar { display: flex; justify-content: space-between; padding: 12px; background: white; font-size: 11px; font-weight: 800; border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+.status-bar { display: flex; justify-content: space-between; padding: 15px; background: white; font-size: 12px; font-weight: 800; border-bottom: 1px solid var(--border); }
 
-/* --- 3. DUAL COLUMN LAYOUT (EQUAL SIZING) --- */
-.main-container { max-width: 1100px; margin: 0 auto; padding: 15px; }
-.desktop-layout-wrapper { display: flex; gap: 15px; align-items: flex-start; }
-
-.column-left, .column-right { flex: 1; min-width: 0; }
-
-.column-right { 
-    background: white; border-radius: 10px; border: 1px solid var(--border); 
-    position: sticky; top: 70px; max-height: calc(100vh - 90px); 
-    display: flex; flex-direction: column; overflow: hidden; 
-}
-
-/* --- 4. PITCH SYSTEM --- */
+/* PITCH AREA */
+.main-container { max-width: 500px; margin: 0 auto; padding: 10px; }
 .pitch-outer-wrap { 
-    background: var(--pitch-green); border-radius: 10px; padding: 15px 8px; position: relative;
-    background-image: repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(0,0,0,0.03) 35px, rgba(0,0,0,0.03) 70px);
+    background: var(--pitch-green); 
+    border-radius: 8px; 
+    padding: 10px; 
+    position: relative;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.05) 40px, rgba(0,0,0,0.05) 80px);
 }
 
-.row { display: flex; justify-content: center; gap: 4px; margin-bottom: 12px; width: 100%; }
-
-.slot { flex: 1; max-width: 19%; min-width: 0; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; transition: 0.2s; }
-
-/* Selection Animation */
-@keyframes pulse-green {
-    0% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(0, 255, 135, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+.pitch-labels {
+    position: absolute; width: 100%; height: 80%; display: flex; flex-direction: column;
+    justify-content: space-around; align-items: center; pointer-events: none;
+    color: rgba(255,255,255,0.2); font-weight: 900; font-size: 2rem;
 }
 
-.slot.selected {
-    outline: 3px solid var(--fpl-green); border-radius: 4px;
-    background: rgba(0, 255, 135, 0.1); transform: scale(1.05);
-    z-index: 10; animation: pulse-green 2s infinite;
-}
+.row { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; position: relative; z-index: 2; }
+.slot { width: 85px; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
+.slot.selected { transform: scale(1.1); filter: brightness(1.2); }
 
-/* --- 5. PLAYER CARDS & JERSEYS --- */
-.player-card { width: 100%; border-radius: 3px; overflow: hidden; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.card-header { background: #004d3d; color: white; padding: 3px 1px; text-align: center; font-size: 8.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bench-divider { text-align: center; color: white; font-size: 10px; font-weight: 800; padding: 10px 0; border-top: 2px dashed rgba(255,255,255,0.3); margin-top: 10px; }
 
+/* JERSEY SYSTEM */
 .jersey {
-    width: 32px; height: 28px; background-color: var(--team-main, #eee);
+    width: 42px; height: 38px; cursor: pointer;
+    background-color: var(--team-main, #eee);
     clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
-    margin-bottom: 2px;
+    transition: 0.3s;
 }
 
-/* Jersey Colors */
-.jersey.arsenal { --team-main: #ef0107; border-top: 3px solid #fff; }
-.jersey.man_city { --team-main: #6cabdd; }
-.jersey.liverpool { --team-main: #c8102e; }
-.jersey.man_utd { --team-main: #da291c; }
-.jersey.chelsea { --team-main: #034694; }
-.jersey.gkp_color { --team-main: #e1ff00; }
+/* AI STATS */
+.stats-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+.stat-box { background: white; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+.stat-label { font-size: 10px; font-weight: 800; color: #666; display: block; margin-bottom: 5px; }
+.stat-value { font-size: 24px; font-weight: 900; color: var(--fpl-purple); }
 
-/* --- 6. SELECTION LIST & FILTERS --- */
-.filter-tabs { display: flex; gap: 4px; padding: 10px; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; }
-.filter-tabs button { flex: 1; padding: 6px 4px; border: 1px solid var(--border); background: #fff; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; }
-.filter-tabs button.active { background: var(--fpl-green); border-color: var(--fpl-green); color: var(--fpl-purple); }
+/* CONTROLS */
+.controls { margin-top: 15px; }
+.btn-main { width: 100%; background: var(--fpl-purple); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
+.btn-reset { width: 100%; background: #fff; color: #ff005a; border: 1px solid #ff005a; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
 
-.player-list-container { overflow-y: auto; flex: 1; }
-.list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 12px; }
-.list-item:hover { background: #f8fafc; }
+/* PLAYER TAGS */
+.player-name-tag { background: var(--fpl-purple); color: white; font-size: 10px; font-weight: 700; padding: 2px 4px; width: 100%; text-align: center; margin-top: 4px; }
+.player-match-tag { width: 100%; font-size: 9px; border: none; background: white; text-align: center; font-weight: bold; padding: 2px; }
 
-/* --- 7. DASHBOARD & AI RECOMMENDATIONS --- */
-.compact-dashboard { display: flex; align-items: center; justify-content: space-between; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-top: 15px; }
-.dash-item span { font-size: 0.9rem; font-weight: 800; color: var(--fpl-purple); }
-.dash-item small { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
+/* --- ENHANCED JERSEY COLORS --- */
 
-.mini-ai-btn { background: var(--fpl-green); color: var(--fpl-purple); border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-.mini-reset-btn { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+/* BIG SIX */
+.jersey.arsenal    { --team-main: #ef0107; border-top: 5px solid #fff; } /* White Shoulders */
+.jersey.man_city   { --team-main: #6cabdd; border-right: 4px solid #fff; } 
+.jersey.liverpool  { --team-main: #c8102e; border-bottom: 3px solid #f6eb61; } /* Gold accent */
+.jersey.man_utd    { --team-main: #da291c; border-bottom: 4px solid #000; }
+.jersey.chelsea    { --team-main: #034694; }
+.jersey.tottenham  { --team-main: #ffffff; border: 1px solid #ddd; border-top: 5px solid #132257; }
 
-.ai-recommendation-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-top: 15px; overflow: hidden; }
-.ai-recommendation-card .card-header { background: var(--fpl-purple); color: var(--fpl-green); padding: 8px 12px; font-size: 11px; display: flex; justify-content: space-between; }
+/* THE REST OF THE PREM */
+.jersey.aston_villa { --team-main: #95bfe5; border-left: 10px solid #670e36; border-right: 10px solid #670e36; }
+.jersey.newcastle   { --team-main: #000000; background-image: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px 100%; } /* Stripes! */
+.jersey.brighton    { --team-main: #0057b8; background-image: linear-gradient(90deg, #0057b8 50%, #fff 50%); background-size: 10px 100%; }
+.jersey.west_ham    { --team-main: #7a263a; border-top: 5px solid #1bb1e7; }
+.jersey.brentford   { --team-main: #e30613; background-image: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px 100%; }
+.jersey.everton     { --team-main: #003399; }
+.jersey.crystal_p   { --team-main: #1b458f; border-right: 15px solid #c4122e; }
+.jersey.fulham      { --team-main: #ffffff; border: 1px solid #ddd; border-right: 10px solid #000; }
+.jersey.bournemouth { --team-main: #da291c; background-image: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 10px 100%; }
+.jersey.wolves      { --team-main: #fdb913; border-bottom: 4px solid #231f20; }
+.jersey.nottm_forest { --team-main: #dd0000; }
+.jersey.leicester   { --team-main: #003090; border-top: 4px solid #fdbe11; }
+.jersey.ipswich     { --team-main: #00529b; border-top: 4px solid #fff; }
+.jersey.southampton { --team-main: #d71920; border-left: 10px solid #fff; border-right: 10px solid #fff; }
 
-.transfer-item { display: flex; align-items: center; justify-content: space-around; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1; margin: 10px; }
-.transfer-out { color: #ef4444; font-weight: bold; font-size: 11px; }
-.transfer-in { color: #10b981; font-weight: bold; font-size: 11px; }
+/* SPECIAL TYPES */
+.jersey.default { --team-main: #ccc; opacity: 0.6; }
+.jersey.gkp_color { --team-main: #e1ff00; color: #000; } /* Neon Goalie Green */
 
-/* --- 8. UI BUTTONS --- */
-.sub-button {
-    position: absolute; top: -6px; right: -4px; background: var(--fpl-purple); color: var(--fpl-green);
-    border: 1.5px solid var(--fpl-green); width: 20px; height: 20px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 5;
+/* Fix for jerseys with stripes to keep the shape */
+.jersey {
+    width: 42px;
+    height: 38px;
+    cursor: pointer;
+    background-color: var(--team-main, #eee);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+    transition: 0.3s;
+    position: relative;
+    border: none; /* Reset borders to use them for kit designs */
 }
 
-/* --- 9. MOBILE FIX --- */
-@media (max-width: 900px) {
-    .desktop-layout-wrapper { flex-direction: column; }
-    .column-left, .column-right { width: 100%; flex: none; }
-    .column-right { max-height: 400px; margin-top: 15px; }
-    .main-container { padding: 8px; }
-    .pitch-outer-wrap { padding: 10px 4px; }
+#gw-rating {
+    background: var(--fpl-purple);
+    color: var(--fpl-green);
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.ai-card {
+    border-top: 4px solid var(--fpl-green);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 
-
-/* Fixture Difficulty Colors */
-.card-fixtures {
-    display: flex;
-    background: #fff;
-    border-top: 1px solid #eee;
-}
-.fix-item {
-    flex: 1;
-    font-size: 7px;
-    padding: 2px 0;
-    text-align: center;
-    font-weight: 800;
-    color: white;
-}
-.fdr-1, .fdr-2 { background: #00ff87; color: #37003c; } /* Easy */
-.fdr-3 { background: #e2e8f0; color: #333; }            /* Moderate */
-.fdr-4 { background: #ff7600; }                         /* Tough */
-.fdr-5 { background: #ff005a; }                         /* Extreme */
-
-/* Ensure the card fits fixtures */
+/* Container for the name and price */
 .player-card {
-    min-height: 28px;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.card-header {
+    background: #004d3d; /* Dark FPL Green */
+    color: white;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.card-fixtures {
+    background: #f0f0f0;
+    display: flex;
+    justify-content: space-around;
+    padding: 6px 2px;
+}
+
+.fix-item {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    font-size: 8px;
+    color: #333;
+    flex: 1;
+}
+
+.fix-item i {
+    font-size: 9px;
+    color: #999;
+    margin-bottom: 3px;
+}
+
+/* Optional: Difficulty color coding */
+.diff-2 { border-bottom: 3px solid #00ff87; } /* Easy */
+.diff-3 { border-bottom: 3px solid #ebebe4; } /* Medium */
+.diff-4 { border-bottom: 3px solid #ff005a; } /* Hard */
+
+/* Hide the default select box but keep it functional */
+.hidden-picker {
+    width: 100%;
+    height: 20px;
+    opacity: 0;
+    margin-top: -20px;
+    cursor: pointer;
 }
 
 
-/* Fixture Colors */
-.card-fixtures { display: flex; border-top: 1px solid #eee; background: white; }
-.fix-item { flex: 1; font-size: 7px; padding: 2px 0; text-align: center; color: white; font-weight: 800; }
-.fdr-1, .fdr-2 { background: #00ff87; color: #37003c; } /* Easy */
-.fdr-3 { background: #e2e8f0; color: #333; }            /* Moderate */
-.fdr-4 { background: #ff7600; }                         /* Tough */
-.fdr-5 { background: #ff005a; }                         /* Extreme */
 
-/* XP Badge */
-.xp-badge {
-    background: #37003c;
-    color: #00ff87;
-    font-size: 7px;
+/* --- AI WILDCARD BUTTON --- */
+.ai-action-btn {
+    grid-column: span 2; /* Spans across both columns in the stats grid */
+    background: linear-gradient(135deg, #37003c 0%, #00ff87 100%);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0, 255, 135, 0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-top: 10px;
+}
+
+.ai-action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 255, 135, 0.5);
+    filter: brightness(1.1);
+}
+
+.ai-action-btn i {
+    font-size: 18px;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
+}
+
+/* --- TRANSFER RECOMMENDATIONS CARD --- */
+.ai-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+}
+
+.verdict-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--fpl-purple);
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.verdict-label i {
+    color: #ff005a; /* Bolt icon color */
+}
+
+/* --- INDIVIDUAL TRANSFER ROWS --- */
+.transfer-row {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    border: 1px solid #edf2f7;
+    transition: all 0.2s;
+}
+
+.transfer-row:hover {
+    border-color: var(--fpl-green);
+    background: #fff;
+}
+
+.status-badge-sell {
+    color: #ff005a;
+    font-size: 9px;
     font-weight: 900;
-    padding: 1px;
-    text-align: center;
+    display: block;
+}
+
+.status-badge-buy {
+    color: #00ff87;
+    font-size: 9px;
+    font-weight: 900;
+    display: block;
+}
+
+.player-name-small {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--fpl-purple);
+}
+
+.transfer-row i.fa-arrow-right {
+    color: #cbd5e0;
+    font-size: 14px;
+}
+
+/* Fix for the nested stats-summary in your HTML */
+.stats-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 15px 0;
 }
