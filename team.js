@@ -1,14 +1,21 @@
 /**
- * KOPALA FPL - AI Master Engine (v4.4.0)
- * FIXED: Mobile CORS Bypass & 4-Hour Smart Cache
+ * KOPALA FPL - AI Master Engine (v4.5.0)
+ * FIX: Mobile Connection Error & Proxy Failover
  */
 
-const PROXY = "https://corsproxy.io/?";
-const API_BASE = "https://fantasy.premierleague.com/api/"; 
-const CACHE_TIME = 4 * 60 * 60 * 1000; // 4 Hours in milliseconds
+// List of public proxies to try if the primary fails
+const PROXY_LIST = [
+    "https://corsproxy.io/?",
+    "https://api.allorigins.win/raw?url=",
+    "https://thingproxy.freeboard.io/fetch/"
+];
+
+const API_BASE = "https://fantasy.premierleague.com/api/bootstrap-static/"; 
+const CACHE_KEY = 'kopala_fpl_cache';
+const CACHE_TIME = 6 * 60 * 60 * 1000; // 6 Hours
 
 let playerDB = [];
-let teamsDB = {}; 
+let teamsDB = {};
 let squad = JSON.parse(localStorage.getItem('kopala_squad')) || [
     { id: 0, pos: 'GKP', name: '', isBench: false }, { id: 1, pos: 'DEF', name: '', isBench: false },
     { id: 2, pos: 'DEF', name: '', isBench: false }, { id: 3, pos: 'DEF', name: '', isBench: false },
@@ -20,53 +27,60 @@ let squad = JSON.parse(localStorage.getItem('kopala_squad')) || [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-async function syncData() {
+// --- SMART SYNC WITH FAILOVER ---
+async function syncData(force = false) {
     const ticker = document.getElementById('ticker');
-    const cachedData = localStorage.getItem('fpl_data_cache');
-    const cacheTimestamp = localStorage.getItem('fpl_cache_time');
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
 
-    // 1. Check if we have fresh data in the cache (Mobile fix)
-    if (cachedData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TIME)) {
-        console.log("🚀 Loading from Cache");
-        processData(JSON.parse(cachedData));
+    // 1. Use Cache if available and fresh (Best for Mobile)
+    if (!force && cached && (Date.now() - cached.timestamp < CACHE_TIME)) {
+        console.log("📦 Using Cached Data");
+        processData(cached.data);
         ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Online (Cached)</span>";
         renderPitch();
         return;
     }
 
-    // 2. If no cache or cache expired, fetch from API
-    ticker.innerHTML = "⏳ Refreshing Live Data...";
-    try {
-        const res = await fetch(`${PROXY}${API_BASE}bootstrap-static/`);
-        if (!res.ok) throw new Error("Proxy Error");
-        const data = await res.json();
+    // 2. Try Proxies one by one
+    ticker.innerHTML = "📡 Connecting to FPL...";
+    for (let proxy of PROXY_LIST) {
+        try {
+            const response = await fetch(`${proxy}${encodeURIComponent(API_BASE)}`);
+            if (!response.ok) throw new Error("Proxy failed");
+            
+            const data = await response.json();
+            
+            // Save to Cache
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+                timestamp: Date.now(),
+                data: data
+            }));
 
-        // Save to cache for next time
-        localStorage.setItem('fpl_data_cache', JSON.stringify(data));
-        localStorage.setItem('fpl_cache_time', Date.now());
-
-        processData(data);
-        ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Engine Online</span>";
-        renderPitch();
-    } catch (e) {
-        console.error("Fetch failed:", e);
-        if (cachedData) {
-            ticker.innerHTML = "⚠️ <span style='color:orange'>Using Old Data (Offline)</span>";
-            processData(JSON.parse(cachedData));
+            processData(data);
+            ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Engine Online</span>";
             renderPitch();
-        } else {
-            ticker.innerHTML = "❌ <span style='color:#ff4444'>Connection Error</span>";
+            return; // Success! Exit loop.
+        } catch (err) {
+            console.warn(`Proxy ${proxy} failed, trying next...`);
         }
+    }
+
+    // 3. Last Resort: Use old cache even if expired
+    if (cached) {
+        processData(cached.data);
+        ticker.innerHTML = "⚠️ <span style='color:orange'>Server busy, using last known data</span>";
+        renderPitch();
+    } else {
+        ticker.innerHTML = "❌ <span style='color:#ff4444'>Connection Error. Tap to retry.</span>";
+        ticker.onclick = () => syncData(true);
     }
 }
 
 function processData(data) {
-    // Map Teams
     data.teams.forEach(t => { 
         teamsDB[t.id] = { name: t.name.toLowerCase().replace(/\s+/g, '_'), short: t.short_name }; 
     });
     
-    // Map Players
     playerDB = data.elements.map(p => ({
         name: p.web_name,
         teamShort: teamsDB[p.team]?.name || 'default',
@@ -77,7 +91,7 @@ function processData(data) {
     })).sort((a,b) => b.xp - a.xp);
 }
 
-// --- UI Logic ---
+// --- UI Logic (Pitch & Stats) ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
@@ -112,16 +126,19 @@ function createSlotUI(slotData) {
         </div>`;
 
     div.onclick = () => {
-        const idx = squad.findIndex(s => s.id === slotData.id);
-        const search = prompt(`Enter player name for ${slotData.pos}:`, slotData.name);
-        if (search) {
-            const found = playerDB.find(pl => pl.name.toLowerCase().includes(search.toLowerCase()) && pl.pos === slotData.pos);
+        const search = prompt(`Search ${slotData.pos} (e.g., Salah):`, slotData.name);
+        if (search !== null) {
+            const found = playerDB.find(pl => 
+                pl.name.toLowerCase().includes(search.toLowerCase()) && 
+                pl.pos === slotData.pos
+            );
             if (found) {
+                const idx = squad.findIndex(s => s.id === slotData.id);
                 squad[idx].name = found.name;
                 localStorage.setItem('kopala_squad', JSON.stringify(squad));
                 renderPitch();
-            } else {
-                alert("Player not found in that position!");
+            } else if (search !== "") {
+                alert("Player not found in this position!");
             }
         }
     };
@@ -137,16 +154,19 @@ function updateStats() {
             if (!s.isBench) xp += p.xp;
         }
     });
-    document.getElementById('budget-val').textContent = `£${(100 - spent).toFixed(1)}m`;
-    document.getElementById('v-xp').textContent = xp.toFixed(1);
+    const budgetEl = document.getElementById('budget-val');
+    const xpEl = document.getElementById('v-xp');
+    if(budgetEl) budgetEl.textContent = `£${(100 - spent).toFixed(1)}m`;
+    if(xpEl) xpEl.textContent = xp.toFixed(1);
 }
 
-function resetSquad() {
-    if(confirm("Reset Team?")) {
+// Reset Function
+window.resetSquad = function() {
+    if(confirm("Are you sure you want to clear your team?")) {
         squad.forEach(s => s.name = "");
         localStorage.setItem('kopala_squad', JSON.stringify(squad));
         renderPitch();
     }
-}
+};
 
-document.addEventListener('DOMContentLoaded', syncData);
+document.addEventListener('DOMContentLoaded', () => syncData());
