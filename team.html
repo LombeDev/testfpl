@@ -40,7 +40,6 @@
         <div class="ticker" id="ticker">Connecting to FPL servers...</div>
         
         <div class="desktop-layout-wrapper">
-            
             <div class="column-left">
                 <div class="status-bar">
                     <span>BANK: <b id="budget-val">£100.0m</b></span>
@@ -54,11 +53,9 @@
                         <span>MIDFIELD</span>
                         <span>ATTACK</span>
                     </div>
-                    <div class="pitch" id="pitch-container">
-                        </div>
+                    <div class="pitch" id="pitch-container"></div>
                     <div class="bench-divider">SUBSTITUTES</div>
-                    <div class="bench-area" id="bench-container">
-                        </div>
+                    <div class="bench-area" id="bench-container"></div>
                 </div>
             </div>
 
@@ -67,7 +64,7 @@
                     <h3>Player Selection</h3>
                     <div class="search-box">
                         <i class="fa fa-search"></i>
-                        <input type="text" id="player-search" placeholder="Search by player or team name" oninput="renderPlayerList()">
+                        <input type="text" id="player-search" placeholder="Search player/team" oninput="renderPlayerList()">
                     </div>
                 </div>
                 
@@ -85,34 +82,31 @@
             </aside>
         </div>
 
-        <section class="stats-summary">
-            <div class="stat-box">
-                <span class="stat-label">Team Rating</span>
-                <span class="stat-value" id="team-rating">87%</span>
+        <section class="compact-dashboard">
+            <div class="dash-item">
+                <small>Rating</small>
+                <span id="team-rating">87%</span>
             </div>
-            <div class="stat-box">
-                <span class="stat-label">Predicted Points</span>
-                <span class="stat-value" id="v-xp">0</span>
+            <div class="dash-item">
+                <small>XP</small>
+                <span id="v-xp">0</span>
             </div>
-            
-            <button id="wildcard-btn" class="ai-action-btn">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> AI Wildcard
-            </button>
+            <div class="dash-actions">
+                <button id="wildcard-btn" class="mini-ai-btn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI
+                </button>
+                <button class="mini-reset-btn" onclick="resetSquad()">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
         </section>
 
-        <div class="btn-group">
-            <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
-                <i class="fa-solid fa-trash"></i> RESET SQUAD
-            </button>
-        </div>
-
-        <div id="results" class="ai-card" style="display:block; margin-top: 20px;">
+        <div id="results" class="ai-card">
             <span class="verdict-label"><i class="fa-solid fa-bolt"></i> Transfer Recommendations</span>
             <div id="transfer-list">
                 <p id="ai-msg">Fill your squad to see transfer logic.</p>
             </div>
         </div>
-        
     </main>
 
     <script src="team.js"></script>
