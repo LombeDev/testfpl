@@ -786,43 +786,58 @@ table {
 }
 
 
-/* POPUP ANIMATIONS */
+/* BOUNCY MODAL ANIMATION */
 .modal-overlay {
     opacity: 0;
-    transition: opacity 0.3s ease;
+    visibility: hidden;
+    transition: all 0.3s ease;
 }
 
-/* When the 'hidden' class is removed, play this */
 .modal-overlay:not(.hidden) {
     opacity: 1;
+    visibility: visible;
 }
 
-/* The Container Animation */
 .modal-content {
-    transform: scale(0.8) translateY(20px);
+    /* Starts small and slightly rotated for a fun entry */
+    transform: scale(0.7) translateY(100px) rotate(-2deg);
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy entry */
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .modal-overlay:not(.hidden) .modal-content {
-    transform: scale(1) translateY(0);
+    transform: scale(1) translateY(0) rotate(0deg);
     opacity: 1;
 }
 
-/* Individual Player Slot Animation */
+/* BOUNCY PLAYER SLOTS */
 .slot {
     opacity: 0;
-    transform: translateY(10px);
+    transform: scale(0.5);
 }
 
 .modal-overlay:not(.hidden) .slot {
-    animation: playerReveal 0.5s forwards;
+    animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* Staggered entry for players */
-@keyframes playerReveal {
-    to {
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(20px);
+    }
+    70% {
+        transform: scale(1.1) translateY(-5px);
+    }
+    100% {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1) translateY(0);
     }
 }
+
+/* STAGGERED ROW DELAYS */
+/* Makes each row pop in slightly after the one above it */
+.modal-row:nth-child(1) .slot { animation-delay: 0.1s; }
+.modal-row:nth-child(2) .slot { animation-delay: 0.2s; }
+.modal-row:nth-child(3) .slot { animation-delay: 0.3s; }
+.modal-row:nth-child(4) .slot { animation-delay: 0.4s; }
+.bench-wrap .slot { animation-delay: 0.5s; }
