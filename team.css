@@ -337,3 +337,21 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
 .slot.selected .player-card {
     border: 2px solid var(--fpl-green);
 }
+
+
+.projected-badge {
+    font-size: 9px;
+    background: rgba(0, 255, 135, 0.2);
+    color: #00ff87;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin-top: 4px;
+    text-align: center;
+    border: 1px solid rgba(0, 255, 135, 0.3);
+}
+
+#v-xp {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+}
