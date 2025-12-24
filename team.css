@@ -197,3 +197,43 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
 .cancel-item:hover {
     background: #fecaca !important;
 }
+
+
+
+/* Animation for the selected player */
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 255, 135, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+}
+
+.slot.selected {
+    outline: 3px solid #00ff87;
+    animation: pulse-green 2s infinite;
+    z-index: 20;
+}
+
+.sub-button {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #37003c;
+    color: #00ff87;
+    border: 2px solid #00ff87;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: transform 0.2s ease;
+}
+
+.sub-button:active {
+    transform: scale(1.2);
+    background: #00ff87;
+    color: #37003c;
+}
