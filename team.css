@@ -471,6 +471,56 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     margin-bottom: 8px;
 }
 
+
+
+.transfer-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.transfer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+}
+
+.t-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.t-col small {
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.transfer-out {
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.transfer-in {
+    color: #10b981;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.transfer-arrow {
+    font-size: 1.2rem;
+    color: #37003c;
+    opacity: 0.5;
+}
+
 .transfer-out { color: #ef4444; font-weight: bold; }
 .transfer-arrow { color: #94a3b8; }
 .transfer-in { color: #22c55e; font-weight: bold; }
