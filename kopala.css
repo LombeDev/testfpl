@@ -275,3 +275,46 @@ table {
 .tag-diff { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
 .tag-in { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
 .tag-out { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+
+/* 1. Global Table Shrinkage */
+#league-table { 
+    font-size: 10px; 
+    border-spacing: 0;
+    width: 100%;
+}
+
+/* 2. Remove the space after the rank number */
+#league-table th:first-child, 
+#league-table td:first-child {
+    width: 15px;         /* Very narrow */
+    padding-right: 2px;  /* Minimal gap */
+    text-align: left;
+    color: #999;
+}
+
+/* 3. Pull Manager Data to the left */
+.manager-col {
+    padding-left: 2px !important; 
+    text-align: left;
+}
+
+.m-info-wrapper {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;    /* Tight vertical spacing */
+}
+
+.m-name { font-size: 11px; font-weight: 700; color: #37003c; }
+.t-name { font-size: 9px; color: #666; }
+.val-text { font-size: 9px; color: #444; font-weight: 400; }
+
+/* 4. Shrink other columns to fit */
+.live-pts, .bold-p { font-size: 13px !important; }
+.mini-tag { font-size: 8px; padding: 1px 3px; margin: 1px; }
+
+/* 5. Horizontal Scroll Columns */
+.diff-col-scroll, .trans-col-scroll {
+    max-width: 120px;
+    gap: 2px;
+}
