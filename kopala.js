@@ -46,7 +46,7 @@ function renderTable(managers) {
             </td>
             <td>
                 <div class="live-pts">${m.event_total}</div>
-                <div id="hits-${m.entry}" style="color:red; font-size:8px;"></div>
+                <div id="hits-${m.entry}" class="hits"></div>
             </td>
             <td>
                 <div class="bold-p">${m.total}</div>
@@ -81,20 +81,29 @@ async function loadLeagueIntelligence(managers, eventId) {
         const data = managerDetails[m.entry];
         if (!data) return;
 
-        document.getElementById(`val-${m.entry}`).innerText = `£${(data.picks.entry_history.value / 10).toFixed(1)}m Value`;
-        
+        // Team Value Update
+        const value = (data.picks.entry_history.value / 10).toFixed(1);
+        document.getElementById(`val-${m.entry}`).innerText = `£${value}m Value`;
+
+        // Captain & Chip
         const cap = data.picks.picks.find(p => p.is_captain);
         const chip = data.picks.active_chip;
         document.getElementById(`cap-${m.entry}`).innerHTML = `
             ${playerMap[cap.element].name} ${chip ? `<span class="c-badge">${chip.toUpperCase()}</span>` : ''}
         `;
 
+        // Diffs
         const diffs = data.picks.picks.filter(p => ownership[p.element] === 1);
         document.getElementById(`diffs-${m.entry}`).innerHTML = diffs.map(p => 
             `<span class="mini-tag tag-diff">${playerMap[p.element].name}</span>`).join('') || '—';
 
+        // Transfers
         document.getElementById(`trans-${m.entry}`).innerHTML = data.trans.map(t => 
             `<span class="mini-tag tag-in">${playerMap[t.element_in].name}</span>`).join('') || 'None';
+            
+        // Hits
+        const hits = data.picks.entry_history.event_transfer_cost;
+        if (hits > 0) document.getElementById(`hits-${m.entry}`).innerText = `-${hits}pt`;
     });
 
     if (document.getElementById("loading-overlay")) document.getElementById("loading-overlay").classList.add("hidden");
@@ -115,18 +124,11 @@ function handleManagerClick(id, name) {
         const pts = player.points * p.multiplier;
         totalLive += pts;
         return `
-        <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; font-size:12px;">
-            <div style="display:flex; align-items:center;">
-                <span class="p-pos bg-pos-${player.pos}" style="font-size:8px; padding:1px 4px; margin-right:8px; border-radius:3px;">
-                    ${{1:'GKP',2:'DEF',3:'MID',4:'FWD'}[player.pos]}
-                </span>
-                <span style="font-weight:600; color:#37003c;">${player.name}</span>
-                <span style="font-size:9px; color:#666; margin-left:6px;">${teamMap[player.team]}</span>
-                ${p.is_captain ? '<span style="color:#fbbf24; margin-left:4px;">★</span>' : ''}
-            </div>
+        <div style="display:flex; justify-content:space-between; padding:6px; border-bottom:1px solid #eee; font-size:11px;">
+            <span>${player.name} (${teamMap[player.team]}) ${p.is_captain ? '★' : ''}</span>
             <span style="font-weight:800;">${pts}</span>
         </div>`;
-    }).join('') + `<div style="padding:15px; text-align:right; font-weight:900; font-size:18px; color:#37003c;">Total: ${totalLive}</div>`;
+    }).join('') + `<div style="padding:10px; text-align:right; font-weight:900; font-size:16px;">Total: ${totalLive}</div>`;
     
     modal.classList.remove("hidden");
 }
