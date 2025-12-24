@@ -247,3 +247,34 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     z-index: 99;
     box-shadow: 0 0 20px rgba(0, 255, 135, 0.5);
 }
+
+
+/* Player List Container */
+#player-list-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+}
+
+/* Mobile Specific: Small Scrollable Window */
+@media (max-width: 768px) {
+    #player-list-results {
+        max-height: 350px; /* Adjust height as needed */
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #f9f9f9;
+        /* Smooth scrolling for iOS */
+        -webkit-overflow-scrolling: touch; 
+    }
+
+    /* Make the sticky action buttons stay at the top of the scrollable area */
+    .selection-actions {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f9f9f9;
+        padding-bottom: 10px;
+    }
+}
