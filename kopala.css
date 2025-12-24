@@ -394,3 +394,57 @@ table {
 }
 
 .mini-tag { font-size: 8px; padding: 1px 3px; white-space: nowrap; }
+
+
+/* 1. Global Table Control */
+#league-table { 
+    font-size: 9px; /* Reduced global font */
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed; /* Forces the 15px and other narrow widths */
+}
+
+/* 2. Space Elimination (Rank Column) */
+#league-table th:first-child, 
+#league-table td:first-child {
+    width: 15px !important;
+    padding: 4px 0 !important;
+    text-align: center;
+}
+
+/* 3. Tightening Data Columns */
+.pts-col, .total-col { 
+    width: 35px; /* Forced narrow width for scores */
+    padding: 4px 0 !important;
+    text-align: center;
+}
+
+/* 4. Intelligence Columns (Cap, Diff, Trans) */
+.cap-col { width: 65px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.diff-col, .trans-col { width: 80px; }
+
+/* 5. Vertical Density & Font Shrink */
+.live-pts, .bold-p { 
+    font-size: 11px !important; 
+    line-height: 1.0; 
+    display: block;
+}
+
+.m-info-wrapper { line-height: 1.0; }
+.m-name { font-size: 10px; font-weight: 700; }
+.t-name, .val-text { font-size: 8px; }
+
+/* 6. Scrolling Tag Containers */
+.diff-col-scroll, .trans-col-scroll {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.diff-col-scroll::-webkit-scrollbar { display: none; }
+
+.mini-tag {
+    font-size: 7.5px;
+    padding: 1px 3px;
+    white-space: nowrap;
+}
