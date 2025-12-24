@@ -7,33 +7,15 @@
     --border: #e2e8f0;
 }
 
-/* --- 1. RESET & BASE STYLES --- */
 * { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light); color: #1a1a1a; }
 
-body, html { 
-    overflow-x: hidden; 
-    width: 100%; 
-    font-family: 'Segoe UI', Roboto, sans-serif; 
-    background: var(--bg-light); 
-    color: #1a1a1a; 
-}
-
-/* --- 2. NAVIGATION & DRAWER --- */
-.navbar { 
-    background: var(--fpl-purple); 
-    color: white; padding: 12px 20px; 
-    display: flex; justify-content: space-between; 
-    align-items: center; position: sticky; top: 0; z-index: 100; 
-}
-
+/* NAVBAR & DRAWER */
+.navbar { background: var(--fpl-purple); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
 .brand { font-weight: 900; letter-spacing: -1px; font-size: 1.2rem; }
 .brand span { color: var(--fpl-green); }
 
-.drawer { 
-    position: fixed; top: 0; left: -300px; width: 280px; height: 100%; 
-    background: white; z-index: 1001; transition: 0.3s ease-in-out; 
-    box-shadow: 5px 0 15px rgba(0,0,0,0.2); 
-}
+.drawer { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 1001; transition: 0.3s ease-in-out; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
 .drawer.open { left: 0; }
 .drawer-header { padding: 20px; background: var(--fpl-purple); color: white; display: flex; justify-content: space-between; }
 .drawer-links { list-style: none; padding: 20px; }
@@ -41,117 +23,80 @@ body, html {
 .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
 .backdrop.active { display: block; }
 
-/* --- 3. LAYOUT WRAPPERS --- */
+/* TICKER & STATUS */
+.ticker { background: #000; color: var(--fpl-green); padding: 8px; font-size: 11px; font-weight: bold; text-align: center; }
+.status-bar { display: flex; justify-content: space-between; padding: 15px; background: white; font-size: 12px; font-weight: 800; border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+
+/* --- TWO COLUMN LAYOUT LOGIC --- */
 .main-container { 
-    max-width: 1200px; 
+    max-width: 1200px; /* Increased for desktop */
     margin: 0 auto; 
     padding: 20px; 
-    width: 100%; 
 }
 
-.desktop-layout-wrapper { display: flex; gap: 20px; align-items: flex-start; }
-.column-left { flex: 1.4; min-width: 0; }
-.column-right { 
-    flex: 1; background: white; border-radius: 12px; border: 1px solid var(--border); 
-    position: sticky; top: 80px; max-height: calc(100vh - 100px); 
-    display: flex; flex-direction: column; overflow: hidden; 
+.desktop-layout-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
 }
 
-/* --- 4. PITCH AREA --- */
+.column-left {
+    flex: 1.4; /* Pitch takes more space */
+    min-width: 0;
+}
+
+.column-right {
+    flex: 1; /* Selection list space */
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* PITCH AREA */
 .pitch-outer-wrap { 
     background: var(--pitch-green); 
-    border-radius: 8px; 
+    border-radius: 0 0 8px 8px; 
     padding: 15px 10px; 
     position: relative;
     background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.05) 40px, rgba(0,0,0,0.05) 80px);
 }
 
-.row { 
-    display: flex; justify-content: center; gap: 8px; 
-    margin-bottom: 20px; position: relative; z-index: 2; 
-    width: 100%;
+.pitch-labels {
+    position: absolute; width: 100%; height: 80%; display: flex; flex-direction: column;
+    justify-content: space-around; align-items: center; pointer-events: none;
+    color: rgba(255,255,255,0.1); font-weight: 900; font-size: 2.5rem;
 }
 
-.slot { 
-    position: relative; width: 90px; 
-    display: flex; flex-direction: column; 
-    align-items: center; transition: 0.3s ease; 
-    cursor: pointer; 
-}
+.row { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; position: relative; z-index: 2; }
+.slot { width: 90px; display: flex; flex-direction: column; align-items: center; transition: 0.2s; cursor: pointer; }
+.slot.selected { transform: scale(1.05); }
+.slot.selected .player-card { border: 2px solid var(--fpl-green); box-shadow: 0 0 15px rgba(0,255,135,0.4); }
 
-.slot.selected {
-    outline: 4px solid var(--fpl-green);
-    background: rgba(0, 255, 135, 0.1);
-    transform: scale(1.08);
-    z-index: 99;
-    box-shadow: 0 0 20px rgba(0, 255, 135, 0.5);
-    border-radius: 4px;
-}
+.bench-divider { text-align: center; color: white; font-size: 10px; font-weight: 800; padding: 10px 0; border-top: 2px dashed rgba(255,255,255,0.3); margin-top: 10px; }
 
-/* Sub/Swap Button */
-.sub-button {
-    position: absolute; top: -8px; right: -8px;
-    background: var(--fpl-purple); color: var(--fpl-green);
-    border: 2px solid var(--fpl-green); width: 26px; height: 26px;
-    border-radius: 50%; display: flex; align-items: center;
-    justify-content: center; font-weight: bold; font-size: 14px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4); z-index: 10;
-}
+/* PLAYER SELECTION LIST (SIDEBAR) */
+.selection-header { padding: 15px; border-bottom: 1px solid var(--border); }
+.selection-header h3 { font-size: 1rem; color: var(--fpl-purple); margin-bottom: 10px; }
 
-/* --- 5. PLAYER CARDS & JERSEYS --- */
-.player-card { 
-    width: 100%; border-radius: 4px; overflow: hidden; 
-    margin-top: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
-    background: #fff;
+.search-box { 
+    display: flex; align-items: center; background: #f1f5f9; 
+    padding: 10px; border-radius: 8px; border: 1px solid var(--border);
 }
-.card-header { 
-    background: #004d3d; color: white; padding: 3px 6px; 
-    display: flex; justify-content: center; 
-    font-size: 10px; font-weight: bold; 
-}
-.p-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-box input { border: none; background: transparent; margin-left: 10px; width: 100%; outline: none; font-size: 13px; }
 
-.jersey {
-    width: 42px; height: 38px;
-    background-color: #ccc;
-    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
-    transition: 0.3s;
+.filter-tabs { display: flex; gap: 4px; padding: 10px; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.filter-tabs button { 
+    flex: 1; padding: 8px 4px; border: 1px solid var(--border); background: #fff; 
+    border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;
 }
+.filter-tabs button.active { background: #00ff87; border-color: #00ff87; color: var(--fpl-purple); }
 
-/* --- 6. DASHBOARD & RATING --- */
-.compact-dashboard {
-    display: flex; align-items: center; justify-content: space-between;
-    background: #ffffff; padding: 12px 20px; border-radius: 14px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-top: 20px;
-}
-
-.dash-item { display: flex; flex-direction: column; }
-.dash-item small { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
-.dash-item span { font-size: 1rem; color: var(--fpl-purple); font-weight: 800; }
-
-#team-rating { transition: color 0.5s ease; display: inline-block; }
-
-/* --- 7. AI RECOMMENDATIONS --- */
-.ai-recommendation-card {
-    background: #ffffff; border-radius: 16px; margin-top: 25px;
-    overflow: hidden; border: 1px solid var(--border);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-}
-.ai-recommendation-card .card-header {
-    background: var(--fpl-purple); padding: 12px 20px;
-    display: flex; justify-content: space-between; align-items: center;
-    color: var(--fpl-green); font-weight: 800; font-size: 0.75rem;
-}
-.recommendation-content { padding: 20px; }
-.transfer-item {
-    display: flex; align-items: center; justify-content: space-around;
-    background: #f8fafc; padding: 15px; border-radius: 12px;
-    border: 1px dashed #cbd5e1;
-}
-.transfer-out { color: #ef4444; font-weight: bold; }
-.transfer-in { color: #10b981; font-weight: bold; }
-
-/* --- 8. SELECTION LIST --- */
 .player-list-container { overflow-y: auto; flex: 1; padding: 5px; }
 .list-item { 
     display: flex; justify-content: space-between; align-items: center; 
@@ -159,37 +104,512 @@ body, html {
 }
 .list-item:hover { background: #f8fafc; }
 
-/* --- 9. THE MOBILE FIX (CRITICAL) --- */
-@media (max-width: 768px) {
-    .main-container { padding: 10px; max-width: 100vw; }
-    .desktop-layout-wrapper { flex-direction: column; }
-    .column-right { position: static; max-height: 400px; width: 100%; margin-top: 15px; }
-
-    .pitch-outer-wrap { padding: 10px 5px !important; }
-    .row { gap: 4px !important; margin-bottom: 15px; }
-
-    /* Fluid scaling for 5-player rows */
-    .slot { 
-        width: auto !important; 
-        flex: 1 1 0; 
-        min-width: 0; 
-        max-width: 19%; 
-    }
-
-    .jersey { width: 32px; height: 28px; }
-    .card-header { font-size: 8px; padding: 2px; min-height: 18px; }
-    .p-name { font-size: 8px; }
-
-    .compact-dashboard { padding: 10px; }
-    .dash-item span { font-size: 0.85rem; }
-    
-    .mini-ai-btn, .mini-reset-btn { padding: 6px 10px; font-size: 0.7rem; }
+/* JERSEY SYSTEM */
+.jersey {
+    width: 42px; height: 38px;
+    background-color: var(--team-main, #eee);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+    transition: 0.3s;
 }
 
-/* JERSEY COLORS */
-.jersey.arsenal { --team-main: #ef0107; }
+/* JERSEY COLORS (RETAINED) */
+.jersey.arsenal { --team-main: #ef0107; border-top: 5px solid #fff; }
 .jersey.man_city { --team-main: #6cabdd; }
 .jersey.liverpool { --team-main: #c8102e; }
 .jersey.man_utd { --team-main: #da291c; }
 .jersey.chelsea { --team-main: #034694; }
+.jersey.tottenham { --team-main: #ffffff; border-top: 5px solid #132257; }
+.jersey.newcastle { --team-main: #000; background-image: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px 100%; }
 .jersey.gkp_color { --team-main: #e1ff00; }
+.jersey.default { --team-main: #ccc; opacity: 0.5; }
+
+/* PLAYER CARDS ON PITCH */
+.player-card { width: 100%; border-radius: 4px; overflow: hidden; margin-top: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+.card-header { background: #004d3d; color: white; padding: 3px 6px; display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; }
+.card-fixtures { background: #fff; display: flex; padding: 4px 1px; }
+.fix-item { flex: 1; text-align: center; font-size: 8px; font-weight: 800; border-right: 1px solid #eee; }
+
+/* STATS */
+.stats-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+.stat-box { background: white; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+.stat-value { font-size: 28px; font-weight: 900; color: var(--fpl-purple); }
+
+.ai-action-btn {
+    grid-column: span 2; background: linear-gradient(135deg, #37003c 0%, #00ff87 100%);
+    color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 800; cursor: pointer;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 900px) {
+    .desktop-layout-wrapper { flex-direction: column; }
+    .column-right { position: static; max-height: none; width: 100%; }
+    .main-container { max-width: 500px; }
+}
+
+
+/* Container for the player card needs to be relative for the absolute button */
+.slot {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.slot.selected {
+    outline: 3px solid #00ff87;
+    border-radius: 8px;
+    transform: scale(1.05);
+}
+
+/* The small arrow button */
+.sub-button {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #37003c; /* FPL Purple */
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border: 2px solid #00ff87;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.sub-button:hover {
+    background: #00ff87;
+    color: #37003c;
+}
+
+
+
+.cancel-item {
+    cursor: pointer;
+    padding: 12px;
+    border-radius: 6px;
+    display: flex;
+    transition: background 0.2s;
+}
+
+.cancel-item:hover {
+    background: #fecaca !important;
+}
+
+
+
+/* Animation for the selected player */
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 255, 135, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+}
+
+.slot.selected {
+    outline: 3px solid #00ff87;
+    animation: pulse-green 2s infinite;
+    z-index: 20;
+}
+
+.sub-button {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #37003c;
+    color: #00ff87;
+    border: 2px solid #00ff87;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: transform 0.2s ease;
+}
+
+.sub-button:active {
+    transform: scale(1.2);
+    background: #00ff87;
+    color: #37003c;
+}
+
+
+
+.slot.selected {
+    outline: 4px solid #00ff87;
+    background: rgba(0, 255, 135, 0.1); /* Subtle green tint */
+    transform: scale(1.08);
+    z-index: 99;
+    box-shadow: 0 0 20px rgba(0, 255, 135, 0.5);
+}
+
+
+/* Player List Container */
+#player-list-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+}
+
+/* Mobile Specific: Small Scrollable Window */
+@media (max-width: 768px) {
+    #player-list-results {
+        max-height: 350px; /* Adjust height as needed */
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #f9f9f9;
+        /* Smooth scrolling for iOS */
+        -webkit-overflow-scrolling: touch; 
+    }
+
+    /* Make the sticky action buttons stay at the top of the scrollable area */
+    .selection-actions {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f9f9f9;
+        padding-bottom: 10px;
+    }
+}
+
+
+/* --- PLAYER SELECTION SCROLL (MOBILE) --- */
+@media (max-width: 768px) {
+    .player-list-container {
+        max-height: 320px; /* Small scrollable window */
+        overflow-y: auto;
+        background: #fdfdfd;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 5px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Keep the action buttons (Cancel/Remove) at the top of the scroll */
+    .selection-actions {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+}
+
+/* --- COMPACT DASHBOARD STYLES --- */
+.compact-dashboard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 12px 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-top: 20px;
+}
+
+.dash-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-item small {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.dash-item span {
+    font-size: 1rem;
+    color: #37003c;
+    font-weight: 800;
+}
+
+.dash-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* --- MINI BUTTON STYLES --- */
+.mini-ai-btn {
+    background: #00ff87;
+    color: #37003c;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.mini-ai-btn:active { transform: scale(0.95); }
+
+.mini-reset-btn {
+    background: #fee2e2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.mini-reset-btn:hover { background: #fecaca; }
+.mini-reset-btn:active { transform: scale(0.9); }
+
+/* --- PITCH SLOT HIGHLIGHT --- */
+.slot.selected {
+    outline: 3px solid #00ff87;
+    background: rgba(0, 255, 135, 0.1);
+    box-shadow: 0 0 15px rgba(0, 255, 135, 0.6);
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.sub-button {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #37003c;
+    color: #00ff87;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #00ff87;
+    pointer-events: none; /* Let the click pass to the slot */
+}
+
+
+/* --- AI RECOMMENDATION CARD --- */
+.ai-recommendation-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    margin-top: 25px;
+    overflow: hidden;
+    border: 1px solid #f1f5f9;
+}
+
+.ai-recommendation-card .card-header {
+    background: #37003c; /* FPL Purple */
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.verdict-label {
+    color: #00ff87; /* FPL Green */
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.update-tag {
+    background: rgba(0, 255, 135, 0.2);
+    color: #00ff87;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    font-weight: bold;
+}
+
+.recommendation-content {
+    padding: 20px;
+}
+
+.recommendation-content h4 {
+    margin: 0 0 15px 0;
+    color: #1e293b;
+    font-size: 1.1rem;
+}
+
+/* Empty State Styling */
+.empty-state {
+    text-align: center;
+    padding: 30px 10px;
+    color: #64748b;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.3;
+}
+
+#ai-msg {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* When Transfer Items are added via JS */
+.transfer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+
+
+.transfer-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.transfer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+}
+
+.t-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.t-col small {
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.transfer-out {
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.transfer-in {
+    color: #10b981;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.transfer-arrow {
+    font-size: 1.2rem;
+    color: #37003c;
+    opacity: 0.5;
+}
+
+.transfer-out { color: #ef4444; font-weight: bold; }
+.transfer-arrow { color: #94a3b8; }
+.transfer-in { color: #22c55e; font-weight: bold; }
+
+
+
+#team-rating {
+    transition: color 0.5s ease, transform 0.3s ease;
+    display: inline-block;
+}
+
+/* Optional: Add a subtle pulse if the rating is 90%+ */
+.rating-elite {
+    text-shadow: 0 0 10px rgba(0, 255, 135, 0.5);
+    animation: shine 2s infinite;
+}
+
+@keyframes shine {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+
+/* Global Box Reset to prevent padding from breaking width */
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    overflow-x: hidden; /* Prevent horizontal shake */
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.main-container {
+    width: 100%;
+    max-width: 100vw;
+    padding: 10px;
+    margin: 0 auto;
+}
+
+/* --- MOBILE PITCH SCALING --- */
+@media (max-width: 768px) {
+    .pitch-outer-wrap {
+        width: 100%;
+        padding: 5px;
+        overflow: hidden; /* Keep the grass within bounds */
+    }
+
+    .pitch {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* Space between GK, DEF, MID, FWD rows */
+    }
+
+    .row {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 4px; /* Tighten player cards on mobile */
+    }
+
+    /* Shrink the player slots to fit 5 defenders/midfielders in a row */
+    .slot {
+        flex: 1;
+        max-width: 18%; /* Ensures 5 players + gaps fit in 100% width */
+        min-width: 60px;
+    }
+
+    .player-card {
+        width: 100%;
+        font-size: 0.7rem; /* Smaller text for mobile */
+    }
+
+    .p-name {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Prevent long names from breaking cards */
+    }
+
+    /* Adjust the compact dashboard to not bleed off edges */
+    .compact-dashboard {
+        width: 100%;
+        margin: 10px 0;
+        padding: 10px;
+        gap: 5px;
+    }
+}
