@@ -1,6 +1,10 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.8.0)
- * UPDATED: Sub-button Arrow, Mobile Scroll, and Selection Actions (Cancel/Remove).
+ * KOPALA FPL - AI Master Engine (v3.0.0)
+ * FEATURES: 
+ * - Arrow Sub-buttons with Mobile Auto-Scroll
+ * - Position-aware Scrolling (Starting XI -> Bench | Bench -> Market)
+ * - Substitution/Swap Logic
+ * - FPL Formation Validator (min 3 DEF, 1 FWD)
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -111,6 +115,23 @@ function getTeamCounts() {
     return counts;
 }
 
+function isValidFormation(squadToTest) {
+    const starters = squadToTest.filter(s => !s.isBench);
+    const counts = starters.reduce((acc, s) => {
+        acc[s.pos] = (acc[s.pos] || 0) + (s.name ? 1 : 0);
+        return acc;
+    }, {});
+
+    const totalStarters = starters.filter(s => s.name !== "").length;
+    if (totalStarters < 11) return { valid: true }; 
+
+    if ((counts['GKP'] || 0) !== 1) return { valid: false, error: "You must have exactly 1 Goalkeeper." };
+    if ((counts['DEF'] || 0) < 3) return { valid: false, error: "Minimum 3 Defenders required." };
+    if ((counts['FWD'] || 0) < 1) return { valid: false, error: "Minimum 1 Forward required." };
+    
+    return { valid: true };
+}
+
 // --- 3. SELECTION & LIST LOGIC ---
 function renderPlayerList(filterPos = 'ALL') {
     const listContainer = document.getElementById('player-list-results');
@@ -134,7 +155,6 @@ function renderPlayerList(filterPos = 'ALL') {
 
     let listHTML = '';
 
-    // Action Header: Shows only when a slot is highlighted
     if (selectedSlotId !== null) {
         listHTML += `
             <div class="selection-actions" style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -165,16 +185,12 @@ function renderPlayerList(filterPos = 'ALL') {
 }
 
 function selectFromList(playerName) {
-    if (selectedSlotId === null) {
-        alert("Please tap a position on the pitch first.");
-        return;
-    }
+    if (selectedSlotId === null) return;
     updatePlayer(selectedSlotId, playerName);
 }
 
 function updatePlayer(id, name) { 
     const currentSlot = squad.find(s => s.id === id);
-    
     if (!name) {
         currentSlot.name = "";
         saveSquad(); 
@@ -186,10 +202,9 @@ function updatePlayer(id, name) {
     const teamCounts = getTeamCounts();
     const existingPlayer = playerDB.find(p => p.name === currentSlot.name);
 
-    // 3-Player Team Limit Check
     if (!existingPlayer || existingPlayer.teamId !== player.teamId) {
         if ((teamCounts[player.teamId] || 0) >= 3) {
-            alert(`Limit reached! You can only select up to 3 players from ${player.teamShort.toUpperCase()}.`);
+            alert(`Limit reached! Max 3 players from ${player.teamShort.toUpperCase()}.`);
             return;
         }
     }
@@ -198,10 +213,33 @@ function updatePlayer(id, name) {
     saveSquad(); 
     selectedSlotId = null; 
     renderPitch(); 
-    renderPlayerList(); // Refresh list to remove action buttons
+    renderPlayerList();
 }
 
-// Action Helpers
+function swapPlayers(id1, id2) {
+    const idx1 = squad.findIndex(s => s.id === id1);
+    const idx2 = squad.findIndex(s => s.id === id2);
+
+    const testSquad = JSON.parse(JSON.stringify(squad));
+    const tempName = testSquad[idx1].name;
+    testSquad[idx1].name = testSquad[idx2].name;
+    testSquad[idx2].name = tempName;
+
+    const validation = isValidFormation(testSquad);
+    if (!validation.valid) {
+        alert(validation.error);
+        selectedSlotId = null;
+        renderPitch();
+        return;
+    }
+
+    squad = testSquad;
+    selectedSlotId = null;
+    saveSquad();
+    renderPitch();
+    renderPlayerList();
+}
+
 function cancelSelection() {
     selectedSlotId = null;
     renderPitch();
@@ -215,14 +253,15 @@ function removePlayerFromSlot() {
         selectedSlotId = null;
         renderPitch();
         renderPlayerList();
-        scrollToElement('pitch-container');
     }
 }
 
 function scrollToElement(id) {
     const el = document.getElementById(id);
     if (window.innerWidth <= 768 && el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const yOffset = -20; 
+        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
     }
 }
 
@@ -236,10 +275,22 @@ function createSlotUI(slotData) {
     const fixtures = player ? getNextFixtures(player.teamId) : [];
 
     div.onclick = () => {
+        if (selectedSlotId !== null && selectedSlotId !== slotData.id) {
+            swapPlayers(selectedSlotId, slotData.id);
+            return;
+        }
+
         selectedSlotId = slotData.id;
         renderPitch(); 
         renderPlayerList(slotData.pos);
-        scrollToElement('player-list-results');
+
+        if (window.innerWidth <= 768) {
+            if (!slotData.isBench) {
+                scrollToElement('bench-container');
+            } else {
+                scrollToElement('player-list-results');
+            }
+        }
     };
 
     div.innerHTML = `
