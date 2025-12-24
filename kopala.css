@@ -602,3 +602,45 @@ table {
 .jersey.man_utd     { --team-main: #da291c; border-bottom: 3px solid #000; }
 .jersey.newcastle   { --team-main: #000; background-image: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 8px 100%; }
 .jersey.gkp_color   { --team-main: #e1ff00; } /* Goalkeeper neon */
+
+
+/* CAPTAIN STAR ANIMATION */
+.cap-star-pitch {
+    position: absolute;
+    top: -8px;
+    right: -2px;
+    color: #fbbf24;
+    font-size: 14px;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+    animation: pulse-star 1.5s infinite ease-in-out;
+    z-index: 10;
+}
+
+@keyframes pulse-star {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* ALL 20 PREM JERSEY DESIGNS */
+.jersey.arsenal      { --team-main: #ef0107; border-top: 4px solid #fff; }
+.jersey.aston_villa  { --team-main: #95bfe5; border-left: 10px solid #670e36; border-right: 10px solid #670e36; }
+.jersey.bournemouth  { --team-main: #da291c; background-image: linear-gradient(90deg, #000 50%, transparent 50%); background-size: 10px 100%; }
+.jersey.brentford    { --team-main: #e30613; background-image: linear-gradient(90deg, #fff 50%, transparent 50%); background-size: 10px 100%; }
+.jersey.brighton     { --team-main: #0057b8; background-image: linear-gradient(90deg, #fff 50%, transparent 50%); background-size: 10px 100%; }
+.jersey.chelsea      { --team-main: #034694; }
+.jersey.crystal_p    { --team-main: #1b458f; border-right: 14px solid #c4122e; }
+.jersey.everton      { --team-main: #003399; }
+.jersey.fulham       { --team-main: #ffffff; border-right: 12px solid #000; }
+.jersey.ipswich      { --team-main: #00529b; border-top: 4px solid #fff; }
+.jersey.leicester    { --team-main: #003090; border-top: 3px solid #fdbe11; }
+.jersey.liverpool    { --team-main: #c8102e; }
+.jersey.man_city     { --team-main: #6cabdd; }
+.jersey.man_utd      { --team-main: #da291c; border-bottom: 4px solid #000; }
+.jersey.newcastle    { --team-main: #000; background-image: linear-gradient(90deg, #fff 50%, transparent 50%); background-size: 8px 100%; }
+.jersey.nottm_forest { --team-main: #dd0000; }
+.jersey.southampton  { --team-main: #d71920; border-left: 10px solid #fff; border-right: 10px solid #fff; }
+.jersey.tottenham    { --team-main: #ffffff; border-top: 5px solid #132257; }
+.jersey.west_ham     { --team-main: #7a263a; border-top: 4px solid #1bb1e7; }
+.jersey.wolves       { --team-main: #fdb913; border-bottom: 4px solid #231f20; }
+.jersey.gkp_color    { --team-main: #e1ff00; } /* Goalkeeper */
