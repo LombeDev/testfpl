@@ -183,3 +183,17 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     background: #00ff87;
     color: #37003c;
 }
+
+
+
+.cancel-item {
+    cursor: pointer;
+    padding: 12px;
+    border-radius: 6px;
+    display: flex;
+    transition: background 0.2s;
+}
+
+.cancel-item:hover {
+    background: #fecaca !important;
+}
