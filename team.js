@@ -1,62 +1,75 @@
 /**
- * KOPALA FPL - AI Master Engine (v4.6.0)
- * MERGED: Advanced Swap Logic + Mobile CORS Bypass + 24hr Cache
+ * KOPALA FPL - AI Master Engine (v2.6)
+ * UPDATED: Multi-position Swapping, Formation Logic & Cached AI Picks
  */
 
-const PROXY = "https://corsproxy.io/?";
-const API_BASE = "https://fantasy.premierleague.com/api/"; 
-const TIME_KEY = 'kopala_cache_timestamp';
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; 
-
+const API_BASE = "/fpl-api/"; 
 let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
 
-let squad = JSON.parse(localStorage.getItem('kopala_saved_squad')) || [
+let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
-    { id: 1, pos: 'DEF', name: '', isBench: false }, { id: 2, pos: 'DEF', name: '', isBench: false },
-    { id: 3, pos: 'DEF', name: '', isBench: false }, { id: 4, pos: 'DEF', name: '', isBench: false },
-    { id: 5, pos: 'MID', name: '', isBench: false }, { id: 6, pos: 'MID', name: '', isBench: false },
-    { id: 7, pos: 'MID', name: '', isBench: false }, { id: 8, pos: 'MID', name: '', isBench: false },
-    { id: 9, pos: 'FWD', name: '', isBench: false }, { id: 10, pos: 'FWD', name: '', isBench: false },
-    { id: 11, pos: 'GKP', name: '', isBench: true }, { id: 12, pos: 'DEF', name: '', isBench: true },
-    { id: 13, pos: 'MID', name: '', isBench: true }, { id: 14, pos: 'FWD', name: '', isBench: true }
+    { id: 1, pos: 'DEF', name: '', isBench: false },
+    { id: 2, pos: 'DEF', name: '', isBench: false },
+    { id: 3, pos: 'DEF', name: '', isBench: false },
+    { id: 4, pos: 'DEF', name: '', isBench: false },
+    { id: 5, pos: 'MID', name: '', isBench: false },
+    { id: 6, pos: 'MID', name: '', isBench: false },
+    { id: 7, pos: 'MID', name: '', isBench: false },
+    { id: 8, pos: 'MID', name: '', isBench: false },
+    { id: 9, pos: 'FWD', name: '', isBench: false },
+    { id: 10, pos: 'FWD', name: '', isBench: false },
+    { id: 11, pos: 'GKP', name: '', isBench: true },
+    { id: 12, pos: 'DEF', name: '', isBench: true },
+    { id: 13, pos: 'MID', name: '', isBench: true },
+    { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
+// --- 1. DATA SYNC (STAYS THE SAME) ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
+    const TIME_KEY = 'kopala_cache_timestamp';
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; 
+
     const cachedPlayers = localStorage.getItem('kopala_player_cache');
+    const cachedFixtures = localStorage.getItem('kopala_fixtures_cache');
+    const cachedTeams = localStorage.getItem('kopala_teams_cache');
     const cachedTime = localStorage.getItem(TIME_KEY);
     
-    // 1. Mobile Cache Check
-    if (cachedPlayers && cachedTime && (Date.now() - cachedTime < TWENTY_FOUR_HOURS)) {
+    const isCacheFresh = cachedTime && (Date.now() - cachedTime < TWENTY_FOUR_HOURS);
+
+    if (cachedPlayers && cachedFixtures) {
         playerDB = JSON.parse(cachedPlayers);
-        fixturesDB = JSON.parse(localStorage.getItem('kopala_fixtures_cache') || '[]');
-        teamsDB = JSON.parse(localStorage.getItem('kopala_teams_cache') || '{}');
-        if (ticker) ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh (Cached)</span>";
+        fixturesDB = JSON.parse(cachedFixtures);
+        teamsDB = JSON.parse(cachedTeams || '{}');
+        loadSquad();
         renderPitch();
-        return;
+        
+        if (isCacheFresh && ticker) {
+            ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh (Cached)</span>";
+            return; 
+        }
     }
 
-    // 2. Fetch via Proxy (Mobile Fix)
-    if (ticker) ticker.textContent = "Syncing live FPL data...";
     try {
+        if (ticker) ticker.textContent = "Syncing live FPL data...";
         const [bootRes, fixRes] = await Promise.all([
-            fetch(`${PROXY}${encodeURIComponent(API_BASE + 'bootstrap-static/')}`),
-            fetch(`${PROXY}${encodeURIComponent(API_BASE + 'fixtures/')}`)
+            fetch(`${API_BASE}bootstrap-static/`),
+            fetch(`${API_BASE}fixtures/`)
         ]);
-        
         const data = await bootRes.json();
         const rawFixtures = await fixRes.json();
 
-        // Process Teams
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+            if (slug.includes('man_city')) slug = 'man_city';
+            if (slug.includes('man_utd')) slug = 'man_utd';
+            if (slug.includes('spurs') || slug.includes('tottenham')) slug = 'tottenham';
             teamsDB[t.id] = slug;
         });
 
-        // Process Players
         playerDB = data.elements.map(p => ({
             id: p.id,
             name: p.web_name,
@@ -69,21 +82,23 @@ async function syncData() {
 
         fixturesDB = rawFixtures;
 
-        // Save everything to localStorage
         localStorage.setItem('kopala_player_cache', JSON.stringify(playerDB));
         localStorage.setItem('kopala_fixtures_cache', JSON.stringify(fixturesDB));
         localStorage.setItem('kopala_teams_cache', JSON.stringify(teamsDB));
         localStorage.setItem(TIME_KEY, Date.now().toString());
         
-        if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine Online (Live)</span>";
+        loadSquad();
         renderPitch();
+        if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine Online (Live)</span>";
     } catch (e) {
-        console.error("Sync failed:", e);
-        if (ticker) ticker.innerHTML = "📡 <span style='color:orange'>Offline: Using Cached Data</span>";
+        console.warn("Sync failed. Using cached fixtures.");
+        if (ticker && playerDB.length > 0) {
+            ticker.innerHTML = "📡 <span style='color:orange'>Offline: Fixtures Cached</span>";
+        }
     }
 }
 
-// --- Swap & Validation ---
+// --- 2. ADVANCED SWAP LOGIC (Bench & Formation) ---
 function handleSwap(id) {
     if (selectedSlotId === null) {
         selectedSlotId = id;
@@ -92,21 +107,29 @@ function handleSwap(id) {
         const p2 = squad.find(s => s.id === id);
 
         if (p1.id !== p2.id) {
+            // Rule 1: GKP can only swap with GKP
             if ((p1.pos === 'GKP' || p2.pos === 'GKP') && p1.pos !== p2.pos) {
-                alert("Goalkeepers can only be swapped with Goalkeepers.");
+                alert("Goalkeepers can only be swapped with other Goalkeepers.");
             } else {
-                // Swap logic
+                // Perform the swap
                 const tempName = p1.name;
                 const tempPos = p1.pos;
-                p1.name = p2.name; p1.pos = p2.pos;
-                p2.name = tempName; p2.pos = tempPos;
 
+                p1.name = p2.name;
+                p1.pos = p2.pos;
+                p2.name = tempName;
+                p2.pos = tempPos;
+
+                // Rule 2: Validate Formation (Min: 3 DEF, 2 MID, 1 FWD)
                 if (!isValidFormation()) {
-                    alert("Invalid! Need 3+ DEF, 2+ MID, 1+ FWD");
-                    p2.name = p1.name; p2.pos = p1.pos;
-                    p1.name = tempName; p1.pos = tempPos;
+                    alert("Invalid Formation! FPL requires at least 3 Defenders, 2 Midfielders, and 1 Forward.");
+                    // Revert the swap
+                    p2.name = p1.name;
+                    p2.pos = p1.pos;
+                    p1.name = tempName;
+                    p1.pos = tempPos;
                 } else {
-                    localStorage.setItem('kopala_saved_squad', JSON.stringify(squad));
+                    saveSquad();
                 }
             }
         }
@@ -123,33 +146,57 @@ function isValidFormation() {
     return defs >= 3 && mids >= 2 && fwds >= 1;
 }
 
-// --- Renderers ---
-function renderPitch() {
-    const pitch = document.getElementById('pitch-container');
-    const bench = document.getElementById('bench-container');
-    if(!pitch || !bench) return;
-    pitch.innerHTML = ''; bench.innerHTML = '';
+// --- 3. AI RECOMMENDER (Works with Cache) ---
+function runAIWildcard() {
+    // Check if playerDB is populated (either from Live or Cache)
+    if (!playerDB || playerDB.length === 0) {
+        alert("Data not loaded. Please wait for sync.");
+        return;
+    }
 
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        const row = document.createElement('div');
-        row.className = 'row';
-        squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
-        pitch.appendChild(row);
+    if (!confirm("AI will rebuild your squad based on current expected points. Continue?")) return;
+
+    let budget = 100.0;
+    const used = [];
+    // Reset squad to default positions first to ensure clean formation
+    squad.forEach((s, i) => {
+        if (i === 0 || i === 11) s.pos = 'GKP';
+        else if (i <= 4 || i === 12) s.pos = 'DEF';
+        else if (i <= 8 || i === 13) s.pos = 'MID';
+        else s.pos = 'FWD';
     });
 
-    const bRow = document.createElement('div');
-    bRow.className = 'row';
-    squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
-    bench.appendChild(bRow);
-    updateStats();
+    squad.forEach((slot, i) => {
+        const buffer = (squad.length - 1 - i) * 4.5;
+        const choice = playerDB.find(p => 
+            p.pos === slot.pos && 
+            !used.includes(p.name) && 
+            parseFloat(p.price) <= (budget - buffer)
+        ) || playerDB.filter(p => p.pos === slot.pos && !used.includes(p.name))
+                     .sort((a,b) => a.price - b.price)[0];
+
+        if (choice) {
+            slot.name = choice.name;
+            used.push(choice.name);
+            budget -= parseFloat(choice.price);
+        }
+    });
+
+    saveSquad();
+    renderPitch();
 }
 
+// --- 4. RENDERERS & UTILS ---
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
     
     const player = playerDB.find(p => p.name === slotData.name);
-    const jerseyClass = player ? (player.pos === 'GKP' ? 'gkp_color' : player.teamShort) : 'default';
+    let jerseyClass = 'default';
+    if (player) {
+        jerseyClass = (player.pos === 'GKP') ? 'gkp_color' : player.teamShort;
+    }
+
     const fixtures = player ? getNextFixtures(player.teamId) : [];
 
     div.innerHTML = `
@@ -160,7 +207,10 @@ function createSlotUI(slotData) {
                 <span class="p-price">${player ? player.price + 'm' : ''}</span>
             </div>
             <div class="card-fixtures">
-                ${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}<br>${f.loc}</div>`).join('')}
+                ${fixtures.length > 0 ? fixtures.map(f => `
+                    <div class="fix-item diff-${f.diff}">
+                        ${f.opp}<br>${f.loc}
+                    </div>`).join('') : '<div class="fix-item">---</div>'}
             </div>
         </div>
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
@@ -168,19 +218,44 @@ function createSlotUI(slotData) {
             ${playerDB.filter(p => p.pos === slotData.pos).map(p => 
                 `<option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>`
             ).join('')}
-        </select>`;
+        </select>
+    `;
     return div;
 }
 
+function renderPitch() {
+    const pitch = document.getElementById('pitch-container');
+    const bench = document.getElementById('bench-container');
+    if(!pitch || !bench) return;
+    pitch.innerHTML = ''; bench.innerHTML = '';
+
+    // Render Starting XI by position rows
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
+        pitch.appendChild(row);
+    });
+
+    // Render Bench
+    const bRow = document.createElement('div');
+    bRow.className = 'row';
+    squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
+    bench.appendChild(bRow);
+    
+    updateStats();
+}
+
 function getNextFixtures(teamId) {
-    if (!fixturesDB.length) return [];
+    if (!fixturesDB || fixturesDB.length === 0) return [];
     return fixturesDB
         .filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
         .slice(0, 3)
         .map(f => {
             const isHome = f.team_h === teamId;
+            const oppId = isHome ? f.team_a : f.team_h;
             return {
-                opp: (teamsDB[isHome ? f.team_a : f.team_h] || "???").substring(0,3).toUpperCase(),
+                opp: (teamsDB[oppId] || "???").substring(0,3).toUpperCase(),
                 loc: isHome ? 'H' : 'A',
                 diff: isHome ? f.team_h_difficulty : f.team_a_difficulty
             };
@@ -197,15 +272,29 @@ function updateStats() {
         }
     });
     const budgetEl = document.getElementById('budget-val');
-    if(budgetEl) budgetEl.textContent = `£${(100 - val).toFixed(1)}m`;
+    if(budgetEl) {
+        const itb = (100 - val).toFixed(1);
+        budgetEl.textContent = `£${itb}m`;
+        budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
+    }
     const xpDisplay = document.getElementById('v-xp');
     if(xpDisplay) xpDisplay.textContent = xp.toFixed(1);
 }
 
 function updatePlayer(id, name) { 
     squad.find(s => s.id === id).name = name; 
-    localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); 
+    saveSquad(); 
     renderPitch(); 
 }
 
-document.addEventListener('DOMContentLoaded', syncData);
+function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
+function loadSquad() {
+    const saved = localStorage.getItem('kopala_saved_squad');
+    if (saved) squad = JSON.parse(saved);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    syncData();
+    const wcBtn = document.getElementById('wildcard-btn');
+    if (wcBtn) wcBtn.onclick = runAIWildcard;
+});
