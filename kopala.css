@@ -784,3 +784,45 @@ table {
 .hidden-hint {
     opacity: 0 !important;
 }
+
+
+/* POPUP ANIMATIONS */
+.modal-overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* When the 'hidden' class is removed, play this */
+.modal-overlay:not(.hidden) {
+    opacity: 1;
+}
+
+/* The Container Animation */
+.modal-content {
+    transform: scale(0.8) translateY(20px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy entry */
+}
+
+.modal-overlay:not(.hidden) .modal-content {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* Individual Player Slot Animation */
+.slot {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.modal-overlay:not(.hidden) .slot {
+    animation: playerReveal 0.5s forwards;
+}
+
+/* Staggered entry for players */
+@keyframes playerReveal {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
