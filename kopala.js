@@ -135,3 +135,68 @@ function handleManagerClick(id, name) {
 
 document.getElementById("close-modal").onclick = () => document.getElementById("team-modal").classList.add("hidden");
 document.addEventListener("DOMContentLoaded", fetchProLeague);
+
+
+
+
+// Helper to map team ID to CSS class
+function getTeamClass(teamId) {
+    const mapping = {
+        1: 'arsenal', 2: 'aston_villa', 3: 'bournemouth', 4: 'brentford', 
+        5: 'brighton', 6: 'chelsea', 7: 'crystal_p', 8: 'everton', 
+        9: 'fulham', 10: 'ipswich', 11: 'leicester', 12: 'liverpool', 
+        13: 'man_city', 14: 'man_utd', 15: 'newcastle', 16: 'nottm_forest', 
+        17: 'southampton', 18: 'tottenham', 19: 'west_ham', 20: 'wolves'
+    };
+    return mapping[teamId] || 'default';
+}
+
+function handleManagerClick(id, name) {
+    const data = managerSquads[id];
+    if (!data) return;
+
+    const modal = document.getElementById("team-modal");
+    const list = document.getElementById("modal-squad-list");
+    document.getElementById("modal-manager-name").innerText = name;
+
+    // Separate players by position
+    const positions = { 1: [], 2: [], 3: [], 4: [] };
+    let squadTotal = 0;
+
+    data.picks.forEach(p => {
+        const player = playerMap[p.element];
+        const pts = player.points * p.multiplier;
+        squadTotal += pts;
+        
+        const isGkp = player.pos === 1;
+        const kitClass = isGkp ? 'gkp_color' : getTeamClass(player.team);
+
+        const playerHTML = `
+            <div class="slot" style="width: 70px;">
+                <div class="jersey ${kitClass}"></div>
+                <div class="modal-player-tag">
+                    <span class="m-p-name">${p.is_captain ? 'Ⓒ ' : ''}${player.name}</span>
+                    <span class="m-p-pts">${pts}</span>
+                </div>
+            </div>`;
+        
+        positions[player.pos].push(playerHTML);
+    });
+
+    // Build the visual pitch
+    list.innerHTML = `
+        <div class="modal-pitch">
+            <div class="modal-row">${positions[1].join('')}</div>
+            <div class="modal-row">${positions[2].join('')}</div>
+            <div class="modal-row">${positions[3].join('')}</div>
+            <div class="modal-row">${positions[4].join('')}</div>
+        </div>
+        <div style="padding:15px 0 5px 0; text-align:right; font-weight:900; font-size:18px; color:#37003c; border-top:2px solid #f0f0f0; margin-top:10px;">
+            <small style="font-size:10px; color:#999; text-transform:uppercase;">Live Squad Total</small><br>
+            ${squadTotal} <small style="font-size:11px;">PTS</small>
+        </div>
+    `;
+
+    modal.classList.remove("hidden");
+    document.body.style.overflow = 'hidden';
+}
