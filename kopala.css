@@ -505,3 +505,70 @@ table {
     padding: 1px 3px;
     border-radius: 2px;
 }
+
+
+/* MODAL JERSEY PITCH */
+.modal-pitch {
+    background: var(--pitch-green);
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(0,0,0,0.03) 30px, rgba(0,0,0,0.03) 60px);
+    border-radius: 12px;
+    padding: 15px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.modal-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* JERSEY SHAPE (Copied from your AI CSS) */
+.jersey {
+    width: 38px;
+    height: 34px;
+    background-color: var(--team-main, #eee);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+    position: relative;
+    transition: transform 0.2s;
+}
+
+/* PLAYER TAGS IN MODAL */
+.modal-player-tag {
+    background: white;
+    width: 65px;
+    text-align: center;
+    margin-top: 4px;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.m-p-name {
+    background: var(--fpl-purple);
+    color: white;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 2px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.m-p-pts {
+    font-size: 10px;
+    font-weight: 900;
+    color: #333;
+    display: block;
+}
+
+/* KIT DESIGNS (Add any missing ones from your AI CSS) */
+.jersey.arsenal     { --team-main: #ef0107; border-top: 4px solid #fff; }
+.jersey.man_city    { --team-main: #6cabdd; }
+.jersey.liverpool   { --team-main: #c8102e; }
+.jersey.man_utd     { --team-main: #da291c; border-bottom: 3px solid #000; }
+.jersey.newcastle   { --team-main: #000; background-image: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 8px 100%; }
+.jersey.gkp_color   { --team-main: #e1ff00; } /* Goalkeeper neon */
