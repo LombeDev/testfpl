@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.7)
- * UPDATED: Fixture-Weighted AI, Transfer Insights, and Value Logic
+ * KOPALA FPL - AI Master Engine (v2.8)
+ * UPDATED: Team Constraints (Max 3) & Formation Control
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -9,6 +9,7 @@ let teamsDB = {};
 let fixturesDB = [];
 let selectedSlotId = null;
 
+// Initial Squad Structure
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -98,7 +99,71 @@ async function syncData() {
     }
 }
 
-// --- 2. ADVANCED SWAP LOGIC ---
+// --- 2. SQUAD SELECTION & FORMATION ---
+
+/**
+ * Ensures only 3 players from the same team can be selected
+ */
+function updatePlayer(id, name) {
+    if (!name) {
+        squad.find(s => s.id === id).name = "";
+        saveSquad();
+        renderPitch();
+        return;
+    }
+
+    const player = playerDB.find(p => p.name === name);
+    
+    // Count current players from this team (excluding the slot being updated)
+    const teamCount = squad.filter(s => {
+        if (s.id === id) return false;
+        const p = playerDB.find(pdb => pdb.name === s.name);
+        return p && p.teamId === player.teamId;
+    }).length;
+
+    if (teamCount >= 3) {
+        alert(`Rule Violation: You cannot have more than 3 players from ${player.teamShort.toUpperCase()}.`);
+        renderPitch(); // Force refresh to revert dropdown
+        return;
+    }
+
+    squad.find(s => s.id === id).name = name;
+    saveSquad();
+    renderPitch();
+}
+
+/**
+ * Changes starting formation by toggling isBench status
+ * Format: '3-4-3', '4-4-2', etc.
+ */
+function changeFormation(formationStr) {
+    const [dCount, mCount, fCount] = formationStr.split('-').map(Number);
+    
+    // Reset: All to bench
+    squad.forEach(s => s.isBench = true);
+
+    // 1. Pick 1 GKP
+    squad.find(s => s.pos === 'GKP').isBench = false;
+
+    // 2. Helper to activate players of a specific position
+    const activate = (pos, limit) => {
+        let count = 0;
+        squad.filter(s => s.pos === pos).forEach(s => {
+            if (count < limit) {
+                s.isBench = false;
+                count++;
+            }
+        });
+    };
+
+    activate('DEF', dCount);
+    activate('MID', mCount);
+    activate('FWD', fCount);
+
+    saveSquad();
+    renderPitch();
+}
+
 function handleSwap(id) {
     if (selectedSlotId === null) {
         selectedSlotId = id;
@@ -119,11 +184,10 @@ function handleSwap(id) {
                 p2.pos = tempPos;
 
                 if (!isValidFormation()) {
-                    alert("Invalid Formation! FPL requires at least 3 Defenders, 2 Midfielders, and 1 Forward.");
-                    p2.name = p1.name;
-                    p2.pos = p1.pos;
-                    p1.name = tempName;
-                    p1.pos = tempPos;
+                    alert("Invalid Formation! FPL requires 3-5 DEFs, 2-5 MIDs, and 1-3 FWDs.");
+                    // Revert
+                    p2.name = p1.name; p2.pos = p1.pos;
+                    p1.name = tempName; p1.pos = tempPos;
                 } else {
                     saveSquad();
                 }
@@ -136,27 +200,23 @@ function handleSwap(id) {
 
 function isValidFormation() {
     const active = squad.filter(s => !s.isBench);
-    const defs = active.filter(s => s.pos === 'DEF').length;
-    const mids = active.filter(s => s.pos === 'MID').length;
-    const fwds = active.filter(s => s.pos === 'FWD').length;
-    return defs >= 3 && mids >= 2 && fwds >= 1;
+    const d = active.filter(s => s.pos === 'DEF').length;
+    const m = active.filter(s => s.pos === 'MID').length;
+    const f = active.filter(s => s.pos === 'FWD').length;
+    return d >= 3 && d <= 5 && m >= 2 && m <= 5 && f >= 1 && f <= 3;
 }
 
-// --- 3. AI RECOMMENDER & WILDCARD ---
+// --- 3. AI LOGIC ---
 function runAIWildcard() {
-    if (!playerDB || playerDB.length === 0) {
-        alert("Data not loaded. Please wait for sync.");
-        return;
-    }
-
-    if (!confirm("AI will rebuild your squad based on fixture difficulty and expected points. Continue?")) return;
+    if (!playerDB.length) return alert("Syncing data, please wait...");
+    if (!confirm("AI will optimize your 15-man squad within budget and team limits. Continue?")) return;
 
     let budget = 100.0;
     const newSquad = [];
     const usedIds = new Set();
+    const teamCounts = {};
     const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
 
-    // Rank players by Score (XP adjusted by next 3 fixtures)
     const rankedPlayers = playerDB.map(p => {
         const fixtures = getNextFixtures(p.teamId);
         const avgDiff = fixtures.reduce((acc, f) => acc + (5 - f.diff), 0) / (fixtures.length || 1);
@@ -165,96 +225,34 @@ function runAIWildcard() {
 
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
         for (let i = 0; i < posLimits[pos]; i++) {
-            const buffer = 4.3 * (15 - newSquad.length); // Safety buffer for remaining slots
+            const buffer = 4.2 * (15 - newSquad.length);
             const choice = rankedPlayers.find(p => 
                 p.pos === pos && 
                 !usedIds.has(p.id) && 
+                (teamCounts[p.teamId] || 0) < 3 && // Logic: Max 3 per team
                 parseFloat(p.price) <= (budget - buffer)
             ) || rankedPlayers.find(p => p.pos === pos && !usedIds.has(p.id));
 
             if (choice) {
-                newSquad.push({ 
-                    id: newSquad.length, 
-                    pos: pos, 
-                    name: choice.name, 
-                    isBench: false 
-                });
+                newSquad.push({ id: newSquad.length, pos: pos, name: choice.name, isBench: false });
                 usedIds.add(choice.id);
+                teamCounts[choice.teamId] = (teamCounts[choice.teamId] || 0) + 1;
                 budget -= parseFloat(choice.price);
             }
         }
     });
 
-    // Smart benching: Put lowest scored players on bench (except one GKP)
-    newSquad.sort((a, b) => {
-        const pA = playerDB.find(p => p.name === a.name);
-        const pB = playerDB.find(p => p.name === b.name);
-        return (pA?.xp || 0) - (pB?.xp || 0);
-    });
-    
-    let benched = 0;
-    newSquad.forEach(s => {
-        if (benched < 4 && (s.pos !== 'GKP' || benched === 0)) {
-            s.isBench = true;
-            benched++;
-        }
-    });
-
     squad = newSquad;
-    saveSquad();
-    renderPitch();
+    changeFormation('4-4-2'); // Set default starting XI
 }
 
-function displayRecommendations() {
-    const recList = document.getElementById('recommendation-list');
-    if (!recList) return;
-
-    const valEl = document.getElementById('budget-val');
-    const currentITB = valEl ? parseFloat(valEl.textContent.replace('£', '').replace('m', '')) : 0;
-    let recs = [];
-
-    squad.forEach(slot => {
-        if (!slot.name) return;
-        const currentP = playerDB.find(p => p.name === slot.name);
-        if (!currentP) return;
-
-        const bestUpgrade = playerDB.find(p => 
-            p.pos === slot.pos && 
-            p.name !== currentP.name &&
-            parseFloat(p.price) <= (parseFloat(currentP.price) + currentITB) &&
-            !squad.some(s => s.name === p.name) &&
-            p.xp > currentP.xp
-        );
-
-        if (bestUpgrade) {
-            recs.push({
-                old: currentP.name,
-                new: bestUpgrade.name,
-                gain: (bestUpgrade.xp - currentP.xp).toFixed(1),
-                cost: bestUpgrade.price
-            });
-        }
-    });
-
-    recs.sort((a, b) => b.gain - a.gain);
-    recList.innerHTML = recs.length ? recs.slice(0, 3).map(r => `
-        <div class="rec-card">
-            <div class="rec-swap"><span class="out">${r.old}</span> ➔ <span class="in">${r.new}</span></div>
-            <div class="rec-meta">Gain: <span class="gain">+${r.gain} xP</span> | Cost: £${r.cost}m</div>
-        </div>`).join('') : "<p>Squad is optimized!</p>";
-}
-
-// --- 4. RENDERERS & UTILS ---
+// --- 4. RENDERERS ---
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
     
     const player = playerDB.find(p => p.name === slotData.name);
-    let jerseyClass = 'default';
-    if (player) {
-        jerseyClass = (player.pos === 'GKP') ? 'gkp_color' : player.teamShort;
-    }
-
+    let jerseyClass = player ? ((player.pos === 'GKP') ? 'gkp_color' : player.teamShort) : 'default';
     const fixtures = player ? getNextFixtures(player.teamId) : [];
 
     div.innerHTML = `
@@ -265,16 +263,13 @@ function createSlotUI(slotData) {
                 <span class="p-price">${player ? player.price + 'm' : ''}</span>
             </div>
             <div class="card-fixtures">
-                ${fixtures.length > 0 ? fixtures.map(f => `
-                    <div class="fix-item diff-${f.diff}">
-                        ${f.opp}<br>${f.loc}
-                    </div>`).join('') : '<div class="fix-item">---</div>'}
+                ${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}<br>${f.loc}</div>`).join('')}
             </div>
         </div>
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
             <option value="">-- Pick --</option>
             ${playerDB.filter(p => p.pos === slotData.pos).map(p => 
-                `<option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>`
+                `<option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name} (£${p.price}m)</option>`
             ).join('')}
         </select>
     `;
@@ -303,15 +298,14 @@ function renderPitch() {
 }
 
 function getNextFixtures(teamId) {
-    if (!fixturesDB || fixturesDB.length === 0) return [];
+    if (!fixturesDB.length) return [];
     return fixturesDB
         .filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
         .slice(0, 3)
         .map(f => {
             const isHome = f.team_h === teamId;
-            const oppId = isHome ? f.team_a : f.team_h;
             return {
-                opp: (teamsDB[oppId] || "???").substring(0,3).toUpperCase(),
+                opp: (teamsDB[isHome ? f.team_a : f.team_h] || "???").substring(0,3).toUpperCase(),
                 loc: isHome ? 'H' : 'A',
                 diff: isHome ? f.team_h_difficulty : f.team_a_difficulty
             };
@@ -334,18 +328,8 @@ function updateStats() {
         budgetEl.textContent = `£${itb}m`;
         budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87';
     }
-
     const xpDisplay = document.getElementById('v-xp');
     if(xpDisplay) xpDisplay.textContent = xp.toFixed(1);
-
-    // Trigger AI Recommendations
-    displayRecommendations();
-}
-
-function updatePlayer(id, name) { 
-    squad.find(s => s.id === id).name = name; 
-    saveSquad(); 
-    renderPitch(); 
 }
 
 function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
@@ -358,4 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
     syncData();
     const wcBtn = document.getElementById('wildcard-btn');
     if (wcBtn) wcBtn.onclick = runAIWildcard;
+
+    // Optional: Attach formation buttons if they exist in HTML
+    const formSelect = document.getElementById('formation-select');
+    if (formSelect) formSelect.onchange = (e) => changeFormation(e.target.value);
 });
