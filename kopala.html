@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOPALA FPL MINI LEAGUE </title>
+    <title>KOPALA FPL MINI LEAGUE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="kopala.css">
@@ -14,11 +14,82 @@
             --fpl-green: #00ff87;
             --fpl-pink: #ff005a;
             --fpl-blue: #04f5ff;
+            --link-blue: #0000ee;
         }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; margin: 0; }
-        
-        /* Ticker Style Match Center */
+
+        /* --- NEW NAV STYLES --- */
+        .navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #eeeeee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #000000 !important; /* Black text for KOPALA */
+            text-transform: uppercase;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .brand span {
+            color: var(--link-blue); /* Blue for FPL */
+            margin-left: 5px;
+        }
+
+        /* Desktop Links Container */
+        .nav-links {
+            display: none; /* Hidden on mobile */
+            list-style: none;
+            margin: 0 0 0 30px;
+            padding: 0;
+            gap: 20px;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links li a:hover {
+            color: var(--link-blue);
+        }
+
+        /* Responsive Desktop View */
+        @media screen and (min-width: 768px) {
+            #menu-btn { display: none !important; }
+            .nav-links { display: flex; align-items: center; }
+        }
+
+        /* Refresh Button Styling */
+        .search-btn {
+            background: #f0f0f0 !important;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .search-btn i { color: #333 !important; }
+
+        /* --- REST OF YOUR ORIGINAL STYLES --- */
         #match-center-content {
             background: var(--fpl-purple);
             color: white;
@@ -32,53 +103,23 @@
         }
 
         .table-container { overflow-x: auto; background: white; border-radius: 8px; }
-        
-        #league-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            font-size: 11px; /* Compact font */
-        }
-
-        #league-table th { 
-            background: #f8f9fa; 
-            color: #888; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-            padding: 12px 8px;
-            border-bottom: 2px solid #eee;
-        }
-
+        #league-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        #league-table th { background: #f8f9fa; color: #888; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 8px; border-bottom: 2px solid #eee; }
         #league-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-
-        /* Column Specifics */
         .m-name { font-weight: bold; font-size: 12px; color: var(--fpl-purple); display: block; }
         .t-name { font-size: 10px; color: #666; }
         .live-pts { font-weight: 800; font-size: 14px; color: #333; }
         .bold-p { font-weight: 800; font-size: 14px; color: var(--fpl-purple); }
         .proj-val { color: #007bff; font-weight: bold; font-size: 10px; margin-top: 2px; }
-        
-        /* Rank Movement */
         .rank-move { font-size: 9px; font-weight: bold; }
         .rank-move.up { color: var(--fpl-green); }
         .rank-move.down { color: var(--fpl-pink); }
-
-        /* Badges */
         .c-badge { background: var(--fpl-blue); color: var(--fpl-purple); padding: 1px 4px; border-radius: 3px; font-weight: 900; font-size: 9px; margin-left: 4px; }
         .d-tag { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; padding: 2px 4px; border-radius: 3px; margin: 1px; font-size: 9px; color: #444; }
         .in-out { color: var(--fpl-green); font-size: 9px; line-height: 1.2; font-weight: 600; }
         .hits { color: var(--fpl-pink); font-size: 10px; font-weight: bold; }
-
-        /* Heatmap Card */
         .heatmap-card { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .heatmap-bar-bg { background: #eee; height: 8px; border-radius: 4px; margin: 4px 0; overflow: hidden; }
-        .heatmap-bar-fill { background: linear-gradient(90deg, var(--fpl-purple), var(--fpl-green)); height: 100%; }
-        
-        /* Loading Overlay Customization */
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 1000;
-        }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         #loading-overlay.hidden { display: none; }
     </style>
 </head>
@@ -90,52 +131,57 @@
             <button id="close-btn">&times;</button>
         </div>
         <ul class="drawer-links">
-            <li><a href="index.html"><i class=""></i> Home</a></li>
-            <li><a href="team.html"><i class=""></i> My team by AI</a></li>
-            <li><a href="price.html"><i class=""></i> Price Timer</a></li>
-            <li><a href="football.html"><i class=""></i> Football</a></li>
-            <li><a href="contact.html"><i class=""></i> Contact Us</a></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="team.html">My team by AI</a></li>
+            <li><a href="price.html">Price Timer</a></li>
+            <li><a href="football.html">Football</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
         </ul>
     </div>
 
     <div id="backdrop" class="backdrop"></div>
 
     <nav class="navbar">
-        <div class="nav-left">
+        <div class="nav-left" style="display: flex; align-items: center;">
             <div id="menu-btn" class="menu-icon">
                 <span></span><span></span><span></span>
             </div>
             <h1 class="brand">KOPALA <span>FPL</span></h1>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="team.html">My Team by AI</a></li>
+                <li><a href="price.html">Price Timer</a></li>
+                <li><a href="football.html">Football</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
         </div>
         <div class="nav-right">
-            <span id="active-gw-label" class="gw-text">GW --</span>
+            <span id="active-gw-label" class="gw-text" style="color: #333; margin-right: 10px; font-weight: bold;">GW --</span>
             <button class="icon-btn search-btn" onclick="location.reload()">
-                <i class="fas fa-sync-alt" style="color: white;"></i>
+                <i class="fas fa-sync-alt"></i>
             </button>
         </div>
     </nav>
 
-    
-
-       <div class="card">
-    <div class="table-wrapper">
-        <table id="league-table">
-            <thead>
-                <tr>
-                    <th class="rank-col">#</th>
-                    <th class="manager-col">Manager</th>
-                    <th class="pts-col">GW</th>
-                    <th class="total-col">TOT</th>
-                    <th class="cap-col">Captain</th>
-                    <th class="diff-col">Diffs</th>
-                    <th class="trans-col">Trans</th>
-                </tr>
-            </thead>
-            <tbody id="league-body">
-                </tbody>
-        </table>
-    </div>
-</div>
+    <div class="container">
+        <div class="card">
+            <div class="table-wrapper">
+                <table id="league-table">
+                    <thead>
+                        <tr>
+                            <th class="rank-col">#</th>
+                            <th class="manager-col">Manager</th>
+                            <th class="pts-col">GW</th>
+                            <th class="total-col">TOT</th>
+                            <th class="cap-col">Captain</th>
+                            <th class="diff-col">Diffs</th>
+                            <th class="trans-col">Trans</th>
+                        </tr>
+                    </thead>
+                    <tbody id="league-body"></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="captain-heatmap" class="heatmap-card">
@@ -153,20 +199,15 @@
         <p>&copy; 2026 Kopala FPL. Data synced with official FPL API.</p>
     </footer>
 
-<div id="team-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modal-manager-name">Manager Squad</h2>
-            <button id="close-modal" class="close-btn">&times;</button>
-        </div>
-        <div id="modal-squad-list" class="squad-grid">
+    <div id="team-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-manager-name">Manager Squad</h2>
+                <button id="close-modal" class="close-btn">&times;</button>
             </div>
+            <div id="modal-squad-list" class="squad-grid"></div>
+        </div>
     </div>
-</div>
-    <div id="scroll-hint" class="swipe-hint">
-    <span class="swipe-hand">👉</span> <span>Swipe for more</span>
-</div>
-</div>
 
     <script src="kopala.js"></script>
     <script src="menu.js"></script>
