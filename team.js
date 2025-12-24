@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.8.0)
- * FEATURES: Two-Column Desktop Layout + Original Mobile Dropdowns
+ * KOPALA FPL - AI Master Engine (v2.7.0)
+ * UPDATED: Two-Column Desktop Layout, Sidebar Market & Validation logic.
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -9,7 +9,6 @@ let teamsDB = {};
 let fixturesDB = [];
 let selectedSlotId = null;
 
-// Initial Squad Structure
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -28,7 +27,7 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC & CACHING ---
+// --- 1. DATA SYNC ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
     const TIME_KEY = 'kopala_cache_timestamp';
@@ -50,7 +49,7 @@ async function syncData() {
         renderPlayerList('ALL');
         
         if (isCacheFresh && ticker) {
-            ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh</span>";
+            ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh (Cached)</span>";
             return; 
         }
     }
@@ -92,7 +91,7 @@ async function syncData() {
         loadSquad();
         renderPitch();
         renderPlayerList('ALL');
-        if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Master Engine Online</span>";
+        if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine Online (Live)</span>";
     } catch (e) {
         console.warn("Sync failed.", e);
     }
@@ -112,15 +111,15 @@ function getTeamCounts() {
     return counts;
 }
 
-// --- 3. DESKTOP MARKET LOGIC ---
+// --- 3. SELECTION & LIST LOGIC ---
 function renderPlayerList(filterPos = 'ALL') {
     const listContainer = document.getElementById('player-list-results');
     const searchInput = document.getElementById('player-search');
-    if (!listContainer || window.innerWidth <= 900) return;
+    if (!listContainer) return;
 
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
     
-    // Update Tab UI active states
+    // Update Tab UI
     document.querySelectorAll('.filter-tabs button').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.getElementById(`tab-${filterPos}`);
     if(activeBtn) activeBtn.classList.add('active');
@@ -150,13 +149,12 @@ function renderPlayerList(filterPos = 'ALL') {
 
 function selectFromList(playerName) {
     if (selectedSlotId === null) {
-        alert("Please select a position on the pitch first.");
+        alert("Please tap a position on the pitch first.");
         return;
     }
     updatePlayer(selectedSlotId, playerName);
 }
 
-// --- 4. CORE SQUAD UPDATES ---
 function updatePlayer(id, name) { 
     if (!name) {
         squad.find(s => s.id === id).name = "";
@@ -170,39 +168,34 @@ function updatePlayer(id, name) {
     const currentSlot = squad.find(s => s.id === id);
     const existingPlayer = playerDB.find(p => p.name === currentSlot.name);
 
-    // Rule: Max 3 players per team
+    // 3-Player Team Limit Check
     if (!existingPlayer || existingPlayer.teamId !== player.teamId) {
         if ((teamCounts[player.teamId] || 0) >= 3) {
-            alert(`Limit reached! 3 players already selected from ${player.teamShort.toUpperCase()}.`);
-            renderPitch(); // Reset UI
+            alert(`Limit reached! You can only select up to 3 players from ${player.teamShort.toUpperCase()}.`);
             return;
         }
     }
 
     currentSlot.name = name; 
     saveSquad(); 
-    selectedSlotId = null; 
+    selectedSlotId = null; // Reset selection
     renderPitch(); 
 }
 
-// --- 5. PITCH RENDERING ---
+// --- 4. RENDER PITCH ---
 function createSlotUI(slotData) {
     const div = document.createElement('div');
-    const isDesktop = window.innerWidth > 900;
-    
-    div.className = `slot ${(isDesktop && selectedSlotId === slotData.id) ? 'selected' : ''}`;
+    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
     
     const player = playerDB.find(p => p.name === slotData.name);
     let jerseyClass = player ? ((player.pos === 'GKP') ? 'gkp_color' : player.teamShort) : 'default';
+
     const fixtures = player ? getNextFixtures(player.teamId) : [];
 
-    // Desktop Click Handler
     div.onclick = () => {
-        if (isDesktop) {
-            selectedSlotId = slotData.id;
-            renderPitch(); 
-            renderPlayerList(slotData.pos);
-        }
+        selectedSlotId = slotData.id;
+        renderPitch(); 
+        renderPlayerList(slotData.pos);
     };
 
     div.innerHTML = `
@@ -214,16 +207,11 @@ function createSlotUI(slotData) {
             </div>
             <div class="card-fixtures">
                 ${fixtures.length > 0 ? fixtures.map(f => `
-                    <div class="fix-item diff-${f.diff}">${f.opp}</div>`).join('') : '<div class="fix-item">---</div>'}
+                    <div class="fix-item diff-${f.diff}">
+                        ${f.opp}
+                    </div>`).join('') : '<div class="fix-item">---</div>'}
             </div>
         </div>
-
-        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)" onclick="event.stopPropagation()">
-            <option value="">-- Pick --</option>
-            ${playerDB.filter(p => p.pos === slotData.pos).map(p => 
-                `<option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name} (£${p.price}m)</option>`
-            ).join('')}
-        </select>
     `;
     return div;
 }
@@ -249,7 +237,44 @@ function renderPitch() {
     updateStats();
 }
 
-// --- 6. AI & UTILS ---
+// --- 5. AI & UTILS ---
+function runAIWildcard() {
+    if (!playerDB || playerDB.length === 0) return;
+    if (!confirm("AI will rebuild your squad based on current expected points. Continue?")) return;
+
+    let budget = 100.0;
+    const usedNames = [];
+    const teamCounts = {};
+
+    squad.forEach((s, i) => {
+        s.name = "";
+        if (i === 0 || i === 11) s.pos = 'GKP';
+        else if (i <= 4 || i === 12) s.pos = 'DEF';
+        else if (i <= 8 || i === 13) s.pos = 'MID';
+        else s.pos = 'FWD';
+    });
+
+    squad.forEach((slot, i) => {
+        const buffer = (squad.length - 1 - i) * 4.4;
+        const choice = playerDB.find(p => 
+            p.pos === slot.pos && 
+            !usedNames.includes(p.name) && 
+            (teamCounts[p.teamId] || 0) < 3 &&
+            parseFloat(p.price) <= (budget - buffer)
+        ) || playerDB.filter(p => p.pos === slot.pos && !usedNames.includes(p.name) && (teamCounts[p.teamId] || 0) < 3).sort((a,b) => a.price - b.price)[0];
+
+        if (choice) {
+            slot.name = choice.name;
+            usedNames.push(choice.name);
+            teamCounts[choice.teamId] = (teamCounts[choice.teamId] || 0) + 1;
+            budget -= parseFloat(choice.price);
+        }
+    });
+
+    saveSquad();
+    renderPitch();
+}
+
 function getNextFixtures(teamId) {
     if (!fixturesDB || fixturesDB.length === 0) return [];
     return fixturesDB
@@ -286,14 +311,8 @@ function loadSquad() {
     if (saved) squad = JSON.parse(saved);
 }
 
-// Listen for resizing to swap UI modes
-window.addEventListener('resize', () => {
-    renderPitch();
-    if (window.innerWidth > 900) renderPlayerList('ALL');
-});
-
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
     const wcBtn = document.getElementById('wildcard-btn');
-    if (wcBtn) wcBtn.onclick = () => alert("AI Wildcard logic processing..."); 
+    if (wcBtn) wcBtn.onclick = runAIWildcard;
 });
