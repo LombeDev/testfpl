@@ -237,3 +237,13 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     background: #00ff87;
     color: #37003c;
 }
+
+
+
+.slot.selected {
+    outline: 4px solid #00ff87;
+    background: rgba(0, 255, 135, 0.1); /* Subtle green tint */
+    transform: scale(1.08);
+    z-index: 99;
+    box-shadow: 0 0 20px rgba(0, 255, 135, 0.5);
+}
