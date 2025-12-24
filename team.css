@@ -295,3 +295,66 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     gap: 10px;
     margin: 15px 0;
 }
+
+
+
+/* --- BOUNCY LINEUP ANIMATIONS --- */
+
+/* 1. The Pitch "Fade-In" */
+.pitch-outer-wrap {
+    animation: pitchFade 0.8s ease-out forwards;
+}
+
+@keyframes pitchFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 2. The Slot "Spring" Effect */
+.slot {
+    opacity: 0;
+    transform: scale(0.5) translateY(30px);
+}
+
+/* This triggers the bounce when the page loads */
+body:not(.loading) .slot {
+    animation: slotBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes slotBounce {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(40px);
+    }
+    70% {
+        transform: scale(1.1) translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 3. Staggered Row Entry (Bottom to Top for effect) */
+/* Goalkeeper (Row 1) */
+.row:nth-child(2) .slot { animation-delay: 0.1s; } 
+/* Defenders (Row 2) */
+.row:nth-child(3) .slot { animation-delay: 0.2s; }
+/* Midfielders (Row 3) */
+.row:nth-child(4) .slot { animation-delay: 0.3s; }
+/* Forwards (Row 4) */
+.row:nth-child(5) .slot { animation-delay: 0.4s; }
+/* Bench */
+.row:nth-child(7) .slot { animation-delay: 0.5s; }
+
+/* 4. Interactive Bounce (When you click a player) */
+.slot:active {
+    transform: scale(0.9);
+    transition: transform 0.1s;
+}
+
+.slot.selected {
+    transform: scale(1.15) !important;
+    filter: brightness(1.2);
+    z-index: 10;
+}
