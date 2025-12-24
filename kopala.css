@@ -748,3 +748,39 @@ table {
     -ms-overflow-style: none;
 }
 .diff-col-scroll::-webkit-scrollbar { display: none; }
+
+
+/* SWIPE INDICATOR */
+.swipe-hint {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(55, 0, 60, 0.9); /* FPL Purple */
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 1000;
+    pointer-events: none; /* User can click through it */
+    transition: opacity 0.5s ease;
+}
+
+.swipe-hand {
+    font-size: 18px;
+    animation: swipe-anim 2s infinite;
+}
+
+@keyframes swipe-anim {
+    0% { transform: translateX(10px); opacity: 0; }
+    50% { transform: translateX(-10px); opacity: 1; }
+    100% { transform: translateX(10px); opacity: 0; }
+}
+
+.hidden-hint {
+    opacity: 0 !important;
+}
