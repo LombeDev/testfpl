@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.8)
- * FEATURES: Bouncy Animations, Auto-Formation, FPL Subs, AI Wildcard
+ * KOPALA FPL - AI Master Engine (v2.6)
+ * UPDATED: Multi-position Swapping, Formation Logic & Cached AI Picks
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -8,7 +8,6 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
-let managerSquads = {}; // Used for the League Table side if applicable
 
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
@@ -28,7 +27,7 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC & CACHING ---
+// --- 1. DATA SYNC (STAYS THE SAME) ---
 async function syncData() {
     const ticker = document.getElementById('ticker');
     const TIME_KEY = 'kopala_cache_timestamp';
@@ -47,7 +46,6 @@ async function syncData() {
         teamsDB = JSON.parse(cachedTeams || '{}');
         loadSquad();
         renderPitch();
-        triggerLineupBounce();
         
         if (isCacheFresh && ticker) {
             ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh (Cached)</span>";
@@ -91,14 +89,16 @@ async function syncData() {
         
         loadSquad();
         renderPitch();
-        triggerLineupBounce();
         if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine Online (Live)</span>";
     } catch (e) {
-        console.warn("Sync failed.");
+        console.warn("Sync failed. Using cached fixtures.");
+        if (ticker && playerDB.length > 0) {
+            ticker.innerHTML = "📡 <span style='color:orange'>Offline: Fixtures Cached</span>";
+        }
     }
 }
 
-// --- 2. ADVANCED SUBSTITUTION & FORMATION LOGIC ---
+// --- 2. ADVANCED SWAP LOGIC (Bench & Formation) ---
 function handleSwap(id) {
     if (selectedSlotId === null) {
         selectedSlotId = id;
@@ -111,23 +111,25 @@ function handleSwap(id) {
             if ((p1.pos === 'GKP' || p2.pos === 'GKP') && p1.pos !== p2.pos) {
                 alert("Goalkeepers can only be swapped with other Goalkeepers.");
             } else {
-                // Store original state
-                const s1Orig = { name: p1.name, pos: p1.pos, isBench: p1.isBench };
-                const s2Orig = { name: p2.name, pos: p2.pos, isBench: p2.isBench };
+                // Perform the swap
+                const tempName = p1.name;
+                const tempPos = p1.pos;
 
-                // Execute Swap
-                p1.name = s2Orig.name; p1.pos = s2Orig.pos; p1.isBench = s2Orig.isBench;
-                p2.name = s1Orig.name; p2.pos = s1Orig.pos; p2.isBench = s1Orig.isBench;
+                p1.name = p2.name;
+                p1.pos = p2.pos;
+                p2.name = tempName;
+                p2.pos = tempPos;
 
-                // Rule 2: Validate Formation
+                // Rule 2: Validate Formation (Min: 3 DEF, 2 MID, 1 FWD)
                 if (!isValidFormation()) {
-                    alert("Invalid Formation! Min: 3 DEF, 2 MID, 1 FWD.");
-                    // Revert
-                    p1.name = s1Orig.name; p1.pos = s1Orig.pos; p1.isBench = s1Orig.isBench;
-                    p2.name = s2Orig.name; p2.pos = s2Orig.pos; p2.isBench = s2Orig.isBench;
+                    alert("Invalid Formation! FPL requires at least 3 Defenders, 2 Midfielders, and 1 Forward.");
+                    // Revert the swap
+                    p2.name = p1.name;
+                    p2.pos = p1.pos;
+                    p1.name = tempName;
+                    p1.pos = tempPos;
                 } else {
                     saveSquad();
-                    triggerLineupBounce();
                 }
             }
         }
@@ -138,31 +140,53 @@ function handleSwap(id) {
 
 function isValidFormation() {
     const active = squad.filter(s => !s.isBench);
-    const gkps = active.filter(s => s.pos === 'GKP').length;
     const defs = active.filter(s => s.pos === 'DEF').length;
     const mids = active.filter(s => s.pos === 'MID').length;
     const fwds = active.filter(s => s.pos === 'FWD').length;
-    return gkps === 1 && defs >= 3 && mids >= 2 && fwds >= 1;
+    return defs >= 3 && mids >= 2 && fwds >= 1;
 }
 
-// --- 3. UI ANIMATIONS ---
-function triggerLineupBounce() {
-    const pitchWrap = document.querySelector('.pitch-outer-wrap');
-    if (!pitchWrap) return;
-    pitchWrap.classList.remove('animate-bounce');
-    void pitchWrap.offsetWidth; // Force Reflow
-    pitchWrap.classList.add('animate-bounce');
+// --- 3. AI RECOMMENDER (Works with Cache) ---
+function runAIWildcard() {
+    // Check if playerDB is populated (either from Live or Cache)
+    if (!playerDB || playerDB.length === 0) {
+        alert("Data not loaded. Please wait for sync.");
+        return;
+    }
+
+    if (!confirm("AI will rebuild your squad based on current expected points. Continue?")) return;
+
+    let budget = 100.0;
+    const used = [];
+    // Reset squad to default positions first to ensure clean formation
+    squad.forEach((s, i) => {
+        if (i === 0 || i === 11) s.pos = 'GKP';
+        else if (i <= 4 || i === 12) s.pos = 'DEF';
+        else if (i <= 8 || i === 13) s.pos = 'MID';
+        else s.pos = 'FWD';
+    });
+
+    squad.forEach((slot, i) => {
+        const buffer = (squad.length - 1 - i) * 4.5;
+        const choice = playerDB.find(p => 
+            p.pos === slot.pos && 
+            !used.includes(p.name) && 
+            parseFloat(p.price) <= (budget - buffer)
+        ) || playerDB.filter(p => p.pos === slot.pos && !used.includes(p.name))
+                     .sort((a,b) => a.price - b.price)[0];
+
+        if (choice) {
+            slot.name = choice.name;
+            used.push(choice.name);
+            budget -= parseFloat(choice.price);
+        }
+    });
+
+    saveSquad();
+    renderPitch();
 }
 
-function initSwipeHint() {
-    const hint = document.getElementById('scroll-hint');
-    const tableWrapper = document.querySelector('.table-wrapper');
-    if (!hint || !tableWrapper) return;
-    tableWrapper.addEventListener('scroll', () => hint.classList.add('hidden-hint'), { once: true });
-    setTimeout(() => hint.classList.add('hidden-hint'), 5000);
-}
-
-// --- 4. RENDERERS ---
+// --- 4. RENDERERS & UTILS ---
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
@@ -202,25 +226,18 @@ function createSlotUI(slotData) {
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
-    const formationLabel = document.getElementById('formation-text');
     if(!pitch || !bench) return;
     pitch.innerHTML = ''; bench.innerHTML = '';
 
-    const active = squad.filter(s => !s.isBench);
-    
-    // Update Formation Text (e.g., 4-4-2)
-    if(formationLabel) {
-        const f = `${active.filter(s=>s.pos==='DEF').length}-${active.filter(s=>s.pos==='MID').length}-${active.filter(s=>s.pos==='FWD').length}`;
-        formationLabel.textContent = f;
-    }
-
+    // Render Starting XI by position rows
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
         const row = document.createElement('div');
         row.className = 'row';
-        active.filter(s => s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
+        squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
         pitch.appendChild(row);
     });
 
+    // Render Bench
     const bRow = document.createElement('div');
     bRow.className = 'row';
     squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
@@ -229,7 +246,6 @@ function renderPitch() {
     updateStats();
 }
 
-// --- 5. UTILS & HANDLERS ---
 function getNextFixtures(teamId) {
     if (!fixturesDB || fixturesDB.length === 0) return [];
     return fixturesDB
@@ -265,30 +281,6 @@ function updateStats() {
     if(xpDisplay) xpDisplay.textContent = xp.toFixed(1);
 }
 
-function runAIWildcard() {
-    if (!playerDB.length) return;
-    if (!confirm("AI will rebuild your squad for max points. Continue?")) return;
-
-    let budget = 100.0;
-    const used = [];
-    squad.forEach((slot, i) => {
-        const buffer = (squad.length - 1 - i) * 4.5;
-        const choice = playerDB.find(p => 
-            p.pos === slot.pos && !used.includes(p.name) && parseFloat(p.price) <= (budget - buffer)
-        ) || playerDB.filter(p => p.pos === slot.pos && !used.includes(p.name))
-                     .sort((a,b) => a.price - b.price)[0];
-
-        if (choice) {
-            slot.name = choice.name;
-            used.push(choice.name);
-            budget -= parseFloat(choice.price);
-        }
-    });
-    saveSquad();
-    renderPitch();
-    triggerLineupBounce();
-}
-
 function updatePlayer(id, name) { 
     squad.find(s => s.id === id).name = name; 
     saveSquad(); 
@@ -301,21 +293,8 @@ function loadSquad() {
     if (saved) squad = JSON.parse(saved);
 }
 
-// --- 6. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
-    initSwipeHint();
-    
     const wcBtn = document.getElementById('wildcard-btn');
     if (wcBtn) wcBtn.onclick = runAIWildcard;
-
-    const resetBtn = document.querySelector('.btn-reset');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            if(confirm("Reset Squad?")) {
-                localStorage.removeItem('kopala_saved_squad');
-                location.reload();
-            }
-        });
-    }
 });
