@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI Master Engine (v2.7.0)
- * UPDATED: Two-Column Desktop Layout, Sidebar Market & Validation logic.
+ * KOPALA FPL - AI Master Engine (v2.8.0)
+ * UPDATED: Sub-button Arrow, Mobile Scroll, and Selection Actions (Cancel/Remove).
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -119,7 +119,6 @@ function renderPlayerList(filterPos = 'ALL') {
 
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
     
-    // Update Tab UI
     document.querySelectorAll('.filter-tabs button').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.getElementById(`tab-${filterPos}`);
     if(activeBtn) activeBtn.classList.add('active');
@@ -133,7 +132,23 @@ function renderPlayerList(filterPos = 'ALL') {
         filtered = filtered.filter(p => p.pos === filterPos);
     }
 
-    listContainer.innerHTML = filtered.slice(0, 50).map(p => `
+    let listHTML = '';
+
+    // Action Header: Shows only when a slot is highlighted
+    if (selectedSlotId !== null) {
+        listHTML += `
+            <div class="selection-actions" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button onclick="cancelSelection()" style="flex: 1; padding: 12px; background: #eee; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                    ✕ Back
+                </button>
+                <button onclick="removePlayerFromSlot()" style="flex: 1; padding: 12px; background: #fee2e2; color: #b91c1c; border: 1px solid #ef4444; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                    🗑️ Remove
+                </button>
+            </div>
+        `;
+    }
+
+    listHTML += filtered.slice(0, 50).map(p => `
         <div class="list-item" onclick="selectFromList('${p.name}')">
             <div>
                 <b style="font-size: 0.9rem;">${p.name}</b><br>
@@ -145,6 +160,8 @@ function renderPlayerList(filterPos = 'ALL') {
             </div>
         </div>
     `).join('');
+
+    listContainer.innerHTML = listHTML;
 }
 
 function selectFromList(playerName) {
@@ -156,8 +173,10 @@ function selectFromList(playerName) {
 }
 
 function updatePlayer(id, name) { 
+    const currentSlot = squad.find(s => s.id === id);
+    
     if (!name) {
-        squad.find(s => s.id === id).name = "";
+        currentSlot.name = "";
         saveSquad(); 
         renderPitch();
         return;
@@ -165,7 +184,6 @@ function updatePlayer(id, name) {
 
     const player = playerDB.find(p => p.name === name);
     const teamCounts = getTeamCounts();
-    const currentSlot = squad.find(s => s.id === id);
     const existingPlayer = playerDB.find(p => p.name === currentSlot.name);
 
     // 3-Player Team Limit Check
@@ -178,8 +196,34 @@ function updatePlayer(id, name) {
 
     currentSlot.name = name; 
     saveSquad(); 
-    selectedSlotId = null; // Reset selection
+    selectedSlotId = null; 
     renderPitch(); 
+    renderPlayerList(); // Refresh list to remove action buttons
+}
+
+// Action Helpers
+function cancelSelection() {
+    selectedSlotId = null;
+    renderPitch();
+    renderPlayerList();
+    scrollToElement('pitch-container');
+}
+
+function removePlayerFromSlot() {
+    if (selectedSlotId !== null) {
+        updatePlayer(selectedSlotId, "");
+        selectedSlotId = null;
+        renderPitch();
+        renderPlayerList();
+        scrollToElement('pitch-container');
+    }
+}
+
+function scrollToElement(id) {
+    const el = document.getElementById(id);
+    if (window.innerWidth <= 768 && el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 // --- 4. RENDER PITCH ---
@@ -189,16 +233,17 @@ function createSlotUI(slotData) {
     
     const player = playerDB.find(p => p.name === slotData.name);
     let jerseyClass = player ? ((player.pos === 'GKP') ? 'gkp_color' : player.teamShort) : 'default';
-
     const fixtures = player ? getNextFixtures(player.teamId) : [];
 
     div.onclick = () => {
         selectedSlotId = slotData.id;
         renderPitch(); 
         renderPlayerList(slotData.pos);
+        scrollToElement('player-list-results');
     };
 
     div.innerHTML = `
+        <div class="sub-button">⇄</div>
         <div class="jersey ${jerseyClass}"></div>
         <div class="player-card">
             <div class="card-header">
