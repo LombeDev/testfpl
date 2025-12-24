@@ -220,3 +220,60 @@ n-top: 60px; text-align: center; }
 .riser-text { color: #008a4a; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; margin-top: 10px; }
 .faller-text { color: #e53e3e; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; margin-top: 10px; }
 .divider { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+
+
+
+
+/* --- Desktop Navigation Styling --- */
+
+/* 1. Reset the list and hide it by default (Mobile-first) */
+.nav-links {
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 20px;
+}
+
+/* 2. Style the individual links */
+.nav-links li a {
+    color: #ffffff; /* White text like your photo */
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.nav-links li a:hover {
+    color: #00ff87; /* FPL Green hover effect */
+}
+
+/* 3. Desktop View (When screen is wider than 768px) */
+@media screen and (min-width: 768px) {
+    /* Hide the hamburger icon */
+    #menu-btn {
+        display: none !important;
+    }
+
+    /* Show the links and align them horizontally */
+    .nav-links {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Ensure the navbar layout is horizontal */
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        background-color: #1a1a1a; /* Dark background from your photo */
+    }
+
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 40px; /* Space between logo and first link */
+    }
+}
