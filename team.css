@@ -524,3 +524,22 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
 .transfer-out { color: #ef4444; font-weight: bold; }
 .transfer-arrow { color: #94a3b8; }
 .transfer-in { color: #22c55e; font-weight: bold; }
+
+
+
+#team-rating {
+    transition: color 0.5s ease, transform 0.3s ease;
+    display: inline-block;
+}
+
+/* Optional: Add a subtle pulse if the rating is 90%+ */
+.rating-elite {
+    text-shadow: 0 0 10px rgba(0, 255, 135, 0.5);
+    animation: shine 2s infinite;
+}
+
+@keyframes shine {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
