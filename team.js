@@ -1,97 +1,129 @@
 /**
- * KOPALA FPL - AI Master Engine (v4.5.0)
- * FIX: Mobile Connection Error & Proxy Failover
+ * KOPALA FPL - AI Master Engine (v4.6.0)
+ * MERGED: Advanced Swap Logic + Mobile CORS Bypass + 24hr Cache
  */
 
-// List of public proxies to try if the primary fails
-const PROXY_LIST = [
-    "https://corsproxy.io/?",
-    "https://api.allorigins.win/raw?url=",
-    "https://thingproxy.freeboard.io/fetch/"
-];
-
-const API_BASE = "https://fantasy.premierleague.com/api/bootstrap-static/"; 
-const CACHE_KEY = 'kopala_fpl_cache';
-const CACHE_TIME = 6 * 60 * 60 * 1000; // 6 Hours
+const PROXY = "https://corsproxy.io/?";
+const API_BASE = "https://fantasy.premierleague.com/api/"; 
+const TIME_KEY = 'kopala_cache_timestamp';
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; 
 
 let playerDB = [];
-let teamsDB = {};
-let squad = JSON.parse(localStorage.getItem('kopala_squad')) || [
-    { id: 0, pos: 'GKP', name: '', isBench: false }, { id: 1, pos: 'DEF', name: '', isBench: false },
-    { id: 2, pos: 'DEF', name: '', isBench: false }, { id: 3, pos: 'DEF', name: '', isBench: false },
-    { id: 4, pos: 'DEF', name: '', isBench: false }, { id: 5, pos: 'MID', name: '', isBench: false },
-    { id: 6, pos: 'MID', name: '', isBench: false }, { id: 7, pos: 'MID', name: '', isBench: false },
-    { id: 8, pos: 'MID', name: '', isBench: false }, { id: 9, pos: 'FWD', name: '', isBench: false },
-    { id: 10, pos: 'FWD', name: '', isBench: false }, { id: 11, pos: 'GKP', name: '', isBench: true },
-    { id: 12, pos: 'DEF', name: '', isBench: true }, { id: 13, pos: 'MID', name: '', isBench: true },
-    { id: 14, pos: 'FWD', name: '', isBench: true }
+let teamsDB = {}; 
+let fixturesDB = [];
+let selectedSlotId = null;
+
+let squad = JSON.parse(localStorage.getItem('kopala_saved_squad')) || [
+    { id: 0, pos: 'GKP', name: '', isBench: false },
+    { id: 1, pos: 'DEF', name: '', isBench: false }, { id: 2, pos: 'DEF', name: '', isBench: false },
+    { id: 3, pos: 'DEF', name: '', isBench: false }, { id: 4, pos: 'DEF', name: '', isBench: false },
+    { id: 5, pos: 'MID', name: '', isBench: false }, { id: 6, pos: 'MID', name: '', isBench: false },
+    { id: 7, pos: 'MID', name: '', isBench: false }, { id: 8, pos: 'MID', name: '', isBench: false },
+    { id: 9, pos: 'FWD', name: '', isBench: false }, { id: 10, pos: 'FWD', name: '', isBench: false },
+    { id: 11, pos: 'GKP', name: '', isBench: true }, { id: 12, pos: 'DEF', name: '', isBench: true },
+    { id: 13, pos: 'MID', name: '', isBench: true }, { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- SMART SYNC WITH FAILOVER ---
-async function syncData(force = false) {
+async function syncData() {
     const ticker = document.getElementById('ticker');
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-
-    // 1. Use Cache if available and fresh (Best for Mobile)
-    if (!force && cached && (Date.now() - cached.timestamp < CACHE_TIME)) {
-        console.log("📦 Using Cached Data");
-        processData(cached.data);
-        ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Online (Cached)</span>";
+    const cachedPlayers = localStorage.getItem('kopala_player_cache');
+    const cachedTime = localStorage.getItem(TIME_KEY);
+    
+    // 1. Mobile Cache Check
+    if (cachedPlayers && cachedTime && (Date.now() - cachedTime < TWENTY_FOUR_HOURS)) {
+        playerDB = JSON.parse(cachedPlayers);
+        fixturesDB = JSON.parse(localStorage.getItem('kopala_fixtures_cache') || '[]');
+        teamsDB = JSON.parse(localStorage.getItem('kopala_teams_cache') || '{}');
+        if (ticker) ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Data: Fresh (Cached)</span>";
         renderPitch();
         return;
     }
 
-    // 2. Try Proxies one by one
-    ticker.innerHTML = "📡 Connecting to FPL...";
-    for (let proxy of PROXY_LIST) {
-        try {
-            const response = await fetch(`${proxy}${encodeURIComponent(API_BASE)}`);
-            if (!response.ok) throw new Error("Proxy failed");
-            
-            const data = await response.json();
-            
-            // Save to Cache
-            localStorage.setItem(CACHE_KEY, JSON.stringify({
-                timestamp: Date.now(),
-                data: data
-            }));
+    // 2. Fetch via Proxy (Mobile Fix)
+    if (ticker) ticker.textContent = "Syncing live FPL data...";
+    try {
+        const [bootRes, fixRes] = await Promise.all([
+            fetch(`${PROXY}${encodeURIComponent(API_BASE + 'bootstrap-static/')}`),
+            fetch(`${PROXY}${encodeURIComponent(API_BASE + 'fixtures/')}`)
+        ]);
+        
+        const data = await bootRes.json();
+        const rawFixtures = await fixRes.json();
 
-            processData(data);
-            ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Engine Online</span>";
-            renderPitch();
-            return; // Success! Exit loop.
-        } catch (err) {
-            console.warn(`Proxy ${proxy} failed, trying next...`);
-        }
-    }
+        // Process Teams
+        data.teams.forEach(t => {
+            let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+            teamsDB[t.id] = slug;
+        });
 
-    // 3. Last Resort: Use old cache even if expired
-    if (cached) {
-        processData(cached.data);
-        ticker.innerHTML = "⚠️ <span style='color:orange'>Server busy, using last known data</span>";
+        // Process Players
+        playerDB = data.elements.map(p => ({
+            id: p.id,
+            name: p.web_name,
+            teamId: p.team,
+            teamShort: teamsDB[p.team] || 'default',
+            pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
+            price: (p.now_cost / 10).toFixed(1),
+            xp: parseFloat(p.ep_next) || 0
+        })).sort((a,b) => b.xp - a.xp);
+
+        fixturesDB = rawFixtures;
+
+        // Save everything to localStorage
+        localStorage.setItem('kopala_player_cache', JSON.stringify(playerDB));
+        localStorage.setItem('kopala_fixtures_cache', JSON.stringify(fixturesDB));
+        localStorage.setItem('kopala_teams_cache', JSON.stringify(teamsDB));
+        localStorage.setItem(TIME_KEY, Date.now().toString());
+        
+        if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine Online (Live)</span>";
         renderPitch();
-    } else {
-        ticker.innerHTML = "❌ <span style='color:#ff4444'>Connection Error. Tap to retry.</span>";
-        ticker.onclick = () => syncData(true);
+    } catch (e) {
+        console.error("Sync failed:", e);
+        if (ticker) ticker.innerHTML = "📡 <span style='color:orange'>Offline: Using Cached Data</span>";
     }
 }
 
-function processData(data) {
-    data.teams.forEach(t => { 
-        teamsDB[t.id] = { name: t.name.toLowerCase().replace(/\s+/g, '_'), short: t.short_name }; 
-    });
-    
-    playerDB = data.elements.map(p => ({
-        name: p.web_name,
-        teamShort: teamsDB[p.team]?.name || 'default',
-        teamCode: teamsDB[p.team]?.short || 'N/A',
-        pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
-        price: (p.now_cost / 10).toFixed(1),
-        xp: parseFloat(p.ep_next) || 0
-    })).sort((a,b) => b.xp - a.xp);
+// --- Swap & Validation ---
+function handleSwap(id) {
+    if (selectedSlotId === null) {
+        selectedSlotId = id;
+    } else {
+        const p1 = squad.find(s => s.id === selectedSlotId);
+        const p2 = squad.find(s => s.id === id);
+
+        if (p1.id !== p2.id) {
+            if ((p1.pos === 'GKP' || p2.pos === 'GKP') && p1.pos !== p2.pos) {
+                alert("Goalkeepers can only be swapped with Goalkeepers.");
+            } else {
+                // Swap logic
+                const tempName = p1.name;
+                const tempPos = p1.pos;
+                p1.name = p2.name; p1.pos = p2.pos;
+                p2.name = tempName; p2.pos = tempPos;
+
+                if (!isValidFormation()) {
+                    alert("Invalid! Need 3+ DEF, 2+ MID, 1+ FWD");
+                    p2.name = p1.name; p2.pos = p1.pos;
+                    p1.name = tempName; p1.pos = tempPos;
+                } else {
+                    localStorage.setItem('kopala_saved_squad', JSON.stringify(squad));
+                }
+            }
+        }
+        selectedSlotId = null;
+    }
+    renderPitch();
 }
 
-// --- UI Logic (Pitch & Stats) ---
+function isValidFormation() {
+    const active = squad.filter(s => !s.isBench);
+    const defs = active.filter(s => s.pos === 'DEF').length;
+    const mids = active.filter(s => s.pos === 'MID').length;
+    const fwds = active.filter(s => s.pos === 'FWD').length;
+    return defs >= 3 && mids >= 2 && fwds >= 1;
+}
+
+// --- Renderers ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
@@ -114,59 +146,66 @@ function renderPitch() {
 
 function createSlotUI(slotData) {
     const div = document.createElement('div');
-    div.className = `slot`;
-    const p = playerDB.find(x => x.name === slotData.name);
-    const jerseyClass = p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamShort) : 'default';
+    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
+    
+    const player = playerDB.find(p => p.name === slotData.name);
+    const jerseyClass = player ? (player.pos === 'GKP' ? 'gkp_color' : player.teamShort) : 'default';
+    const fixtures = player ? getNextFixtures(player.teamId) : [];
 
     div.innerHTML = `
-        <div class="jersey ${jerseyClass}"></div>
+        <div class="jersey ${jerseyClass}" onclick="handleSwap(${slotData.id})"></div>
         <div class="player-card">
-            <div class="card-header">${slotData.name || slotData.pos}</div>
-            ${p ? `<div class="xp-badge">${p.xp} XP</div>` : ''}
-        </div>`;
-
-    div.onclick = () => {
-        const search = prompt(`Search ${slotData.pos} (e.g., Salah):`, slotData.name);
-        if (search !== null) {
-            const found = playerDB.find(pl => 
-                pl.name.toLowerCase().includes(search.toLowerCase()) && 
-                pl.pos === slotData.pos
-            );
-            if (found) {
-                const idx = squad.findIndex(s => s.id === slotData.id);
-                squad[idx].name = found.name;
-                localStorage.setItem('kopala_squad', JSON.stringify(squad));
-                renderPitch();
-            } else if (search !== "") {
-                alert("Player not found in this position!");
-            }
-        }
-    };
+            <div class="card-header">
+                <span class="p-name">${slotData.name || slotData.pos}</span>
+                <span class="p-price">${player ? player.price + 'm' : ''}</span>
+            </div>
+            <div class="card-fixtures">
+                ${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}<br>${f.loc}</div>`).join('')}
+            </div>
+        </div>
+        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
+            <option value="">-- Pick --</option>
+            ${playerDB.filter(p => p.pos === slotData.pos).map(p => 
+                `<option value="${p.name}" ${slotData.name === p.name ? 'selected' : ''}>${p.name}</option>`
+            ).join('')}
+        </select>`;
     return div;
 }
 
+function getNextFixtures(teamId) {
+    if (!fixturesDB.length) return [];
+    return fixturesDB
+        .filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
+        .slice(0, 3)
+        .map(f => {
+            const isHome = f.team_h === teamId;
+            return {
+                opp: (teamsDB[isHome ? f.team_a : f.team_h] || "???").substring(0,3).toUpperCase(),
+                loc: isHome ? 'H' : 'A',
+                diff: isHome ? f.team_h_difficulty : f.team_a_difficulty
+            };
+        });
+}
+
 function updateStats() {
-    let xp = 0, spent = 0;
+    let xp = 0, val = 0;
     squad.forEach(s => {
         const p = playerDB.find(x => x.name === s.name);
         if (p) {
-            spent += parseFloat(p.price);
+            val += parseFloat(p.price);
             if (!s.isBench) xp += p.xp;
         }
     });
     const budgetEl = document.getElementById('budget-val');
-    const xpEl = document.getElementById('v-xp');
-    if(budgetEl) budgetEl.textContent = `£${(100 - spent).toFixed(1)}m`;
-    if(xpEl) xpEl.textContent = xp.toFixed(1);
+    if(budgetEl) budgetEl.textContent = `£${(100 - val).toFixed(1)}m`;
+    const xpDisplay = document.getElementById('v-xp');
+    if(xpDisplay) xpDisplay.textContent = xp.toFixed(1);
 }
 
-// Reset Function
-window.resetSquad = function() {
-    if(confirm("Are you sure you want to clear your team?")) {
-        squad.forEach(s => s.name = "");
-        localStorage.setItem('kopala_squad', JSON.stringify(squad));
-        renderPitch();
-    }
-};
+function updatePlayer(id, name) { 
+    squad.find(s => s.id === id).name = name; 
+    localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); 
+    renderPitch(); 
+}
 
-document.addEventListener('DOMContentLoaded', () => syncData());
+document.addEventListener('DOMContentLoaded', syncData);
