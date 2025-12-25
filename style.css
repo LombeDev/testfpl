@@ -308,3 +308,94 @@ footer { background: var(--dark-blue); color: white; padding: 40px 15px; margin-
     font-size: 14px;
     border-radius: 8px 8px 0 0;
 }
+
+
+
+
+
+.card-pro {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 28px;
+    padding: 30px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+    margin: 20px auto;
+    max-width: 900px;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 15px;
+    align-items: center;
+}
+
+.player-profile { text-align: center; }
+
+.compare-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    margin-bottom: 12px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.val {
+    font-size: 1.2rem;
+    font-weight: 900;
+    width: 50px;
+    text-align: center;
+    transition: all 0.4s var(--elastic);
+}
+
+.winner {
+    color: #00ff87 !important; /* FPL Green */
+    transform: scale(1.25);
+    text-shadow: 0 0 15px rgba(0, 255, 135, 0.5);
+}
+
+/* Share Button & Feedback */
+.fpl-btn {
+    position: relative;
+    background: linear-gradient(135deg, #ff005a, #37003c);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 50px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(255, 0, 90, 0.3);
+    transition: all 0.3s var(--elastic);
+}
+
+.fpl-btn:hover { transform: translateY(-4px); }
+
+.share-feedback {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #37003c;
+    padding: 6px 15px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s var(--elastic);
+}
+
+.share-feedback.visible {
+    opacity: 1;
+    top: -50px;
+}
