@@ -83,13 +83,16 @@
         .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
         .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
 
-        /* --- ORIGINAL CARD STRUCTURE --- */
+        /* --- CARD STRUCTURE (FIXED FOR OVERFLOW) --- */
         .card {
             background-color: var(--fpl-container);
             border: 1px solid var(--fpl-border);
             border-radius: 24px;
-            padding: 24px;
+            padding: 20px;
             margin-bottom: 20px;
+            height: auto; /* Ensures card grows with content */
+            min-height: fit-content;
+            overflow: hidden;
         }
 
         .accent-title {
@@ -98,29 +101,35 @@
             text-transform: uppercase;
             font-size: 0.9rem;
             margin-bottom: 15px;
+            text-align: center;
         }
 
-        /* --- DEADLINE TIMER (Fixed to match your JS) --- */
+        /* --- DEADLINE TIMER (Fixed Alignment) --- */
         #countdown-timer {
             display: flex;
+            flex-wrap: wrap; /* Allows wrapping on very small screens */
             justify-content: center;
-            gap: 15px;
+            gap: 10px;
+            width: 100%;
         }
 
         .timer-unit {
             background-color: var(--fpl-surface);
-            padding: 12px;
-            border-radius: 16px;
+            padding: 10px 5px;
+            border-radius: 12px;
+            flex: 1; /* Distributes space evenly */
             min-width: 60px;
+            max-width: 80px;
             text-align: center;
             border: 1px solid var(--fpl-border);
         }
 
         .timer-value {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 900;
             color: var(--fpl-primary);
             display: block;
+            margin-bottom: 4px;
         }
 
         .timer-label {
@@ -128,12 +137,8 @@
             font-weight: 700;
             opacity: 0.6;
             text-transform: uppercase;
+            display: block;
         }
-
-        /* --- PRICE LIST STYLES (Restored) --- */
-        .price-list-vertical { display: flex; flex-direction: column; gap: 8px; }
-        .riser-text { color: #00ff87; }
-        .faller-text { color: #ff005a; }
 
         /* --- NAVIGATION --- */
         .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
@@ -209,12 +214,15 @@
         <div id="loading-overlay">Updating FPL Data...</div>
 
         <div id="deadline-card" class="card">
-            <h3 class="accent-title" style="text-align: center;">Next Deadline</h3>
+            <h3 class="accent-title">Next Deadline</h3>
             <div id="countdown-timer">
                 <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
                 <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
                 <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
                 <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
+            </div>
+            <div id="gw-label" style="text-align: center; margin-top: 15px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
+                GW 18 DEADLINE
             </div>
         </div>
 
@@ -228,16 +236,8 @@
         
         <div id="price-card" class="card" style="display:none;">
             <h3 class="accent-title">Daily Price Changes</h3>
-            <div class="vertical-scroll-container">
-                <div class="scroll-section">
-                    <h4 class="mini-header riser-text"><i class="fa-solid fa-arrow-up"></i> Risers</h4>
-                    <div id="risers-list" class="price-list-vertical"></div>
-                </div>
-                <div class="scroll-section" style="margin-top:15px;">
-                    <h4 class="mini-header faller-text"><i class="fa-solid fa-arrow-down"></i> Fallers</h4>
-                    <div id="fallers-list" class="price-list-vertical"></div>
-                </div>
-            </div>    
+            <div id="risers-list"></div>
+            <div id="fallers-list"></div>
         </div>
     </main>
 
