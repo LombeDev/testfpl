@@ -33,6 +33,25 @@
             font-family: 'Inter', 'Segoe UI', sans-serif;
         }
 
+        /* --- PROGRESS BAR STYLES --- */
+        .progress-container {
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            overflow: hidden;
+            position: sticky;
+            top: 58px; /* Matches Navbar height */
+            z-index: 1100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--fpl-primary);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 12px rgba(var(--fpl-primary-rgb), 0.6);
+        }
+
         /* --- THEMED NAVBAR --- */
         .navbar {
             background-color: var(--fpl-container);
@@ -63,7 +82,6 @@
             transition: color var(--transition-speed);
         }
 
-        /* --- THEME PICKER (DROPDOWN) --- */
         .theme-menu-container { position: relative; display: inline-block; }
         
         .btn-round-theme {
@@ -76,7 +94,7 @@
         }
 
         .theme-dropdown {
-            display: none; /* Explicitly hidden by default */
+            display: none;
             position: absolute; top: 50px; right: 0;
             background: var(--fpl-container); border: 1px solid var(--fpl-border);
             border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
@@ -86,7 +104,6 @@
         .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
         .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
 
-        /* --- GLOW EFFECTS & DASHBOARD UI --- */
         .league-btn.active, .toggle-btn.active {
             background-color: var(--fpl-primary) !important;
             color: white !important;
@@ -99,6 +116,7 @@
             border-radius: 24px;
             box-shadow: none;
             overflow: hidden;
+            margin-bottom: 20px;
         }
 
         .page-title { color: var(--fpl-primary); font-weight: 900; text-transform: uppercase; }
@@ -106,14 +124,10 @@
         .search-btn-round {
             background: var(--fpl-surface);
             border-radius: 50%;
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
             border: 1px solid var(--fpl-border);
-            cursor: pointer;
-            color: var(--fpl-primary);
+            cursor: pointer; color: var(--fpl-primary);
         }
 
         .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
@@ -124,7 +138,7 @@
             .nav-links { display: flex; align-items: center; }
         }
 
-        #last-updated { background: var(--fpl-container) !important; color: var(--fpl-on-container) !important; border: 1px solid var(--fpl-border) !important; }
+        #last-updated { background: var(--fpl-container) !important; color: var(--fpl-on-container) !important; border: 1px solid var(--fpl-border) !important; padding: 5px 10px; border-radius: 12px; font-size: 0.8rem;}
     </style>
 </head>
 <body>
@@ -188,6 +202,10 @@
         </div>
     </nav>
 
+    <div class="progress-container">
+        <div id="sync-progress-bar" class="progress-bar"></div>
+    </div>
+
     <div class="league-nav-container">
         <div class="league-nav-bar">
             <button class="league-btn active" data-id="PL" onclick="switchLeague('PL')">EPL</button>
@@ -202,14 +220,14 @@
 
     <main class="main-content">
         <div class="container">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; padding: 0 10px;">
                 <h1 id="section-title" class="page-title" style="margin:0;">English Premier League</h1>
                 <span id="last-updated">
                     <i class="fas fa-history"></i> Syncing...
                 </span>
             </div>
             
-            <div id="loader">Syncing Live Data...</div>
+            <div id="loader" style="text-align:center; padding: 20px; font-weight:bold; opacity:0.6;">Syncing Live Data...</div>
 
             <div class="dashboard-grid">
                 <section class="card">
@@ -269,6 +287,39 @@
     </footer>
 
     <script>
+        // --- 1. PROGRESS BAR LOGIC ---
+        function updateProgress(percent) {
+            const bar = document.getElementById('sync-progress-bar');
+            if (bar) {
+                bar.style.width = percent + '%';
+                if (percent >= 100) {
+                    setTimeout(() => { bar.style.width = '0%'; }, 800);
+                }
+            }
+        }
+
+        function simulateSync() {
+            updateProgress(10);
+            setTimeout(() => updateProgress(40), 150);
+            setTimeout(() => updateProgress(70), 300);
+            setTimeout(() => updateProgress(100), 500);
+        }
+
+        // Intercept league switching to show progress
+        const originalSwitchLeague = window.switchLeague;
+        window.switchLeague = function(id) {
+            simulateSync();
+            if(typeof originalSwitchLeague === 'function') originalSwitchLeague(id);
+        };
+
+        // Intercept refresh button
+        const originalForceRefresh = window.forceRefresh;
+        window.forceRefresh = function() {
+            simulateSync();
+            if(typeof originalForceRefresh === 'function') originalForceRefresh();
+        };
+
+        // --- 2. THEME LOGIC ---
         function toggleThemeMenu() {
             const menu = document.getElementById('theme-dropdown');
             menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
@@ -287,7 +338,6 @@
             document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
             localStorage.setItem('kopala_ai_theme', color);
             localStorage.setItem('kopala_is_dark', 'false');
-            // Dropdown stays hidden unless explicitly clicked
         }
 
         function toggleDarkMode() {
@@ -315,14 +365,10 @@
             document.documentElement.style.setProperty('--fpl-primary', savedTheme);
             document.documentElement.style.setProperty('--fpl-primary-rgb', hexToRgb(savedTheme));
             
-            // Ensure dropdown is closed
-            document.getElementById('theme-dropdown').style.display = 'none';
-
             if (wasDark) {
                 document.body.classList.add('dark-mode');
                 document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
             } else {
-                // Apply theme without triggering the dropdown menu
                 document.documentElement.style.setProperty('--fpl-surface', `${savedTheme}0A`);
             }
         });
