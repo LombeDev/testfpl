@@ -107,7 +107,6 @@
 
         .stat-value, .value { color: var(--fpl-primary) !important; font-weight: 900; }
 
-        /* Buttons */
         .btn-primary, .ai-action-btn {
             background-color: var(--fpl-primary) !important;
             color: white !important;
@@ -182,16 +181,16 @@
                 <div id="theme-dropdown" class="theme-dropdown">
                     <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
                     <div class="swatch-grid">
-                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a')"></div>
-                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87')"></div>
-                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c')"></div>
-                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff')"></div>
-                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00')"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff')"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00')"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4')"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea')"></div>
-                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888')"></div>
+                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
+                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
+                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
+                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
+                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
+                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
                     </div>
                     <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer; margin-top:5px;">
                         🌙 Midnight Mode
@@ -227,7 +226,6 @@
             <div class="bench-area" id="bench-container"></div>
         </div>
 
-
          <div class="btn-group" style="margin-bottom:10px;">
             <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
                 <i class="fa-solid fa-trash"></i> Reset team
@@ -258,7 +256,6 @@
                 <span id="team-rating" class="value" style="font-weight: bold;">0%</span>
             </div>
          </section>
-
     </main>
 
     <div id="analysis-modal" class="modal">
@@ -276,14 +273,17 @@
             menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         }
 
-        function applyMaterialTheme(color) {
+        function applyMaterialTheme(color, shouldClose = false) {
             document.body.classList.remove('dark-mode');
             document.documentElement.style.setProperty('--fpl-primary', color);
             const surfaceColor = `${color}0A`; 
             document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
+            
+            // Cache theme permanently
             localStorage.setItem('kopala_ai_theme', color);
             localStorage.setItem('kopala_is_dark', 'false');
-            toggleThemeMenu();
+            
+            if(shouldClose) toggleThemeMenu();
         }
 
         function toggleDarkMode() {
@@ -292,7 +292,7 @@
             if(isDark) {
                 document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
             } else {
-                applyMaterialTheme(savedTheme);
+                applyMaterialTheme(savedTheme, false);
             }
             localStorage.setItem('kopala_is_dark', isDark);
             toggleThemeMenu();
@@ -306,15 +306,21 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
             const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
+            
             document.documentElement.style.setProperty('--fpl-primary', savedTheme);
+            
             if (wasDark) {
                 document.body.classList.add('dark-mode');
                 document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
             } else {
-                applyMaterialTheme(savedTheme);
+                // Pass 'false' so it sets the colors without opening the menu
+                applyMaterialTheme(savedTheme, false);
             }
+            
+            // Explicitly ensure the menu is hidden
+            document.getElementById('theme-dropdown').style.display = 'none';
         });
     </script>
     <script src="team.js"></script>
