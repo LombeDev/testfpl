@@ -415,22 +415,22 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
 
 /* --- Action Button Styling (Matched to Image) --- */
 .ai-action-btn, .btn-primary, .btn-reset {
-    /* Colors - Light Tint Background & Subtle Border */
+    /* Colors - Light Tint Background & Soft Border (No more gradients/pink) */
     background-color: #f8faff !important; 
-    color: #0f172a !important; /* Dark text like the image */
-    border: 1px solid #e2e8f0 !important; /* Thinner, softer border */
+    color: #0f172a !important; 
+    border: 1px solid #e2e8f0 !important;
 
-    /* The "Pill" Shape from the photo */
+    /* Pill Silhouette */
     border-radius: 50px !important; 
 
     /* Typography - Clean & Normal Case */
     font-family: 'Inter', sans-serif;
     font-weight: 600;
-    text-transform: none !important; /* Matches "La Liga", "Serie A", etc. */
+    text-transform: none !important; 
     letter-spacing: -0.2px;
     font-size: 0.9rem;
 
-    /* Layout */
+    /* Layout & Alignment */
     padding: 8px 24px;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
@@ -441,21 +441,19 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* --- Hover State (Modern Highlight) --- */
+/* --- Hover State (Subtle brand highlight) --- */
 .ai-action-btn:hover, .btn-primary:hover, .btn-reset:hover {
     background-color: #ffffff !important;
-    border-color: #ff005a !important; /* Your brand color highlight */
+    border-color: #ff005a !important; /* Brand pink only on hover border */
     color: #ff005a !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* --- Active State --- */
+/* --- Active State (Click animation) --- */
 .ai-action-btn:active, .btn-primary:active, .btn-reset:active {
     transform: scale(0.97);
     background-color: #f1f5f9 !important;
 }
-
 
 
 /* --- Stats Summary Section (Clean Dashboard) --- */
