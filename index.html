@@ -145,11 +145,10 @@
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--fpl-border); transition: .4s; border-radius: 34px;
-            border: 1px solid var(--fpl-border);
+            background-color: #ccc; transition: .4s; border-radius: 34px;
         }
         .slider:before {
-            position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px;
+            position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
             background-color: white; transition: .4s; border-radius: 50%;
         }
         input:checked + .slider { background-color: var(--fpl-primary); }
@@ -167,60 +166,18 @@
 </head>
 <body>
 
-    <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <h2 class="brand">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
-        </div>
-        <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Kopala FPL</a></li>
-            <li><a href="team.html">My team by AI</a></li>
-            <li><a href="price.html">Price Change Predictor</a></li>
-            <li><a href="football.html">Football Leagues</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-        </ul>
-    </div>
-
-    <div id="main-backdrop" class="backdrop"></div>
-
     <nav class="navbar">
         <div class="nav-left" style="display: flex; align-items: center;">
-            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
             <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="kopala.html">Kopala FPL</a></li>
-                <li><a href="team.html">My Team by AI</a></li>
-                <li><a href="price.html">Price Change Predictor</a></li>
-                <li><a href="football.html">Football Leagues</a></li>
-                <li><a href="contact.html">Contact Us</a></li>
-            </ul>
         </div>
-        
         <div class="nav-right">
-            <div class="theme-menu-container">
-                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
-                    <i class="fa-solid fa-palette"></i>
+            <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
+                <i class="fa-solid fa-palette"></i>
+            </button>
+            <div id="theme-dropdown" class="theme-dropdown">
+                <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer;">
+                    🌙 Midnight Mode
                 </button>
-                <div id="theme-dropdown" class="theme-dropdown">
-                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
-                    <div class="swatch-grid">
-                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
-                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
-                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
-                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
-                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
-                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
-                    </div>
-                    <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">
-                        🌙 Midnight Mode
-                    </button>
-                </div>
             </div>
         </div>
     </nav>
@@ -238,88 +195,33 @@
             </div>
             
             <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--fpl-border); display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-bell" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
-                    <span style="font-size: 0.7rem; font-weight: 800; color: var(--fpl-on-container); opacity: 0.7;">2HR DEADLINE ALERTS</span>
-                </div>
+                <span style="font-size: 0.7rem; font-weight: 800; color: var(--fpl-on-container); opacity: 0.7;">2HR DEADLINE ALERTS</span>
                 <label class="switch">
                     <input type="checkbox" id="notify-toggle" onchange="handleNotificationToggle(this.checked)">
                     <span class="slider round"></span>
                 </label>
             </div>
 
-            <button onclick="testDeadlineNotification()" style="margin-top: 10px; width: 100%; padding: 8px; border-radius: 8px; border: 1px dashed var(--fpl-primary); background: transparent; color: var(--fpl-primary); font-size: 0.7rem; font-weight: 800; cursor: pointer;">
-    <i class="fa-solid fa-flask"></i> TEST ALERT (10 SEC DELAY)
-</button>
+            <button onclick="testDeadlineNotification()" style="margin-top: 12px; width: 100%; padding: 8px; border-radius: 8px; border: 1px dashed var(--fpl-primary); background: transparent; color: var(--fpl-primary); font-size: 0.7rem; font-weight: 800; cursor: pointer;">
+                🧪 TEST NOTIFICATION (10s)
+            </button>
 
             <div id="gw-label" style="text-align: center; margin-top: 10px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
-                SYNCING DEADLINE...
+                GW LOADING...
             </div>
         </div>
 
         <div id="live-king-card" class="card" style="display:none;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <span style="background: var(--fpl-primary); color: white; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 900;">LIVE</span>
-                <h3 class="accent-title" style="margin:0;">KING OF THE GW</h3>
-            </div>
+            <h3 class="accent-title">King of the GW</h3>
             <div id="live-king-content"></div>
         </div>
         
         <div id="price-card" class="card" style="display:none;">
-            <h3 class="accent-title">Daily Price Changes</h3>
+            <h3 class="accent-title">Price Changes</h3>
             <div id="risers-list"></div>
             <div id="fallers-list"></div>
         </div>
     </main>
-
-    <script>
-        /* Theme logic as before */
-        function toggleThemeMenu() {
-            const menu = document.getElementById('theme-dropdown');
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
-
-        function applyMaterialTheme(color, shouldCloseMenu = false) {
-            document.body.classList.remove('dark-mode');
-            document.documentElement.style.setProperty('--fpl-primary', color);
-            const surfaceColor = `${color}0A`; 
-            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
-            localStorage.setItem('kopala_ai_theme', color);
-            localStorage.setItem('kopala_is_dark', 'false');
-            if(shouldCloseMenu) toggleThemeMenu();
-        }
-
-        function toggleDarkMode() {
-            const isDark = document.body.classList.toggle('dark-mode');
-            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            if(isDark) {
-                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
-            } else {
-                applyMaterialTheme(savedTheme, false);
-            }
-            localStorage.setItem('kopala_is_dark', isDark);
-            toggleThemeMenu();
-        }
-
-        window.onclick = function(e) {
-            if (!e.target.closest('.theme-menu-container')) {
-                const d = document.getElementById('theme-dropdown');
-                if (d) d.style.display = 'none';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
-            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
-            if (wasDark) {
-                document.body.classList.add('dark-mode');
-                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
-            } else {
-                applyMaterialTheme(savedTheme, false);
-            }
-        });
-    </script>
 
     <script src="script.js"></script>
 </body>
