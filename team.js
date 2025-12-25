@@ -50,7 +50,7 @@ async function syncData() {
         loadSquad();
         renderPitch();
         if (isCacheFresh && ticker) {
-            ticker.innerHTML = "✅ <span style='color:#00ff87'>AI Engine: Ready</span>";
+            ticker.innerHTML = "🚨 <span style='color:#00ff87'>Get your team rated by AI</span>";
             return; 
         }
     }
