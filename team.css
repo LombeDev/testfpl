@@ -387,3 +387,18 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     margin-bottom: 5px;
     border-left: 3px solid #ff005a;
 }
+
+
+
+.p-xp {
+    display: block;
+    font-size: 0.7rem;
+    color: #00ff87;
+    margin-top: 2px;
+    font-weight: bold;
+}
+
+#team-rating {
+    text-shadow: 0 0 10px rgba(0, 255, 135, 0.4);
+    font-size: 1.2rem;
+}
