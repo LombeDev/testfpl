@@ -85,9 +85,43 @@
         .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
         .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
 
-        /* --- PRICE PREDICTOR UI --- */
+        /* --- PRICE PREDICTOR UI & PROGRESS BARS --- */
         .main-title { color: var(--fpl-primary); font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
         
+        /* Dynamic Progress Bar Styling */
+        progress {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: none;
+        }
+
+        progress::-webkit-progress-bar {
+            background-color: var(--fpl-border);
+            border-radius: 10px;
+        }
+
+        progress::-webkit-progress-value {
+            background-color: var(--fpl-primary);
+            transition: width 0.5s ease;
+        }
+
+        progress::-moz-progress-bar {
+            background-color: var(--fpl-primary);
+        }
+
+        /* Custom class used in some scripts */
+        .progress-bar-fill {
+            background-color: var(--fpl-primary) !important;
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
         .countdown-bar { 
             background: var(--fpl-container); 
             border: 1px solid var(--fpl-border); 
@@ -210,16 +244,16 @@
                 <div id="theme-dropdown" class="theme-dropdown">
                     <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
                     <div class="swatch-grid">
-                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a')"></div>
-                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87')"></div>
-                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c')"></div>
-                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff')"></div>
-                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00')"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff')"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00')"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4')"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea')"></div>
-                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888')"></div>
+                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
+                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
+                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
+                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
+                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
+                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
                     </div>
                     <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer;">
                         🌙 Midnight Mode
@@ -282,7 +316,7 @@
             return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 0, 90';
         }
 
-        function applyMaterialTheme(color) {
+        function applyMaterialTheme(color, shouldClose = false) {
             document.body.classList.remove('dark-mode');
             document.documentElement.style.setProperty('--fpl-primary', color);
             document.documentElement.style.setProperty('--fpl-primary-rgb', hexToRgb(color));
@@ -290,7 +324,10 @@
             document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
             localStorage.setItem('kopala_ai_theme', color);
             localStorage.setItem('kopala_is_dark', 'false');
-            toggleThemeMenu();
+            if(shouldClose) {
+                const menu = document.getElementById('theme-dropdown');
+                if(menu) menu.style.display = 'none';
+            }
         }
 
         function toggleDarkMode() {
@@ -299,10 +336,11 @@
             if(isDark) {
                 document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
             } else {
-                applyMaterialTheme(savedTheme);
+                applyMaterialTheme(savedTheme, false);
             }
             localStorage.setItem('kopala_is_dark', isDark);
-            toggleThemeMenu();
+            const menu = document.getElementById('theme-dropdown');
+            if(menu) menu.style.display = 'none';
         }
 
         window.onclick = function(e) {
@@ -315,13 +353,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
             const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            
+            // Apply variables
             document.documentElement.style.setProperty('--fpl-primary', savedTheme);
             document.documentElement.style.setProperty('--fpl-primary-rgb', hexToRgb(savedTheme));
+            
+            // Hard hide menu on load
+            const dropdown = document.getElementById('theme-dropdown');
+            if(dropdown) dropdown.style.display = 'none';
+
             if (wasDark) {
                 document.body.classList.add('dark-mode');
                 document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
             } else {
-                applyMaterialTheme(savedTheme);
+                applyMaterialTheme(savedTheme, false);
             }
         });
     </script>
