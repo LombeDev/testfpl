@@ -149,33 +149,23 @@
 
         <section class="stats-summary">
             <div class="stat-box">
-                <span class="stat-label">Team Rating</span>
-                <span class="stat-value" id="team-rating">0%</span>
-            </div>
-            <div class="stat-box">
                 <span class="stat-label">Predicted Points</span>
                 <span class="stat-value" id="v-xp">0</span>
             </div>
             
             <button id="wildcard-btn" class="ai-action-btn">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> AI Wildcard
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Start with template team
             </button>
 
 
-            <button id="analyze-btn" class="btn-primary">Analyse My Team</button>
+            <button id="analyze-btn" class="btn-primary">Analyse my team</button>
 
         <div class="btn-group">
             <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
-                <i class="fa-solid fa-trash"></i> RESET SQUAD
+                <i class="fa-solid fa-trash"></i> Reset team
             </button>
         </div>
 
-        <div id="results" class="ai-card" style="display:block;">
-            <span class="verdict-label"><i class="fa-solid fa-bolt"></i> Transfer Recommendations</span>
-            <div id="transfer-list">
-                <p id="ai-msg">Fill your squad to see transfer logic.</p>
-            </div>
-        </div>
     </main>
 <div id="analysis-modal" class="modal">
     <div class="modal-content">
