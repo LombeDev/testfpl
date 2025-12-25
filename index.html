@@ -261,6 +261,70 @@
             <div id="risers-list"></div>
             <div id="fallers-list"></div>
         </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<section class="card-pro player-compare-section" id="player-comparison-card">
+    <div class="compare-header">
+        <h3><i class="fa-solid fa-scales-balanced"></i> Tactical Comparison</h3>
+        <p class="stat-hint">Side-by-side performance analysis</p>
+    </div>
+
+    <div class="comparison-grid">
+        <div class="player-slot slot-left">
+            <div class="search-box">
+                <input type="text" placeholder="Search Player 1..." id="search-p1">
+            </div>
+            <div class="player-profile" id="profile-p1">
+                <img src="https://via.placeholder.com/80/ff005a/ffffff?text=P1" class="compare-img">
+                <h4 class="p-name">Select Player</h4>
+                <span class="p-team">---</span>
+            </div>
+        </div>
+
+        <div class="compare-stats-spine">
+            <div class="stat-row" data-stat="points">
+                <span class="val p1-val">0</span>
+                <span class="stat-label">Total Points</span>
+                <span class="val p2-val">0</span>
+            </div>
+            <div class="stat-row" data-stat="xg">
+                <span class="val p1-val">0.0</span>
+                <span class="stat-label">Expected Goals (xG)</span>
+                <span class="val p2-val">0.0</span>
+            </div>
+            <div class="stat-row" data-stat="xa">
+                <span class="val p1-val">0.0</span>
+                <span class="stat-label">Expected Assists (xA)</span>
+                <span class="val p2-val">0.0</span>
+            </div>
+            <div class="stat-row" data-stat="ict">
+                <span class="val p1-val">0.0</span>
+                <span class="stat-label">ICT Index</span>
+                <span class="val p2-val">0.0</span>
+            </div>
+        </div>
+
+        <div class="player-slot slot-right">
+            <div class="search-box">
+                <input type="text" placeholder="Search Player 2..." id="search-p2">
+            </div>
+            <div class="player-profile" id="profile-p2">
+                <img src="https://via.placeholder.com/80/00ff87/000000?text=P2" class="compare-img">
+                <h4 class="p-name">Select Player</h4>
+                <span class="p-team">---</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="share-actions">
+        <button id="share-comparison-btn" class="fpl-btn share-btn">
+            <i class="fa-solid fa-camera"></i> Share Comparison
+            <span class="share-feedback" id="share-feedback-msg"></span>
+        </button>
+    </div>
+</section>
+
     </main>
 
     <script>
