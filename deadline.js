@@ -263,3 +263,21 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+
+
+
+function testDeadlineNotification() {
+    if (localStorage.getItem('kopala_notifications') !== 'true') {
+        alert("Please turn on the 'Deadline Alerts' switch first!");
+        return;
+    }
+
+    // We simulate a deadline that is exactly 2 hours and 10 seconds from now
+    // This trick forces the Service Worker math to trigger in 10 seconds
+    const fakeDeadline = new Date(Date.now() + (2 * 60 * 60 * 1000) + 10000).toISOString();
+    
+    syncDeadlineWithServiceWorker(fakeDeadline, "TEST");
+    
+    alert("Test scheduled! Now CLOSE the browser tab and lock your phone. The notification should appear in 10 seconds.");
+}
