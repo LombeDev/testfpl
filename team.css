@@ -412,40 +412,48 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     flex-wrap: wrap;
 }
 
-/* --- Action Button Styling (All White Background) --- */
-.ai-action-btn, .btn-primary, .btn-reset {
-    /* Base Colors - Force White Background */
-    background-color: #ffffff !important; 
-    color: #ff005a !important;
-    border: 2px solid #ff005a !important;
 
-    /* High-End Typography & Layout */
+/* --- Action Button Styling (Matched to Image) --- */
+.ai-action-btn, .btn-primary, .btn-reset {
+    /* Colors - Light Tint Background & Subtle Border */
+    background-color: #f8faff !important; 
+    color: #0f172a !important; /* Dark text like the image */
+    border: 1px solid #e2e8f0 !important; /* Thinner, softer border */
+
+    /* The "Pill" Shape from the photo */
+    border-radius: 50px !important; 
+
+    /* Typography - Clean & Normal Case */
     font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 10px 22px;
-    border-radius: 8px;
+    font-weight: 600;
+    text-transform: none !important; /* Matches "La Liga", "Serie A", etc. */
+    letter-spacing: -0.2px;
+    font-size: 0.9rem;
+
+    /* Layout */
+    padding: 8px 24px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease-in-out;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* --- Hover State (Consistent across all three) --- */
+/* --- Hover State (Modern Highlight) --- */
 .ai-action-btn:hover, .btn-primary:hover, .btn-reset:hover {
-    background-color: #ff005a !important;
-    color: #ffffff !important;
+    background-color: #ffffff !important;
+    border-color: #ff005a !important; /* Your brand color highlight */
+    color: #ff005a !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 0, 90, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* --- Active State (Click animation) --- */
+/* --- Active State --- */
 .ai-action-btn:active, .btn-primary:active, .btn-reset:active {
-    transform: translateY(1px);
-    box-shadow: none;
+    transform: scale(0.97);
+    background-color: #f1f5f9 !important;
 }
 
 
