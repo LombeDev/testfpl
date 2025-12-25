@@ -11,14 +11,30 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <style>
-        /* Site-Wide Consistency Variables */
+        /* --- DYNAMIC THEME SYSTEM --- */
         :root {
             --link-blue: #0000ee;
+            --fpl-primary: #ff005a; /* This changes via the Theme Picker */
+            --fpl-bg: #ffffff;      
+            --fpl-surface: #ffffff; 
+            --fpl-text: #37003c;    
+            --fpl-border: #eeeeee;
         }
 
+        /* Midnight Mode Logic */
+        body.dark-mode {
+            --fpl-bg: #020609;
+            --fpl-surface: #0b1116;
+            --fpl-text: #ffffff;
+            --fpl-border: #1e293b;
+            background-color: var(--fpl-bg);
+            color: var(--fpl-text);
+        }
+
+        /* --- NAVBAR & BRANDING --- */
         .navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid #eeeeee;
+            background-color: var(--fpl-surface);
+            border-bottom: 1px solid var(--fpl-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -31,7 +47,7 @@
         .brand {
             font-size: 1.5rem;
             font-weight: 900;
-            color: #000000 !important;
+            color: var(--fpl-text) !important;
             text-transform: uppercase;
             margin: 0;
             display: flex;
@@ -40,11 +56,137 @@
         }
 
         .brand span {
-            color: var(--link-blue);
+            color: var(--fpl-primary);
             margin-left: 5px;
         }
 
-        /* Desktop Navigation */
+        /* --- THEME PICKER BUTTON --- */
+        .theme-menu-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .btn-round {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background-color: transparent;
+            color: var(--fpl-primary);
+            border: 2px solid var(--fpl-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-round:hover {
+            background-color: var(--fpl-primary);
+            color: #ffffff !important;
+            transform: rotate(30deg);
+        }
+
+        .theme-dropdown {
+            display: none;
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: var(--fpl-surface);
+            border: 2px solid var(--fpl-primary);
+            border-radius: 12px;
+            padding: 12px;
+            width: 180px;
+            z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .palette-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #888;
+            display: block;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .swatch-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .swatch:hover { transform: scale(1.2); }
+
+        .dark-toggle-row {
+            width: 100%;
+            margin-top: 10px;
+            padding-top: 8px;
+            border: 0;
+            border-top: 1px solid var(--fpl-border);
+            background: none;
+            color: var(--fpl-text);
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* --- THEMED TIMER --- */
+        #deadline-card {
+            text-align: center;
+            padding: 20px;
+            background: var(--fpl-surface);
+            border: 1px solid var(--fpl-border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        #countdown-timer {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .timer-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timer-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--fpl-primary);
+            background: var(--fpl-bg);
+            padding: 8px;
+            border-radius: 8px;
+            min-width: 45px;
+            border: 1px solid var(--fpl-border);
+        }
+
+        .timer-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-top: 5px;
+            color: var(--fpl-text);
+            opacity: 0.7;
+        }
+
+        /* Existing Navbar Links */
         .nav-links {
             display: none;
             list-style: none;
@@ -55,43 +197,34 @@
 
         .nav-links li a {
             text-decoration: none;
-            color: #333;
+            color: var(--fpl-text);
             font-weight: 600;
             font-size: 0.9rem;
             transition: color 0.3s;
         }
 
-        .nav-links li a:hover {
-            color: var(--link-blue);
-        }
-
-        /* Switch logic for Desktop */
         @media screen and (min-width: 768px) {
             #menu-btn { display: none !important; }
             .nav-links { display: flex; align-items: center; }
         }
 
-        .search-btn-round {
-            background: #f0f0f0;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
+        /* Default card logic */
+        .card {
+            background: var(--fpl-surface);
+            border: 1px solid var(--fpl-border);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: var(--fpl-text);
         }
-
-        .search-btn-round i { color: #333; }
     </style>
 </head>
 <body>
 
     <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: #ffffff; color: #333; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+        <div style="padding: 20px; background: var(--fpl-surface); color: var(--fpl-text); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
             <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:#333; font-size:1.5rem;">&times;</button>
+            <button id="close-btn" style="background:none; border:none; color:var(--fpl-text); font-size:1.5rem;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
@@ -132,27 +265,57 @@
             </ul>
         </div>
         
-        
+        <div class="nav-right">
+            <div class="theme-menu-container">
+                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
+                    <i id="theme-icon" class="fa-solid fa-palette"></i>
+                </button>
+                
+                <div id="theme-dropdown" class="theme-dropdown">
+                    <span class="palette-label">Accent Colors</span>
+                    <div class="swatch-grid">
+                        <div class="swatch" style="background: #ff005a;" onclick="setTheme('#ff005a')"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="setTheme('#00ff87')"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="setTheme('#37003c')"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="setTheme('#04f5ff')"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="setTheme('#e1ff00')"></div>
+                        <div class="swatch" style="background: #60e6ff;" onclick="setTheme('#60e6ff')"></div>
+                        <div class="swatch" style="background: #ff4d00;" onclick="setTheme('#ff4d00')"></div>
+                        <div class="swatch" style="background: #7d32f4;" onclick="setTheme('#7d32f4')"></div>
+                        <div class="swatch" style="background: #0072ea;" onclick="setTheme('#0072ea')"></div>
+                        <div class="swatch" style="background: #888888;" onclick="setTheme('#888888')"></div>
+                    </div>
+                    <button class="dark-toggle-row" onclick="toggleDarkMode()">
+                         🌙 Midnight Mode
+                    </button>
+                </div>
+            </div>
+        </div>
     </nav>
 
     <main class="container">
         <div id="loading-overlay">Updating FPL Data...</div>
 
-        <div id="deadline-card" class="card" style="display:none;">
-            <h3>Next Deadline</h3>
-            <div id="countdown-timer"></div>
+        <div id="deadline-card" class="card">
+            <h3 style="margin:0; font-size: 12px; opacity: 0.7;">NEXT DEADLINE</h3>
+            <div id="countdown-timer">
+                <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
+                <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
+                <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
+                <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
+            </div>
         </div>
 
-        <div id="live-king-card" class="card" style="display:none; border-top: 4px solid #37003c;">
+        <div id="live-king-card" class="card" style="display:none; border-top: 4px solid var(--fpl-primary);">
             <div class="card-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <span style="background: #ff005a; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; letter-spacing: 1px;">LIVE</span>
+                <span style="background: var(--fpl-primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; letter-spacing: 1px;">LIVE</span>
                 <h3 class="accent-title" style="border:none; padding:0; margin:0; font-size: 14px;">KING OF THE GW</h3>
             </div>
             <div id="live-king-content"></div>
         </div>
         
         <div id="price-card" class="card" style="display:none;">
-            <h3 class="accent-title">Daily Price Changes</h3>
+            <h3 class="accent-title" style="color: var(--fpl-primary); border: none;">Daily Price Changes</h3>
             <div class="vertical-scroll-container">
                 <div class="scroll-section">
                     <h4 class="mini-header riser-text"><i class="fa-solid fa-arrow-up"></i> Risers</h4>
@@ -178,6 +341,46 @@
     <footer>
         <p>&copy; 2026 Kopala FPL. All rights reserved.</p>
     </footer>
+
+    <script>
+        function toggleThemeMenu() {
+            const menu = document.getElementById('theme-dropdown');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function setTheme(color) {
+            document.body.classList.remove('dark-mode');
+            document.documentElement.style.setProperty('--fpl-primary', color);
+            localStorage.setItem('kopala_ai_theme', color);
+            localStorage.setItem('kopala_is_dark', 'false');
+            toggleThemeMenu();
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const accent = isDark ? '#04f5ff' : '#ff005a';
+            document.documentElement.style.setProperty('--fpl-primary', accent);
+            localStorage.setItem('kopala_is_dark', isDark);
+            localStorage.setItem('kopala_ai_theme', accent);
+            toggleThemeMenu();
+        }
+
+        // Close dropdown if user clicks away
+        window.onclick = function(event) {
+            if (!event.target.closest('.theme-menu-container')) {
+                const dropdown = document.getElementById('theme-dropdown');
+                if (dropdown) dropdown.style.display = 'none';
+            }
+        }
+
+        // Load preferences on startup
+        document.addEventListener('DOMContentLoaded', () => {
+            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
+            if (wasDark) document.body.classList.add('dark-mode');
+        });
+    </script>
 
     <script src="script.js"></script>
     <script src="deadline.js"></script>
