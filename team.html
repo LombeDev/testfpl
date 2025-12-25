@@ -86,7 +86,23 @@
         .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
         .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
 
-        /* --- PITCH & UI ADJUSTMENTS --- */
+        /* --- PITCH AREA (Locked to Green) --- */
+        .pitch-outer-wrap {
+            background: #008444; /* Classic FPL Green */
+            background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            border: 4px solid #006b37;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            color: white; /* Labels on pitch stay white */
+        }
+
+        .pitch-labels span { color: rgba(255,255,255,0.9); font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .bench-divider { border-top: 2px dashed rgba(255,255,255,0.3); color: white; padding-top: 10px; margin-top: 20px; }
+
+        /* --- UI ELEMENTS --- */
         .status-bar {
             background: var(--fpl-container);
             border: 1px solid var(--fpl-border);
@@ -98,40 +114,24 @@
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        .status-bar select {
-            background: var(--fpl-surface);
-            color: var(--fpl-on-container);
-            border: 1px solid var(--fpl-border);
-            border-radius: 8px;
-            padding: 5px;
-        }
-
-        .pitch-outer-wrap {
-            background: var(--fpl-container);
-            border: 1px solid var(--fpl-border);
-            border-radius: 24px;
-            padding: 15px;
-            margin-bottom: 25px;
-            transition: background-color var(--transition-speed);
-        }
-
         .stat-box, .stat-item {
             background: var(--fpl-container);
             border: 1px solid var(--fpl-border);
             border-radius: 16px;
             padding: 15px;
-            transition: background-color var(--transition-speed);
         }
 
-        .stat-value, .value { color: var(--fpl-primary) !important; }
+        .stat-value, .value { color: var(--fpl-primary) !important; font-weight: 900; }
 
         /* Buttons */
         .btn-primary, .ai-action-btn {
             background-color: var(--fpl-primary) !important;
             color: white !important;
-            border-radius: 14px;
+            border-radius: 12px;
             border: none;
-            transition: filter 0.2s;
+            padding: 12px 20px;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         .btn-reset {
@@ -139,9 +139,10 @@
             background: transparent;
             border: 1px solid var(--fpl-border);
             border-radius: 12px;
+            padding: 10px;
+            cursor: pointer;
         }
 
-        /* Nav Links */
         .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
         .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
         
@@ -159,7 +160,7 @@
 </head>
 <body>
 
-<div id="side-drawer" class="drawer">
+    <div id="side-drawer" class="drawer">
         <div style="padding: 20px; background: var(--fpl-container); color: var(--fpl-on-container); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
             <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
             <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
@@ -243,28 +244,27 @@
         </div>
 
 
-         <div class="btn-group">
+         <div class="btn-group" style="margin-bottom:10px;">
             <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
                 <i class="fa-solid fa-trash"></i> Reset team
             </button>
          </div>
 
-         <div class="btn-group">
+         <div class="btn-group" style="margin-bottom:10px;">
             <button id="wildcard-btn" class="ai-action-btn">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Start with template team
             </button>
            </div>
 
-        <div class="btn-group">
+        <div class="btn-group" style="margin-bottom:20px;">
             <button id="analyze-btn" class="btn-primary">Analyse my team</button>
         </div>
 
-         <section class="stats-summary" style="margin-top: 20px; display: grid; gap: 15px;">
+         <section class="stats-summary" style="display: grid; gap: 15px;">
             <div class="stat-box">
                 <span class="stat-label">Predicted Points</span>
                 <span class="stat-value" id="v-xp">0</span>
             </div>
-
              <div class="stat-item">
                 <span class="label">3 GWs xP:</span>
                 <span id="three-week-xp" class="value">0.0</span>
@@ -277,14 +277,14 @@
 
     </main>
 
-<div id="analysis-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" id="close-modal">&times;</span>
-        <h2 id="modal-title"> AI Team Analysis</h2>
-        <hr style="border: 0; border-top: 1px solid var(--fpl-border); margin: 15px 0;">
-        <div id="analysis-results"></div>
+    <div id="analysis-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <h2 id="modal-title"> AI Team Analysis</h2>
+            <hr style="border: 0; border-top: 1px solid var(--fpl-border); margin: 15px 0;">
+            <div id="analysis-results"></div>
+        </div>
     </div>
-</div>
 
     <script>
         function toggleThemeMenu() {
