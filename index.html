@@ -140,6 +140,21 @@
             display: block;
         }
 
+        /* --- TOGGLE SWITCH CSS --- */
+        .switch { position: relative; display: inline-block; width: 38px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--fpl-border); transition: .4s; border-radius: 34px;
+            border: 1px solid var(--fpl-border);
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--fpl-primary); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
         /* --- NAVIGATION --- */
         .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
         .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
@@ -221,8 +236,20 @@
                 <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
                 <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
             </div>
-            <div id="gw-label" style="text-align: center; margin-top: 15px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
-                GW 18 DEADLINE
+            
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--fpl-border); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-bell" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
+                    <span style="font-size: 0.7rem; font-weight: 800; color: var(--fpl-on-container); opacity: 0.7;">2HR DEADLINE ALERTS</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="notify-toggle" onchange="handleNotificationToggle(this.checked)">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div id="gw-label" style="text-align: center; margin-top: 10px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
+                SYNCING DEADLINE...
             </div>
         </div>
 
@@ -242,6 +269,7 @@
     </main>
 
     <script>
+        /* Theme logic as before */
         function toggleThemeMenu() {
             const menu = document.getElementById('theme-dropdown');
             menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
@@ -284,12 +312,11 @@
                 document.body.classList.add('dark-mode');
                 document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
             } else {
-                applyMaterialTheme(savedTheme, false); // Pass false so it doesn't toggle on load
+                applyMaterialTheme(savedTheme, false);
             }
         });
     </script>
 
     <script src="script.js"></script>
-    <script src="deadline.js"></script>
 </body>
 </html>
