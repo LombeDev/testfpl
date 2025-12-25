@@ -282,3 +282,56 @@ td {
     .f-home, .f-away { font-size: 0.7rem; }
     .card { padding: 10px; }
 }
+
+
+/* --- FIXED STICKY STACKING --- */
+
+.navbar {
+    background-color: var(--fpl-container);
+    border-bottom: 1px solid var(--fpl-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1100; /* Highest priority */
+}
+
+/* Progress bar sits exactly under the navbar */
+.progress-container {
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    overflow: hidden;
+    position: sticky;
+    top: 58px; /* Navbar Height */
+    z-index: 1050;
+}
+
+/* League selector sticks under the progress bar */
+.league-nav-container {
+    position: sticky;
+    top: 61px; /* Navbar (58px) + Progress (3px) */
+    background: var(--fpl-surface);
+    z-index: 1000;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--fpl-border);
+    backdrop-filter: blur(10px); /* Makes it look premium while sticky */
+}
+
+/* Ensure body has enough padding so content doesn't jump */
+.main-content {
+    padding-top: 10px;
+}
+
+/* --- REST OF YOUR CSS PRESERVED --- */
+:root {
+    --fpl-primary: #ff005a; 
+    --fpl-surface: #fdf8f9; 
+    --fpl-container: #ffffff; 
+    --fpl-on-container: #37003c;
+    --fpl-border: rgba(0,0,0,0.06);
+    --transition-speed: 0.6s;
+}
+/* ... (keep other styles same) ... */
