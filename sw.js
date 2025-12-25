@@ -23,6 +23,26 @@ self.addEventListener('message', (event) => {
     }
 });
 
+
+self.addEventListener('message', (event) => {
+    if (event.data.type === 'SCHEDULE_DEADLINE') {
+        const deadline = new Date(event.data.deadline).getTime();
+        const notifyTime = deadline - (2 * 60 * 60 * 1000); 
+        const delay = notifyTime - Date.now();
+
+        if (delay > 0) {
+            setTimeout(() => {
+                self.registration.showNotification('KOPALA FPL', {
+                    body: `GW ${event.data.gw} deadline is in 2 hours!`,
+                    icon: '/favicon-32x32.png',
+                    vibrate: [200, 100, 200],
+                    tag: 'deadline-alert'
+                });
+            }, delay);
+        }
+    }
+});
+
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     event.waitUntil(clients.openWindow('/team.html'));
