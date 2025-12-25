@@ -277,3 +277,39 @@ n-top: 60px; text-align: center; }
         gap: 40px; /* Space between logo and first link */
     }
 }
+
+
+
+
+/* Ensure the injected content is visible */
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    color: #333; /* Dark text */
+}
+
+.player-name {
+    font-weight: 800;
+    display: block;
+    color: #37003c;
+}
+
+.team-name {
+    font-size: 11px;
+    color: #666;
+}
+
+.change-up { color: #00ff87; font-weight: bold; }
+.change-down { color: #ff005a; font-weight: bold; }
+
+.market-card h3 {
+    padding: 10px;
+    background: #37003c;
+    color: white;
+    font-size: 14px;
+    border-radius: 8px 8px 0 0;
+}
