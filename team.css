@@ -412,12 +412,14 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     flex-wrap: wrap;
 }
 
-/* --- The Unified "FPL Pink" Outline Style --- */
+/* --- Action Button Styling (All White Background) --- */
 .ai-action-btn, .btn-primary, .btn-reset {
-    background-color: #ffffff; /* Clean white background */
-    color: #ff005a;            /* FPL Pink Text */
-    border: 2px solid #ff005a; /* FPL Pink Border */
-    
+    /* Base Colors - Force White Background */
+    background-color: #ffffff !important; 
+    color: #ff005a !important;
+    border: 2px solid #ff005a !important;
+
+    /* High-End Typography & Layout */
     font-family: 'Inter', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
@@ -432,96 +434,42 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     font-size: 0.85rem;
 }
 
-/* Hover Effect: Inverse colors for high-end feel */
+/* --- Hover State (Consistent across all three) --- */
 .ai-action-btn:hover, .btn-primary:hover, .btn-reset:hover {
-    background-color: #ff005a;
-    color: #ffffff;
+    background-color: #ff005a !important;
+    color: #ffffff !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255, 0, 90, 0.15);
 }
 
-/* Active State: Slight push-down animation */
+/* --- Active State (Click animation) --- */
 .ai-action-btn:active, .btn-primary:active, .btn-reset:active {
     transform: translateY(1px);
     box-shadow: none;
 }
 
-/* --- Stats Summary (Matching Light Theme) --- */
-.stats-summary {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #ebebeb;
-    margin: 20px 0;
-    flex-wrap: wrap;
-    gap: 20px;
-}
 
-.stat-box, .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.stat-label, .label {
-    font-size: 0.7rem;
-    color: #777;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-}
-
-.stat-value, .value {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #37003c; /* Dark Purple for readability */
-}
-
-/* The AI Rating - Pink Highlight to match buttons */
-#team-rating {
-    color: #ff005a;
-}
-
-/* --- Modal Content (Matching Border) --- */
-.modal-content {
-    background-color: #ffffff;
-    border-radius: 16px;
-    border: 2px solid #ff005a; /* Matching Pink Border */
-    padding: 30px;
-    color: #37003c;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-}
-
-.transfer-item {
-    background: #fff5f8; /* Very light pink tint */
-    padding: 12px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    border-left: 4px solid #ff005a;
-    font-weight: 600;
-}
 
 /* --- Stats Summary Section (Clean Dashboard) --- */
 .stats-summary {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    background: #ffffff;
+    background: #ffffff; /* Pure white background */
     padding: 25px;
     border-radius: 12px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #e0e0e0; /* Soft light border */
     margin: 20px 0;
     flex-wrap: wrap;
     gap: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03); /* Very subtle elevation */
 }
 
 .stat-box, .stat-item {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    align-items: center;
 }
 
 .stat-label, .label {
@@ -535,21 +483,49 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
 .stat-value, .value {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #37003c;
+    color: #37003c; /* Official PL Purple for key numbers */
 }
 
-/* Specific Highlight for AI Rating */
+/* Specific Highlight for AI Rating - Using the Pink theme */
 #team-rating {
-    color: #00ff87;
+    color: #ff005a;
     font-size: 1.8rem;
 }
 
-/* --- Modal Content (Light Theme) --- */
+/* --- Modal Content (Clean Light Theme) --- */
 .modal-content {
     background-color: #ffffff;
     border-radius: 15px;
-    border: 2px solid #00ff87;
+    border: 2px solid #ff005a; /* Pink border to match the reset style */
     padding: 30px;
     color: #37003c;
     box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+}
+
+#modal-title {
+    font-weight: 800;
+    text-align: center;
+    color: #37003c;
+    margin-bottom: 15px;
+}
+
+.transfer-item {
+    background: #fdfdfd;
+    border-left: 4px solid #ff005a;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* Close button for light mode */
+.close-btn {
+    color: #999;
+    font-size: 24px;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #ff005a;
 }
