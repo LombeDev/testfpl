@@ -404,8 +404,7 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
 }
 
 
-
-/* --- Button Group Container --- */
+/* --- Button Group Layout --- */
 .btn-group, .action-row {
     display: flex;
     gap: 12px;
@@ -413,9 +412,12 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     flex-wrap: wrap;
 }
 
-/* --- High-End Outline Button Base --- */
+/* --- The Unified "FPL Pink" Outline Style --- */
 .ai-action-btn, .btn-primary, .btn-reset {
     background-color: #ffffff; /* Clean white background */
+    color: #ff005a;            /* FPL Pink Text */
+    border: 2px solid #ff005a; /* FPL Pink Border */
+    
     font-family: 'Inter', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
@@ -430,27 +432,76 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     font-size: 0.85rem;
 }
 
-/* AI Wildcard & Analyze Buttons (Green Outline) */
-.ai-action-btn, .btn-primary {
-    color: #00ff87;
-    border: 2px solid #00ff87;
-}
-
-/* Reset Team Button (Pink/Red Outline) */
-.btn-reset {
-    color: #ff005a;
-    border: 2px solid #ff005a;
-}
-
-/* Hover Effects for all buttons */
-.ai-action-btn:hover, .btn-primary:hover {
-    background-color: #00ff87;
-    color: #37003c; /* FPL Dark Purple for text on hover */
-}
-
-.btn-reset:hover {
+/* Hover Effect: Inverse colors for high-end feel */
+.ai-action-btn:hover, .btn-primary:hover, .btn-reset:hover {
     background-color: #ff005a;
     color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 0, 90, 0.15);
+}
+
+/* Active State: Slight push-down animation */
+.ai-action-btn:active, .btn-primary:active, .btn-reset:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+/* --- Stats Summary (Matching Light Theme) --- */
+.stats-summary {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #ebebeb;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.stat-box, .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label, .label {
+    font-size: 0.7rem;
+    color: #777;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.stat-value, .value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #37003c; /* Dark Purple for readability */
+}
+
+/* The AI Rating - Pink Highlight to match buttons */
+#team-rating {
+    color: #ff005a;
+}
+
+/* --- Modal Content (Matching Border) --- */
+.modal-content {
+    background-color: #ffffff;
+    border-radius: 16px;
+    border: 2px solid #ff005a; /* Matching Pink Border */
+    padding: 30px;
+    color: #37003c;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.transfer-item {
+    background: #fff5f8; /* Very light pink tint */
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border-left: 4px solid #ff005a;
+    font-weight: 600;
 }
 
 /* --- Stats Summary Section (Clean Dashboard) --- */
