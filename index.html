@@ -11,182 +11,189 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <style>
-        /* --- DYNAMIC THEME SYSTEM --- */
+        /* --- MATERIAL YOU DYNAMIC CORE --- */
         :root {
-            --link-blue: #0000ee;
-            --fpl-primary: #ff005a; /* This changes via the Theme Picker */
-            --fpl-bg: #ffffff;      
-            --fpl-surface: #ffffff; 
-            --fpl-text: #37003c;    
-            --fpl-border: #eeeeee;
+            --fpl-primary: #ff005a; 
+            --fpl-surface: #fdf8f9; /* Dynamic Tinted Background */
+            --fpl-container: #ffffff; 
+            --fpl-on-container: #37003c;
+            --fpl-border: rgba(0,0,0,0.06);
+            --transition-speed: 0.6s;
         }
 
-        /* Midnight Mode Logic */
         body.dark-mode {
-            --fpl-bg: #020609;
-            --fpl-surface: #0b1116;
-            --fpl-text: #ffffff;
-            --fpl-border: #1e293b;
-            background-color: var(--fpl-bg);
-            color: var(--fpl-text);
+            --fpl-surface: #0a0c10;
+            --fpl-container: #161b22;
+            --fpl-on-container: #ffffff;
+            --fpl-border: rgba(255,255,255,0.08);
         }
 
-        /* --- NAVBAR & BRANDING --- */
-        .navbar {
+        body {
             background-color: var(--fpl-surface);
+            color: var(--fpl-on-container);
+            transition: background-color var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), 
+                        color var(--transition-speed);
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            background-color: var(--fpl-container);
             border-bottom: 1px solid var(--fpl-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
+            padding: 12px 20px;
             position: sticky;
             top: 0;
             z-index: 1000;
+            transition: background-color var(--transition-speed);
         }
 
         .brand {
             font-size: 1.5rem;
             font-weight: 900;
-            color: var(--fpl-text) !important;
+            color: var(--fpl-on-container) !important;
             text-transform: uppercase;
             margin: 0;
             display: flex;
             align-items: center;
             text-decoration: none;
+            letter-spacing: -1px;
         }
 
         .brand span {
             color: var(--fpl-primary);
             margin-left: 5px;
+            transition: color var(--transition-speed);
         }
 
-        /* --- THEME PICKER BUTTON --- */
+        /* --- THEME PICKER (CIRCULAR) --- */
         .theme-menu-container {
             position: relative;
             display: inline-block;
         }
 
         .btn-round {
-            width: 38px;
-            height: 38px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            background-color: transparent;
+            background-color: var(--fpl-surface);
             color: var(--fpl-primary);
             border: 2px solid var(--fpl-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .btn-round:hover {
             background-color: var(--fpl-primary);
             color: #ffffff !important;
-            transform: rotate(30deg);
+            transform: scale(1.1) rotate(15deg);
         }
 
         .theme-dropdown {
             display: none;
             position: absolute;
-            top: 45px;
+            top: 55px;
             right: 0;
-            background: var(--fpl-surface);
-            border: 2px solid var(--fpl-primary);
-            border-radius: 12px;
-            padding: 12px;
-            width: 180px;
+            background: var(--fpl-container);
+            border: 1px solid var(--fpl-border);
+            border-radius: 20px;
+            padding: 18px;
+            width: 200px;
             z-index: 2000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            animation: fadeIn 0.3s ease-out;
         }
 
-        .palette-label {
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #888;
-            display: block;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .swatch-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
+            gap: 10px;
+            margin: 12px 0;
         }
 
         .swatch {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
             cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.1);
-            transition: transform 0.2s;
+            border: 2px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
         .swatch:hover { transform: scale(1.2); }
 
         .dark-toggle-row {
             width: 100%;
-            margin-top: 10px;
-            padding-top: 8px;
-            border: 0;
-            border-top: 1px solid var(--fpl-border);
-            background: none;
-            color: var(--fpl-text);
+            margin-top: 15px;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: var(--fpl-surface);
+            color: var(--fpl-on-container);
             font-weight: 700;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             cursor: pointer;
             display: flex;
-            justify-content: center;
-        }
-
-        /* --- THEMED TIMER --- */
-        #deadline-card {
-            text-align: center;
-            padding: 20px;
-            background: var(--fpl-surface);
-            border: 1px solid var(--fpl-border);
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        #countdown-timer {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .timer-unit {
-            display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: filter 0.2s;
+        }
+
+        .dark-toggle-row:hover { filter: brightness(0.9); }
+
+        /* --- CARDS & UI --- */
+        .card {
+            background-color: var(--fpl-container);
+            border: 1px solid var(--fpl-border);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: background-color var(--transition-speed), border-color var(--transition-speed);
+        }
+
+        .accent-title {
+            color: var(--fpl-primary);
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color var(--transition-speed);
+        }
+
+        /* --- TIMER --- */
+        .timer-unit {
+            background-color: var(--fpl-surface);
+            padding: 15px;
+            border-radius: 16px;
+            min-width: 65px;
+            text-align: center;
+            border: 1px solid var(--fpl-border);
+            transition: background-color var(--transition-speed);
         }
 
         .timer-value {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 900;
             color: var(--fpl-primary);
-            background: var(--fpl-bg);
-            padding: 8px;
-            border-radius: 8px;
-            min-width: 45px;
-            border: 1px solid var(--fpl-border);
+            display: block;
         }
 
-        .timer-label {
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            margin-top: 5px;
-            color: var(--fpl-text);
-            opacity: 0.7;
-        }
-
-        /* Existing Navbar Links */
+        /* Nav Links Styles */
         .nav-links {
             display: none;
             list-style: none;
@@ -197,34 +204,34 @@
 
         .nav-links li a {
             text-decoration: none;
-            color: var(--fpl-text);
+            color: var(--fpl-on-container);
             font-weight: 600;
             font-size: 0.9rem;
-            transition: color 0.3s;
+            opacity: 0.8;
+            transition: opacity 0.3s, color 0.3s;
         }
+
+        .nav-links li a:hover { opacity: 1; color: var(--fpl-primary); }
 
         @media screen and (min-width: 768px) {
             #menu-btn { display: none !important; }
             .nav-links { display: flex; align-items: center; }
         }
 
-        /* Default card logic */
-        .card {
-            background: var(--fpl-surface);
-            border: 1px solid var(--fpl-border);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: var(--fpl-text);
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.6;
+            font-size: 0.8rem;
         }
     </style>
 </head>
 <body>
 
     <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: var(--fpl-surface); color: var(--fpl-text); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
-            <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:var(--fpl-text); font-size:1.5rem;">&times;</button>
+        <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="brand">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
@@ -234,18 +241,6 @@
             <li><a href="football.html">Football Leagues</a></li>
             <li><a href="contact.html">Contact Us</a></li>
         </ul>
-    </div>
-
-    <div id="confirm-modal" class="backdrop">
-        <div class="modal-card">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">👋</div>
-            <h3 style="color: #37003c; margin: 0 0 10px 0;">Clear Team Data?</h3>
-            <p style="font-size: 0.9rem; color: #666; margin-bottom: 25px;">You will be returned to the home screen and your ID will be cleared.</p>
-            <div style="display: flex; gap: 10px;">
-                <button id="cancel-clear" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:8px; background:white; font-weight:700;">Cancel</button>
-                <button id="confirm-clear" style="flex:1; padding:12px; border:none; border-radius:8px; background: #ff005a; color:white; font-weight:700;">Clear</button>
-            </div>
-        </div>
     </div>
 
     <div id="main-backdrop" class="backdrop"></div>
@@ -272,18 +267,18 @@
                 </button>
                 
                 <div id="theme-dropdown" class="theme-dropdown">
-                    <span class="palette-label">Accent Colors</span>
+                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px;">Color Palette</span>
                     <div class="swatch-grid">
-                        <div class="swatch" style="background: #ff005a;" onclick="setTheme('#ff005a')"></div>
-                        <div class="swatch" style="background: #00ff87;" onclick="setTheme('#00ff87')"></div>
-                        <div class="swatch" style="background: #37003c;" onclick="setTheme('#37003c')"></div>
-                        <div class="swatch" style="background: #04f5ff;" onclick="setTheme('#04f5ff')"></div>
-                        <div class="swatch" style="background: #e1ff00;" onclick="setTheme('#e1ff00')"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="setTheme('#60e6ff')"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="setTheme('#ff4d00')"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="setTheme('#7d32f4')"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="setTheme('#0072ea')"></div>
-                        <div class="swatch" style="background: #888888;" onclick="setTheme('#888888')"></div>
+                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a')"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87')"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c')"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff')"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00')"></div>
+                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff')"></div>
+                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00')"></div>
+                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4')"></div>
+                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea')"></div>
+                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888')"></div>
                     </div>
                     <button class="dark-toggle-row" onclick="toggleDarkMode()">
                          🌙 Midnight Mode
@@ -293,53 +288,35 @@
         </div>
     </nav>
 
-    <main class="container">
+    <main class="container" style="max-width: 800px; margin: 30px auto; padding: 0 15px;">
         <div id="loading-overlay">Updating FPL Data...</div>
 
         <div id="deadline-card" class="card">
-            <h3 style="margin:0; font-size: 12px; opacity: 0.7;">NEXT DEADLINE</h3>
-            <div id="countdown-timer">
-                <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
-                <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
-                <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
-                <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
+            <h3 class="accent-title" style="margin-bottom: 20px; text-align: center;">Next Deadline</h3>
+            <div style="display: flex; justify-content: center; gap: 15px;">
+                <div class="timer-unit"><span class="timer-value" id="days">02</span><span style="font-size: 0.6rem; font-weight: 700; opacity: 0.6;">DAYS</span></div>
+                <div class="timer-unit"><span class="timer-value" id="hours">14</span><span style="font-size: 0.6rem; font-weight: 700; opacity: 0.6;">HRS</span></div>
+                <div class="timer-unit"><span class="timer-value" id="mins">55</span><span style="font-size: 0.6rem; font-weight: 700; opacity: 0.6;">MIN</span></div>
+                <div class="timer-unit"><span class="timer-value" id="secs">08</span><span style="font-size: 0.6rem; font-weight: 700; opacity: 0.6;">SEC</span></div>
             </div>
         </div>
 
-        <div id="live-king-card" class="card" style="display:none; border-top: 4px solid var(--fpl-primary);">
-            <div class="card-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <span style="background: var(--fpl-primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; letter-spacing: 1px;">LIVE</span>
-                <h3 class="accent-title" style="border:none; padding:0; margin:0; font-size: 14px;">KING OF THE GW</h3>
+        <div id="live-king-card" class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <span style="background: var(--fpl-primary); color: white; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 900;">LIVE</span>
+                <h3 class="accent-title" style="margin:0;">KING OF THE GW</h3>
             </div>
-            <div id="live-king-content"></div>
+            <div id="live-king-content" style="opacity: 0.8;">Analyzing live match data...</div>
         </div>
         
-        <div id="price-card" class="card" style="display:none;">
-            <h3 class="accent-title" style="color: var(--fpl-primary); border: none;">Daily Price Changes</h3>
-            <div class="vertical-scroll-container">
-                <div class="scroll-section">
-                    <h4 class="mini-header riser-text"><i class="fa-solid fa-arrow-up"></i> Risers</h4>
-                    <div id="risers-list" class="price-list-vertical"></div>
-                </div>
-                <hr class="divider">
-                <div class="scroll-section">
-                    <h4 class="mini-header faller-text"><i class="fa-solid fa-arrow-down"></i> Fallers</h4>
-                    <div id="fallers-list" class="price-list-vertical"></div>
-                </div>
-            </div>    
-        </div>
-
-        <div id="scout-card" class="card" style="display:none; border-top: 4px solid #00ff87;">
-            <div class="card-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                <i class="fa-solid fa-magnifying-glass-chart" style="color: #00ff87;"></i>
-                <h3 class="accent-title" style="border:none; padding:0; margin:0; font-size: 14px;">KOPALA SCOUT REPORT</h3>
-            </div>
-            <div id="scout-list"></div>
+        <div id="price-card" class="card">
+            <h3 class="accent-title">Market Report</h3>
+            <p style="font-size: 0.9rem; opacity: 0.7;">Daily price changes monitored by AI.</p>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2026 Kopala FPL. All rights reserved.</p>
+        <p>&copy; 2026 Kopala FPL AI. All rights reserved.</p>
     </footer>
 
     <script>
@@ -348,9 +325,16 @@
             menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         }
 
-        function setTheme(color) {
+        function applyMaterialTheme(color) {
             document.body.classList.remove('dark-mode');
+            
+            // Set Primary
             document.documentElement.style.setProperty('--fpl-primary', color);
+            
+            // Generate Surface Tint (Material You logic: 4% opacity of the hue)
+            const surfaceColor = `${color}0A`; 
+            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
+            
             localStorage.setItem('kopala_ai_theme', color);
             localStorage.setItem('kopala_is_dark', 'false');
             toggleThemeMenu();
@@ -358,27 +342,42 @@
 
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
-            const accent = isDark ? '#04f5ff' : '#ff005a';
+            const currentTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            
+            // In dark mode, we keep a more vibrant version of the accent
+            const accent = isDark ? (currentTheme === '#37003c' ? '#00ff87' : currentTheme) : currentTheme;
+            
             document.documentElement.style.setProperty('--fpl-primary', accent);
+            if(isDark) {
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(accent);
+            }
+            
             localStorage.setItem('kopala_is_dark', isDark);
-            localStorage.setItem('kopala_ai_theme', accent);
             toggleThemeMenu();
         }
 
-        // Close dropdown if user clicks away
-        window.onclick = function(event) {
-            if (!event.target.closest('.theme-menu-container')) {
-                const dropdown = document.getElementById('theme-dropdown');
-                if (dropdown) dropdown.style.display = 'none';
+        // Close dropdown when clicking outside
+        window.onclick = function(e) {
+            if (!e.target.closest('.theme-menu-container')) {
+                const d = document.getElementById('theme-dropdown');
+                if (d) d.style.display = 'none';
             }
         }
 
-        // Load preferences on startup
+        // Persistence Logic
         document.addEventListener('DOMContentLoaded', () => {
             const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
             const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
-            if (wasDark) document.body.classList.add('dark-mode');
+            
+            if (wasDark) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.style.setProperty('--fpl-primary', savedTheme);
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme);
+            }
         });
     </script>
 
