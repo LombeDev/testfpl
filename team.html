@@ -8,14 +8,36 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="team.css">
     <style>
-        /* Ensuring internal consistency for the Light Theme Header */
+        /* --- MATERIAL YOU DYNAMIC CORE --- */
         :root {
+            --fpl-primary: #ff005a; 
+            --fpl-surface: #fdf8f9; 
+            --fpl-container: #ffffff; 
+            --fpl-on-container: #37003c;
+            --fpl-border: rgba(0,0,0,0.06);
+            --transition-speed: 0.6s;
             --link-blue: #0000ee;
         }
 
+        body.dark-mode {
+            --fpl-surface: #0a0c10;
+            --fpl-container: #161b22;
+            --fpl-on-container: #ffffff;
+            --fpl-border: rgba(255,255,255,0.08);
+        }
+
+        body {
+            background-color: var(--fpl-surface);
+            color: var(--fpl-on-container);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed);
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        /* --- THEMED NAVBAR --- */
         .navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid #eeeeee;
+            background-color: var(--fpl-container);
+            border-bottom: 1px solid var(--fpl-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -28,7 +50,7 @@
         .brand {
             font-size: 1.5rem;
             font-weight: 900;
-            color: #000000 !important;
+            color: var(--fpl-on-container) !important;
             text-transform: uppercase;
             margin: 0;
             display: flex;
@@ -37,59 +59,110 @@
         }
 
         .brand span {
-            color: var(--link-blue);
+            color: var(--fpl-primary);
             margin-left: 5px;
+            transition: color var(--transition-speed);
         }
 
-        /* Desktop Navigation Links */
-        .nav-links {
-            display: none; /* Mobile first: hidden */
-            list-style: none;
-            margin: 0 0 0 30px;
-            padding: 0;
-            gap: 20px;
+        /* --- THEME PICKER --- */
+        .theme-menu-container { position: relative; display: inline-block; }
+        
+        .btn-round-theme {
+            width: 38px; height: 38px; border-radius: 50%;
+            background-color: var(--fpl-surface);
+            color: var(--fpl-primary);
+            border: 2px solid var(--fpl-primary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
         }
 
-        .nav-links li a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: color 0.3s;
+        .theme-dropdown {
+            display: none; position: absolute; top: 50px; right: 0;
+            background: var(--fpl-container); border: 1px solid var(--fpl-border);
+            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        .nav-links li a:hover {
-            color: var(--link-blue);
+        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
+        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* --- PITCH & UI ADJUSTMENTS --- */
+        .status-bar {
+            background: var(--fpl-container);
+            border: 1px solid var(--fpl-border);
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin: 15px auto;
+            max-width: 95%;
+            color: var(--fpl-on-container);
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Desktop Switch */
+        .status-bar select {
+            background: var(--fpl-surface);
+            color: var(--fpl-on-container);
+            border: 1px solid var(--fpl-border);
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .pitch-outer-wrap {
+            background: var(--fpl-container);
+            border: 1px solid var(--fpl-border);
+            border-radius: 24px;
+            padding: 15px;
+            margin-bottom: 25px;
+            transition: background-color var(--transition-speed);
+        }
+
+        .stat-box, .stat-item {
+            background: var(--fpl-container);
+            border: 1px solid var(--fpl-border);
+            border-radius: 16px;
+            padding: 15px;
+            transition: background-color var(--transition-speed);
+        }
+
+        .stat-value, .value { color: var(--fpl-primary) !important; }
+
+        /* Buttons */
+        .btn-primary, .ai-action-btn {
+            background-color: var(--fpl-primary) !important;
+            color: white !important;
+            border-radius: 14px;
+            border: none;
+            transition: filter 0.2s;
+        }
+
+        .btn-reset {
+            color: var(--fpl-primary);
+            background: transparent;
+            border: 1px solid var(--fpl-border);
+            border-radius: 12px;
+        }
+
+        /* Nav Links */
+        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
+        .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
+        
         @media screen and (min-width: 768px) {
             #menu-btn { display: none !important; }
             .nav-links { display: flex; align-items: center; }
         }
 
-        /* Circular Light Search Button */
-        .search-btn-round {
-            background: #f0f0f0;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
+        .modal-content {
+            background-color: var(--fpl-container) !important;
+            color: var(--fpl-on-container) !important;
+            border-radius: 24px;
         }
-
-        .search-btn-round i { color: #333; }
     </style>
 </head>
 <body>
 
 <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: #ffffff; color: #333; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+        <div style="padding: 20px; background: var(--fpl-container); color: var(--fpl-on-container); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
             <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:#333; font-size:1.5rem;">&times;</button>
+            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
@@ -115,7 +188,32 @@
                 <li><a href="contact.html">Contact Us</a></li>
             </ul>
         </div>
-         
+
+        <div class="nav-right">
+            <div class="theme-menu-container">
+                <button id="theme-master-btn" class="btn-round-theme" onclick="toggleThemeMenu()">
+                    <i class="fa-solid fa-palette"></i>
+                </button>
+                <div id="theme-dropdown" class="theme-dropdown">
+                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
+                    <div class="swatch-grid">
+                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a')"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87')"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c')"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff')"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00')"></div>
+                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff')"></div>
+                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00')"></div>
+                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4')"></div>
+                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea')"></div>
+                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888')"></div>
+                    </div>
+                    <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer; margin-top:5px;">
+                        🌙 Midnight Mode
+                    </button>
+                </div>
+            </div>
+        </div>
     </nav>
 
     <main class="main-container">
@@ -124,12 +222,12 @@
         <div class="status-bar">
             <span>BANK: <b id="budget-val">£100.0m</b></span>
             <select onchange="changeFormation(this.value)">
-    <option value="4-4-2">4-4-2</option>
-    <option value="3-4-3">3-4-3</option>
-    <option value="3-5-2">3-5-2</option>
-    <option value="5-3-2">5-3-2</option>
-    <option value="4-5-1">4-5-1</option>
-</select>
+                <option value="4-4-2">4-4-2</option>
+                <option value="3-4-3">3-4-3</option>
+                <option value="3-5-2">3-5-2</option>
+                <option value="5-3-2">5-3-2</option>
+                <option value="4-5-1">4-5-1</option>
+            </select>
         </div>
 
         <div class="pitch-outer-wrap">
@@ -159,32 +257,82 @@
 
         <div class="btn-group">
             <button id="analyze-btn" class="btn-primary">Analyse my team</button>
-</div>
-         <section class="stats-summary">
+        </div>
+
+         <section class="stats-summary" style="margin-top: 20px; display: grid; gap: 15px;">
             <div class="stat-box">
                 <span class="stat-label">Predicted Points</span>
                 <span class="stat-value" id="v-xp">0</span>
             </div>
 
              <div class="stat-item">
-    <span class="label">3 GWs xP:</span>
-    <span id="three-week-xp" class="value">0.0</span>
-</div>
-<div class="stat-item">
-    <span class="label">AI Rating:</span>
-    <span id="team-rating" class="value" style="font-weight: bold;">0%</span>
-</div>
+                <span class="label">3 GWs xP:</span>
+                <span id="three-week-xp" class="value">0.0</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">AI Rating:</span>
+                <span id="team-rating" class="value" style="font-weight: bold;">0%</span>
+            </div>
+         </section>
 
     </main>
+
 <div id="analysis-modal" class="modal">
     <div class="modal-content">
         <span class="close-btn" id="close-modal">&times;</span>
         <h2 id="modal-title"> AI Team Analysis</h2>
-        <hr>
-        <div id="analysis-results">
-            </div>
+        <hr style="border: 0; border-top: 1px solid var(--fpl-border); margin: 15px 0;">
+        <div id="analysis-results"></div>
     </div>
 </div>
+
+    <script>
+        function toggleThemeMenu() {
+            const menu = document.getElementById('theme-dropdown');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function applyMaterialTheme(color) {
+            document.body.classList.remove('dark-mode');
+            document.documentElement.style.setProperty('--fpl-primary', color);
+            const surfaceColor = `${color}0A`; 
+            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
+            localStorage.setItem('kopala_ai_theme', color);
+            localStorage.setItem('kopala_is_dark', 'false');
+            toggleThemeMenu();
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            if(isDark) {
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme);
+            }
+            localStorage.setItem('kopala_is_dark', isDark);
+            toggleThemeMenu();
+        }
+
+        window.onclick = function(e) {
+            if (!e.target.closest('.theme-menu-container')) {
+                const d = document.getElementById('theme-dropdown');
+                if (d) d.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
+            if (wasDark) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme);
+            }
+        });
+    </script>
     <script src="team.js"></script>
     <script src="menu.js"></script>
 </body>
