@@ -162,3 +162,56 @@ setInterval(() => {
         console.log("Kopala Live: Checking for BPS updates...");
     }
 }, 60000);
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const shareBtn = document.getElementById('share-comparison-btn');
+    const feedback = document.getElementById('share-feedback-msg');
+    const card = document.getElementById('player-comparison-card');
+
+    // 1. Function to highlight the winner
+    function updateComparison() {
+        const stats = ['points', 'xg', 'xa', 'ict'];
+        stats.forEach(stat => {
+            const row = document.querySelector(`[data-stat="${stat}"]`);
+            const v1 = parseFloat(row.querySelector('.p1-val').innerText);
+            const v2 = parseFloat(row.querySelector('.p2-val').innerText);
+            
+            row.querySelectorAll('.val').forEach(el => el.classList.remove('winner'));
+            
+            if (v1 > v2) row.querySelector('.p1-val').classList.add('winner');
+            else if (v2 > v1) row.querySelector('.p2-val').classList.add('winner');
+        });
+    }
+
+    // 2. Share Image with Emotional Feedback
+    shareBtn.addEventListener('click', async () => {
+        shareBtn.style.pointerEvents = 'none';
+        feedback.innerText = "Crafting Masterpiece... ✨";
+        feedback.classList.add('visible');
+
+        try {
+            const canvas = await html2canvas(card, {
+                backgroundColor: '#f8fafc',
+                scale: 2,
+                logging: false
+            });
+
+            const link = document.createElement('a');
+            link.download = 'FPL-Comparison.png';
+            link.href = canvas.toDataURL();
+            link.click();
+
+            feedback.innerText = "Captured! Ready to Share 😎";
+            setTimeout(() => feedback.classList.remove('visible'), 2000);
+        } catch (e) {
+            feedback.innerText = "Oops! Try again 😅";
+        } finally {
+            shareBtn.style.pointerEvents = 'auto';
+        }
+    });
+
+    // Run comparison initially
+    updateComparison();
+});
