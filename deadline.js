@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - Ultimate Home Dashboard (v4.0)
- * Features: Timer, Vertical Price Scroll, Live King, & The Scout (Value)
+ * KOPALA FPL - Ultimate Home Dashboard (v4.0 + Alerts)
+ * Combined Features: Timer, Notification Sync, Vertical Price Scroll, Live King, & Scout
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -10,6 +10,11 @@ async function init() {
     const loader = document.getElementById("loading-overlay");
     const CACHE_KEY = "fpl_bootstrap_cache";
     const LOCK_KEY = 'fpl_api_blocked_until';
+
+    // Restore Toggle State (Material Switch)
+    const notifyEnabled = localStorage.getItem('kopala_notifications') === 'true';
+    const toggle = document.getElementById('notify-toggle');
+    if (toggle) toggle.checked = notifyEnabled;
 
     // 1. Rate Limit Guard
     const blockedUntil = localStorage.getItem(LOCK_KEY);
@@ -60,9 +65,7 @@ async function init() {
 }
 
 function processAndRender(data) {
-    // Build Team Map (ID -> Short Name)
     data.teams.forEach(t => teamMap[t.id] = t.short_name);
-
     renderDeadline(data.events);
     renderPrices(data.elements);
     renderLiveKing(data.elements);
@@ -80,11 +83,16 @@ function loadFromCacheOnly() {
 }
 
 /**
- * 1. COUNTDOWN TIMER
+ * 1. COUNTDOWN TIMER & NOTIFICATION SYNC
  */
 function renderDeadline(events) {
     const nextGW = events.find(e => !e.finished && new Date(e.deadline_time) > new Date());
     if (!nextGW) return;
+
+    // Sync Background Notification if Enabled
+    if (localStorage.getItem('kopala_notifications') === 'true') {
+        syncDeadlineWithServiceWorker(nextGW.deadline_time, nextGW.id);
+    }
 
     const el = document.getElementById("countdown-timer");
     const card = document.getElementById("deadline-card");
@@ -124,6 +132,40 @@ function renderDeadline(events) {
 }
 
 /**
+ * NOTIFICATION PERMISSION & TOGGLE LOGIC
+ */
+async function handleNotificationToggle(isEnabled) {
+    if (isEnabled) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            localStorage.setItem('kopala_notifications', 'true');
+            // Re-run init to trigger the first sync
+            init();
+        } else {
+            alert("Please allow notifications in browser settings.");
+            document.getElementById('notify-toggle').checked = false;
+            localStorage.setItem('kopala_notifications', 'false');
+        }
+    } else {
+        localStorage.setItem('kopala_notifications', 'false');
+    }
+}
+
+function syncDeadlineWithServiceWorker(deadlineString, gwId) {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+            if (registration.active) {
+                registration.active.postMessage({
+                    type: 'SCHEDULE_DEADLINE',
+                    deadline: deadlineString,
+                    gw: gwId
+                });
+            }
+        });
+    }
+}
+
+/**
  * 2. VERTICAL PRICE SCROLL
  */
 function renderPrices(players) {
@@ -138,8 +180,7 @@ function renderPrices(players) {
 
     const createRow = (p) => {
         const change = p.cost_change_event / 10;
-        const isRiser = change > 0;
-        const colorClass = isRiser ? 'change-up' : 'change-down';
+        const colorClass = change > 0 ? 'change-up' : 'change-down';
 
         return `
             <div class="price-row-mini">
@@ -150,7 +191,7 @@ function renderPrices(players) {
                 <div style="text-align:right;">
                     <div style="font-weight:800; font-size:14px;">£${(p.now_cost / 10).toFixed(1)}</div>
                     <div class="${colorClass}" style="font-size:11px; font-weight:bold;">
-                        ${isRiser ? '▲' : '▼'} ${Math.abs(change).toFixed(1)}
+                        ${change > 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(1)}
                     </div>
                 </div>
             </div>
@@ -159,26 +200,19 @@ function renderPrices(players) {
 
     risersList.innerHTML = risers.length > 0 ? risers.map(createRow).join('') : '<p style="padding:10px; font-size:11px; color:#999;">No risers today</p>';
     fallersList.innerHTML = fallers.length > 0 ? fallers.map(createRow).join('') : '<p style="padding:10px; font-size:11px; color:#999;">No fallers today</p>';
-
     card.style.display = 'block';
 }
 
 /**
- * 3. LIVE KING - Displays top performer of the current GW
+ * 3. LIVE KING
  */
 function renderLiveKing(players) {
     const container = document.getElementById("live-king-content");
     const card = document.getElementById("live-king-card");
     if (!container || !card) return;
 
-    const king = players.reduce((prev, current) => 
-        (prev.event_points > current.event_points) ? prev : current
-    );
-
-    if (king.event_points <= 0) {
-        card.style.display = 'none';
-        return;
-    }
+    const king = players.reduce((prev, current) => (prev.event_points > current.event_points) ? prev : current);
+    if (king.event_points <= 0) { card.style.display = 'none'; return; }
 
     container.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
@@ -196,22 +230,17 @@ function renderLiveKing(players) {
 }
 
 /**
- * 4. THE SCOUT - Highlights top 3 budget enablers (Points per Million)
+ * 4. THE SCOUT
  */
 function renderScout(players) {
     const container = document.getElementById("scout-list");
     const card = document.getElementById("scout-card");
     if (!container || !card) return;
 
-    const bestValue = players
-        .filter(p => parseFloat(p.value_form) > 0)
-        .sort((a, b) => parseFloat(b.value_form) - parseFloat(a.value_form))
-        .slice(0, 3);
+    const bestValue = players.filter(p => parseFloat(p.value_form) > 0)
+        .sort((a, b) => parseFloat(b.value_form) - parseFloat(a.value_form)).slice(0, 3);
 
-    if (bestValue.length === 0) {
-        card.style.display = 'none';
-        return;
-    }
+    if (bestValue.length === 0) { card.style.display = 'none'; return; }
 
     container.innerHTML = bestValue.map(p => `
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f0fdf4; border-radius: 8px; margin-bottom: 8px; border: 1px solid #dcfce7;">
@@ -225,8 +254,12 @@ function renderScout(players) {
             </div>
         </div>
     `).join('');
-
     card.style.display = 'block';
+}
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
 }
 
 document.addEventListener('DOMContentLoaded', init);
