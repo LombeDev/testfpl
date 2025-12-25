@@ -1,23 +1,19 @@
-/* --- 1. CORE VARIABLES & THEMING --- */
+/* --- 1. CORE VARIABLES --- */
 :root {
     --bg-light: #ffffff;
     --fpl-green: #00ff87;
     --fpl-purple: #37003c;
     --fpl-pink: #ff005a;
-    --fpl-primary: #ff005a; 
-    --fpl-surface: #fdf8f9; 
-    --fpl-container: #ffffff; 
-    --fpl-on-container: #37003c;
-    --fpl-border: rgba(0,0,0,0.06);
     --border-light: #e2e8f0;
     --text-main: #1a1a1a;
     --text-muted: #666666;
     --gray-bg: #f8fafc;
-    --transition-speed: 0.6s;
 }
 
-/* --- 2. GLOBAL RESET --- */
-* { box-sizing: border-box; }
+/* --- 2. GLOBAL RESET & SAFETY --- */
+* {
+    box-sizing: border-box; /* Critical: Includes padding in width */
+}
 
 html, body {
     margin: 0;
@@ -25,52 +21,27 @@ html, body {
     background-color: var(--gray-bg);
     color: var(--text-main);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    overflow-x: hidden;
+    overflow-x: hidden; /* Prevents horizontal wiggle */
     width: 100%;
 }
 
-/* --- 3. STICKY STACKING LOGIC (THE FIX) --- */
-
+/* --- 3. NAVBAR & LAYOUT --- */
 .navbar {
-    background: var(--fpl-container);
-    border-bottom: 1px solid var(--fpl-border);
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-light);
     padding: 10px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
     top: 0;
-    height: 60px; /* Force a consistent height */
-    z-index: 1100;
-}
-
-.progress-container {
-    width: 100%;
-    height: 4px;
-    background: transparent;
-    overflow: hidden;
-    position: sticky;
-    top: 60px; /* Sits exactly under Navbar */
-    z-index: 1050;
-}
-
-.league-nav-container {
-    background: var(--fpl-surface);
-    border-bottom: 1px solid var(--fpl-border);
-    padding: 8px 0;
-    width: 100%;
-    position: sticky;
-    top: 64px; /* Sits under Navbar (60) + Progress (4) */
     z-index: 1000;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
 }
 
-/* --- 4. CONTENT AREA --- */
 .main-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px 12px;
+    padding: 12px;
 }
 
 .dashboard-grid {
@@ -79,20 +50,41 @@ html, body {
     gap: 16px;
 }
 
-/* --- 5. CARDS & TABLES --- */
+@media (max-width: 900px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+/* --- 4. CARDS & TABLES (Screen-Safe) --- */
 .card {
     background: #ffffff;
     border-radius: 12px;
     padding: 12px;
     border: 1px solid var(--border-light);
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    margin-bottom: 16px;
-    overflow: hidden;
+    width: 100%;
+    overflow: hidden; /* Contains children */
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 8px;
+}
+
+.card h2 {
+    font-size: 0.85rem;
+    font-weight: 800;
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--fpl-purple);
 }
 
 .table-container {
     width: 100%;
-    overflow-x: auto;
+    overflow-x: auto; /* Safety scroll for tables */
     -webkit-overflow-scrolling: touch;
 }
 
@@ -102,49 +94,245 @@ table {
     font-size: 0.8rem;
 }
 
-/* --- 6. LEAGUE BUTTONS & NAV --- */
+thead th {
+    background-color: var(--gray-bg);
+    padding: 8px 4px;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 10px 4px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.team-cell { 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+}
+
+.crest { 
+    width: 18px; 
+    height: 18px; 
+    object-fit: contain;
+    flex-shrink: 0; 
+}
+
+.t-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px; /* Prevents name from pushing screen width */
+    font-weight: 600;
+}
+
+/* --- 5. FIXTURES & LIVE SCORES --- */
+.fixtures-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.fixture-row {
+    display: grid;
+    /* Time: 55px, Score: 55px, Teams share the rest */
+    grid-template-columns: 55px 1fr 55px 1fr;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+    width: 100%;
+}
+
+.f-time { 
+    font-size: 0.6rem; 
+    color: var(--text-muted); 
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.f-home { 
+    text-align: right; 
+    font-weight: 700; 
+    display: flex; 
+    align-items: center; 
+    justify-content: flex-end; 
+    gap: 4px;
+    font-size: 0.75rem;
+}
+
+.f-away { 
+    text-align: left; 
+    font-weight: 700; 
+    display: flex; 
+    align-items: center; 
+    justify-content: flex-start; 
+    gap: 4px;
+    font-size: 0.75rem;
+}
+
+.f-home img, .f-away img {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.score-pill {
+    background: var(--fpl-purple);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 900;
+    padding: 3px 0;
+    border-radius: 4px;
+    text-align: center;
+    width: 48px;
+    margin: 0 auto;
+}
+
+.score-pill.live {
+    background: var(--fpl-pink);
+    animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* --- 6. LEAGUE NAV (Horizontal Scroll) --- */
+.league-nav-container {
+    background: #fff;
+    border-bottom: 1px solid var(--border-light);
+    padding: 8px 0;
+    width: 100%;
+}
+
 .league-nav-bar {
     display: flex;
     gap: 8px;
     overflow-x: auto;
     padding: 0 16px;
-    scrollbar-width: none;
+    scrollbar-width: none; /* Firefox */
 }
-.league-nav-bar::-webkit-scrollbar { display: none; }
+.league-nav-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
 .league-btn {
     padding: 6px 14px;
-    background: var(--fpl-container);
-    border: 1px solid var(--fpl-border);
+    background: var(--gray-bg);
+    border: 1px solid var(--border-light);
     border-radius: 20px;
     white-space: nowrap;
     font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     flex-shrink: 0;
-    color: var(--fpl-on-container);
 }
 
 .league-btn.active {
-    background: var(--fpl-primary);
+    background: var(--fpl-purple);
     color: #fff;
-    border-color: var(--fpl-primary);
+    border-color: var(--fpl-purple);
 }
 
-/* --- 7. PROGRESS BAR COLOR --- */
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: var(--fpl-primary);
-    transition: width 0.3s ease;
-    box-shadow: 0 0 8px rgba(255, 0, 90, 0.4);
+/* --- 7. UI ELEMENTS --- */
+.toggle-btn {
+    border: none;
+    background: none;
+    padding: 4px 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
 }
 
-/* --- 8. RESPONSIVE --- */
-@media (max-width: 900px) {
-    .dashboard-grid { grid-template-columns: 1fr; }
+.toggle-btn.active {
+    background: #fff;
+    color: var(--fpl-purple);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.view-toggles {
+    display: flex;
+    background: #f1f5f9;
+    padding: 2px;
+    border-radius: 8px;
+}
+
+#loader {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: var(--fpl-purple);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.fa-spin { animation: spin 1s infinite linear; }
+@keyframes spin { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
+
+/* --- 8. MOBILE-SPECIFIC TWEAKS --- */
 @media (max-width: 480px) {
-    .navbar { padding: 10px; }
+    .t-name { max-width: 70px; } /* Even tighter for small phones */
+    .f-home, .f-away { font-size: 0.7rem; }
+    .card { padding: 10px; }
 }
+
+
+/* --- FIXED STICKY STACKING --- */
+
+.navbar {
+    background-color: var(--fpl-container);
+    border-bottom: 1px solid var(--fpl-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1100; /* Highest priority */
+}
+
+/* Progress bar sits exactly under the navbar */
+.progress-container {
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    overflow: hidden;
+    position: sticky;
+    top: 58px; /* Navbar Height */
+    z-index: 1050;
+}
+
+/* League selector sticks under the progress bar */
+.league-nav-container {
+    position: sticky;
+    top: 61px; /* Navbar (58px) + Progress (3px) */
+    background: var(--fpl-surface);
+    z-index: 1000;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--fpl-border);
+    backdrop-filter: blur(10px); /* Makes it look premium while sticky */
+}
+
+/* Ensure body has enough padding so content doesn't jump 
+*/
+.main-content {
+    padding-top: 10px;
+}
+
+/* --- REST OF YOUR CSS PRESERVED --- */
+:root {
+    --fpl-primary: #ff005a; 
+    --fpl-surface: #fdf8f9; 
+    --fpl-container: #ffffff; 
+    --fpl-on-container: #37003c;
+    --fpl-border: rgba(0,0,0,0.06);
+    --transition-speed: 0.6s;
+}
+/* ... (keep other styles same) ... */
