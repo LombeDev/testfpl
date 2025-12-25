@@ -429,37 +429,47 @@ body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light);
     display: none;
 }
 
-/* --- 2. THE BUTTONS (Matched to Photo) --- */
-.ai-action-btn, .btn-primary, .btn-reset {
-    /* Layout - Makes them consistent sizes */
-    flex: 0 0 auto; /* Prevents buttons from shrinking */
-    min-width: 100px;
-    padding: 8px 20px;
-    
-    /* Colors - Light Tint from Photo */
-    background-color: #f8faff !important;
+/* --- BUTTON ROW CONTAINER --- */
+.button-row {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 10px;
+    padding: 20px 10px;
+    margin: 10px 0;
+    width: 100%;
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+    justify-content: flex-start; /* Allows scrolling if too long */
+    align-items: center;
+    min-height: 60px; /* Prevents container collapse */
+}
+.button-row::-webkit-scrollbar { display: none; }
+
+/* --- RE-STYLED PILL BUTTONS --- */
+.btn-primary, .ai-action-btn, .btn-reset {
+    flex: 0 0 auto !important; /* Forces buttons to keep their shape */
+    display: inline-flex !important; 
+    background-color: #f8faff !important; 
     color: #0f172a !important;
     border: 1px solid #e2e8f0 !important;
-
-    /* Shape & Typography */
-    border-radius: 50px !important; /* The Pill Shape */
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 0.85rem;
+    border-radius: 50px !important; 
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
     text-transform: none !important;
-    
     cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    height: 42px; /* Uniform height */
 }
 
-/* Hover State */
-.ai-action-btn:hover, .btn-primary:hover, .btn-reset:hover {
-    border-color: #ff005a !important;
-    color: #ff005a !important;
-    background-color: #fff !important;
+/* Hover effect to show the FPL pink */
+.btn-primary:hover, .ai-action-btn:hover, .btn-reset:hover {
+    border-color: var(--fpl-primary) !important;
+    color: var(--fpl-primary) !important;
+    background-color: #ffffff !important;
 }
 
 /* --- Stats Summary Section (Clean Dashboard) --- */
