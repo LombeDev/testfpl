@@ -309,4 +309,19 @@ footer { background: var(--dark-blue); color: white; padding: 40px 15px; margin-
     border-radius: 8px 8px 0 0;
 }
 
+
+
+#confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 9999 !important; /* Always on top of everything */
+    display: none; /* Controlled by JS */
+    align-items: center;
+    justify-content: center;
+}
     
