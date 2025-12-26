@@ -413,3 +413,15 @@ footer { background: var(--dark-blue); color: white; padding: 40px 15px; margin-
 html {
     scroll-behavior: smooth;
 }
+
+
+.bonus-log {
+    border: 1px dashed var(--fpl-primary);
+    animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+    0% { border-color: rgba(255, 0, 90, 0.2); }
+    50% { border-color: rgba(255, 0, 90, 0.8); }
+    100% { border-color: rgba(255, 0, 90, 0.2); }
+}
