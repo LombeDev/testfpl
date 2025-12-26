@@ -277,6 +277,59 @@
             </div>
         </div>
 
+<div id="match-center-card" class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-stadium" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
+            <h3 class="accent-title" style="margin: 0;">Match Center</h3>
+        </div>
+        <span id="live-indicator" class="hidden" style="display: flex; align-items: center; gap: 5px; color: #00ff87; font-size: 0.7rem; font-weight: 900;">
+            <span class="pulse-dot"></span> LIVE
+        </span>
+    </div>
+
+    <div id="fixtures-container">
+        <div style="text-align: center; padding: 20px; opacity: 0.5;">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            <p style="font-size: 0.8rem; margin-top: 10px;">Checking for live matches...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Pulse Animation for the Live Dot */
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #00ff87;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 135, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+    }
+
+    /* Event log styling */
+    .event-item {
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+    }
+
+    .fixture-row:last-child {
+        border-bottom: none !important;
+    }
+</style>
+
+
+        
         <div id="id-entry-section" class="card">
             <h3 class="accent-title">Live Rank</h3>
             <input type="number" id="fpl-id" placeholder="Enter FPL Team ID" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--fpl-border); margin-bottom:15px; box-sizing:border-box;">
