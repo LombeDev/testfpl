@@ -425,3 +425,45 @@ html {
     50% { border-color: rgba(255, 0, 90, 0.8); }
     100% { border-color: rgba(255, 0, 90, 0.2); }
 }
+
+
+
+/* --- SCROLLABLE PRICE SECTION --- */
+.price-scroll-container {
+    max-height: 300px; /* Set the maximum height you want */
+    overflow-y: auto;  /* Enable vertical scrolling */
+    padding-right: 8px; /* Space for the scrollbar */
+    scrollbar-width: thin; /* Firefox support */
+    scrollbar-color: var(--primary-green) transparent; /* Firefox support */
+}
+
+/* Custom Scrollbar for Chrome/Safari/Edge */
+.price-scroll-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.price-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.price-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--primary-green);
+    border-radius: 10px;
+}
+
+/* Optional: Add a subtle fade at the bottom to indicate more content */
+.price-card-wrapper {
+    position: relative;
+}
+
+.price-card-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
+    pointer-events: none;
+    border-radius: 0 0 12px 12px;
+}
