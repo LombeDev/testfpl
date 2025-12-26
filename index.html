@@ -286,15 +286,34 @@
        <div id="live-dashboard" class="hidden">
     <div class="card">
         <h3 class="accent-title">Manager Dashboard</h3>
-        <p style="text-align:center; font-weight:800; margin-bottom: 5px;" id="disp-name">--</p>
+        <p style="text-align:center; font-weight:800; font-size: 1.1rem; margin-bottom: 5px; color: var(--fpl-on-container);" id="disp-name">--</p>
         
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-top:20px;">
-            <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
-            <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total Pts</span></div>
-            <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Live Rank</span></div>
+        <div class="dashboard-grid">
+            <div class="timer-unit">
+                <span class="timer-value" id="disp-gw">0</span>
+                <span class="timer-label">GW Pts</span>
+            </div>
+            <div class="timer-unit">
+                <span class="timer-value" id="disp-total">0</span>
+                <span class="timer-label">Total</span>
+            </div>
+            <div class="timer-unit">
+                <span class="timer-value" id="disp-rank">--</span>
+                <span class="timer-label">Rank</span>
+            </div>
             
-            <div class="timer-unit"><span class="timer-value" id="disp-transfers">0</span><span class="timer-label">Transfers</span></div>
-            <div class="timer-unit"><span class="timer-value reset-fpl-id" style="cursor:pointer; color:red;"><i class="fa-solid fa-right-from-bracket"></i></span><span class="timer-label">Reset</span></div>
+            <div class="timer-unit">
+                <span class="timer-value" id="disp-transfers">0</span>
+                <span class="timer-label">Transfers</span>
+            </div>
+            <div class="timer-unit">
+                <span class="timer-value" id="disp-safety">Live</span>
+                <span class="timer-label">Status</span>
+            </div>
+            <div class="timer-unit reset-fpl-id" style="cursor:pointer; border-color: rgba(255,0,0,0.2);">
+                <span class="timer-value" style="color:red;"><i class="fa-solid fa-right-from-bracket"></i></span>
+                <span class="timer-label" style="color:red;">Reset</span>
+            </div>
         </div>
         
         <div id="bps-list" style="margin-top:20px;"></div>
