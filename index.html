@@ -6,10 +6,13 @@
     <title>KOPALA FPL | Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    
+    <meta name="theme-color" id="meta-theme-color" content="#ff005a">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="manifest" href="/manifest.json">
+
     <style>
         /* --- MATERIAL YOU CORE VARIABLES --- */
         :root {
@@ -34,6 +37,7 @@
             transition: background-color var(--transition-speed) ease, color var(--transition-speed);
             margin: 0;
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
 
         /* --- SCROLL PROGRESS BAR --- */
@@ -41,7 +45,7 @@
             width: 100%;
             height: 4px;
             background: transparent;
-            position: absolute; /* Relative to Navbar */
+            position: absolute;
             bottom: 0;
             left: 0;
             z-index: 1001;
@@ -158,6 +162,25 @@
             display: block;
         }
 
+        /* --- PWA INSTALL BUTTON STYLING --- */
+        #pwa-install-btn {
+            display: none; 
+            position: fixed; 
+            bottom: 30px; 
+            right: 20px; 
+            z-index: 1001; 
+            background: var(--fpl-primary); 
+            color: white; 
+            border: none;
+            border-radius: 50px; 
+            padding: 12px 24px; 
+            font-weight: 800;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            align-items: center;
+            gap: 8px;
+        }
+
         /* --- NAVIGATION --- */
         .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
         .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
@@ -166,6 +189,8 @@
             #menu-btn { display: none !important; }
             .nav-links { display: flex; }
         }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -232,8 +257,12 @@
         </div>
     </nav>
 
+    <button id="pwa-install-btn">
+        <i class="fa-solid fa-circle-down"></i> INSTALL APP
+    </button>
+
     <main class="container" style="max-width: 800px; margin: 20px auto; padding: 0 15px;">
-        <div id="loading-overlay">Updating FPL Data...</div>
+        <div id="loading-overlay" class="hidden">Updating FPL Data...</div>
 
         <div id="deadline-card" class="card">
             <h3 class="accent-title">Next Deadline</h3>
@@ -245,6 +274,26 @@
             </div>
             <div id="gw-label" style="text-align: center; margin-top: 15px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
                 GW 18 DEADLINE
+            </div>
+        </div>
+
+        <div id="id-entry-section" class="card">
+            <h3 class="accent-title">Track your Team</h3>
+            <input type="number" id="fpl-id" placeholder="Enter FPL Team ID" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--fpl-border); margin-bottom:15px; box-sizing:border-box;">
+            <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">CONNECT TEAM</button>
+        </div>
+
+        <div id="live-dashboard" class="hidden">
+            <div class="card">
+                <h3 class="accent-title">Manager Dashboard</h3>
+                <p style="text-align:center; font-weight:800;" id="disp-name">--</p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px;">
+                    <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="disp-safety">0</span><span class="timer-label">Safety %</span></div>
+                    <div class="timer-unit"><span class="timer-value reset-fpl-id" style="cursor:pointer; color:red;"><i class="fa-solid fa-right-from-bracket"></i></span><span class="timer-label">Exit</span></div>
+                </div>
+                <div id="bps-list" style="margin-top:20px;"></div>
             </div>
         </div>
 
@@ -262,25 +311,34 @@
             <div id="fallers-list"></div>
         </div>
 
-
-       
-
     </main>
 
+    <div id="confirm-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;">
+        <div class="card" style="width:100%; max-width:400px; text-align:center;">
+            <h3 class="accent-title">Clear FPL ID?</h3>
+            <p>This will remove your saved team data from this device.</p>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="cancel-clear" style="flex:1; padding:12px; border-radius:12px; border:1px solid var(--fpl-border); background:none; color:inherit; cursor:pointer;">Cancel</button>
+                <button id="confirm-clear" style="flex:1; padding:12px; border-radius:12px; border:none; background:red; color:white; cursor:pointer;">Clear Now</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Progress bar logic
+        // Theme & UI Helpers
         window.onscroll = function() { updateProgressBar() };
 
         function updateProgressBar() {
             var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
             var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
             var scrolled = (winScroll / height) * 100;
-            document.getElementById("myBar").style.width = scrolled + "%";
+            const bar = document.getElementById("myBar");
+            if(bar) bar.style.width = scrolled + "%";
         }
 
         function toggleThemeMenu() {
             const menu = document.getElementById('theme-dropdown');
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+            if(menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         }
 
         function applyMaterialTheme(color, shouldCloseMenu = false) {
@@ -288,6 +346,11 @@
             document.documentElement.style.setProperty('--fpl-primary', color);
             const surfaceColor = `${color}0A`; 
             document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
+            
+            // Sync Meta Tag for PWA Address Bar
+            const metaTheme = document.getElementById('meta-theme-color');
+            if(metaTheme) metaTheme.setAttribute('content', color);
+
             localStorage.setItem('kopala_ai_theme', color);
             localStorage.setItem('kopala_is_dark', 'false');
             if(shouldCloseMenu) toggleThemeMenu();
@@ -296,8 +359,11 @@
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
             const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            const metaTheme = document.getElementById('meta-theme-color');
+            
             if(isDark) {
                 document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+                if(metaTheme) metaTheme.setAttribute('content', '#0a0c10');
             } else {
                 applyMaterialTheme(savedTheme, false);
             }
@@ -305,6 +371,7 @@
             toggleThemeMenu();
         }
 
+        // Close dropdown when clicking outside
         window.onclick = function(e) {
             if (!e.target.closest('.theme-menu-container')) {
                 const d = document.getElementById('theme-dropdown');
@@ -323,10 +390,21 @@
                 applyMaterialTheme(savedTheme, false);
             }
         });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => {
+                        console.log('✅ Service Worker Registered');
+                        reg.update();
+                    })
+                    .catch(err => console.log('❌ SW Failed', err));
+            });
+        }
     </script>
 
     <script src="script.js"></script>
     <script src="deadline.js"></script>
-   
 </body>
 </html>
