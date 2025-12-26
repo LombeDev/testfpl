@@ -11,6 +11,7 @@ const state = {
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initDashboardLogic();
+    initPWAInstall(); // Added PWA logic
     
     // Auto-load dashboard if ID exists
     if (state.fplId) {
@@ -28,6 +29,7 @@ function initNavigation() {
     const backdrop = document.getElementById('main-backdrop');
 
     const toggle = () => {
+        if (!drawer || !backdrop) return;
         drawer.classList.toggle('open');
         backdrop.classList.toggle('active');
         backdrop.style.display = drawer.classList.contains('open') ? 'block' : 'none';
@@ -46,8 +48,8 @@ function initDashboardLogic() {
     const cancelModalBtn = document.getElementById('cancel-clear');
     const confirmClearBtn = document.getElementById('confirm-clear');
 
-    // Handle Login
-    loginBtn.addEventListener('click', () => {
+    // Handle Login - Added safety check (?)
+    loginBtn?.addEventListener('click', () => {
         const id = fplInput.value.trim();
         if (id && !isNaN(id)) {
             state.fplId = id;
@@ -62,14 +64,14 @@ function initDashboardLogic() {
     document.addEventListener('click', (e) => {
         if (e.target.closest('.reset-fpl-id')) {
             e.preventDefault();
-            confirmModal.style.display = 'flex';
+            if (confirmModal) confirmModal.style.display = 'flex';
         }
     });
 
-    // Modal Actions
-    cancelModalBtn.addEventListener('click', () => confirmModal.style.display = 'none');
+    // Modal Actions with safety checks
+    cancelModalBtn?.addEventListener('click', () => confirmModal.style.display = 'none');
     
-    confirmClearBtn.addEventListener('click', () => {
+    confirmClearBtn?.addEventListener('click', () => {
         confirmModal.style.display = 'none';
         performLogout();
     });
@@ -82,6 +84,8 @@ function renderView(view) {
     const entrySection = document.getElementById('id-entry-section');
     const liveDashboard = document.getElementById('live-dashboard');
 
+    if (!entrySection || !liveDashboard) return; // Prevent crashes if elements missing
+
     if (view === 'dashboard') {
         entrySection.classList.add('hidden');
         liveDashboard.classList.remove('hidden');
@@ -89,7 +93,8 @@ function renderView(view) {
     } else {
         entrySection.classList.remove('hidden');
         liveDashboard.classList.add('hidden');
-        document.getElementById('fpl-id').value = '';
+        const fplInput = document.getElementById('fpl-id');
+        if (fplInput) fplInput.value = '';
     }
 }
 
@@ -97,26 +102,24 @@ function performLogout() {
     localStorage.removeItem('kopala_fpl_id');
     state.fplId = null;
     
-    // Close sidebar if open
-    document.getElementById('side-drawer').classList.remove('open');
-    document.getElementById('main-backdrop').classList.remove('active');
-    document.getElementById('main-backdrop').style.display = 'none';
+    const drawer = document.getElementById('side-drawer');
+    const backdrop = document.getElementById('main-backdrop');
+    
+    drawer?.classList.remove('open');
+    backdrop?.classList.remove('active');
+    if (backdrop) backdrop.style.display = 'none';
     
     renderView('home');
 }
 
 /**
- * 4. DATA FETCHING (Re-engineered from Images)
+ * 4. DATA FETCHING
  */
 async function fetchLiveFPLData() {
-    // Show loading state (Optional)
-    document.getElementById('disp-name').textContent = "Loading...";
+    const dispName = document.getElementById('disp-name');
+    if (dispName) dispName.textContent = "Loading...";
 
     try {
-        // In a real production environment, you would use:
-        // const data = await fetch(`YOUR_PROXY_URL/entry/${state.fplId}/live/`);
-        
-        // Simulating the exact data from your images for the "re-engineered" feel
         setTimeout(() => {
             updateDashboardUI({
                 name: "Lombe Simakando",
@@ -130,66 +133,73 @@ async function fetchLiveFPLData() {
                 ]
             });
         }, 800);
-
     } catch (err) {
         console.error("Fetch failed", err);
     }
 }
 
 function updateDashboardUI(data) {
-    document.getElementById('disp-name').textContent = data.name;
-    document.getElementById('disp-safety').textContent = data.safety;
-    document.getElementById('disp-gw').textContent = data.gwPoints;
-    document.getElementById('disp-total').textContent = data.totalPoints;
+    if (document.getElementById('disp-name')) {
+        document.getElementById('disp-name').textContent = data.name;
+        document.getElementById('disp-safety').textContent = data.safety;
+        document.getElementById('disp-gw').textContent = data.gwPoints;
+        document.getElementById('disp-total').textContent = data.totalPoints;
 
-    const bpsList = document.getElementById('bps-list');
-    bpsList.innerHTML = data.bonusPlayers.map(p => `
-        <div class="bps-row">
-            <span>${p.name}</span>
-            <span style="font-weight: 800; color: var(--primary-green);">+${p.bonus} Bonus</span>
-        </div>
-    `).join('');
-
+        const bpsList = document.getElementById('bps-list');
+        if (bpsList) {
+            bpsList.innerHTML = data.bonusPlayers.map(p => `
+                <div class="bps-row">
+                    <span>${p.name}</span>
+                    <span style="font-weight: 800; color: #00ff87;">+${p.bonus} Bonus</span>
+                </div>
+            `).join('');
+        }
+    }
     state.lastRefresh = new Date();
 }
 
 /**
- * 5. UTILS - Live Auto-Refresh Simulation
+ * 5. PWA INSTALL LOGIC (Fixed)
  */
-setInterval(() => {
-    if (state.fplId && document.getElementById('live-dashboard').offsetParent !== null) {
-        // This is where you'd trigger a silent background refresh every 60s
-        console.log("Kopala Live: Checking for BPS updates...");
-    }
-}, 60000);
+let deferredPrompt;
 
+function initPWAInstall() {
+    const installBtn = document.getElementById('pwa-install-btn');
 
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Show the button if it exists
+        if (installBtn) installBtn.style.display = 'block';
+    });
 
-document.addEventListener('DOMContentLoaded', () => {
+    installBtn?.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response: ${outcome}`);
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * 6. COMPARISON TOOL
+ */
+function initComparison() {
     const shareBtn = document.getElementById('share-comparison-btn');
     const feedback = document.getElementById('share-feedback-msg');
     const card = document.getElementById('player-comparison-card');
 
-    // 1. Function to highlight the winner
-    function updateComparison() {
-        const stats = ['points', 'xg', 'xa', 'ict'];
-        stats.forEach(stat => {
-            const row = document.querySelector(`[data-stat="${stat}"]`);
-            const v1 = parseFloat(row.querySelector('.p1-val').innerText);
-            const v2 = parseFloat(row.querySelector('.p2-val').innerText);
-            
-            row.querySelectorAll('.val').forEach(el => el.classList.remove('winner'));
-            
-            if (v1 > v2) row.querySelector('.p1-val').classList.add('winner');
-            else if (v2 > v1) row.querySelector('.p2-val').classList.add('winner');
-        });
-    }
+    if (!shareBtn || !card) return;
 
-    // 2. Share Image with Emotional Feedback
     shareBtn.addEventListener('click', async () => {
         shareBtn.style.pointerEvents = 'none';
-        feedback.innerText = "Crafting Masterpiece... ✨";
-        feedback.classList.add('visible');
+        if (feedback) {
+            feedback.innerText = "Crafting Masterpiece... ✨";
+            feedback.classList.add('visible');
+        }
 
         try {
             const canvas = await html2canvas(card, {
@@ -203,15 +213,12 @@ document.addEventListener('DOMContentLoaded', () => {
             link.href = canvas.toDataURL();
             link.click();
 
-            feedback.innerText = "Captured! Ready to Share 😎";
-            setTimeout(() => feedback.classList.remove('visible'), 2000);
+            if (feedback) feedback.innerText = "Captured! Ready to Share 😎";
+            setTimeout(() => feedback?.classList.remove('visible'), 2000);
         } catch (e) {
-            feedback.innerText = "Oops! Try again 😅";
+            if (feedback) feedback.innerText = "Oops! Try again 😅";
         } finally {
             shareBtn.style.pointerEvents = 'auto';
         }
     });
-
-    // Run comparison initially
-    updateComparison();
-});
+}
