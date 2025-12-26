@@ -217,6 +217,34 @@ function initComparison() {
             setTimeout(() => feedback?.classList.remove('visible'), 2000);
         } catch (e) {
             if (feedback) feedback.innerText = "Oops! Try again 😅";
+
+
+            let deferredPrompt;
+const installBtn = document.getElementById('pwa-install-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome from showing its own prompt automatically
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    // Update UI notify the user they can install the PWA
+    if (installBtn) installBtn.style.display = 'flex';
+});
+
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to install prompt: ${outcome}`);
+            // We've used the prompt, and can't use it again, throw it away
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        }
+    });
+}
         } finally {
             shareBtn.style.pointerEvents = 'auto';
         }
