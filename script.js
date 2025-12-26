@@ -215,3 +215,45 @@ document.addEventListener('DOMContentLoaded', () => {
     // Run comparison initially
     updateComparison();
 });
+
+
+
+let deferredPrompt;
+const installContainer = document.getElementById('pwa-install-container');
+const installBtn = document.getElementById('pwa-install-btn');
+const installText = document.getElementById('install-instruction');
+
+// 1. Handle Android/Chrome (The 'beforeinstallprompt' event)
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installContainer.style.display = 'flex';
+    installBtn.style.display = 'block'; // Show the actual install button
+});
+
+// 2. Handle iOS (No automated event, requires manual instruction)
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+if (isIOS && !isStandalone) {
+    installContainer.style.display = 'flex';
+    installBtn.style.display = 'none'; // Hide button on iOS
+    installText.innerHTML = 'Tap <i class="fa-solid fa-arrow-up-from-bracket"></i> and <b>"Add to Home Screen"</b>';
+}
+
+// 3. Execution of Install
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('User installed the app! 🚀');
+        }
+        deferredPrompt = null;
+        installContainer.style.display = 'none';
+    }
+});
+
+document.getElementById('pwa-close-btn').onclick = () => {
+    installContainer.style.display = 'none';
+};
