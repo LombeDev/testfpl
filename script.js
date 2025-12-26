@@ -1,27 +1,138 @@
 /**
- * KOPALA FPL - Core Logic
+ * KOPALA FPL - Core Logic (Real-Time Version)
  */
 
 const state = {
     fplId: localStorage.getItem('kopala_fpl_id') || null,
+    playerMap: {}, // Stores { 355: "Haaland" }
+    currentGW: null,
     updateInterval: null,
     lastRefresh: null
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initNavigation();
     initDashboardLogic();
     initPWAInstall(); 
-    checkFirstTimeWelcome(); // New addition: Welcome logic
+    checkFirstTimeWelcome();
     
-    // Auto-load dashboard if ID exists
+    // Load the player database first so names show up immediately
+    await loadPlayerDatabase();
+    
     if (state.fplId) {
         renderView('dashboard');
     }
 });
 
 /**
- * 1. SIDEBAR & NAVIGATION
+ * 1. DATA ENGINE (Real API Calls)
+ */
+
+// Loads all names and find the current Gameweek
+async function loadPlayerDatabase() {
+    const proxy = "https://corsproxy.io/?";
+    const url = "https://fantasy.premierleague.com/api/bootstrap-static/";
+    
+    try {
+        const response = await fetch(proxy + encodeURIComponent(url));
+        const data = await response.json();
+        
+        // Map Player ID to Web Name
+        data.elements.forEach(p => {
+            state.playerMap[p.id] = p.web_name;
+        });
+
+        // Find which Gameweek is happening now
+        const activeGW = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
+        state.currentGW = activeGW ? activeGW.id : 1;
+        
+        console.log(`✅ FPL Data Sync: GW${state.currentGW} Active`);
+    } catch (err) {
+        console.error("Database sync failed:", err);
+    }
+}
+
+async function fetchLiveFPLData() {
+    if (!state.fplId) return;
+    
+    const dispName = document.getElementById('disp-name');
+    if (dispName) dispName.textContent = "Syncing...";
+
+    const proxy = "https://corsproxy.io/?";
+    const entryUrl = `https://fantasy.premierleague.com/api/entry/${state.fplId}/`;
+
+    try {
+        const response = await fetch(proxy + encodeURIComponent(entryUrl));
+        if (!response.ok) throw new Error("Manager not found");
+        const data = await response.json();
+
+        // Update Dashboard with Real Manager Stats
+        updateDashboardUI({
+            name: `${data.player_first_name} ${data.player_last_name}`,
+            safety: "Live", // FPL doesn't provide a 'safety %' via API
+            gwPoints: data.summary_event_points || 0,
+            totalPoints: data.summary_overall_points.toLocaleString()
+        });
+
+        // Fetch Live Bonus Points (BPS) for current matches
+        fetchLiveBPS();
+
+    } catch (err) {
+        if (dispName) dispName.textContent = "Invalid ID";
+        console.error("Fetch failed", err);
+    }
+}
+
+async function fetchLiveBPS() {
+    const proxy = "https://corsproxy.io/?";
+    const liveUrl = `https://fantasy.premierleague.com/api/event/${state.currentGW}/live/`;
+
+    try {
+        const response = await fetch(proxy + encodeURIComponent(liveUrl));
+        const data = await response.json();
+
+        // Get top 3 performers by BPS
+        const topPerformers = data.elements
+            .sort((a, b) => b.stats.bps - a.stats.bps)
+            .slice(0, 3)
+            .map(p => ({
+                name: state.playerMap[p.id] || "Unknown",
+                bonus: p.stats.bps // Displaying BPS value as "Bonus" indicator
+            }));
+
+        renderBPSList(topPerformers);
+    } catch (err) {
+        console.error("BPS error", err);
+    }
+}
+
+/**
+ * 2. UI UPDATE LOGIC
+ */
+function updateDashboardUI(data) {
+    if (document.getElementById('disp-name')) {
+        document.getElementById('disp-name').textContent = data.name;
+        document.getElementById('disp-safety').textContent = data.safety;
+        document.getElementById('disp-gw').textContent = data.gwPoints;
+        document.getElementById('disp-total').textContent = data.totalPoints;
+    }
+    state.lastRefresh = new Date();
+}
+
+function renderBPSList(players) {
+    const bpsList = document.getElementById('bps-list');
+    if (bpsList) {
+        bpsList.innerHTML = players.map(p => `
+            <div class="bps-row" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span>${p.name}</span>
+                <span style="font-weight: 800; color: #00ff87;">${p.bonus} BPS</span>
+            </div>
+        `).join('');
+    }
+}
+
+/**
+ * 3. NAVIGATION, MODALS & PWA (Retained from your code)
  */
 function initNavigation() {
     const menuBtn = document.getElementById('menu-btn');
@@ -39,9 +150,6 @@ function initNavigation() {
     [menuBtn, closeBtn, backdrop].forEach(el => el && el.addEventListener('click', toggle));
 }
 
-/**
- * 2. DASHBOARD & MODAL LOGIC
- */
 function initDashboardLogic() {
     const loginBtn = document.getElementById('change-id-btn');
     const fplInput = document.getElementById('fpl-id');
@@ -49,25 +157,17 @@ function initDashboardLogic() {
     const cancelModalBtn = document.getElementById('cancel-clear');
     const confirmClearBtn = document.getElementById('confirm-clear');
 
-    // Handle Login
     loginBtn?.addEventListener('click', () => {
         const id = fplInput.value.trim();
         if (id && !isNaN(id)) {
             state.fplId = id;
             localStorage.setItem('kopala_fpl_id', id);
-            
-            // Request Notification Permission when they connect
-            if ("Notification" in window) {
-                Notification.requestPermission();
-            }
-            
             renderView('dashboard');
         } else {
             alert("Please enter a valid numeric FPL ID.");
         }
     });
 
-    // Handle Exit/Clear (Opens Modal)
     document.addEventListener('click', (e) => {
         if (e.target.closest('.reset-fpl-id')) {
             e.preventDefault();
@@ -75,18 +175,13 @@ function initDashboardLogic() {
         }
     });
 
-    // Modal Actions
     cancelModalBtn?.addEventListener('click', () => confirmModal.style.display = 'none');
-    
     confirmClearBtn?.addEventListener('click', () => {
         confirmModal.style.display = 'none';
         performLogout();
     });
 }
 
-/**
- * 3. VIEW CONTROLLER
- */
 function renderView(view) {
     const entrySection = document.getElementById('id-entry-section');
     const liveDashboard = document.getElementById('live-dashboard');
@@ -100,90 +195,31 @@ function renderView(view) {
     } else {
         entrySection.classList.remove('hidden');
         liveDashboard.classList.add('hidden');
-        const fplInput = document.getElementById('fpl-id');
-        if (fplInput) fplInput.value = '';
+        if (document.getElementById('fpl-id')) document.getElementById('fpl-id').value = '';
     }
 }
 
 function performLogout() {
     localStorage.removeItem('kopala_fpl_id');
     state.fplId = null;
-    
     const drawer = document.getElementById('side-drawer');
     const backdrop = document.getElementById('main-backdrop');
-    
     drawer?.classList.remove('open');
     backdrop?.classList.remove('active');
     if (backdrop) backdrop.style.display = 'none';
-    
     renderView('home');
 }
 
-/**
- * 4. DATA FETCHING (Mock Data)
- */
-async function fetchLiveFPLData() {
-    const dispName = document.getElementById('disp-name');
-    if (dispName) dispName.textContent = "Loading...";
-
-    try {
-        setTimeout(() => {
-            updateDashboardUI({
-                name: "Lombe Simakando",
-                safety: "71",
-                gwPoints: "54",
-                totalPoints: "856",
-                bonusPlayers: [
-                    { name: "Haaland", bonus: 3 },
-                    { name: "Matheus N.", bonus: 2 },
-                    { name: "Cherki", bonus: 1 }
-                ]
-            });
-        }, 800);
-    } catch (err) {
-        console.error("Fetch failed", err);
-    }
-}
-
-function updateDashboardUI(data) {
-    if (document.getElementById('disp-name')) {
-        document.getElementById('disp-name').textContent = data.name;
-        document.getElementById('disp-safety').textContent = data.safety;
-        document.getElementById('disp-gw').textContent = data.gwPoints;
-        document.getElementById('disp-total').textContent = data.totalPoints;
-
-        const bpsList = document.getElementById('bps-list');
-        if (bpsList) {
-            bpsList.innerHTML = data.bonusPlayers.map(p => `
-                <div class="bps-row" style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span>${p.name}</span>
-                    <span style="font-weight: 800; color: #00ff87;">+${p.bonus} Bonus</span>
-                </div>
-            `).join('');
-        }
-    }
-    state.lastRefresh = new Date();
-}
-
-/**
- * 5. PWA INSTALL & WELCOME LOGIC
- */
-let deferredPrompt;
-
 function initPWAInstall() {
     const installBtn = document.getElementById('pwa-install-btn');
-
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
         if (installBtn) installBtn.style.display = 'flex';
     });
-
     installBtn?.addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response: ${outcome}`);
             deferredPrompt = null;
             installBtn.style.display = 'none';
         }
@@ -191,61 +227,14 @@ function initPWAInstall() {
 }
 
 function checkFirstTimeWelcome() {
-    // Detect if running as installed app
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    const hasBeenWelcomed = localStorage.getItem('pwa_welcome_shown');
-
-    if (isStandalone && !hasBeenWelcomed) {
-        if ("Notification" in window && Notification.permission === "granted") {
-            navigator.serviceWorker.ready.then(registration => {
-                registration.showNotification('Welcome to KOPALA FPL!', {
-                    body: 'Installed successfully. You are now ready for live FPL tracking.',
-                    icon: '/android-chrome-192x192.png',
-                    badge: '/favicon-32x32.png'
-                });
-                localStorage.setItem('pwa_welcome_shown', 'true');
+    if (isStandalone && !localStorage.getItem('pwa_welcome_shown')) {
+        navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification('Welcome to KOPALA FPL!', {
+                body: 'Installed successfully. Ready for live FPL tracking.',
+                icon: '/android-chrome-192x192.png'
             });
-        }
+            localStorage.setItem('pwa_welcome_shown', 'true');
+        });
     }
-}
-
-/**
- * 6. COMPARISON TOOL (Capture & Share)
- */
-function initComparison() {
-    const shareBtn = document.getElementById('share-comparison-btn');
-    const feedback = document.getElementById('share-feedback-msg');
-    const card = document.getElementById('player-comparison-card');
-
-    if (!shareBtn || !card) return;
-
-    shareBtn.addEventListener('click', async () => {
-        shareBtn.style.pointerEvents = 'none';
-        if (feedback) {
-            feedback.innerText = "Crafting Masterpiece... ✨";
-            feedback.classList.add('visible');
-        }
-
-        try {
-            // Note: html2canvas library must be loaded for this to work
-            const canvas = await html2canvas(card, {
-                backgroundColor: '#f8fafc',
-                scale: 2,
-                logging: false
-            });
-
-            const link = document.createElement('a');
-            link.download = 'FPL-Comparison.png';
-            link.href = canvas.toDataURL();
-            link.click();
-
-            if (feedback) feedback.innerText = "Captured! Ready to Share 😎";
-            setTimeout(() => feedback?.classList.remove('visible'), 2000);
-        } catch (e) {
-            if (feedback) feedback.innerText = "Oops! Try again 😅";
-            console.error("Comparison capture failed", e);
-        } finally {
-            shareBtn.style.pointerEvents = 'auto';
-        }
-    });
 }
