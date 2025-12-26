@@ -223,6 +223,13 @@
                         <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
                         <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
                         <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
+
+function applyMaterialTheme(color, shouldCloseMenu = false) {
+    // ... your existing code ...
+    
+    // This updates the mobile browser's status bar color in real-time!
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
+}
                     </div>
                     <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">
                         🌙 Midnight Mode
