@@ -325,3 +325,52 @@ footer { background: var(--dark-blue); color: white; padding: 40px 15px; margin-
     justify-content: center;
 }
     
+/* --- IMPROVED DASHBOARD GRID --- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+    gap: 12px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.timer-unit {
+    background-color: var(--fpl-surface);
+    padding: 15px 5px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid var(--fpl-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-width: 0; /* Prevents grid blowout */
+    transition: transform 0.2s ease;
+}
+
+.timer-value {
+    font-size: 1.2rem; /* Adjusted size to prevent overflow */
+    font-weight: 900;
+    color: var(--fpl-primary);
+    display: block;
+    word-break: break-word; /* Forces long numbers to wrap if absolutely necessary */
+    line-height: 1.2;
+}
+
+/* Specific fix for the large Rank number */
+#disp-rank {
+    font-size: 1rem; 
+}
+
+.timer-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+@media (max-width: 400px) {
+    .timer-value { font-size: 1rem; }
+    .dashboard-grid { gap: 8px; }
+}
