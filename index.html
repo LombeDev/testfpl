@@ -223,7 +223,6 @@
                         <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
                         <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
                         <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
-
                     </div>
                     <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">
                         🌙 Midnight Mode
@@ -264,21 +263,7 @@
         </div>
 
 
-  <div id="pwa-install-container" class="install-banner" style="display: none;">
-    <div class="install-content">
-        <div class="install-icon-wrapper">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-        </div>
-        <div class="install-text">
-            <h4>Install Kopala FPL</h4>
-            <p id="install-instruction">Get faster access and live tracking.</p>
-        </div>
-    </div>
-    <div class="install-actions">
-        <button id="pwa-install-btn" class="fpl-btn-sm" style="display: none;">Install</button>
-        <button id="pwa-close-btn" class="close-x">&times;</button>
-    </div>
-</div>     
+       
 
     </main>
 
@@ -342,15 +327,6 @@
 
     <script src="script.js"></script>
     <script src="deadline.js"></script>
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('✅ Service Worker registered!', reg.scope))
-                .catch(err => console.log('❌ Registration failed:', err));
-        });
-    }
-</script>
    
 </body>
 </html>
