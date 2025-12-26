@@ -11,7 +11,8 @@ const state = {
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initDashboardLogic();
-    initPWAInstall(); // Added PWA logic
+    initPWAInstall(); 
+    checkFirstTimeWelcome(); // New addition: Welcome logic
     
     // Auto-load dashboard if ID exists
     if (state.fplId) {
@@ -48,12 +49,18 @@ function initDashboardLogic() {
     const cancelModalBtn = document.getElementById('cancel-clear');
     const confirmClearBtn = document.getElementById('confirm-clear');
 
-    // Handle Login - Added safety check (?)
+    // Handle Login
     loginBtn?.addEventListener('click', () => {
         const id = fplInput.value.trim();
         if (id && !isNaN(id)) {
             state.fplId = id;
             localStorage.setItem('kopala_fpl_id', id);
+            
+            // Request Notification Permission when they connect
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+            
             renderView('dashboard');
         } else {
             alert("Please enter a valid numeric FPL ID.");
@@ -68,7 +75,7 @@ function initDashboardLogic() {
         }
     });
 
-    // Modal Actions with safety checks
+    // Modal Actions
     cancelModalBtn?.addEventListener('click', () => confirmModal.style.display = 'none');
     
     confirmClearBtn?.addEventListener('click', () => {
@@ -84,7 +91,7 @@ function renderView(view) {
     const entrySection = document.getElementById('id-entry-section');
     const liveDashboard = document.getElementById('live-dashboard');
 
-    if (!entrySection || !liveDashboard) return; // Prevent crashes if elements missing
+    if (!entrySection || !liveDashboard) return;
 
     if (view === 'dashboard') {
         entrySection.classList.add('hidden');
@@ -113,7 +120,7 @@ function performLogout() {
 }
 
 /**
- * 4. DATA FETCHING
+ * 4. DATA FETCHING (Mock Data)
  */
 async function fetchLiveFPLData() {
     const dispName = document.getElementById('disp-name');
@@ -148,7 +155,7 @@ function updateDashboardUI(data) {
         const bpsList = document.getElementById('bps-list');
         if (bpsList) {
             bpsList.innerHTML = data.bonusPlayers.map(p => `
-                <div class="bps-row">
+                <div class="bps-row" style="display:flex; justify-content:space-between; margin-bottom:8px;">
                     <span>${p.name}</span>
                     <span style="font-weight: 800; color: #00ff87;">+${p.bonus} Bonus</span>
                 </div>
@@ -159,7 +166,7 @@ function updateDashboardUI(data) {
 }
 
 /**
- * 5. PWA INSTALL LOGIC (Fixed)
+ * 5. PWA INSTALL & WELCOME LOGIC
  */
 let deferredPrompt;
 
@@ -169,8 +176,7 @@ function initPWAInstall() {
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        // Show the button if it exists
-        if (installBtn) installBtn.style.display = 'block';
+        if (installBtn) installBtn.style.display = 'flex';
     });
 
     installBtn?.addEventListener('click', async () => {
@@ -184,8 +190,27 @@ function initPWAInstall() {
     });
 }
 
+function checkFirstTimeWelcome() {
+    // Detect if running as installed app
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const hasBeenWelcomed = localStorage.getItem('pwa_welcome_shown');
+
+    if (isStandalone && !hasBeenWelcomed) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification('Welcome to KOPALA FPL!', {
+                    body: 'Installed successfully. You are now ready for live FPL tracking.',
+                    icon: '/android-chrome-192x192.png',
+                    badge: '/favicon-32x32.png'
+                });
+                localStorage.setItem('pwa_welcome_shown', 'true');
+            });
+        }
+    }
+}
+
 /**
- * 6. COMPARISON TOOL
+ * 6. COMPARISON TOOL (Capture & Share)
  */
 function initComparison() {
     const shareBtn = document.getElementById('share-comparison-btn');
@@ -202,6 +227,7 @@ function initComparison() {
         }
 
         try {
+            // Note: html2canvas library must be loaded for this to work
             const canvas = await html2canvas(card, {
                 backgroundColor: '#f8fafc',
                 scale: 2,
@@ -217,34 +243,7 @@ function initComparison() {
             setTimeout(() => feedback?.classList.remove('visible'), 2000);
         } catch (e) {
             if (feedback) feedback.innerText = "Oops! Try again 😅";
-
-
-            let deferredPrompt;
-const installBtn = document.getElementById('pwa-install-btn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent Chrome from showing its own prompt automatically
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-    // Update UI notify the user they can install the PWA
-    if (installBtn) installBtn.style.display = 'flex';
-});
-
-if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            // Show the install prompt
-            deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to install prompt: ${outcome}`);
-            // We've used the prompt, and can't use it again, throw it away
-            deferredPrompt = null;
-            installBtn.style.display = 'none';
-        }
-    });
-}
+            console.error("Comparison capture failed", e);
         } finally {
             shareBtn.style.pointerEvents = 'auto';
         }
