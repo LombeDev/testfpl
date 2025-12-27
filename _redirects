@@ -1,2 +1,3 @@
 # Proxy for Premier League Crests
-/fpl-crest/* https://resources.premierleague.com/premierleague/badges/50/t:splat  200/fpl-api/* https://fantasy.premierleague.com/api/:splat  200
+/fpl-crest/* https://resources.premierleague.com/premierleague/badges/50/t:splat  
+200/fpl-api/* https://fantasy.premierleague.com/api/:splat  200
