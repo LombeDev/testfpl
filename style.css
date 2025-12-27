@@ -428,80 +428,165 @@ html {
 
 
 
-/* Container safety */
+//* --- UPDATED FIXTURE & MATCH CENTER STYLES --- */
+
+/* Container safety - ensuring no horizontal scroll */
 #fixtures-container {
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    padding: 2px;
+}
+
+/* Date Group Header Styling (Friday, Saturday, etc.) */
+.date-group-header {
+    background: linear-gradient(90deg, #00ff87, #00ebff);
+    color: #37003c;
+    text-align: center;
+    padding: 8px;
+    font-weight: 900;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    margin: 15px 0 5px 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 /* The Main Card */
 .fixture-card {
     background: #fff;
     border-radius: 12px;
-    border: 1px solid #f0f0f0;
+    border: 1px solid #eee;
     overflow: hidden;
     width: 100%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
 }
 
 /* Horizontal Content Wrapper */
 .fixture-content {
     display: flex;
-    align-items: stretch; /* Keeps all columns same height */
+    align-items: stretch; 
     padding: 10px;
     gap: 5px;
 }
 
 /* Column 1: Events (Left) */
 .events-col {
-    flex: 0 0 25%; /* Fixed width for events */
-    border-right: 1px solid #eee;
-    padding-right: 5px;
+    flex: 1; /* Proportional sizing */
+    border-right: 1px solid #f0f0f0;
+    padding-right: 8px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     font-size: 0.75rem;
+    min-width: 0; /* Prevents text from pushing width */
 }
 
-/* Column 2: The Score (Middle) */
+/* Column 2: The Scoreboard (Middle) - STRENGTHENED */
 .score-col {
-    flex: 1; /* Takes up remaining middle space */
+    flex: 2.5; 
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 120px; /* Prevents the '1 - 0' from stacking vertically */
+    min-width: 160px; /* Prevents 'crunching' with logos */
 }
 
-/* Column 3: Bonus (Right) */
-.bonus-col {
-    flex: 0 0 30%; /* Fixed width for bonus */
-    background: #f9f9f9;
-    border-radius: 8px;
-    padding: 8px;
+.score-row {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.team-unit {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+    justify-content: center;
+}
+
+.team-logo {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.team-abbr {
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #333;
 }
 
 /* The dark score box from your image */
 .score-box {
-    background: #37003c;
+    background: #37003c; /* FPL Purple */
     color: #fff;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-family: 'monospace';
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: 'Monaco', 'Consolas', monospace;
     font-weight: 900;
-    font-size: 1.2rem;
-    margin: 4px 0;
+    font-size: 1.1rem;
     display: flex;
-    gap: 8px;
+    gap: 4px;
     align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    min-width: 60px;
 }
 
-/* Fix for mobile screens */
-@media (max-width: 400px) {
-    .events-col { display: none; } /* Hide events on tiny screens to save the score */
-    .score-col { flex: 2; }
+/* Column 3: Bonus (Right) */
+.bonus-col {
+    flex: 1.2; 
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 8px;
+    margin-left: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.bonus-header {
+    font-size: 0.55rem;
+    font-weight: 900;
+    opacity: 0.4;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+/* Specific GW Label */
+.gw-label {
+    font-size: 0.55rem;
+    font-weight: 800;
+    opacity: 0.3;
+    margin-top: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* --- MOBILE OPTIMIZATIONS --- */
+@media (max-width: 450px) {
+    .events-col { 
+        display: none; /* Auto-hide events on small phones to keep score large */
+    }
+    .score-col { 
+        flex: 3; 
+    }
+    .team-logo {
+        width: 18px;
+        height: 18px;
+    }
+    .team-abbr {
+        font-size: 0.7rem;
+    }
+    .score-box {
+        font-size: 1rem;
+        padding: 4px 8px;
+    }
 }
