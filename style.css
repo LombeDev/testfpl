@@ -428,99 +428,57 @@ html {
 
 
 
-/* MATCH CENTER CARD OVERRIDES */
-#match-center-card {
-    background: var(--fpl-surface);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-}
-
-/* FIXTURES SCROLL AREA */
+/* Ensure the container doesn't overflow horizontally */
 #fixtures-container {
-    max-height: 600px; /* Adjust based on your preference */
-    overflow-y: auto;
-    padding-right: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+    width: 100%;
+    overflow-x: hidden;
+    padding: 10px;
+    box-sizing: border-box; /* Includes padding in width calculation */
 }
 
-/* CUSTOM SCROLLBAR */
-#fixtures-container::-webkit-scrollbar {
-    width: 5px;
-}
-#fixtures-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-#fixtures-container::-webkit-scrollbar-thumb {
-    background: var(--fpl-primary);
-    border-radius: 10px;
-}
-
-/* FIXTURE CARD DESIGN */
+/* Base Card Styles */
 .fixture-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    animation: fadeIn 0.4s ease-out forwards;
+    width: 100%;
+    margin-bottom: 15px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #eee;
 }
 
-.fixture-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* EVENT LOG STYLING */
-.event-log {
-    font-family: 'Inter', sans-serif;
-    color: #333;
-    font-weight: 500;
-}
-
-.event-item {
+/* The horizontal layout container */
+.fixture-content {
     display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 2px;
+    flex-wrap: nowrap; /* Forces them to stay side-by-side on desktop */
+    padding: 12px;
+    gap: 8px;
 }
 
-/* LIVE PULSE INDICATOR */
-.pulse-dot {
-    height: 8px;
-    width: 8px;
-    background-color: #00ff87;
-    border-radius: 50%;
-    display: inline-block;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 135, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* MOBILE OPTIMIZATIONS */
-@media (max-width: 480px) {
-    .fixture-card > div:nth-child(2) {
-        flex-direction: column; /* Stack columns on very small screens if needed */
-        gap: 10px;
+/* Responsive Breakpoint for Mobile */
+@media (max-width: 500px) {
+    .fixture-content {
+        flex-direction: column; /* Stacks Events, Score, and Bonus vertically */
+        align-items: center;
+        text-align: center;
     }
-    
-    .fixture-card div[style*="border-right"] {
+
+    /* Remove the border-right when stacked */
+    .events-col {
         border-right: none !important;
         border-bottom: 1px solid #f0f0f0;
         padding-bottom: 10px;
-        padding-right: 0 !important;
+        width: 100%;
     }
 
-    .fixture-card div[style*="margin-left"] {
+    /* Make the center score section wider on mobile */
+    .score-col {
+        padding: 15px 0 !important;
+        width: 100%;
+    }
+
+    /* Bonus section spans full width */
+    .bonus-col {
         margin-left: 0 !important;
-        margin-top: 5px;
+        width: 100%;
     }
 }
