@@ -1,5 +1,5 @@
 /**
- * KOPALA FPL - PRO MATCH CENTER (ORGANIZED SPLIT-VIEW)
+ * KOPALA FPL - PRO MATCH CENTER (CLEAN SINGLE-SCORE VERSION)
  */
 
 const FPL_PROXY = "/fpl-api/"; 
@@ -32,6 +32,8 @@ async function updateLiveScores() {
         const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
         const fixtures = await response.json();
         const startedGames = fixtures.filter(f => f.started);
+        
+        // Refresh every 60s if matches are live
         if (startedGames.some(f => !f.finished)) refreshTimer = setTimeout(updateLiveScores, 60000);
 
         let html = '';
@@ -43,18 +45,18 @@ async function updateLiveScores() {
             const currentDateString = kickoff.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
             if (currentDateString !== lastDateString) {
-                html += `<div class="date-group-header" style="background:none; color:#37003c; border:none; box-shadow:none; text-align:left; padding-left:15px; font-size:0.75rem;">${currentDateString}</div>`;
+                html += `<div class="date-group-header" style="background:none; color:#37003c; border:none; box-shadow:none; text-align:left; padding-left:5px; font-size:0.75rem; margin-top:20px;">${currentDateString}</div>`;
                 lastDateString = currentDateString;
             }
 
             // Live Minute Logic
-            let statusDisplay = game.finished ? 'FULL TIME' : 'LIVE';
+            let statusDisplay = game.finished ? 'FT' : 'LIVE';
             if (!game.finished && game.started) {
                 const diffMins = Math.floor((new Date() - kickoff) / 60000);
                 statusDisplay = diffMins < 45 ? `${diffMins}'` : (diffMins < 60 ? 'HT' : `${diffMins - 15}'`);
             }
 
-            // Stats Parsing (Goals & Assists)
+            // Parse Events
             const goals = game.stats.find(s => s.identifier === 'goals_scored');
             const assists = game.stats.find(s => s.identifier === 'assists');
             let homeEvents = '', awayEvents = '';
@@ -77,43 +79,41 @@ async function updateLiveScores() {
                 top.forEach((p, i) => {
                     bonusHtml += `
                         <div style="display:flex; align-items:center; gap:6px; margin-bottom:5px; font-size:0.65rem;">
-                            <span style="background:${colors[i]}; color:#000; width:14px; height:14px; display:flex; align-items:center; justify-content:center; border-radius:3px; font-weight:900; font-size:0.5rem;">${3-i}</span>
-                            <span style="font-weight:700;">${playerLookup[p.element]} <span style="opacity:0.4; font-weight:400;">${p.value}</span></span>
+                            <span style="background:${colors[i]}; color:#000; width:13px; height:13px; display:flex; align-items:center; justify-content:center; border-radius:3px; font-weight:900; font-size:0.5rem;">${3-i}</span>
+                            <span style="font-weight:700;">${playerLookup[p.element]} <span style="opacity:0.3; font-weight:400; font-size:0.55rem;">${p.value}</span></span>
                         </div>`;
                 });
             }
 
             html += `
-                <div class="fixture-card" style="display: flex; flex-direction: row; padding: 0; min-height: 160px; margin-bottom: 15px;">
-                    <div style="flex: 1.5; padding: 12px; display: flex; flex-direction: column; position: relative; border-right: 1px solid #f0f0f0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <div style="font-weight: 800; font-size: 0.7rem; max-width: 60px;">${teamLookup[game.team_h]}</div>
-                            <div style="background: #37003c; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 900; font-size: 0.7rem;">${game.team_h_score} | ${game.team_a_score}</div>
-                            <div style="font-weight: 800; font-size: 0.7rem; text-align: right; max-width: 60px;">${teamLookup[game.team_a]}</div>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; font-size: 0.65rem; margin-top: 5px; flex-grow: 1;">
-                            <div style="flex: 1; text-align: left; font-weight: 700;">${homeEvents}</div>
-                            <div style="flex: 1; text-align: right; font-weight: 700;">${awayEvents}</div>
-                        </div>
-
-                        <div style="margin-top: auto; border-top: 1px solid #f9f9f9; padding-top: 8px; text-align: left;">
-                             <div style="display: inline-block; background: #37003c; color: white; padding: 5px 15px; border-radius: 6px; font-weight: 900; font-size: 1.1rem; letter-spacing: 2px;">
+                <div class="fixture-card" style="display: flex; flex-direction: row; padding: 0; min-height: 110px; margin-bottom: 12px; border: 1px solid #f0f0f0;">
+                    <div style="flex: 1.5; padding: 10px; display: flex; flex-direction: column; border-right: 1px solid #f5f5f5;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 800; font-size: 0.75rem; color:#37003c;">${teamLookup[game.team_h]}</span>
+                            <div style="background: #37003c; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 900; font-size: 0.75rem; font-family: monospace;">
                                 ${game.team_h_score} | ${game.team_a_score}
-                             </div>
-                             <div style="font-size: 0.5rem; font-weight: 800; opacity: 0.3; margin-top: 4px; text-transform: uppercase;">GW ${activeGameweek}</div>
-                             <div style="font-size: 0.65rem; font-weight: 800; color: #37003c; margin-top: 5px;">${statusDisplay}</div>
+                            </div>
+                            <span style="font-weight: 800; font-size: 0.75rem; color:#37003c; text-align: right;">${teamLookup[game.team_a]}</span>
+                        </div>
+
+                        <div style="display: flex; gap: 8px; font-size: 0.65rem; flex-grow: 1;">
+                            <div style="flex: 1; text-align: left; font-weight: 600;">${homeEvents}</div>
+                            <div style="flex: 1; text-align: right; font-weight: 600;">${awayEvents}</div>
+                        </div>
+
+                        <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; opacity: 0.4;">
+                             <span style="font-size: 0.55rem; font-weight: 800;">GW ${activeGameweek}</span>
+                             <span style="font-size: 0.6rem; font-weight: 900; color:#37003c;">${statusDisplay}</span>
                         </div>
                     </div>
 
-                    <div style="flex: 1; padding: 12px; background: #fafafa; display: flex; flex-direction: column;">
-                        <div style="font-size: 0.6rem; font-weight: 900; color: #37003c; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
-                            🏆 BONUS <span style="width: 5px; height: 5px; background: ${game.finished ? '#ccc' : 'red'}; border-radius: 50%;"></span>
+                    <div style="flex: 1; padding: 10px; background: #fafafa; display: flex; flex-direction: column;">
+                        <div style="font-size: 0.55rem; font-weight: 900; color: #37003c; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; opacity: 0.6;">
+                            🏆 BONUS <span style="width: 4px; height: 4px; background: ${game.finished ? '#ccc' : '#ff005a'}; border-radius: 50%;"></span>
                         </div>
                         <div style="flex-grow: 1;">
-                            ${bonusHtml || '<span style="opacity:0.2; font-size:0.55rem;">Calculating...</span>'}
+                            ${bonusHtml || '<span style="opacity:0.2; font-size:0.5rem;">Calculating...</span>'}
                         </div>
-                        <div style="margin-top: auto; font-size: 0.55rem; color: #999; font-weight: 700; text-align: right;">More ▾</div>
                     </div>
                 </div>`;
         });
