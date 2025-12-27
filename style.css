@@ -428,57 +428,80 @@ html {
 
 
 
-/* Ensure the container doesn't overflow horizontally */
+/* Container safety */
 #fixtures-container {
     width: 100%;
-    overflow-x: hidden;
-    padding: 10px;
-    box-sizing: border-box; /* Includes padding in width calculation */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-/* Base Card Styles */
+/* The Main Card */
 .fixture-card {
-    width: 100%;
-    margin-bottom: 15px;
     background: #fff;
     border-radius: 12px;
+    border: 1px solid #f0f0f0;
     overflow: hidden;
-    border: 1px solid #eee;
+    width: 100%;
 }
 
-/* The horizontal layout container */
+/* Horizontal Content Wrapper */
 .fixture-content {
     display: flex;
-    flex-wrap: nowrap; /* Forces them to stay side-by-side on desktop */
-    padding: 12px;
-    gap: 8px;
+    align-items: stretch; /* Keeps all columns same height */
+    padding: 10px;
+    gap: 5px;
 }
 
-/* Responsive Breakpoint for Mobile */
-@media (max-width: 500px) {
-    .fixture-content {
-        flex-direction: column; /* Stacks Events, Score, and Bonus vertically */
-        align-items: center;
-        text-align: center;
-    }
+/* Column 1: Events (Left) */
+.events-col {
+    flex: 0 0 25%; /* Fixed width for events */
+    border-right: 1px solid #eee;
+    padding-right: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 0.75rem;
+}
 
-    /* Remove the border-right when stacked */
-    .events-col {
-        border-right: none !important;
-        border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 10px;
-        width: 100%;
-    }
+/* Column 2: The Score (Middle) */
+.score-col {
+    flex: 1; /* Takes up remaining middle space */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px; /* Prevents the '1 - 0' from stacking vertically */
+}
 
-    /* Make the center score section wider on mobile */
-    .score-col {
-        padding: 15px 0 !important;
-        width: 100%;
-    }
+/* Column 3: Bonus (Right) */
+.bonus-col {
+    flex: 0 0 30%; /* Fixed width for bonus */
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
-    /* Bonus section spans full width */
-    .bonus-col {
-        margin-left: 0 !important;
-        width: 100%;
-    }
+/* The dark score box from your image */
+.score-box {
+    background: #37003c;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'monospace';
+    font-weight: 900;
+    font-size: 1.2rem;
+    margin: 4px 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Fix for mobile screens */
+@media (max-width: 400px) {
+    .events-col { display: none; } /* Hide events on tiny screens to save the score */
+    .score-col { flex: 2; }
 }
