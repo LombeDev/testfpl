@@ -11,7 +11,6 @@ const ASSETS_TO_CACHE = [
     '/kopala.css',
     '/football.css',
     '/price.css',
-    '/script.js',
     '/deadline.js',
     '/kopala.js',
     '/football.js',
