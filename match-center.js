@@ -1,45 +1,52 @@
 /**
- * KOPALA FPL - INSTANT MATCH CENTER
- * Optimized for reliability and "Keep Results" logic
+ * KOPALA FPL - PRO ENGINE
+ * Uses Netlify Proxy for 100% Reliability
  */
 
-const MATCH_CONFIG = {
-    // We use a high-reliability proxy link
-    proxy: "https://api.allorigins.win/raw?url=", 
-    base: "https://fantasy.premierleague.com/api/"
-};
+const FPL_PROXY = "/fpl-api/"; 
 
 let playerLookup = {};
 let teamLookup = {};
 let activeGameweek = null;
 let refreshTimer = null;
 
-// 1. INITIALIZE DATA
+// 1. INITIALIZE DATABASE
 async function initMatchCenter() {
     try {
-        const url = `${MATCH_CONFIG.proxy}${encodeURIComponent(MATCH_CONFIG.base + 'bootstrap-static/')}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Network Response Fail");
+        console.log("Syncing with FPL Database...");
+        
+        // Fetching through your Netlify proxy
+        const response = await fetch(`${FPL_PROXY}bootstrap-static/`);
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
-        // Faster Mapping
-        for (const p of data.elements) playerLookup[p.id] = p.web_name;
-        for (const t of data.teams) teamLookup[t.id] = t.name;
+        // Map data for instant access
+        data.elements.forEach(p => playerLookup[p.id] = p.web_name);
+        data.teams.forEach(t => teamLookup[t.id] = t.name);
         
+        // Identify Current Gameweek
         const current = data.events.find(e => e.is_current) || data.events.find(e => !e.finished);
         activeGameweek = current ? current.id : 1;
 
-        console.log("Engine Ready. GW:", activeGameweek);
+        console.log("Database Synced. GW:", activeGameweek);
+        
+        // Start live updates
         updateLiveScores();
 
     } catch (error) {
-        console.error("Init Error:", error);
-        // Retry once after 5 seconds if init fails
-        setTimeout(initMatchCenter, 5000);
+        console.error("Critical Sync Error:", error);
+        const container = document.getElementById('fixtures-container');
+        if (container) {
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#ff4d4d; font-size:0.8rem;">
+                <strong>CONNECTION BLOCKED</strong><br>
+                Please ensure the _redirects file is deployed.
+            </div>`;
+        }
     }
 }
 
-// 2. FETCH & RENDER (Instant Logic)
+// 2. LIVE SCORE ENGINE
 async function updateLiveScores() {
     const container = document.getElementById('fixtures-container');
     const liveTag = document.getElementById('live-indicator');
@@ -51,37 +58,31 @@ async function updateLiveScores() {
     clearTimeout(refreshTimer);
 
     try {
-        const url = `${MATCH_CONFIG.proxy}${encodeURIComponent(MATCH_CONFIG.base + 'fixtures/?event=' + activeGameweek)}`;
-        const response = await fetch(url);
+        // Fetch fixtures for the active gameweek
+        const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
         const fixtures = await response.json();
 
-        // THE KEY: Filter by 'started' only. This keeps Finished games in the list.
-        const allStartedMatches = fixtures.filter(f => f.started === true);
-        
-        // Check if we need to keep refreshing
-        const liveGamesExist = allStartedMatches.some(f => f.finished === false);
+        // FILTER: Keep everything that has started (Live + Finished)
+        const startedGames = fixtures.filter(f => f.started);
+        const isAnyMatchLive = startedGames.some(f => !f.finished);
 
-        if (allStartedMatches.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:30px; opacity:0.5;">
-                <i class="fa-solid fa-calendar-days" style="font-size:2rem; margin-bottom:10px;"></i>
-                <p>No matches have started yet for GW ${activeGameweek}.</p>
-            </div>`;
+        if (startedGames.length === 0) {
+            container.innerHTML = `<p style="text-align:center; opacity:0.5; padding:30px;">No matches started yet for GW ${activeGameweek}.</p>`;
             if (liveTag) liveTag.classList.add('hidden');
             return;
         }
 
-        // Handle the LIVE badge and Auto-Refresh
-        if (liveGamesExist) {
+        // Handle Live Indicators & Smart Refresh
+        if (isAnyMatchLive) {
             if (liveTag) liveTag.classList.remove('hidden');
-            // Auto-refresh every 60s ONLY if games are actually happening
-            refreshTimer = setTimeout(updateLiveScores, 60000);
+            refreshTimer = setTimeout(updateLiveScores, 60000); // Update every minute
         } else {
             if (liveTag) liveTag.classList.add('hidden');
         }
 
-        // Render matches (Newest/Live at the top)
+        // Render HTML
         let html = '';
-        [...allStartedMatches].reverse().forEach(game => {
+        [...startedGames].reverse().forEach(game => {
             const goals = game.stats.find(s => s.identifier === 'goals_scored');
             const assists = game.stats.find(s => s.identifier === 'assists');
             const bps = game.stats.find(s => s.identifier === 'bps');
@@ -89,12 +90,12 @@ async function updateLiveScores() {
             let eventsHtml = '';
             if (goals) {
                 [...goals.h, ...goals.a].forEach(s => {
-                    eventsHtml += `<div class="event-item">⚽ ${playerLookup[s.element] || 'Player'}</div>`;
+                    eventsHtml += `<div class="event-item">⚽ ${playerLookup[s.element]}</div>`;
                 });
             }
             if (assists) {
                 [...assists.h, ...assists.a].forEach(s => {
-                    eventsHtml += `<div class="event-item" style="opacity:0.6;">👟 ${playerLookup[s.element] || 'Player'}</div>`;
+                    eventsHtml += `<div class="event-item" style="opacity:0.6;">👟 ${playerLookup[s.element]}</div>`;
                 });
             }
 
@@ -110,24 +111,24 @@ async function updateLiveScores() {
             }
 
             const status = game.finished ? 
-                `<span style="opacity:0.5; font-size:0.6rem; font-weight:800;">FINISHED</span>` : 
+                `<span style="opacity:0.4; font-size:0.6rem; font-weight:800;">FT</span>` : 
                 `<span style="color:#00ff87; font-size:0.6rem; font-weight:900;">LIVE</span>`;
 
             html += `
-                <div class="fixture-row" style="padding:15px 0; border-bottom:1px solid var(--fpl-border); animation: fadeIn 0.5s ease;">
+                <div class="fixture-row" style="padding:15px 0; border-bottom:1px solid var(--fpl-border);">
                     <div style="text-align:center; margin-bottom:5px;">${status}</div>
                     <div style="display:flex; justify-content:space-between; align-items:center; font-weight:900;">
-                        <span style="flex:1; text-align:right; font-size:0.85rem;">${teamLookup[game.team_h]}</span>
-                        <span style="margin:0 15px; background:var(--fpl-on-container); color:white; padding:4px 12px; border-radius:8px; font-family:monospace; min-width:45px; text-align:center; font-size:1rem;">
+                        <span style="flex:1; text-align:right;">${teamLookup[game.team_h]}</span>
+                        <span style="margin:0 15px; background:var(--fpl-on-container); color:white; padding:4px 10px; border-radius:6px; font-family:monospace; min-width:45px; text-align:center;">
                             ${game.team_h_score} - ${game.team_a_score}
                         </span>
-                        <span style="flex:1; font-size:0.85rem;">${teamLookup[game.team_a]}</span>
+                        <span style="flex:1;">${teamLookup[game.team_a]}</span>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-top: 12px; padding:0 5px;">
-                        <div class="event-log">${eventsHtml || '<span style="opacity:0.3; font-size:0.7rem;">No scorers yet</span>'}</div>
-                        <div style="background:var(--fpl-surface); padding:10px; border-radius:12px; border: 1px dashed var(--fpl-primary);">
-                            <p style="font-size:0.55rem; font-weight:900; margin:0 0 5px 0; opacity:0.6; text-transform:uppercase;">Bonus Points</p>
-                            ${bonusHtml || '<span style="opacity:0.3; font-size:0.6rem;">Calculating...</span>'}
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-top: 12px; padding:0 10px;">
+                        <div class="event-log">${eventsHtml || '<span style="opacity:0.2;">...</span>'}</div>
+                        <div style="background:var(--fpl-surface); padding:8px; border-radius:10px; border: 1px dashed var(--fpl-primary);">
+                            <p style="font-size:0.55rem; font-weight:900; margin:0 0 5px 0; opacity:0.6; text-transform:uppercase;">Bonus</p>
+                            ${bonusHtml || '<span style="opacity:0.2;">...</span>'}
                         </div>
                     </div>
                 </div>`;
@@ -136,11 +137,9 @@ async function updateLiveScores() {
         container.innerHTML = html;
 
     } catch (err) {
-        console.error("Fetch Error:", err);
+        console.error("Score Update Failed:", err);
     } finally {
-        if (refreshIcon) {
-            setTimeout(() => refreshIcon.classList.remove('fa-spin'), 800);
-        }
+        if (refreshIcon) setTimeout(() => refreshIcon.classList.remove('fa-spin'), 800);
     }
 }
 
