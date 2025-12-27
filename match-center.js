@@ -1,5 +1,5 @@
 /**
- * KOPALA FPL - PRO MATCH CENTER (3-LETTER ABBREVIATION ENGINE)
+ * KOPALA FPL - PRO MATCH CENTER (FINAL STABLE VERSION)
  */
 
 const FPL_PROXY = "/fpl-api/"; 
@@ -14,10 +14,7 @@ async function initMatchCenter() {
         const response = await fetch(`${FPL_PROXY}bootstrap-static/`);
         const data = await response.json();
         
-        // Map Player Names
         data.elements.forEach(p => playerLookup[p.id] = p.web_name);
-        
-        // Map Team Names
         data.teams.forEach(t => teamLookup[t.id] = t.name);
         
         const current = data.events.find(e => e.is_current) || data.events.find(e => !e.finished);
@@ -38,6 +35,7 @@ async function updateLiveScores() {
         const fixtures = await response.json();
         const startedGames = fixtures.filter(f => f.started);
         
+        // Only refresh if games are actually in progress
         if (startedGames.some(f => !f.finished)) refreshTimer = setTimeout(updateLiveScores, 60000);
 
         let html = '';
@@ -48,24 +46,26 @@ async function updateLiveScores() {
             const kickoff = new Date(game.kickoff_time);
             const currentDateString = kickoff.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
-            // Date Group Header
             if (currentDateString !== lastDateString) {
                 html += `<div style="color:#37003c; font-size:0.75rem; font-weight:800; margin: 20px 0 10px 5px; opacity:0.6; text-transform:uppercase;">${currentDateString}</div>`;
                 lastDateString = currentDateString;
             }
 
-            // Live Minute / Status Calculation
-            let statusDisplay = game.finished ? 'FT' : 'LIVE';
-            if (!game.finished && game.started) {
+            // --- FIXED MINUTE LOGIC ---
+            let statusDisplay = "";
+            if (game.finished) {
+                statusDisplay = 'FT'; // Shows FT if the game is over
+            } else if (game.started) {
                 const diffMins = Math.floor((new Date() - kickoff) / 60000);
-                statusDisplay = diffMins < 45 ? `${diffMins}'` : (diffMins < 60 ? 'HT' : `${diffMins - 15}'`);
+                if (diffMins < 45) statusDisplay = `${diffMins}'`;
+                else if (diffMins < 60) statusDisplay = 'HT';
+                else if (diffMins < 105) statusDisplay = `${diffMins - 15}'`;
+                else statusDisplay = "90+'"; // Prevents 171' bug
             }
 
-            // Abbreviate Team Names to 3 Letters
             const homeAbbr = teamLookup[game.team_h].substring(0, 3).toUpperCase();
             const awayAbbr = teamLookup[game.team_a].substring(0, 3).toUpperCase();
 
-            // Match Events (Goals/Assists)
             const goals = game.stats.find(s => s.identifier === 'goals_scored');
             const assists = game.stats.find(s => s.identifier === 'assists');
             let homeEvents = '', awayEvents = '';
@@ -79,7 +79,6 @@ async function updateLiveScores() {
                 assists.a.forEach(s => awayEvents += `<div style="opacity:0.4; font-size:0.55rem;"><span style="color:#ff005a">A</span> ${playerLookup[s.element]}</div>`);
             }
 
-            // Bonus Section
             const bps = game.stats.find(s => s.identifier === 'bps');
             let bonusHtml = '';
             if (bps) {
@@ -94,29 +93,25 @@ async function updateLiveScores() {
                 });
             }
 
-            // Simplified Split Layout (No Cards, Single Score)
             html += `
                 <div style="display: flex; flex-direction: row; padding: 12px 0; margin-bottom: 2px; border-bottom: 1px solid #f8f8f8; min-height: 90px;">
                     <div style="flex: 1.3; padding-right: 12px; display: flex; flex-direction: column; border-right: 1px solid #eee;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-weight: 900; font-size: 0.8rem; color:#37003c; flex: 1;">${homeAbbr}</span>
-                            <div style="background: #37003c; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 900; font-size: 0.8rem; font-family: monospace;">
+                            <div style="background: #37003c; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 900; font-size: 0.8rem; font-family: monospace; margin: 0 10px;">
                                 ${game.team_h_score} | ${game.team_a_score}
                             </div>
                             <span style="font-weight: 900; font-size: 0.8rem; color:#37003c; flex: 1; text-align: right;">${awayAbbr}</span>
                         </div>
-
                         <div style="display: flex; gap: 8px; font-size: 0.65rem; flex-grow: 1;">
                             <div style="flex: 1; text-align: left; font-weight: 600;">${homeEvents}</div>
                             <div style="flex: 1; text-align: right; font-weight: 600;">${awayEvents}</div>
                         </div>
-
                         <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
                              <span style="font-size: 0.55rem; font-weight: 800; opacity: 0.2;">GW ${activeGameweek}</span>
                              <span style="font-size: 0.65rem; font-weight: 900; color:#37003c;">${statusDisplay}</span>
                         </div>
                     </div>
-
                     <div style="flex: 1; padding-left: 12px; display: flex; flex-direction: column;">
                         <div style="font-size: 0.55rem; font-weight: 900; color: #37003c; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; opacity: 0.5;">
                             🏆 BONUS <span style="width: 4px; height: 4px; background: ${game.finished ? '#ccc' : '#ff005a'}; border-radius: 50%;"></span>
