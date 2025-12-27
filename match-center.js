@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - PREMIUM MATCH CENTER (TEXT-ONLY OPTIMIZED)
- * Features: Compact Layout, Live BPS, Date Grouping
+ * KOPALA FPL - PREMIUM MATCH CENTER (FINAL ENGINE)
+ * Features: Live Clock, Text-Only Badges, Live BPS, Date Grouping
  */
 
 const FPL_PROXY = "/fpl-api/"; 
@@ -42,7 +42,7 @@ async function updateLiveScores() {
         const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
         const fixtures = await response.json();
 
-        // Filter for started games and check if any are currently live
+        // Filter for started games
         const startedGames = fixtures.filter(f => f.started);
         const isAnyMatchLive = startedGames.some(f => !f.finished);
 
@@ -58,8 +58,8 @@ async function updateLiveScores() {
         const sortedGames = [...startedGames].sort((a, b) => new Date(b.kickoff_time) - new Date(a.kickoff_time));
 
         sortedGames.forEach(game => {
-            const matchDate = new Date(game.kickoff_time);
-            const currentDateString = matchDate.toLocaleDateString('en-GB', { 
+            const kickoff = new Date(game.kickoff_time);
+            const currentDateString = kickoff.toLocaleDateString('en-GB', { 
                 weekday: 'long', day: 'numeric', month: 'long' 
             });
 
@@ -67,6 +67,27 @@ async function updateLiveScores() {
             if (currentDateString !== lastDateString) {
                 html += `<div class="date-group-header" style="font-size: 0.65rem; padding: 5px; margin-top: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px;">${currentDateString}</div>`;
                 lastDateString = currentDateString;
+            }
+
+            // --- LIVE MINUTE CALCULATION ---
+            let statusDisplay = game.finished ? 'FULL TIME' : 'LIVE';
+            let isBlinking = false;
+
+            if (!game.finished && game.started) {
+                const now = new Date();
+                const diffMs = now - kickoff;
+                const diffMins = Math.floor(diffMs / 60000);
+                isBlinking = true;
+
+                if (diffMins <= 45) {
+                    statusDisplay = `${diffMins}'`;
+                } else if (diffMins > 45 && diffMins < 60) {
+                    statusDisplay = `HT`;
+                } else if (diffMins >= 60 && diffMins < 105) {
+                    statusDisplay = `${diffMins - 15}'`;
+                } else {
+                    statusDisplay = `90+'`;
+                }
             }
 
             // Scorer & Assist Logic
@@ -99,13 +120,13 @@ async function updateLiveScores() {
                 });
             }
 
-            const statusText = game.finished ? 'FULL TIME' : 'LIVE';
             const statusColor = game.finished ? '#f8f8f8' : '#00ff87';
 
             html += `
                 <div class="fixture-card" style="margin-bottom:8px; border: 1px solid #eee; background: #fff; border-radius: 8px; overflow: hidden;">
-                    <div style="background:${statusColor}; color:#000; text-align:center; padding:3px; font-weight:900; font-size:0.55rem; letter-spacing:0.5px; border-bottom: 1px solid #eee;">
-                        ${statusText}
+                    <div style="background:${statusColor}; color:#000; text-align:center; padding:3px; font-weight:900; font-size:0.55rem; letter-spacing:0.5px; border-bottom: 1px solid #eee; display: flex; justify-content: center; align-items: center; gap: 5px;">
+                        ${statusDisplay}
+                        ${isBlinking ? '<span style="width: 6px; height: 6px; background: #ff005a; border-radius: 50%; display: inline-block; animation: blink 1s infinite;"></span>' : ''}
                     </div>
                     
                     <div class="fixture-content" style="padding: 8px; display: flex; align-items: center; min-height: 60px;">
@@ -115,7 +136,7 @@ async function updateLiveScores() {
 
                         <div class="score-col" style="flex: 1.5; text-align: center; padding: 0 10px;">
                             <div style="display: flex; justify-content: center; align-items: center; gap: 6px;">
-                                <span style="font-weight: 800; font-size: 0.75rem; text-transform: uppercase; flex: 1; text-align: right;">
+                                <span style="font-weight: 800; font-size: 0.75rem; text-transform: uppercase; flex: 1; text-align: right; color: #37003c;">
                                     ${teamLookup[game.team_h].substring(0,3)}
                                 </span>
                                 
@@ -123,7 +144,7 @@ async function updateLiveScores() {
                                     ${game.team_h_score}-${game.team_a_score}
                                 </div>
 
-                                <span style="font-weight: 800; font-size: 0.75rem; text-transform: uppercase; flex: 1; text-align: left;">
+                                <span style="font-weight: 800; font-size: 0.75rem; text-transform: uppercase; flex: 1; text-align: left; color: #37003c;">
                                     ${teamLookup[game.team_a].substring(0,3)}
                                 </span>
                             </div>
@@ -144,4 +165,5 @@ async function updateLiveScores() {
     }
 }
 
+// Start the engine
 document.addEventListener('DOMContentLoaded', initMatchCenter);
