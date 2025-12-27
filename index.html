@@ -468,4 +468,24 @@
         });
 
         // Service Worker Registration
-        if ('serviceWorker' in navi
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => {
+                        console.log('✅ Service Worker Registered');
+                        reg.update();
+                    })
+                    .catch(err => console.log('❌ SW Failed', err));
+            });
+        }
+    </script>
+
+     <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+    <i class="fa-solid fa-arrow-up"></i>
+
+    <script src="script.js"></script>
+    <script src="deadline.js"></script>
+    <script src="match-center.js"></script>
+</button>
+</body>
+</html>
