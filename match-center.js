@@ -4,14 +4,15 @@
  */
 
 const MATCH_CONFIG = {
-    proxy: "https://corsproxy.io/?",
+    // Switching to a more stable proxy to fix "Unable to reach FPL servers"
+    proxy: "https://api.allorigins.win/raw?url=",
     base: "https://fantasy.premierleague.com/api/"
 };
 
 let playerLookup = {};
 let teamLookup = {};
 let activeGameweek = null;
-let refreshTimer = null; // To manage the smart refresh
+let refreshTimer = null;
 
 // 1. INITIALIZE DATA (Run once on load)
 async function initMatchCenter() {
@@ -35,6 +36,10 @@ async function initMatchCenter() {
 
     } catch (error) {
         console.error("Initialization failed:", error);
+        const container = document.getElementById('fixtures-container');
+        if (container) {
+            container.innerHTML = `<p style="text-align:center; opacity:0.5; font-size:0.8rem; padding: 20px;">Unable to reach FPL servers. Please try refreshing.</p>`;
+        }
     }
 }
 
@@ -46,7 +51,7 @@ async function updateLiveScores() {
     
     if (!container) return;
 
-    // UI Feedback: Start spinning icon if it exists
+    // UI Feedback: Spin the icon
     if (refreshIcon) refreshIcon.classList.add('fa-spin');
     
     // Safety: Clear any existing timer
@@ -57,15 +62,14 @@ async function updateLiveScores() {
         const response = await fetch(url);
         const fixtures = await response.json();
 
-        // CHANGE: Filter for any game that has started (Live OR Finished)
-        // This keeps the results on screen until the next GW
+        // FILTER: Keep any game that has started (Live + Finished)
         const startedGames = fixtures.filter(f => f.started);
 
-        // Logic to check if we should refresh again
+        // CHECK: Is any game currently in progress?
         const isAnyMatchLive = startedGames.some(f => !f.finished);
 
         if (startedGames.length === 0) {
-            container.innerHTML = `<p style="text-align:center; opacity:0.5; font-size:0.8rem; padding: 20px;">No matches started yet.</p>`;
+            container.innerHTML = `<p style="text-align:center; opacity:0.5; font-size:0.8rem; padding: 20px;">No matches started yet for GW ${activeGameweek}.</p>`;
             if (liveTag) liveTag.classList.add('hidden');
             return;
         }
@@ -73,16 +77,16 @@ async function updateLiveScores() {
         // --- SMART REFRESH CONTROL ---
         if (isAnyMatchLive) {
             if (liveTag) liveTag.classList.remove('hidden');
-            // Schedule next refresh in 60s because a game is live
+            // Schedule next refresh in 60s ONLY because a game is live
             refreshTimer = setTimeout(updateLiveScores, 60000);
         } else {
-            // No games are live, hide the live tag and DON'T set a timer
+            // All games finished, stop auto-refresh
             if (liveTag) liveTag.classList.add('hidden');
         }
 
         container.innerHTML = '';
 
-        // Render from newest to oldest
+        // Render matches (Reverse to show newest/live games first)
         [...startedGames].reverse().forEach(game => {
             const goals = game.stats.find(s => s.identifier === 'goals_scored');
             const assists = game.stats.find(s => s.identifier === 'assists');
@@ -134,7 +138,7 @@ async function updateLiveScores() {
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-top: 12px;">
-                        <div class="event-log">${eventsHtml || '<span style="opacity:0.3; font-size:0.7rem;">No scorers</span>'}</div>
+                        <div class="event-log">${eventsHtml || '<span style="opacity:0.3; font-size:0.7rem;">No scorers yet</span>'}</div>
                         <div style="background:var(--fpl-surface); padding:10px; border-radius:12px; border: 1px dashed var(--fpl-primary);">
                             <p style="font-size:0.55rem; font-weight:900; margin:0 0 5px 0; opacity:0.6; text-transform:uppercase;">
                                 ${game.finished ? 'Final Bonus' : 'Live Bonus'}
@@ -147,7 +151,7 @@ async function updateLiveScores() {
     } catch (err) {
         console.error("Match Center Update Error:", err);
     } finally {
-        // UI Feedback: Stop spinning icon
+        // Stop spinning icon
         if (refreshIcon) {
             setTimeout(() => refreshIcon.classList.remove('fa-spin'), 600);
         }
