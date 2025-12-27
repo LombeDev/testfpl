@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFCON 2025 - Morocco Edition</title>
+    <style>
+        :root {
+            --afcon-green: #189E4B;
+            --afcon-red: #E90052;
+            --afcon-gold: #E0B700;
+            --afcon-dark: #1e1e1e;
+            --morocco-bg: #f8f1e7;
+        }
+
+        body {
+            background-color: var(--morocco-bg);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* The Zellij Mosaic Pattern */
+        .zellij-header {
+            background-color: var(--afcon-green);
+            background-image: radial-gradient(var(--afcon-gold) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: white;
+            padding: 25px 20px;
+            border-bottom: 5px solid var(--afcon-red);
+        }
+
+        .dashboard-card {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--afcon-gold);
+            border-radius: 8px;
+            background: white;
+            font-weight: 800;
+            color: var(--afcon-dark);
+            margin-top: 10px;
+        }
+
+        .section-title {
+            background: #fdfdfd;
+            padding: 15px 20px 5px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--afcon-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 4px;
+            height: 15px;
+            background: var(--afcon-red);
+            display: inline-block;
+        }
+
+        .score-pill {
+            background: var(--afcon-dark);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 900;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--afcon-gold);
+        }
+
+        .team-abbr {
+            font-weight: 900;
+            font-size: 0.9rem;
+            color: #222;
+        }
+
+        .stat-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .pts-green { color: var(--afcon-green); }
+        .gd-red { color: var(--afcon-red); }
+
+        #refresh-btn {
+            background: var(--afcon-gold);
+            border: none;
+            color: var(--afcon-dark);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 900;
+            font-size: 0.7rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b89600;
+        }
+
+        #refresh-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b89600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-card">
+        <div class="zellij-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 0.6rem; font-weight: 800; opacity: 0.9; text-transform: uppercase;">TotalEnergies CAF</div>
+                    <div style="font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px;">AFCON MOROCCO 2025</div>
+                </div>
+                <button id="refresh-btn" onclick="updateAll()">SYNC</button>
+            </div>
+            <select id="group-id" onchange="updateAll()">
+                <option value="1">GROUP A (ZAM, MAR, MLI, COM)</option>
+                <option value="2">GROUP B (EGY, RSA, ANG, ZIM)</option>
+                <option value="3">GROUP C (NGR, TUN, UGA, TAN)</option>
+                <option value="4">GROUP D (SEN, COD, BEN, BOT)</option>
+                <option value="5">GROUP E (ALG, BFA, EQG, SUD)</option>
+                <option value="6">GROUP F (CIV, CMR, GAB, MOZ)</option>
+            </select>
+        </div>
+
+        <div class="section-title">Group Standings</div>
+        <div id="standings-box" style="padding: 10px;"></div>
+
+        <div class="section-title">Latest Results</div>
+        <div id="results-box" style="padding: 10px;"></div>
+
+        <div class="section-title">Goal Leaders</div>
+        <div id="scorers-box" style="padding: 10px 20px 20px;"></div>
+
+        <div id="last-update" style="background: var(--afcon-dark); color: #888; text-align: center; font-size: 0.6rem; padding: 12px; font-weight: 700;">
+            SELECT GROUP TO BEGIN
+        </div>
+    </div>
+
+    <script>
+        // ... [Include the JavaScript from the previous response here] ...
+        // (The logic remains the same, just targeting the new CSS classes)
+        
+        async function updateAll() {
+            const groupIdx = document.getElementById('group-id').value;
+            const status = document.getElementById('last-update');
+            status.innerHTML = "FETCHING MOROCCO 2025 DATA...";
+            const section = parseInt(groupIdx) + 6; 
+
+            try {
+                const groupRes = await fetch(`https://en.wikipedia.org/w/api.php?action=parse&page=2025_Africa_Cup_of_Nations&section=${section}&prop=text&format=json&origin=*`);
+                const groupData = await groupRes.json();
+                const groupDoc = new DOMParser().parseFromString(groupData.parse.text["*"], 'text/html');
+
+                renderStandings(groupDoc);
+                renderResults(groupDoc);
+
+                const scorerRes = await fetch(`https://en.wikipedia.org/w/api.php?action=parse&page=2025_Africa_Cup_of_Nations&section=14&prop=text&format=json&origin=*`);
+                const scorerData = await scorerRes.json();
+                renderScorers(scorerData.parse.text["*"]);
+
+                status.innerHTML = `LIVE SYNC: ${new Date().toLocaleTimeString()}`;
+            } catch (e) {
+                status.innerHTML = "CONNECTION ERROR";
+            }
+        }
+
+        function renderStandings(doc) {
+            const table = doc.querySelector('table.wikitable');
+            const rows = table.querySelectorAll('tr');
+            let html = '';
+            rows.forEach((row, i) => {
+                if (i === 0) return;
+                const cols = row.querySelectorAll('td');
+                if (cols.length >= 8) {
+                    const name = cols[0].innerText.trim().split('(')[0].substring(0,3).toUpperCase();
+                    const p = cols[1].innerText.trim();
+                    const gd = cols[7].innerText.trim();
+                    const pts = cols[8].innerText.trim();
+                    html += `
+                    <div style="display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px solid #eee;">
+                        <span style="width: 25px; font-size: 0.7rem; font-weight: 900; color: #bbb;">${i}</span>
+                        <span class="team-abbr" style="flex: 1;">${name}</span>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <span class="stat-badge" style="background: #f0f0f0;">${p}P</span>
+                            <span class="stat-badge ${gd.includes('−') || gd.includes('-') ? 'gd-red' : 'pts-green'}">${gd} GD</span>
+                            <span style="font-weight: 900; color: var(--afcon-green); font-size: 1rem;">${pts}</span>
+                        </div>
+                    </div>`;
+                }
+            });
+            document.getElementById('standings-box').innerHTML = html;
+        }
+
+        function renderResults(doc) {
+            const matches = doc.querySelectorAll('.footballbox');
+            let html = '';
+            matches.forEach(m => {
+                const h = m.querySelector('.fhome').innerText.trim().substring(0,3).toUpperCase();
+                const a = m.querySelector('.faway').innerText.trim().substring(0,3).toUpperCase();
+                const s = m.querySelector('.fscore').innerText.trim();
+                html += `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; background: white; border-radius: 8px; border: 1px solid #eee;">
+                    <span class="team-abbr" style="flex: 1; text-align: right;">${h}</span>
+                    <span class="score-pill" style="margin: 0 15px;">${s}</span>
+                    <span class="team-abbr" style="flex: 1; text-align: left;">${a}</span>
+                </div>`;
+            });
+            document.getElementById('results-box').innerHTML = html || '<p style="font-size:0.7rem; text-align:center; padding:10px;">Results loading...</p>';
+        }
+
+        function renderScorers(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const sections = doc.querySelectorAll('h3');
+            let listHtml = '';
+            sections.forEach(sec => {
+                const goalNum = sec.innerText.replace('[edit]', '').trim();
+                if (goalNum.includes('goals') && parseInt(goalNum) >= 2) {
+                    const players = sec.nextElementSibling.querySelectorAll('li');
+                    players.forEach(p => {
+                        listHtml += `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f9f9f9; align-items:center;">
+                            <span style="font-size:0.8rem; font-weight:700; color:var(--afcon-dark);">${p.innerText}</span>
+                            <span style="background:var(--afcon-red); color:white; font-size:0.65rem; font-weight:900; padding:2px 8px; border-radius:20px;">${goalNum.split(' ')[0]} GOALS</span>
+                        </div>`;
+                    });
+                }
+            });
+            document.getElementById('scorers-box').innerHTML = listHtml || '<p style="font-size:0.7rem; text-align:center;">Competition in progress...</p>';
+        }
+
+        window.onload = updateAll;
+    </script>
+</body>
+</html>
