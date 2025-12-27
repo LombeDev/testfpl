@@ -1,169 +1,600 @@
-/**
- * KOPALA FPL - PREMIUM MATCH CENTER (FINAL ENGINE)
- * Features: Live Clock, Text-Only Badges, Live BPS, Date Grouping
- */
+/* --- GLOBAL FIXES --- */
+:root {
+    --primary-green: #249771;
+    --dark-blue: #0f172a;
+    --text-gray: #4a5568;
+    --bg-light: #f5f5f7;
+    --card-bg: #ffffff;
+    --text-dim: #718096;
+    --accent: #249771;
+    --down: #e53e3e;
+    --fpl-pink: #ff005a;
+    /* Organic Motion Timing Function */
+    --organic-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
-const FPL_PROXY = "/fpl-api/"; 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent; /* Removes mobile tap flicker */
+}
 
-let playerLookup = {};
-let teamLookup = {};
-let activeGameweek = null;
-let refreshTimer = null;
+/* FIX: Removed overflow-x: hidden from html/body. 
+   'Sticky' fails if any parent has overflow: hidden.
+*/
+html, body {
+    width: 100%;
+}
 
-// 1. INITIALIZE DATABASE
-async function initMatchCenter() {
-    try {
-        const response = await fetch(`${FPL_PROXY}bootstrap-static/`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    color: var(--text-gray);
+    line-height: 1.5;
+    background-color: #fff;
+}
 
-        // Map Player Names and Team Names
-        data.elements.forEach(p => playerLookup[p.id] = p.web_name);
-        data.teams.forEach(t => teamLookup[t.id] = t.name);
-        
-        // Find Active Gameweek
-        const current = data.events.find(e => e.is_current) || data.events.find(e => !e.finished);
-        activeGameweek = current ? current.id : 1;
+/* --- NAVBAR (NOW STICKY) --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 10px;
+    background: #ffffff; 
+    border-bottom: 1px solid #eee;
+    position: -webkit-sticky; 
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
 
-        updateLiveScores();
-    } catch (error) {
-        console.error("Sync Error:", error);
+.nav-left { display: flex; align-items: center; gap: 15px; }
+
+.menu-icon { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 5px; transition: transform 0.2s var(--organic-bounce); }
+.menu-icon:active { transform: scale(0.85); }
+.menu-icon span { width: 20px; height: 2px; background: #000; }
+
+.brand { font-size: 1.2rem; font-weight: 900; color: #ffffff; margin: 0; }
+.brand span { color: var(--primary-green); }
+
+.nav-right { display: flex; align-items: center; gap: 8px; }
+
+/* Haptic Feedback on Icon Buttons */
+.icon-btn { 
+    background: var(--bg-light); border: none; border-radius: 50%; 
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; 
+    color: var(--dark-blue);
+    transition: transform 0.2s var(--organic-bounce), background 0.2s;
+}
+.icon-btn:active { transform: scale(0.9); background: #e2e8f0; }
+
+.divider { width: 1px; height: 20px; background: #ddd; margin: 0 5px; }
+
+/* --- DRAWER & BACKDROP --- */
+.drawer {
+    position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+    background: white; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.drawer.open { left: 0; }
+.backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: none; z-index: 1500;
+}
+.backdrop.active { display: block; }
+
+.drawer-links { list-style: none; padding: 20px; margin: 0; }
+.drawer-links li { padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+.drawer-links a { text-decoration: none; color: #333; font-weight: 600; transition: 0.2s; display: block; }
+.drawer-links a:active { color: var(--primary-green); transform: scale(0.98); }
+
+/* --- MAIN CONTENT / CONTAINER --- */
+.main-content {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.container { 
+    width: 100%;
+    max-width: 500px; 
+    margin: 30px auto; 
+    padding: 0 5px;
+    min-height: 60vh; 
+}
+
+/* Haptic Feedback on Cards */
+.card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.3s var(--organic-bounce), box-shadow 0.3s ease;
+}
+.card:active { transform: scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
+
+.accent-title { border-left: 6px solid var(--primary-green); padding-left: 15px; }
+
+/* --- KOPALA EDGE STYLES --- */
+.edge-container { margin-top: 40px; }
+.edge-title { 
+    font-size: 0.9rem; font-weight: 900; letter-spacing: 2px; 
+    color: var(--dark-blue); margin-bottom: 20px; 
+    display: flex; align-items: center; gap: 10px;
+}
+.edge-title::after { content: ""; flex: 1; height: 2px; background: #eee; }
+
+.edge-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+
+.edge-card {
+    background: #fff; border: 1px solid #f0f0f0; border-radius: 12px;
+    padding: 25px; position: relative;
+    transition: transform 0.3s var(--organic-bounce), box-shadow 0.3s ease;
+}
+.edge-card:active { transform: scale(0.97); }
+
+.edge-card h3 { font-size: 1rem; color: var(--dark-blue); margin: 15px 0 8px 0; font-weight: 800; }
+.edge-card p { font-size: 0.85rem; color: var(--text-gray); margin: 0; line-height: 1.4; }
+
+.highlighted { border-left: 4px solid var(--primary-green); }
+
+/* --- GEOMETRIC ICONS --- */
+.geo-icon { width: 30px; height: 30px; position: relative; transition: transform 0.5s var(--organic-bounce); }
+.edge-card:hover .geo-icon { transform: rotate(15deg) scale(1.1); }
+
+.circle-split { background: linear-gradient(90deg, var(--primary-green) 50%, var(--fpl-pink) 50%); border-radius: 50%; }
+.square-stack::before { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--primary-green); }
+.square-stack::after { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--fpl-pink); top: 5px; left: 5px; }
+.triangle-point { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 25px solid var(--primary-green); }
+.bars-minimal { border-left: 6px solid #ddd; border-right: 6px solid var(--primary-green); height: 25px; }
+.circle-dot { border: 3px solid var(--dark-blue); border-radius: 50%; }
+.circle-dot::after { content: ''; position: absolute; width: 8px; height: 8px; background: var(--fpl-pink); top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; }
+.strike-line { background: var(--fpl-pink); height: 4px; top: 13px; transform: rotate(-45deg); width: 30px; }
+
+/* --- COUNTDOWN & PRICE DATA --- */
+h3.timer-header {
+    margin-top: 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+}
+
+#countdown-timer { text-align: center; }
+
+.timer-grid {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.timer-unit {
+    font-size: 10px;
+    display: block;
+    color: var(--text-dim);
+    font-weight: 400;
+}
+
+/* Interactivity on Price Rows */
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    border-bottom: 1px solid #eeeeee;
+    transition: transform 0.2s var(--organic-bounce), background 0.2s ease;
+    cursor: pointer;
+}
+.price-row:active { transform: scale(0.96); background: #f8fafc; }
+.price-row:last-child { border-bottom: none; }
+
+.player-info { display: flex; flex-direction: column; }
+.player-name { font-weight: 600; font-size: 15px; color: var(--dark-blue); }
+.team-name { font-size: 12px; color: var(--text-dim); }
+.price-data { text-align: right; }
+.price-val { font-weight: 700; color: var(--dark-blue); }
+.change-up { color: #008a4a; font-weight: bold; }
+.change-down { color: var(--down); font-weight: bold; }
+
+/* --- FOOTER --- */
+footer { background: var(--dark-blue); color: white; padding: 40px 15px; margin-top: 60px; text-align: center; }
+
+/* --- DESKTOP ADJUSTMENT --- */
+@media (min-width: 480px) {
+    .edge-grid { grid-template-columns: 1fr 1fr; }
+    .container { padding: 0 20px; }
+}
+
+
+/* Vertical Scroll Container */
+.price-list-vertical {
+    max-height: 250px; 
+    overflow-y: auto;  
+    padding-right: 5px;
+}
+
+/* Custom Scrollbar */
+.price-list-vertical::-webkit-scrollbar {
+    width: 4px;
+}
+.price-list-vertical::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.price-row-mini {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.riser-text { color: #008a4a; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; margin-top: 10px; }
+.faller-text { color: #e53e3e; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; margin-top: 10px; }
+.divider { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+
+/* --- Desktop Navigation Styling --- */
+
+.nav-links {
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 20px;
+}
+
+.nav-links li a {
+    color: #ffffff; 
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: color 0.3s var(--organic-bounce), transform 0.2s;
+}
+
+.nav-links li a:hover {
+    color: #00ff87; 
+}
+.nav-links li a:active { transform: scale(0.95); }
+
+@media screen and (min-width: 768px) {
+    #menu-btn {
+        display: none !important;
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+    }
+
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        background-color: #1a1a1a; 
+    }
+
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 40px; 
     }
 }
 
-// 2. LIVE SCORE ENGINE
-async function updateLiveScores() {
-    const container = document.getElementById('fixtures-container');
-    if (!container) return;
+.player-name {
+    font-weight: 800;
+    display: block;
+    color: #37003c;
+}
+
+.team-name {
+    font-size: 11px;
+    color: #666;
+}
+
+.change-up { color: #00ff87; font-weight: bold; }
+.change-down { color: #ff005a; font-weight: bold; }
+
+.market-card h3 {
+    padding: 10px;
+    background: #37003c;
+    color: white;
+    font-size: 14px;
+    border-radius: 8px 8px 0 0;
+}
+
+
+
+#confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 9999 !important; /* Always on top of everything */
+    display: none; /* Controlled by JS */
+    align-items: center;
+    justify-content: center;
+}
     
-    clearTimeout(refreshTimer);
+/* --- IMPROVED DASHBOARD GRID --- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+    gap: 12px;
+    margin-top: 20px;
+    width: 100%;
+}
 
-    try {
-        const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
-        const fixtures = await response.json();
+.timer-unit {
+    background-color: var(--fpl-surface);
+    padding: 15px 5px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid var(--fpl-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-width: 0; /* Prevents grid blowout */
+    transition: transform 0.2s ease;
+}
 
-        // Filter for started games
-        const startedGames = fixtures.filter(f => f.started);
-        const isAnyMatchLive = startedGames.some(f => !f.finished);
+.timer-value {
+    font-size: 1.2rem; /* Adjusted size to prevent overflow */
+    font-weight: 900;
+    color: var(--fpl-primary);
+    display: block;
+    word-break: break-word; /* Forces long numbers to wrap if absolutely necessary */
+    line-height: 1.2;
+}
 
-        // Auto-refresh every 60 seconds if a match is live
-        if (isAnyMatchLive) {
-            refreshTimer = setTimeout(updateLiveScores, 60000);
-        }
+/* Specific fix for the large Rank number */
+#disp-rank {
+    font-size: 1rem; 
+}
 
-        let html = '';
-        let lastDateString = "";
+.timer-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
 
-        // Sort by Kickoff (Newest First)
-        const sortedGames = [...startedGames].sort((a, b) => new Date(b.kickoff_time) - new Date(a.kickoff_time));
+@media (max-width: 400px) {
+    .timer-value { font-size: 1rem; }
+    .dashboard-grid { gap: 8px; }
+}
 
-        sortedGames.forEach(game => {
-            const kickoff = new Date(game.kickoff_time);
-            const currentDateString = kickoff.toLocaleDateString('en-GB', { 
-                weekday: 'long', day: 'numeric', month: 'long' 
-            });
 
-            // Add Date Header
-            if (currentDateString !== lastDateString) {
-                html += `<div class="date-group-header" style="font-size: 0.65rem; padding: 5px; margin-top: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px;">${currentDateString}</div>`;
-                lastDateString = currentDateString;
-            }
+/* --- BACK TO TOP BUTTON --- */
+.back-to-top {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 45px;
+    height: 45px;
+    background-color: var(--fpl-primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
 
-            // --- LIVE MINUTE CALCULATION ---
-            let statusDisplay = game.finished ? 'FULL TIME' : 'LIVE';
-            let isBlinking = false;
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+}
 
-            if (!game.finished && game.started) {
-                const now = new Date();
-                const diffMs = now - kickoff;
-                const diffMins = Math.floor(diffMs / 60000);
-                isBlinking = true;
+.back-to-top:hover {
+    transform: translateY(-5px);
+    background-color: #37003c; /* Slightly darker shade */
+}
 
-                if (diffMins <= 45) {
-                    statusDisplay = `${diffMins}'`;
-                } else if (diffMins > 45 && diffMins < 60) {
-                    statusDisplay = `HT`;
-                } else if (diffMins >= 60 && diffMins < 105) {
-                    statusDisplay = `${diffMins - 15}'`;
-                } else {
-                    statusDisplay = `90+'`;
-                }
-            }
+/* Ensure smooth scrolling for the whole page */
+html {
+    scroll-behavior: smooth;
+}
 
-            // Scorer & Assist Logic
-            const goals = game.stats.find(s => s.identifier === 'goals_scored');
-            const assists = game.stats.find(s => s.identifier === 'assists');
-            let eventsHtml = '';
-            if (goals) {
-                [...goals.h, ...goals.a].forEach(s => {
-                    eventsHtml += `<div style="margin-bottom:1px;">⚽ ${playerLookup[s.element]}</div>`;
-                });
-            }
-            if (assists) {
-                [...assists.h, ...assists.a].forEach(s => {
-                    eventsHtml += `<div style="opacity:0.5; font-size:0.55rem;">👟 ${playerLookup[s.element]}</div>`;
-                });
-            }
 
-            // Bonus Point Rank Logic
-            const bps = game.stats.find(s => s.identifier === 'bps');
-            let bonusHtml = '';
-            if (bps) {
-                const top = [...bps.h, ...bps.a].sort((a, b) => b.value - a.value).slice(0, 3);
-                const colors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-                top.forEach((p, i) => {
-                    bonusHtml += `
-                        <div style="display:flex; align-items:center; gap:4px; margin-bottom:2px; font-size:0.6rem;">
-                            <span style="background:${colors[i]}; color:#000; width:12px; height:12px; display:flex; align-items:center; justify-content:center; border-radius:2px; font-weight:900; font-size:0.45rem;">${3-i}</span>
-                            <span style="font-weight:700;">${playerLookup[p.element]}</span>
-                        </div>`;
-                });
-            }
+.bonus-log {
+    border: 1px dashed var(--fpl-primary);
+    animation: pulse-border 2s infinite;
+}
 
-            const statusColor = game.finished ? '#f8f8f8' : '#00ff87';
+@keyframes pulse-border {
+    0% { border-color: rgba(255, 0, 90, 0.2); }
+    50% { border-color: rgba(255, 0, 90, 0.8); }
+    100% { border-color: rgba(255, 0, 90, 0.2); }
+}
 
-            html += `
-                <div class="fixture-card" style="margin-bottom:8px; border: 1px solid #eee; background: #fff; border-radius: 8px; overflow: hidden;">
-                    <div style="background:${statusColor}; color:#000; text-align:center; padding:3px; font-weight:900; font-size:0.55rem; letter-spacing:0.5px; border-bottom: 1px solid #eee; display: flex; justify-content: center; align-items: center; gap: 5px;">
-                        ${statusDisplay}
-                        ${isBlinking ? '<span style="width: 6px; height: 6px; background: #ff005a; border-radius: 50%; display: inline-block; animation: blink 1s infinite;"></span>' : ''}
-                    </div>
-                    
-                    <div class="fixture-content" style="padding: 8px; display: flex; align-items: center; min-height: 60px;">
-                        <div class="events-col" style="flex: 1; font-size: 0.6rem; border-right: 1px solid #f5f5f5; padding-right: 5px;">
-                            ${eventsHtml || '<span style="opacity:0.2;">---</span>'}
-                        </div>
 
-                        <div class="score-col" style="flex: 1.5; text-align: center; padding: 0 10px;">
-                            <div style="display: flex; justify-content: center; align-items: center; gap: 6px;">
-                                <span style="font-weight: 800; font-size: 0.75rem; text-transform: uppercase; flex: 1; text-align: right; color: #37003c;">
-                                    ${teamLookup[game.team_h].substring(0,3)}
-                                </span>
-                                
-                                <div style="font-size: 1rem; font-weight: 900; background: #37003c; color: #fff; padding: 3px 8px; border-radius: 4px; font-family: monospace; min-width: 45px;">
-                                    ${game.team_h_score}-${game.team_a_score}
-                                </div>
 
-                                <span style="font-weight: 800; font-size: 0.75rem; text-transform: uppercase; flex: 1; text-align: left; color: #37003c;">
-                                    ${teamLookup[game.team_a].substring(0,3)}
-                                </span>
-                            </div>
-                            <div style="font-size: 0.45rem; font-weight: 800; opacity: 0.3; margin-top: 3px; letter-spacing: 1px;">GW ${activeGameweek}</div>
-                        </div>
+//* --- UPDATED FIXTURE & MATCH CENTER STYLES --- */
 
-                        <div class="bonus-col" style="flex: 1; background: #fafafa; border-radius: 4px; padding: 5px; border-left: 1px solid #eee;">
-                            <div style="font-size: 0.5rem; font-weight: 900; opacity: 0.4; margin-bottom: 3px; text-transform: uppercase;">🏆 Bonus</div>
-                            ${bonusHtml || '<span style="opacity:0.2; font-size:0.55rem;">Awaiting...</span>'}
-                        </div>
-                    </div>
-                </div>`;
-        });
-        
-        container.innerHTML = html;
-    } catch (err) {
-        console.error("Update Failed:", err);
+/* Container safety - ensuring no horizontal scroll */
+#fixtures-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 2px;
+}
+
+/* Date Group Header Styling (Friday, Saturday, etc.) */
+.date-group-header {
+    background: linear-gradient(90deg, #00ff87, #00ebff);
+    color: #37003c;
+    text-align: center;
+    padding: 8px;
+    font-weight: 900;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    margin: 15px 0 5px 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* The Main Card */
+.fixture-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    overflow: hidden;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+}
+
+/* Horizontal Content Wrapper */
+.fixture-content {
+    display: flex;
+    align-items: stretch; 
+    padding: 10px;
+    gap: 5px;
+}
+
+/* Column 1: Events (Left) */
+.events-col {
+    flex: 1; /* Proportional sizing */
+    border-right: 1px solid #f0f0f0;
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 0.75rem;
+    min-width: 0; /* Prevents text from pushing width */
+}
+
+/* Column 2: The Scoreboard (Middle) - STRENGTHENED */
+.score-col {
+    flex: 2.5; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px; /* Prevents 'crunching' with logos */
+}
+
+.score-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.team-unit {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+    justify-content: center;
+}
+
+.team-logo {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.team-abbr {
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #333;
+}
+
+/* The dark score box from your image */
+.score-box {
+    background: #37003c; /* FPL Purple */
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-weight: 900;
+    font-size: 1.1rem;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    min-width: 60px;
+}
+
+/* Column 3: Bonus (Right) */
+.bonus-col {
+    flex: 1.2; 
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 8px;
+    margin-left: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.bonus-header {
+    font-size: 0.55rem;
+    font-weight: 900;
+    opacity: 0.4;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+/* Specific GW Label */
+.gw-label {
+    font-size: 0.55rem;
+    font-weight: 800;
+    opacity: 0.3;
+    margin-top: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* --- MOBILE OPTIMIZATIONS --- */
+@media (max-width: 450px) {
+    .events-col { 
+        display: none; /* Auto-hide events on small phones to keep score large */
+    }
+    .score-col { 
+        flex: 3; 
+    }
+    .team-logo {
+        width: 18px;
+        height: 18px;
+    }
+    .team-abbr {
+        font-size: 0.7rem;
+    }
+    .score-box {
+        font-size: 1rem;
+        padding: 4px 8px;
     }
 }
 
-// Start the engine
-document.addEventListener('DOMContentLoaded', initMatchCenter);
+
+
+@keyframes blink {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
