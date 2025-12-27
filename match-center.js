@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - PRO MATCH CENTER (FULL ENGINE)
- * Features: Netlify Proxy, Team Logos, Date Grouping, Live BPS
+ * KOPALA FPL - PRO MATCH CENTER (FULL ENGINE 2025/26)
+ * Fixes: Official Team Badges, Date Grouping, Live BPS, Refresh Logic
  */
 
 const FPL_PROXY = "/fpl-api/"; 
@@ -10,7 +10,10 @@ let teamLookup = {};
 let activeGameweek = null;
 let refreshTimer = null;
 
-// 1. INITIALIZE DATABASE
+/**
+ * 1. INITIALIZE DATABASE
+ * Syncs team names and player names for IDs
+ */
 async function initMatchCenter() {
     try {
         console.log("Syncing with FPL Database...");
@@ -23,11 +26,11 @@ async function initMatchCenter() {
         data.elements.forEach(p => playerLookup[p.id] = p.web_name);
         data.teams.forEach(t => teamLookup[t.id] = t.name);
         
-        // Identify Current Gameweek
+        // Identify Current/Active Gameweek
         const current = data.events.find(e => e.is_current) || data.events.find(e => !e.finished);
         activeGameweek = current ? current.id : 1;
 
-        console.log("Database Synced. GW:", activeGameweek);
+        console.log("Database Synced. Active GW:", activeGameweek);
         
         // Load initial scores
         updateLiveScores();
@@ -36,17 +39,23 @@ async function initMatchCenter() {
         console.error("Critical Sync Error:", error);
         const container = document.getElementById('fixtures-container');
         if (container) {
-            container.innerHTML = `<div style="text-align:center; padding:20px; color:#ff4d4d;">
-                <strong>CONNECTION ERROR</strong><br>Check _redirects and Netlify deployment.
-            </div>`;
+            container.innerHTML = `
+                <div style="text-align:center; padding:40px; color:#ff4d4d; font-weight:bold;">
+                    ⚠️ DATABASE SYNC ERROR<br>
+                    <span style="font-size:0.8rem; font-weight:normal; opacity:0.7;">
+                        Check your Netlify /fpl-api/ proxy configuration.
+                    </span>
+                </div>`;
         }
     }
 }
 
-// 2. LIVE SCORE ENGINE
+/**
+ * 2. LIVE SCORE ENGINE
+ * Fetches fixtures and builds the Match Center UI
+ */
 async function updateLiveScores() {
     const container = document.getElementById('fixtures-container');
-    const liveTag = document.getElementById('live-indicator');
     const refreshIcon = document.getElementById('refresh-icon');
     
     if (!container) return;
@@ -58,104 +67,105 @@ async function updateLiveScores() {
         const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
         const fixtures = await response.json();
 
-        // Filter: Started matches only
+        // Sort: We want the newest/active games at the top
         const startedGames = fixtures.filter(f => f.started);
-        const isAnyMatchLive = startedGames.some(f => !f.finished);
+        const sortedGames = [...startedGames].sort((a, b) => new Date(b.kickoff_time) - new Date(a.kickoff_time));
 
-        if (startedGames.length === 0) {
-            container.innerHTML = `<p style="text-align:center; opacity:0.5; padding:30px;">No matches started yet for GW ${activeGameweek}.</p>`;
+        if (sortedGames.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:50px; opacity:0.5;">
+                    <i class="fa-regular fa-calendar-xmark" style="font-size:2rem; margin-bottom:10px;"></i>
+                    <p>No matches have started yet for Gameweek ${activeGameweek}.</p>
+                </div>`;
             return;
         }
 
-        // Smart Refresh: Every 60 seconds if live matches exist
+        // Auto-refresh logic: If games are live, refresh every 60s
+        const isAnyMatchLive = sortedGames.some(f => !f.finished);
         if (isAnyMatchLive) {
-            if (liveTag) liveTag.classList.remove('hidden');
             refreshTimer = setTimeout(updateLiveScores, 60000);
-        } else {
-            if (liveTag) liveTag.classList.add('hidden');
         }
 
-        // 3. GROUP BY DATE & RENDER
         let html = '';
         let lastDateString = "";
 
-        // Sort: Newest matches first
-        const sortedGames = [...startedGames].sort((a, b) => new Date(b.kickoff_time) - new Date(a.kickoff_time));
-
         sortedGames.forEach(game => {
-            // Check for Date Header
+            // A. Handle Date Headers (Friday, Saturday, etc.)
             const matchDate = new Date(game.kickoff_time);
             const currentDateString = matchDate.toLocaleDateString('en-GB', { 
-                weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' 
+                weekday: 'long', day: 'numeric', month: 'long' 
             });
 
             if (currentDateString !== lastDateString) {
-                html += `<div style="background:linear-gradient(90deg, #00ff87, #00ebff); color:#000; text-align:center; padding:8px; font-weight:900; font-size:0.85rem; border-radius:8px; margin: 15px 0 10px 0; letter-spacing:1px;">${currentDateString}</div>`;
+                html += `<div class="date-group-header">${currentDateString}</div>`;
                 lastDateString = currentDateString;
             }
 
-            // Scorer & Assist Logic
+            // B. Extract Scorer and Assist Stats
             const goals = game.stats.find(s => s.identifier === 'goals_scored');
             const assists = game.stats.find(s => s.identifier === 'assists');
             let eventsHtml = '';
             if (goals) {
                 [...goals.h, ...goals.a].forEach(s => {
-                    eventsHtml += `<div style="margin-bottom:2px;">⚽ ${playerLookup[s.element]}</div>`;
+                    eventsHtml += `<div>⚽ ${playerLookup[s.element]}</div>`;
                 });
             }
             if (assists) {
                 [...assists.h, ...assists.a].forEach(s => {
-                    eventsHtml += `<div style="opacity:0.6; font-size:0.7rem;">👟 ${playerLookup[s.element]}</div>`;
+                    eventsHtml += `<div style="opacity:0.5; font-size:0.65rem;">👟 ${playerLookup[s.element]}</div>`;
                 });
             }
 
-            // Bonus Points logic
+            // C. Extract Live Bonus Points (BPS)
             const bps = game.stats.find(s => s.identifier === 'bps');
             let bonusHtml = '';
             if (bps) {
-                const top = [...bps.h, ...bps.a].sort((a, b) => b.value - a.value).slice(0, 3);
-                const colors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-                top.forEach((p, i) => {
+                const topThree = [...bps.h, ...bps.a].sort((a, b) => b.value - a.value).slice(0, 3);
+                const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+                topThree.forEach((p, i) => {
                     bonusHtml += `
-                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:0.7rem;">
-                            <span style="background:${colors[i]}; color:#000; width:15px; height:15px; display:flex; align-items:center; justify-content:center; border-radius:3px; font-weight:900; font-size:0.6rem;">${3-i}</span>
-                            <span style="font-weight:700; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${playerLookup[p.element]}</span>
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px; font-size:0.7rem;">
+                            <span style="background:${medalColors[i]}; color:#000; width:14px; height:14px; display:flex; align-items:center; justify-content:center; border-radius:2px; font-weight:900; font-size:0.55rem;">${3-i}</span>
+                            <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${playerLookup[p.element]}</span>
                         </div>`;
                 });
             }
 
-            const statusText = game.finished ? 'FINAL RESULT' : 'LIVE MATCH';
+            // D. UI Logic for Status
+            const statusText = game.finished ? 'FULL TIME' : (game.finished_provisional ? 'PROVISIONAL' : 'LIVE');
             const statusColor = game.finished ? '#f1f1f1' : '#00ff87';
 
-            // Build the card HTML
+            // E. Build the Fixture Card
             html += `
-                <div class="fixture-card" style="margin-bottom:12px; background:#fff; border-radius:12px; overflow:hidden; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
+                <div class="fixture-card">
                     <div style="background:${statusColor}; color:#000; text-align:center; padding:4px; font-weight:900; font-size:0.65rem; letter-spacing:0.5px;">${statusText}</div>
                     
-                    <div class="fixture-content" style="display:flex; padding:10px; min-height:90px; align-items:stretch;">
-                        <div class="events-col" style="flex:1; border-right:1px solid #f5f5f5; padding-right:8px; font-size:0.75rem; display:flex; flex-direction:column; justify-content:center;">
+                    <div class="fixture-content">
+                        <div class="events-col">
                             ${eventsHtml || '<span style="opacity:0.2;">---</span>'}
                         </div>
 
-                        <div class="score-col" style="flex:2.2; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:150px;">
-                            <div style="display:flex; align-items:center; gap:5px; width:100%; justify-content:center;">
-                                <div style="display:flex; align-items:center; gap:4px; flex:1; justify-content:flex-end;">
-                                    <span style="font-weight:900; font-size:0.75rem;">${teamLookup[game.team_h].substring(0,3)}</span>
-                                    <img src="https://resources.premierleague.com/premierleague/badges/t${game.team_h}.png" style="width:22px; height:22px;" alt="">
+                        <div class="score-col">
+                            <div class="score-row">
+                                <div class="team-unit">
+                                    <span class="team-abbr">${teamLookup[game.team_h].substring(0,3)}</span>
+                                    <img src="https://resources.premierleague.com/premierleague/badges/50/t${game.team_h}.png" class="team-logo" onerror="this.src='https://fantasy.premierleague.com/static/libs/fpl-crest.png'">
                                 </div>
-                                <div style="background:#37003c; color:#fff; padding:6px 10px; border-radius:6px; font-family:monospace; font-weight:900; font-size:1.1rem; white-space:nowrap; min-width:55px; text-align:center;">
+                                
+                                <div class="score-box">
                                     ${game.team_h_score} - ${game.team_a_score}
                                 </div>
-                                <div style="display:flex; align-items:center; gap:4px; flex:1; justify-content:flex-start;">
-                                    <img src="https://resources.premierleague.com/premierleague/badges/t${game.team_a}.png" style="width:22px; height:22px;" alt="">
-                                    <span style="font-weight:900; font-size:0.75rem;">${teamLookup[game.team_a].substring(0,3)}</span>
+
+                                <div class="team-unit">
+                                    <img src="https://resources.premierleague.com/premierleague/badges/50/t${game.team_a}.png" class="team-logo" onerror="this.src='https://fantasy.premierleague.com/static/libs/fpl-crest.png'">
+                                    <span class="team-abbr">${teamLookup[game.team_a].substring(0,3)}</span>
                                 </div>
                             </div>
-                            <span style="font-size:0.55rem; font-weight:800; opacity:0.3; margin-top:4px; letter-spacing:1px;">GAMEREWEEEEK ${activeGameweek}</span>
+                            <span class="gw-label">GAMEREEEEK ${activeGameweek}</span>
                         </div>
 
-                        <div class="bonus-col" style="flex:1.2; background:#f9f9f9; border-radius:8px; padding:8px; margin-left:8px; display:flex; flex-direction:column; justify-content:center;">
-                            <div style="font-size:0.55rem; font-weight:900; opacity:0.4; margin-bottom:5px; text-transform:uppercase;">🏆 Bonus</div>
+                        <div class="bonus-col">
+                            <div class="bonus-header">🏆 Bonus</div>
                             ${bonusHtml || '<span style="opacity:0.2; font-size:0.6rem;">Awaiting BPS...</span>'}
                         </div>
                     </div>
@@ -167,9 +177,11 @@ async function updateLiveScores() {
     } catch (err) {
         console.error("Match Update Failed:", err);
     } finally {
-        if (refreshIcon) setTimeout(() => refreshIcon.classList.remove('fa-spin'), 800);
+        if (refreshIcon) {
+            setTimeout(() => refreshIcon.classList.remove('fa-spin'), 1000);
+        }
     }
 }
 
-// Start
+// BOOTSTRAP: Start the engine when page loads
 document.addEventListener('DOMContentLoaded', initMatchCenter);
