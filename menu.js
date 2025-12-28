@@ -7,36 +7,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawer = document.getElementById('side-drawer');
     const backdrop = document.getElementById('main-backdrop');
 
-    // Function to toggle the drawer
-    const toggleDrawer = () => {
-        // Toggle the 'open' class on the drawer
-        drawer.classList.toggle('open');
-        
-        // Toggle the 'active' class on the backdrop
+    // Explicit Open Function
+    const openDrawer = () => {
+        drawer.classList.add('open');
         if (backdrop) {
-            backdrop.classList.toggle('active');
-            
-            // Explicitly handle display for safety
-            if (drawer.classList.contains('open')) {
-                backdrop.style.display = 'block';
-            } else {
-                backdrop.style.display = 'none';
-            }
+            backdrop.style.display = 'block';
+            // Small timeout to allow display:block to hit before adding opacity
+            setTimeout(() => backdrop.classList.add('active'), 10);
         }
     };
 
-    // Close drawer when clicking a link (optional but recommended for UX)
-    const navLinks = document.querySelectorAll('.drawer-links a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            drawer.classList.remove('open');
+    // Explicit Close Function
+    const closeDrawer = () => {
+        drawer.classList.remove('open');
+        if (backdrop) {
             backdrop.classList.remove('active');
-            backdrop.style.display = 'none';
-        });
-    });
+            // Wait for transition to finish before hiding display
+            setTimeout(() => {
+                if (!drawer.classList.contains('open')) {
+                    backdrop.style.display = 'none';
+                }
+            }, 300);
+        }
+    };
 
     // Event Listeners
-    if (menuBtn) menuBtn.addEventListener('click', toggleDrawer);
-    if (closeBtn) closeBtn.addEventListener('click', toggleDrawer);
-    if (backdrop) backdrop.addEventListener('click', toggleDrawer);
+    if (menuBtn) {
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openDrawer();
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeDrawer();
+        });
+    }
+
+    if (backdrop) {
+        backdrop.addEventListener('click', closeDrawer);
+    }
+
+    // Close drawer when clicking a link
+    const navLinks = document.querySelectorAll('.drawer-links a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', closeDrawer);
+    });
 });
