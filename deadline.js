@@ -1,9 +1,10 @@
 /**
- * KOPALA FPL - Unified App Logic (v11)
- * Deadline Timer + Price Scroll + Push Subscription
+ * KOPALA FPL - Unified App Logic (v12)
+ * Fixed: Variable Collision + Vertical Scroll Integration
  */
 
-const state = {
+// Changed name to prevent SyntaxError collision with other scripts
+const deadlineState = {
     fplId: localStorage.getItem('kopala_fpl_id') || null,
     playerMap: {}, 
     teamMap: {},
@@ -13,22 +14,31 @@ const state = {
 async function init() {
     const loader = document.getElementById("loading-overlay");
     try {
+        // Fetching through the Service Worker / Netlify proxy
         const response = await fetch("/fpl-api/bootstrap-static/");
+        if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         
         processAndRender(data);
         if (loader) loader.style.display = 'none';
-        if (state.fplId) renderView('dashboard');
-    } catch (err) { console.error("Init failed:", err); }
+        // Only run dashboard logic if fplId exists
+        if (deadlineState.fplId && typeof renderView === 'function') renderView('dashboard');
+    } catch (err) { 
+        console.error("Init failed:", err); 
+        if (loader) loader.style.display = 'none';
+    }
 }
 
 function processAndRender(data) {
-    data.teams.forEach(t => state.teamMap[t.id] = t.short_name);
-    data.elements.forEach(p => state.playerMap[p.id] = p.web_name);
+    data.teams.forEach(t => deadlineState.teamMap[t.id] = t.short_name);
+    data.elements.forEach(p => deadlineState.playerMap[p.id] = p.web_name);
+    
     renderDeadline(data.events);
-    renderPrices(data.elements);
-    renderLiveKing(data.elements);
-    renderScout(data.elements);
+    
+    // Check if functions exist before calling to prevent crashes
+    if (typeof renderPrices === 'function') renderPrices(data.elements);
+    if (typeof renderLiveKing === 'function') renderLiveKing(data.elements);
+    if (typeof renderScout === 'function') renderScout(data.elements);
 }
 
 // --- DEADLINE & NOTIFICATIONS ---
@@ -37,6 +47,8 @@ function renderDeadline(events) {
     if (!nextGW) return;
 
     const el = document.getElementById("countdown-timer");
+    if (!el) return; // Prevent "null" errors
+
     const deadline = new Date(nextGW.deadline_time).getTime();
 
     const update = () => {
@@ -54,14 +66,15 @@ function renderDeadline(events) {
             <button id="notif-btn" class="notify-btn" onclick="subscribePush()">🔔 Notify Me (2h before)</button>
         `;
     };
-    update(); setInterval(update, 1000);
+    update(); 
+    setInterval(update, 60000); // Updated to 60s to save battery/performance
 }
 
+// Helper for notifications (v12)
 async function subscribePush() {
-    const btn = document.getElementById('notif-btn');
     try {
         const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return showToast("Permission denied", "warning");
+        if (permission !== 'granted') return console.log("Permission denied");
 
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.subscribe({
@@ -69,15 +82,14 @@ async function subscribePush() {
             applicationServerKey: urlB64ToUint8Array('YOUR_PUBLIC_VAPID_KEY')
         });
 
-        // Save to Netlify Blobs via a function
         await fetch('/.netlify/functions/save-sub', {
             method: 'POST',
             body: JSON.stringify(sub)
         });
 
-        btn.innerText = "✅ Subscribed";
-        showToast("Deadline alert set!", "success");
-    } catch (err) { showToast("Failed to subscribe", "warning"); }
+        const btn = document.getElementById('notif-btn');
+        if (btn) btn.innerText = "✅ Subscribed";
+    } catch (err) { console.error("Subscription failed", err); }
 }
 
 function urlB64ToUint8Array(base64String) {
@@ -88,7 +100,5 @@ function urlB64ToUint8Array(base64String) {
     for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
     return outputArray;
 }
-
-// Include your existing renderPrices, renderLiveKing, and renderScout functions here...
 
 document.addEventListener('DOMContentLoaded', init);
