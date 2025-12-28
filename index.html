@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KOPALA FPL | Home</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.1">
     
     <meta name="theme-color" id="meta-theme-color" content="#ff005a">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/manifest.json">
 
     <style>
-        /* --- MATERIAL YOU CORE VARIABLES --- */
         :root {
             --fpl-primary: #ff005a; 
             --fpl-surface: #fdf8f9; 
@@ -23,65 +24,25 @@
             --fpl-border: rgba(0,0,0,0.06);
             --transition-speed: 0.6s;
         }
-
         body.dark-mode {
             --fpl-surface: #0a0c10;
             --fpl-container: #161b22;
             --fpl-on-container: #ffffff;
             --fpl-border: rgba(255,255,255,0.08);
         }
-
         body {
             background-color: var(--fpl-surface);
             color: var(--fpl-on-container);
             transition: background-color var(--transition-speed) ease, color var(--transition-speed);
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
+            margin: 0; font-family: 'Inter', sans-serif; overflow-x: hidden;
         }
-
-        /* --- SCROLL PROGRESS BAR --- */
-        .progress-container {
-            width: 100%; height: 4px; background: transparent;
-            position: absolute; bottom: 0; left: 0; z-index: 1001;
-        }
-        .progress-bar {
-            height: 4px; background: var(--fpl-primary);
-            width: 0%; transition: width 0.1s ease-out;
-        }
-
-        /* --- THEME PICKER --- */
-        .btn-round {
-            width: 42px; height: 42px; border-radius: 50%;
-            background-color: var(--fpl-surface); color: var(--fpl-primary);
-            border: 2px solid var(--fpl-primary); display: flex; 
-            align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s ease;
-        }
-        .btn-round:hover { transform: scale(1.1); background-color: var(--fpl-primary); color: white !important; }
-
-        .theme-dropdown {
-            display: none; position: absolute; top: 55px; right: 0;
-            background: var(--fpl-container); border: 1px solid var(--fpl-border);
-            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
+        .progress-container { width: 100%; height: 4px; background: transparent; position: absolute; bottom: 0; left: 0; z-index: 1001; }
+        .progress-bar { height: 4px; background: var(--fpl-primary); width: 0%; transition: width 0.1s ease-out; }
+        .btn-round { width: 42px; height: 42px; border-radius: 50%; background-color: var(--fpl-surface); color: var(--fpl-primary); border: 2px solid var(--fpl-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; }
+        .theme-dropdown { display: none; position: absolute; top: 55px; right: 0; background: var(--fpl-container); border: 1px solid var(--fpl-border); border-radius: 20px; padding: 18px; width: 200px; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
         .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
-
         .hidden { display: none !important; }
-
-        .pulse-dot {
-            width: 8px; height: 8px; background-color: #00ff87;
-            border-radius: 50%; display: inline-block;
-            animation: pulse-green 2s infinite;
-        }
-        @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 135, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
-        }
     </style>
 </head>
 <body>
@@ -89,7 +50,6 @@
     <div id="side-drawer" class="drawer">
         <div style="padding: 30px 20px 20px; border-bottom: 1px solid var(--fpl-border);">
             <h2 class="brand" style="margin:0; font-size: 1.4rem;">KOPALA <span>FPL</span></h2>
-            <p style="font-size: 0.6rem; opacity: 0.5; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;">Menu</p>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
@@ -100,35 +60,21 @@
             <li><a href="AFCON.html"><i class="fa-solid fa-earth-africa"></i> Afcon</a></li>
             <li><a href="contact.html"><i class="fa-solid fa-envelope"></i> Contact Us</a></li>
         </ul>
-        <div style="margin-top: auto; padding: 20px; font-size: 0.65rem; opacity: 0.4; text-align: center;">
-            Swipe left or tap outside to close
-        </div>
+        <div style="margin-top: auto; padding: 20px; font-size: 0.65rem; opacity: 0.4; text-align: center;">Swipe left or tap outside to close</div>
     </div>
 
     <div id="main-backdrop" class="backdrop"></div>
 
     <nav class="navbar">
-        <div class="progress-container">
-            <div class="progress-bar" id="myBar"></div>
-        </div>
-
+        <div class="progress-container"><div class="progress-bar" id="myBar"></div></div>
         <div class="nav-left" style="display: flex; align-items: center;">
             <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
             <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="kopala.html">Kopala FPL</a></li>
-                <li><a href="team.html">My Team by AI</a></li>
-                <li><a href="price.html">Price Predictor</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
         </div>
         
         <div class="nav-right">
             <div class="theme-menu-container">
-                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
-                    <i class="fa-solid fa-palette"></i>
-                </button>
+                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()"><i class="fa-solid fa-palette"></i></button>
                 <div id="theme-dropdown" class="theme-dropdown">
                     <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
                     <div class="swatch-grid">
@@ -137,27 +83,14 @@
                         <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
                         <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
                         <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
-                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
                     </div>
-                    <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">
-                        🌙 Midnight Mode
-                    </button>
+                    <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">🌙 Midnight Mode</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <button id="pwa-install-btn">
-        <i class="fa-solid fa-circle-down"></i> INSTALL APP
-    </button>
-
     <main class="container">
-        <div id="loading-overlay" class="hidden">Updating FPL Data...</div>
-
         <div id="deadline-card" class="card">
             <h3 class="accent-title">Next Deadline</h3>
             <div id="countdown-timer">
@@ -167,83 +100,32 @@
                 <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
             </div>
         </div>
-
-        <div id="match-center-card" class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-stadium" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
-                    <h3 class="accent-title" style="margin: 0;">Bonus Points</h3>
-                </div>
-                <span id="live-indicator" class="hidden" style="display: flex; align-items: center; gap: 5px; color: #00ff87; font-size: 0.7rem; font-weight: 900;">
-                    <span class="pulse-dot"></span> LIVE
-                </span>
-            </div>
-            <div id="fixtures-container"></div>
-        </div>
-        
         <div id="id-entry-section" class="card">
             <h3 class="accent-title">Live Rank</h3>
             <input type="number" id="fpl-id" placeholder="Enter FPL Team ID">
-            <button id="change-id-btn" class="primary-btn">Go</button>
-        </div>
-
-        <div id="live-dashboard" class="hidden">
-            <div class="card">
-                <h3 class="accent-title">Manager Dashboard</h3>
-                <p id="disp-name" style="text-align:center; font-weight:800;"></p>
-                <div class="dashboard-grid">
-                    <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Rank</span></div>
-                    <div class="timer-unit reset-fpl-id" style="cursor:pointer;"><span class="timer-value" style="color:red;"><i class="fa-solid fa-trash"></i></span><span class="timer-label">Clear</span></div>
-                </div>
-            </div>
+            <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">Go</button>
         </div>
     </main>
 
-    <button id="back-to-top" class="back-to-top"><i class="fa-solid fa-arrow-up"></i></button>
+    <script src="menu.js?v=1.1"></script>
+    <script src="script.js?v=1.1"></script>
+    <script src="deadline.js?v=1.1"></script>
+    <script src="match-center.js?v=1.1"></script>
 
     <script>
-        // Inline Theme Logic
-        window.onscroll = function() { updateProgressBar() };
-        function updateProgressBar() {
-            var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-            var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            var scrolled = (winScroll / height) * 100;
-            const bar = document.getElementById("myBar");
-            if(bar) bar.style.width = scrolled + "%";
-        }
-        function toggleThemeMenu() {
-            const menu = document.getElementById('theme-dropdown');
-            if(menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
-        function applyMaterialTheme(color, shouldCloseMenu = false) {
-            document.body.classList.remove('dark-mode');
-            document.documentElement.style.setProperty('--fpl-primary', color);
-            document.documentElement.style.setProperty('--fpl-surface', `${color}0A`);
-            localStorage.setItem('kopala_ai_theme', color);
-            localStorage.setItem('kopala_is_dark', 'false');
-            if(shouldCloseMenu) toggleThemeMenu();
+        // Theme Scripts
+        function toggleThemeMenu() { const d = document.getElementById('theme-dropdown'); d.style.display = (d.style.display==='block')?'none':'block'; }
+        function applyMaterialTheme(c, s=false) {
+            document.documentElement.style.setProperty('--fpl-primary', c);
+            document.documentElement.style.setProperty('--fpl-surface', c+'0A');
+            localStorage.setItem('kopala_ai_theme', c);
+            if(s) toggleThemeMenu();
         }
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
-            if(isDark) { document.documentElement.style.setProperty('--fpl-surface', '#0a0c10'); }
-            else { applyMaterialTheme(localStorage.getItem('kopala_ai_theme') || '#ff005a', false); }
             localStorage.setItem('kopala_is_dark', isDark);
             toggleThemeMenu();
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
-            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
-            if (wasDark) { document.body.classList.add('dark-mode'); document.documentElement.style.setProperty('--fpl-surface', '#0a0c10'); }
-            else { applyMaterialTheme(savedTheme, false); }
-        });
     </script>
-
-    <script src="menu.js"></script>
-    <script src="script.js"></script>
-    <script src="deadline.js"></script>
-    <script src="match-center.js"></script>
 </body>
 </html>
