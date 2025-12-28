@@ -1,12 +1,13 @@
 /**
- * KOPALA FPL - Service Worker (RE-ENGINEERED)
+ * KOPALA FPL - Service Worker (FINAL PRODUCTION v7)
  */
 
-const CACHE_NAME = 'kopala-fpl-v6';
+const CACHE_NAME = 'kopala-fpl-v7';
 
+// 1. Expanded Assets: Including screenshots is vital for the "Install" prompt
 const ASSETS_TO_CACHE = [
     '/',
-    '/index.html', // MUST be cached for the Install prompt to work
+    '/index.html',
     '/style.css',
     '/kopala.css',
     '/football.css',
@@ -18,13 +19,18 @@ const ASSETS_TO_CACHE = [
     '/menu.js',
     '/manifest.json',
     '/android-chrome-192x192.png',
-    '/android-chrome-512x512.png'
+    '/android-chrome-512x512.png',
+    '/screenshot-mobile.jpg', // MUST match your manifest filename exactly
+    '/screenshot-desktop.jpg' // MUST match your manifest filename exactly
 ];
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('Kopala Cache: Opening and Storing Shell');
+            return cache.addAll(ASSETS_TO_CACHE);
+        })
     );
 });
 
@@ -41,18 +47,20 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // 1. ALWAYS Network-Only for FPL API (Live Scores)
+    // STRATEGY: Network-Only for FPL API (Live data must be fresh)
     if (url.hostname.includes('fantasy.premierleague.com')) {
         return; 
     }
 
-    // 2. Cache-First for App Shell (HTML, CSS, JS)
+    // STRATEGY: Cache-First for App Shell
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse;
+            // Handle root request (/) by serving index.html from cache
+            if (!cachedResponse && url.pathname === '/') {
+                return caches.match('/index.html');
             }
-            return fetch(event.request);
+            
+            return cachedResponse || fetch(event.request);
         })
     );
 });
