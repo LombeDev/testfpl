@@ -3,25 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KOPALA FPL | Pro Match Center</title>
+    <title>KOPALA FPL | Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <meta name="theme-color" id="meta-theme-color" content="#ff005a">
+    <link rel="manifest" href="/manifest.json">
+
     <style>
+        /* --- MATERIAL YOU CORE VARIABLES --- */
         :root {
             --fpl-primary: #ff005a; 
             --fpl-surface: #fdf8f9; 
             --fpl-container: #ffffff; 
             --fpl-on-container: #37003c;
             --fpl-border: rgba(0,0,0,0.06);
+            --transition-speed: 0.6s;
+        }
+
+        body.dark-mode {
+            --fpl-surface: #0a0c10;
+            --fpl-container: #161b22;
+            --fpl-on-container: #ffffff;
+            --fpl-border: rgba(255,255,255,0.08);
         }
 
         body {
             background-color: var(--fpl-surface);
             color: var(--fpl-on-container);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed);
             margin: 0;
             font-family: 'Inter', sans-serif;
-            padding: 15px;
+            overflow-x: hidden;
         }
 
+        /* --- NAVBAR --- */
+        .navbar {
+            background-color: var(--fpl-container);
+            border-bottom: 1px solid var(--fpl-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--fpl-on-container) !important;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        .brand span { color: var(--fpl-primary); margin-left: 5px; }
+
+        /* --- CARD STRUCTURE --- */
         .card {
             background-color: var(--fpl-container);
             border: 1px solid var(--fpl-border);
@@ -36,33 +75,18 @@
             font-weight: 800;
             text-transform: uppercase;
             font-size: 0.9rem;
-            margin: 0;
+            margin-bottom: 15px;
+            text-align: center;
         }
 
         /* --- TOGGLE SWITCH STYLING --- */
-        .toggle-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .toggle-label {
-            font-size: 0.55rem;
-            font-weight: 900;
-            color: #ccc;
-            text-transform: uppercase;
-        }
-
         .switch {
             position: relative;
             display: inline-block;
             width: 32px;
             height: 18px;
         }
-
         .switch input { opacity: 0; width: 0; height: 0; }
-
         .slider {
             position: absolute;
             cursor: pointer;
@@ -71,7 +95,6 @@
             transition: .3s;
             border-radius: 20px;
         }
-
         .slider:before {
             position: absolute;
             content: "";
@@ -81,82 +104,128 @@
             transition: .3s;
             border-radius: 50%;
         }
-
         input:checked + .slider { background-color: var(--fpl-primary); }
         input:checked + .slider:before { transform: translateX(14px); }
 
-        /* --- MATCH ROW STYLING --- */
-        .match-row {
-            display: flex;
-            padding: 15px 0;
-            border-bottom: 1px solid #f8f8f8;
+        /* --- TIMER & DASHBOARD --- */
+        .timer-grid, .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
         }
+        .timer-unit {
+            background-color: var(--fpl-surface);
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--fpl-border);
+        }
+        .timer-value { font-size: 1.2rem; font-weight: 900; color: var(--fpl-primary); display: block; }
+        .timer-label { font-size: 0.55rem; font-weight: 700; opacity: 0.6; text-transform: uppercase; }
 
-        .score-box {
-            background: #37003c;
-            color: #fff;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: 900;
-            font-family: monospace;
-            font-size: 0.9rem;
+        .hidden { display: none !important; }
+
+        /* --- THEME PICKER --- */
+        .theme-dropdown {
+            display: none; position: absolute; top: 55px; right: 0;
+            background: var(--fpl-container); border: 1px solid var(--fpl-border);
+            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
+        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
+        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-    <main style="max-width: 600px; margin: 0 auto;">
+    <nav class="navbar">
+        <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
+        <div class="nav-right">
+            <button id="theme-master-btn" style="background:none; border:none; color:var(--fpl-primary); font-size:1.2rem; cursor:pointer;" onclick="toggleThemeMenu()">
+                <i class="fa-solid fa-palette"></i>
+            </button>
+            <div id="theme-dropdown" class="theme-dropdown">
+                <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
+                <div class="swatch-grid">
+                    <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
+                    <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
+                    <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
+                </div>
+                <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer;">🌙 Mode</button>
+            </div>
+        </div>
+    </nav>
+
+    <main style="max-width: 800px; margin: 20px auto; padding: 0 15px;">
         
-        <div class="card">
+        <div id="deadline-card" class="card">
+            <h3 class="accent-title">Next Deadline</h3>
+            <div id="countdown-timer" class="timer-grid">
+                <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
+                <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
+                <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
+            </div>
+        </div>
+
+        <div id="match-center-card" class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 class="accent-title">Match Center</h3>
-                
+                <h3 class="accent-title" style="margin: 0;">Match Center</h3>
                 <div style="display: flex; gap: 15px;">
-                    <div class="toggle-group">
-                        <span class="toggle-label">xG</span>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-xg" onchange="updateLiveScores()">
-                            <span class="slider"></span>
-                        </label>
+                    <div style="text-align:center;">
+                        <span style="font-size: 0.55rem; font-weight: 900; opacity: 0.4; display:block;">xG</span>
+                        <label class="switch"><input type="checkbox" id="toggle-xg" onchange="updateLiveScores()"><span class="slider"></span></label>
                     </div>
-                    <div class="toggle-group">
-                        <span class="toggle-label">DefCon</span>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-defcon" checked onchange="updateLiveScores()">
-                            <span class="slider"></span>
-                        </label>
+                    <div style="text-align:center;">
+                        <span style="font-size: 0.55rem; font-weight: 900; opacity: 0.4; display:block;">DefCon</span>
+                        <label class="switch"><input type="checkbox" id="toggle-defcon" checked onchange="updateLiveScores()"><span class="slider"></span></label>
                     </div>
                 </div>
             </div>
-
             <div id="fixtures-container">
-                <div style="text-align: center; padding: 20px; opacity: 0.3;">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i>
-                    <p>Fetching Live Data...</p>
+                <p style="text-align:center; opacity:0.5; font-size:0.8rem;">Loading live scores...</p>
+            </div>
+        </div>
+
+        <div id="id-entry-section" class="card">
+            <h3 class="accent-title">Manager Login</h3>
+            <input type="number" id="fpl-id" placeholder="Enter FPL Team ID" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--fpl-border); margin-bottom:15px; box-sizing:border-box;">
+            <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">Show My Team</button>
+        </div>
+
+        <div id="live-dashboard" class="hidden">
+            <div class="card">
+                <h3 class="accent-title">Live Dashboard</h3>
+                <p style="text-align:center; font-weight:800;" id="disp-name">--</p>
+                <div class="dashboard-grid">
+                    <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Rank</span></div>
                 </div>
+                <button id="confirm-clear" style="margin-top:15px; width:100%; background:none; border:none; color:red; font-size:0.7rem; font-weight:800; cursor:pointer;">LOGOUT</button>
             </div>
         </div>
 
     </main>
 
     <script>
-        const FPL_PROXY = "/fpl-api/"; 
+        // --- CORE LOGIC ---
+        const FPL_PROXY = "/fpl-api/";
         let playerLookup = {};
         let teamLookup = {};
-        let activeGameweek = null;
+        let activeGW = 18;
 
-        async function initMatchCenter() {
+        async function init() {
             try {
                 const response = await fetch(`${FPL_PROXY}bootstrap-static/`);
                 const data = await response.json();
-                
                 data.elements.forEach(p => playerLookup[p.id] = p.web_name);
                 data.teams.forEach(t => teamLookup[t.id] = t.name);
-                
                 const current = data.events.find(e => e.is_current) || data.events.find(e => !e.finished);
-                activeGameweek = current ? current.id : 1;
+                if (current) activeGW = current.id;
+                
                 updateLiveScores();
-            } catch (error) { console.error("Init Error:", error); }
+                renderDeadline(data.events);
+            } catch (e) { console.error("Sync Error"); }
         }
 
         async function updateLiveScores() {
@@ -165,59 +234,52 @@
             const showDefCon = document.getElementById('toggle-defcon').checked;
 
             try {
-                const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
-                const fixtures = await response.json();
-                
+                const res = await fetch(`${FPL_PROXY}fixtures/?event=${activeGW}`);
+                const fixtures = await res.json();
                 let html = '';
+
                 fixtures.filter(f => f.started).forEach(game => {
-                    const homeAbbr = teamLookup[game.team_h].substring(0, 3).toUpperCase();
-                    const awayAbbr = teamLookup[game.team_a].substring(0, 3).toUpperCase();
-
-                    // --- xG Mockup (Based on shots in FPL stats) ---
-                    const xGHtml = showXG ? `
-                        <div style="font-size: 0.6rem; font-weight: 800; color: var(--fpl-primary); opacity: 0.7; margin-top: 4px;">
-                            ${(game.team_h_score * 0.92).toFixed(2)} xG ${(game.team_a_score * 0.88).toFixed(2)}
-                        </div>` : '';
-
-                    // --- DefCon Processing ---
-                    let defConHtml = '';
+                    const home = teamLookup[game.team_h].substring(0,3).toUpperCase();
+                    const away = teamLookup[game.team_a].substring(0,3).toUpperCase();
+                    
+                    const xG = showXG ? `<div style="font-size:0.6rem; color:var(--fpl-primary); font-weight:800;">${(game.team_h_score*0.8).toFixed(1)} xG ${(game.team_a_score*0.7).toFixed(1)}</div>` : '';
+                    
+                    let defCon = '';
                     if (showDefCon) {
                         const bps = game.stats.find(s => s.identifier === 'bps');
                         if (bps) {
-                            const topDefenders = [...bps.h, ...bps.a].sort((a,b) => b.value - a.value).slice(0, 3);
-                            defConHtml = `
-                                <div style="margin-top: 10px; border-top: 1px dashed #eee; padding-top: 8px;">
-                                    <div style="font-size: 0.5rem; font-weight: 900; opacity: 0.4; margin-bottom: 5px;">DEFCON TRACKER</div>
-                                    <div style="display: flex; gap: 10px; overflow-x: auto;">
-                                        ${topDefenders.map(p => `
-                                            <div style="font-size: 0.55rem; white-space: nowrap;">
-                                                <span style="font-weight: 800;">${playerLookup[p.element]}</span> 
-                                                <span style="color: var(--fpl-primary); font-weight: 900;">${p.value >= 20 ? '⚡+2' : '...' }</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>`;
+                            const top = [...bps.h, ...bps.a].sort((a,b) => b.value - a.value).slice(0, 2);
+                            defCon = `<div style="margin-top:8px; border-top:1px dashed #eee; font-size:0.55rem; padding-top:5px; opacity:0.6;">
+                                DEFCON: ${top.map(p => playerLookup[p.element] + ' (+' + p.value + ')').join(', ')}
+                            </div>`;
                         }
                     }
 
-                    html += `
-                        <div class="match-row" style="flex-direction: column;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="flex: 1; font-weight: 900;">${homeAbbr}</div>
-                                <div style="text-align: center;">
-                                    <div class="score-box">${game.team_h_score} - ${game.team_a_score}</div>
-                                    ${xGHtml}
-                                </div>
-                                <div style="flex: 1; text-align: right; font-weight: 900;">${awayAbbr}</div>
+                    html += `<div style="padding:10px 0; border-bottom:1px solid #f8f8f8;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:900;">${home}</span>
+                            <div style="text-align:center;">
+                                <div style="background:#37003c; color:white; padding:3px 10px; border-radius:5px; font-weight:900;">${game.team_h_score} - ${game.team_a_score}</div>
+                                ${xG}
                             </div>
-                            ${defConHtml}
-                        </div>`;
+                            <span style="font-weight:900;">${away}</span>
+                        </div>
+                        ${defCon}
+                    </div>`;
                 });
-                container.innerHTML = html || '<p style="text-align:center; font-size:0.8rem; opacity:0.5;">No live games currently.</p>';
-            } catch (err) { console.error("Render Error:", err); }
+                container.innerHTML = html || '<p style="text-align:center; font-size:0.8rem;">No live matches.</p>';
+            } catch (e) { container.innerHTML = "Error loading scores."; }
         }
 
-        document.addEventListener('DOMContentLoaded', initMatchCenter);
+        // --- THEME & UI ---
+        function toggleThemeMenu() { document.getElementById('theme-dropdown').style.display = 'block'; }
+        function applyMaterialTheme(color) {
+            document.documentElement.style.setProperty('--fpl-primary', color);
+            document.getElementById('theme-dropdown').style.display = 'none';
+        }
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
