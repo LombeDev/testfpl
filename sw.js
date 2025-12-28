@@ -1,12 +1,12 @@
 /**
- * KOPALA FPL - Service Worker (v9)
- * Strategy: Stale-While-Revalidate + Background Sync
+ * KOPALA FPL - Service Worker (v10)
  */
 
-const CACHE_NAME = 'kopala-fpl-v9';
-const DATA_CACHE_NAME = 'fpl-data-v1';
+const CACHE_NAME = 'kopala-fpl-v10';
+const DATA_CACHE_NAME = 'fpl-data-v2';
 
 const ASSETS_TO_CACHE = [
+    '/',
     '/index.html',
     '/style.css',
     '/kopala.css',
@@ -24,7 +24,6 @@ const ASSETS_TO_CACHE = [
     '/screenshot-desktop.jpg'
 ];
 
-// Broadcast Channel to talk to the App
 const updateChannel = new BroadcastChannel('fpl-updates');
 
 self.addEventListener('install', (event) => {
@@ -42,22 +41,26 @@ self.addEventListener('activate', (event) => {
             })
         ))
     );
+    self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // 1. DATA STRATEGY: Stale-While-Revalidate for FPL API
-    if (url.hostname.includes('fantasy.premierleague.com')) {
+    // 1. DATA STRATEGY: Stale-While-Revalidate for your Netlify Proxy
+    if (url.pathname.startsWith('/fpl-api/')) {
         event.respondWith(
             caches.open(DATA_CACHE_NAME).then((cache) => {
                 return cache.match(event.request).then((cachedResponse) => {
                     const fetchPromise = fetch(event.request).then((networkResponse) => {
-                        cache.put(event.request, networkResponse.clone());
-                        // Tell the app there is fresh data
-                        updateChannel.postMessage({ type: 'DATA_UPDATED' });
+                        // Success? Update the cache.
+                        if (networkResponse.ok) {
+                           cache.put(event.request, networkResponse.clone());
+                           updateChannel.postMessage({ type: 'DATA_UPDATED' });
+                        }
                         return networkResponse;
                     });
+                    // Serve cached data immediately, update in background
                     return cachedResponse || fetchPromise;
                 });
             })
@@ -65,7 +68,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 2. SHELL STRATEGY: Cache-First for local files
+    // 2. SHELL STRATEGY: Cache-First
     event.respondWith(
         caches.match(event.request).then((res) => {
             if (res) return res;
