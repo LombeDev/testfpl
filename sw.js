@@ -1,60 +1,63 @@
 /**
- * KOPALA FPL - Service Worker (v12)
- * Optimized: Network-First for UI/Logic, Stale-While-Revalidate for API
+ * KOPALA FPL - Service Worker (v13)
+ * Strategy: Network-First for UI (Freshness), Stale-While-Revalidate for API (Speed)
  */
 
-const CACHE_NAME = 'kopala-fpl-v12';
+const CACHE_NAME = 'kopala-fpl-v13'; // Bumped version
 const DATA_CACHE_NAME = 'fpl-data-v4';
 
-// Only cache essential, rarely changing static assets
-const ASSETS_TO_CACHE = [
-    '/manifest.json',
+// Assets that ALMOST NEVER change (Images/Icons)
+const STATIC_ASSETS = [
     '/android-chrome-192x192.png',
     '/android-chrome-512x512.png',
-    '/screenshot-mobile.jpg',
-    '/screenshot-desktop.jpg'
+    '/manifest.json'
 ];
 
 const updateChannel = new BroadcastChannel('fpl-updates');
 
-// 1. INSTALL
+// 1. INSTALL: Immediate takeover
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
     );
 });
 
-// 2. ACTIVATE
+// 2. ACTIVATE: Purge all old versions of the app logic
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((keys) => Promise.all(
-            keys.map((key) => {
-                if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) return caches.delete(key);
-            })
-        ))
+        caches.keys().then((keys) => {
+            return Promise.all(
+                keys.map((key) => {
+                    if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+                        console.log('SW: Purging old cache:', key);
+                        return caches.delete(key);
+                    }
+                })
+            );
+        })
     );
     self.clients.claim();
 });
 
-// 3. FETCH STRATEGY
+// 3. FETCH: The Logic Center
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // STRATEGY A: FPL API DATA (Stale-While-Revalidate)
-    // We want speed, but we update the cache in the background.
+    // STRATEGY A: FPL API (Stale-While-Revalidate)
+    // Speed is king for data. Show old data, update in background.
     if (url.pathname.startsWith('/fpl-api/')) {
         event.respondWith(
             caches.open(DATA_CACHE_NAME).then((cache) => {
-                return cache.match(event.request).then((cachedResponse) => {
-                    const fetchPromise = fetch(event.request).then((networkResponse) => {
-                        if (networkResponse.ok) {
-                            cache.put(event.request, networkResponse.clone());
+                return cache.match(event.request).then((cached) => {
+                    const networked = fetch(event.request).then((res) => {
+                        if (res.ok) {
+                            cache.put(event.request, res.clone());
                             updateChannel.postMessage({ type: 'DATA_UPDATED' });
                         }
-                        return networkResponse;
+                        return res;
                     });
-                    return cachedResponse || fetchPromise;
+                    return cached || networked;
                 });
             })
         );
@@ -62,68 +65,40 @@ self.addEventListener('fetch', (event) => {
     }
 
     // STRATEGY B: UI & LOGIC (Network-First)
-    // HTML, JS, and CSS files should always try to load fresh to ensure AI logic is current.
+    // For HTML, CSS, JS: ALWAYS check Netlify first. 
+    // This fixes your "non-updating elements" bug.
     if (
         event.request.mode === 'navigate' || 
-        url.pathname.endsWith('.html') || 
-        url.pathname.endsWith('.js') || 
-        url.pathname.endsWith('.css')
+        url.pathname.match(/\.(html|css|js)$/)
     ) {
         event.respondWith(
-            fetch(event.request).catch(() => {
-                return caches.match(event.request);
-            })
+            fetch(event.request)
+                .then((response) => {
+                    // Update the cache with the fresh version for offline use
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                    return response;
+                })
+                .catch(() => caches.match(event.request)) // Offline fallback
         );
         return;
     }
 
     // STRATEGY C: ASSETS (Cache-First)
+    // For icons and manifest files.
     event.respondWith(
-        caches.match(event.request).then((res) => {
-            return res || fetch(event.request);
-        })
+        caches.match(event.request).then((res) => res || fetch(event.request))
     );
 });
 
-// --- PUSH NOTIFICATION LISTENERS ---
-
+// --- PUSH NOTIFICATIONS ---
 self.addEventListener('push', (event) => {
-    let data = { 
-        title: 'FPL Deadline Alert', 
-        body: '2 hours until the deadline! Check your aggressive AI picks.' 
-    };
-
-    if (event.data) {
-        try {
-            data = event.data.json();
-        } catch (e) {
-            data.body = event.data.text();
-        }
-    }
-
-    const options = {
-        body: data.body,
-        icon: '/android-chrome-192x192.png',
-        badge: '/android-chrome-192x192.png',
-        vibrate: [200, 100, 200, 100, 200],
-        data: { url: '/' },
-        tag: 'fpl-deadline',
-        requireInteraction: true
-    };
-
+    let data = event.data ? event.data.json() : { title: 'FPL Alert', body: 'Check your team!' };
     event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
-});
-
-self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-            for (let client of windowClients) {
-                if (client.url === '/' && 'focus' in client) return client.focus();
-            }
-            if (clients.openWindow) return clients.openWindow('/');
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: '/android-chrome-192x192.png',
+            tag: 'fpl-deadline'
         })
     );
 });
