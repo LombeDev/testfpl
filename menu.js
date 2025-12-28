@@ -7,31 +7,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawer = document.getElementById('side-drawer');
     const backdrop = document.getElementById('main-backdrop');
 
-    // Explicit Open Function
     const openDrawer = () => {
         drawer.classList.add('open');
         if (backdrop) {
             backdrop.style.display = 'block';
-            // Small timeout to allow display:block to hit before adding opacity
+            // Delay class to trigger CSS transition
             setTimeout(() => backdrop.classList.add('active'), 10);
         }
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
     };
 
-    // Explicit Close Function
     const closeDrawer = () => {
         drawer.classList.remove('open');
         if (backdrop) {
             backdrop.classList.remove('active');
-            // Wait for transition to finish before hiding display
             setTimeout(() => {
                 if (!drawer.classList.contains('open')) {
                     backdrop.style.display = 'none';
                 }
             }, 300);
         }
+        document.body.style.overflow = ''; // Re-enable scroll
     };
 
-    // Event Listeners
     if (menuBtn) {
         menuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -50,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         backdrop.addEventListener('click', closeDrawer);
     }
 
-    // Close drawer when clicking a link
+    // Auto-close on link click
     const navLinks = document.querySelectorAll('.drawer-links a');
     navLinks.forEach(link => {
         link.addEventListener('click', closeDrawer);
