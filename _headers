@@ -1,6 +1,0 @@
-/*
-  Cache-Control: public, max-age=0, must-revalidate
-/fpl-api/*
-  Cache-Control: no-cache
-/sw.js
-  Cache-Control: no-cache
