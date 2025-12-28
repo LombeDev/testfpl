@@ -1,6 +1,6 @@
 {
-  "name": "KOPALA FPL",
-  "short_name": "KOPALA",
+  "name": "Kopala FPL",
+  "short_name": "Kopala",
   "description": "Premium Fantasy Premier League Dashboard",
   "id": "/index.html",
   "start_url": "/index.html",
@@ -24,21 +24,21 @@
       "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "/screenshot-mobile.png",
+      "src": "/screenshot-mobile.jpg",
       "sizes": "1080x1920",
-      "type": "image/png",
+      "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Kopala FPL Mobile Dashboard"
     },
     {
-      "src": "/screenshot-desktop.png",
+      "src": "/screenshot-desktop.jpg",
       "sizes": "1920x1080",
-      "type": "image/png",
+      "type": "image/jpeg",
       "form_factor": "wide",
       "label": "Kopala FPL Desktop Dashboard"
     }
