@@ -1,104 +1,232 @@
 /**
- * KOPALA FPL - Unified App Logic (v12)
- * Fixed: Variable Collision + Vertical Scroll Integration
+ * KOPALA FPL - Ultimate Home Dashboard (v4.0)
+ * Features: Timer, Vertical Price Scroll, Live King, & The Scout (Value)
  */
 
-// Changed name to prevent SyntaxError collision with other scripts
-const deadlineState = {
-    fplId: localStorage.getItem('kopala_fpl_id') || null,
-    playerMap: {}, 
-    teamMap: {},
-    currentGW: 18,
-};
+const API_BASE = "/fpl-api/"; 
+let teamMap = {};
 
 async function init() {
     const loader = document.getElementById("loading-overlay");
+    const CACHE_KEY = "fpl_bootstrap_cache";
+    const LOCK_KEY = 'fpl_api_blocked_until';
+
+    // 1. Rate Limit Guard
+    const blockedUntil = localStorage.getItem(LOCK_KEY);
+    if (blockedUntil && Date.now() < parseInt(blockedUntil)) {
+        loadFromCacheOnly(); 
+        return;
+    }
+
     try {
-        // Fetching through the Service Worker / Netlify proxy
-        const response = await fetch("/fpl-api/bootstrap-static/");
-        if (!response.ok) throw new Error("Network response was not ok");
-        const data = await response.json();
-        
+        // 2. Cache Logic (10-minute window)
+        const cached = localStorage.getItem(CACHE_KEY);
+        let data;
+
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Date.now() - parsed.timestamp < 10 * 60 * 1000) {
+                data = parsed.content;
+            }
+        }
+
+        // 3. Fetch Data
+        if (!data) {
+            const response = await fetch(`${API_BASE}bootstrap-static/`);
+
+            if (response.status === 429) {
+                const coolDownTime = Date.now() + (30 * 60 * 1000); 
+                localStorage.setItem(LOCK_KEY, coolDownTime.toString());
+                throw new Error("429");
+            }
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            data = await response.json();
+            
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+                timestamp: Date.now(),
+                content: data
+            }));
+        }
+
         processAndRender(data);
         if (loader) loader.style.display = 'none';
-        // Only run dashboard logic if fplId exists
-        if (deadlineState.fplId && typeof renderView === 'function') renderView('dashboard');
-    } catch (err) { 
-        console.error("Init failed:", err); 
-        if (loader) loader.style.display = 'none';
+
+    } catch (err) {
+        console.error("Init failed:", err.message);
+        loadFromCacheOnly(); 
     }
 }
 
 function processAndRender(data) {
-    data.teams.forEach(t => deadlineState.teamMap[t.id] = t.short_name);
-    data.elements.forEach(p => deadlineState.playerMap[p.id] = p.web_name);
-    
+    // Build Team Map (ID -> Short Name)
+    data.teams.forEach(t => teamMap[t.id] = t.short_name);
+
     renderDeadline(data.events);
-    
-    // Check if functions exist before calling to prevent crashes
-    if (typeof renderPrices === 'function') renderPrices(data.elements);
-    if (typeof renderLiveKing === 'function') renderLiveKing(data.elements);
-    if (typeof renderScout === 'function') renderScout(data.elements);
+    renderPrices(data.elements);
+    renderLiveKing(data.elements);
+    renderScout(data.elements);
 }
 
-// --- DEADLINE & NOTIFICATIONS ---
+function loadFromCacheOnly() {
+    const cached = localStorage.getItem("fpl_bootstrap_cache");
+    const loader = document.getElementById("loading-overlay");
+    if (cached) {
+        const parsed = JSON.parse(cached);
+        processAndRender(parsed.content);
+        if (loader) loader.style.display = 'none';
+    }
+}
+
+/**
+ * 1. COUNTDOWN TIMER
+ */
 function renderDeadline(events) {
     const nextGW = events.find(e => !e.finished && new Date(e.deadline_time) > new Date());
     if (!nextGW) return;
 
     const el = document.getElementById("countdown-timer");
-    if (!el) return; // Prevent "null" errors
+    const card = document.getElementById("deadline-card");
+    if (card) card.style.display = 'block';
 
     const deadline = new Date(nextGW.deadline_time).getTime();
 
     const update = () => {
-        const diff = deadline - Date.now();
-        if (diff <= 0) { el.innerHTML = "Deadline Passed"; return; }
+        const now = new Date().getTime();
+        const diff = deadline - now;
 
+        if (diff <= 0) {
+            if (el) el.innerHTML = "Deadline Passed";
+            return;
+        }
+
+        const d = Math.floor(diff / 86400000);
         const h = Math.floor((diff % 86400000) / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
 
-        el.innerHTML = `
-            <div class="timer-grid">
-                <div>${h}<span class="timer-unit">HRS</span></div>
-                <div>${m}<span class="timer-unit">MIN</span></div>
+        if (el) {
+            el.innerHTML = `
+                <div class="timer-grid">
+                    <div>${d}<span class="timer-unit">DAYS</span></div>
+                    <div>${h}<span class="timer-unit">HRS</span></div>
+                    <div>${m}<span class="timer-unit">MIN</span></div>
+                    <div>${s}<span class="timer-unit">SEC</span></div>
+                </div>
+                <div style="margin-top:10px; font-size:12px; font-weight:800; color: #37003c;">GW ${nextGW.id} DEADLINE</div>
+            `;
+        }
+    };
+
+    update();
+    setInterval(update, 1000);
+}
+
+/**
+ * 2. VERTICAL PRICE SCROLL
+ */
+function renderPrices(players) {
+    const risersList = document.getElementById("risers-list");
+    const fallersList = document.getElementById("fallers-list");
+    const card = document.getElementById("price-card");
+
+    if (!risersList || !fallersList || !card) return;
+
+    const risers = players.filter(p => p.cost_change_event > 0).sort((a,b) => b.cost_change_event - a.cost_change_event);
+    const fallers = players.filter(p => p.cost_change_event < 0).sort((a,b) => a.cost_change_event - b.cost_change_event);
+
+    const createRow = (p) => {
+        const change = p.cost_change_event / 10;
+        const isRiser = change > 0;
+        const colorClass = isRiser ? 'change-up' : 'change-down';
+
+        return `
+            <div class="price-row-mini">
+                <div class="player-info">
+                    <span class="mini-name" style="font-weight:700; display:block;">${p.web_name}</span>
+                    <span class="mini-team" style="font-size:11px; color:#666;">${teamMap[p.team] || ''}</span>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-weight:800; font-size:14px;">£${(p.now_cost / 10).toFixed(1)}</div>
+                    <div class="${colorClass}" style="font-size:11px; font-weight:bold;">
+                        ${isRiser ? '▲' : '▼'} ${Math.abs(change).toFixed(1)}
+                    </div>
+                </div>
             </div>
-            <button id="notif-btn" class="notify-btn" onclick="subscribePush()">🔔 Notify Me (2h before)</button>
         `;
     };
-    update(); 
-    setInterval(update, 60000); // Updated to 60s to save battery/performance
+
+    risersList.innerHTML = risers.length > 0 ? risers.map(createRow).join('') : '<p style="padding:10px; font-size:11px; color:#999;">No risers today</p>';
+    fallersList.innerHTML = fallers.length > 0 ? fallers.map(createRow).join('') : '<p style="padding:10px; font-size:11px; color:#999;">No fallers today</p>';
+
+    card.style.display = 'block';
 }
 
-// Helper for notifications (v12)
-async function subscribePush() {
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return console.log("Permission denied");
+/**
+ * 3. LIVE KING - Displays top performer of the current GW
+ */
+function renderLiveKing(players) {
+    const container = document.getElementById("live-king-content");
+    const card = document.getElementById("live-king-card");
+    if (!container || !card) return;
 
-        const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlB64ToUint8Array('YOUR_PUBLIC_VAPID_KEY')
-        });
+    const king = players.reduce((prev, current) => 
+        (prev.event_points > current.event_points) ? prev : current
+    );
 
-        await fetch('/.netlify/functions/save-sub', {
-            method: 'POST',
-            body: JSON.stringify(sub)
-        });
+    if (king.event_points <= 0) {
+        card.style.display = 'none';
+        return;
+    }
 
-        const btn = document.getElementById('notif-btn');
-        if (btn) btn.innerText = "✅ Subscribed";
-    } catch (err) { console.error("Subscription failed", err); }
+    container.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
+            <div>
+                <div style="font-size: 1.1rem; font-weight: 900; color: #0f172a; line-height: 1;">${king.web_name}</div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">${teamMap[king.team]} | ${king.selected_by_percent}% Owned</div>
+            </div>
+            <div style="text-align: center; background: white; padding: 5px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 1.6rem; font-weight: 900; color: #249771; line-height: 1;">${king.event_points}</div>
+                <div style="font-size: 0.6rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Points</div>
+            </div>
+        </div>
+    `;
+    card.style.display = 'block';
 }
 
-function urlB64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-    return outputArray;
+/**
+ * 4. THE SCOUT - Highlights top 3 budget enablers (Points per Million)
+ */
+function renderScout(players) {
+    const container = document.getElementById("scout-list");
+    const card = document.getElementById("scout-card");
+    if (!container || !card) return;
+
+    const bestValue = players
+        .filter(p => parseFloat(p.value_form) > 0)
+        .sort((a, b) => parseFloat(b.value_form) - parseFloat(a.value_form))
+        .slice(0, 3);
+
+    if (bestValue.length === 0) {
+        card.style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = bestValue.map(p => `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f0fdf4; border-radius: 8px; margin-bottom: 8px; border: 1px solid #dcfce7;">
+            <div>
+                <div style="font-weight: 800; color: #166534; font-size: 13px;">${p.web_name}</div>
+                <div style="font-size: 11px; color: #15803d;">${teamMap[p.team]} | £${(p.now_cost/10).toFixed(1)}m</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 9px; font-weight: 700; color: #166534; text-transform: uppercase;">Value Form</div>
+                <div style="font-size: 16px; font-weight: 900; color: #166534;">${p.value_form}</div>
+            </div>
+        </div>
+    `).join('');
+
+    card.style.display = 'block';
 }
 
 document.addEventListener('DOMContentLoaded', init);
