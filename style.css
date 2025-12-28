@@ -251,3 +251,43 @@ input[type="number"] {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     cursor: pointer;
 }
+
+
+
+
+/* Uniform Vertical Scroll Container */
+.scroll-v {
+    max-height: 400px; /* Adjust this to change how much content is visible */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--fpl-primary) transparent;
+}
+
+/* Custom Scrollbar for Chrome/Safari/Edge */
+.scroll-v::-webkit-scrollbar {
+    width: 6px;
+}
+.scroll-v::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scroll-v::-webkit-scrollbar-thumb {
+    background: var(--fpl-primary);
+    border-radius: 10px;
+}
+
+/* Vertical Price Card Style */
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--fpl-surface);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border: 1px solid var(--fpl-border);
+}
+
+.price-up { color: #00ff87; font-weight: 800; }
+.price-down { color: #ff005a; font-weight: 800; }
