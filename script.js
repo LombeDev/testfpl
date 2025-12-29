@@ -1,6 +1,6 @@
 /**
  * KOPALA FPL - Professional Core Logic
- * Integrated: Real Data, BPS, Hits Tracking, Overflow Fixes & Scroll Utilities
+ * Integrated: Fallback Proxies, PWA Fixes, & Robust Data Parsing
  */
 
 const state = {
@@ -9,41 +9,58 @@ const state = {
     currentGW: 18, 
 };
 
-// Global Proxy Configuration
-const PROXY = "https://api.allorigins.win/get?url=";
+// We use a list of proxies. If one is blocked (403), the script tries the next.
+const PROXIES = [
+    "https://api.allorigins.win/get?url=",
+    "https://thingproxy.freeboard.io/fetch/"
+];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Initialize Navigation, PWA, and Scroll Utilities
     initNavigation();
     initPWAInstall();
     initScrollUtilities(); 
     
-    // 2. Load Player Names & Current Gameweek
+    // Load Database with proxy rotation
     await loadPlayerDatabase();
 
-    // 3. Connect Dashboard Button Logic
     initDashboardLogic();
 
-    // 4. Auto-load Dashboard if ID is already saved
     if (state.fplId) {
         renderView('dashboard');
     }
 });
 
 /**
- * 1. DATA ENGINE (FPL API FETCHING)
+ * 1. DATA ENGINE (FPL API FETCHING WITH FALLBACKS)
  */
+async function apiFetch(targetUrl) {
+    for (let proxy of PROXIES) {
+        try {
+            const response = await fetch(`${proxy}${encodeURIComponent(targetUrl)}`);
+            if (!response.ok) continue;
+
+            let data;
+            // AllOrigins wraps data in a .contents string
+            if (proxy.includes("allorigins")) {
+                const wrapper = await response.json();
+                data = JSON.parse(wrapper.contents);
+            } else {
+                // ThingProxy/CORS-Anywhere return raw JSON
+                data = await response.json();
+            }
+            
+            if (data) return data;
+        } catch (err) {
+            console.warn(`Proxy ${proxy} failed, trying next...`);
+        }
+    }
+    throw new Error("All proxies failed to reach FPL API.");
+}
+
 async function loadPlayerDatabase() {
-    const url = "https://fantasy.premierleague.com/api/bootstrap-static/";
-    
     try {
-        const response = await fetch(`${PROXY}${encodeURIComponent(url)}`);
-        if (!response.ok) throw new Error('Proxy error');
+        const data = await apiFetch("https://fantasy.premierleague.com/api/bootstrap-static/");
         
-        const wrapper = await response.json();
-        const data = JSON.parse(wrapper.contents);
-        
-        // Safety check to prevent the ".forEach of undefined" error
         if (data && data.elements) {
             data.elements.forEach(p => {
                 state.playerMap[p.id] = p.web_name;
@@ -71,17 +88,9 @@ async function fetchLiveFPLData() {
     const picksUrl = `https://fantasy.premierleague.com/api/entry/${state.fplId}/event/${state.currentGW}/picks/`;
 
     try {
-        // Fetch Manager Data
-        const mResp = await fetch(`${PROXY}${encodeURIComponent(managerUrl)}`);
-        const mWrap = await mResp.json();
-        const mData = JSON.parse(mWrap.contents);
+        const mData = await apiFetch(managerUrl);
+        const pData = await apiFetch(picksUrl);
 
-        // Fetch Picks Data
-        const pResp = await fetch(`${PROXY}${encodeURIComponent(picksUrl)}`);
-        const pWrap = await pResp.json();
-        const pData = JSON.parse(pWrap.contents);
-
-        // Update UI
         if (dispName) dispName.textContent = `${mData.player_first_name} ${mData.player_last_name}`;
         
         const dispGW = document.getElementById('disp-gw');
@@ -116,9 +125,7 @@ async function fetchLiveBPS() {
     const url = `https://fantasy.premierleague.com/api/event/${state.currentGW}/live/`;
 
     try {
-        const response = await fetch(`${PROXY}${encodeURIComponent(url)}`);
-        const wrapper = await response.json();
-        const data = JSON.parse(wrapper.contents);
+        const data = await apiFetch(url);
 
         if (data && data.elements) {
             const topPerformers = data.elements
@@ -241,21 +248,42 @@ function initScrollUtilities() {
     });
 }
 
+/**
+ * 5. PWA INSTALL LOGIC (FIXED)
+ */
 function initPWAInstall() {
     const installBtn = document.getElementById('pwa-install-btn');
     let deferredPrompt;
 
     window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent default browser banner
         e.preventDefault();
+        // Save the event to trigger it later on click
         deferredPrompt = e;
-        if (installBtn) installBtn.style.display = 'flex';
+        // Show our custom button
+        if (installBtn) {
+            installBtn.style.display = 'flex';
+            installBtn.classList.remove('hidden');
+        }
     });
 
     installBtn?.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt = null;
-            installBtn.style.display = 'none';
-        }
+        if (!deferredPrompt) return;
+        
+        // Show the native prompt
+        deferredPrompt.prompt();
+        
+        // Check user choice
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User Choice: ${outcome}`);
+        
+        // Prompt can only be used once
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        if (installBtn) installBtn.style.display = 'none';
     });
 }
