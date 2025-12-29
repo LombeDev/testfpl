@@ -37,7 +37,7 @@
   "screenshots": [
     {
       "src": "screenshot-mobile.jpg",
-      "sizes": "1080x1920", 
+      "sizes": "1080x1920",
       "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Kopala FPL Mobile Dashboard"
@@ -50,3 +50,4 @@
       "label": "Kopala FPL Desktop Dashboard"
     }
   ]
+}
