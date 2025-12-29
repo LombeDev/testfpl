@@ -37,17 +37,16 @@
   "screenshots": [
     {
       "src": "screenshot-mobile.jpg",
-      "sizes": "250x498",
+      "sizes": "1080x1920", 
       "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Kopala FPL Mobile Dashboard"
     },
     {
       "src": "screenshot-desktop.jpg",
-      "sizes": "500x348",
+      "sizes": "1920x1080",
       "type": "image/jpeg",
       "form_factor": "wide",
       "label": "Kopala FPL Desktop Dashboard"
     }
   ]
-}
