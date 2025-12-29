@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - AI MASTER ENGINE (v4.0 Aggressive Edition)
- * "The Hub Style" - High Upside & Value Protection
+ * KOPALA FPL - AI MASTER ENGINE (v3.3)
+ * THE COMPLETE SCRIPT: No Omissions.
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -9,9 +9,7 @@ let teamsDB = {};
 let fixturesDB = [];
 let selectedSlotId = null;
 
-// AI Weighting Configuration
-const AI_WEIGHTS = { GW1: 0.6, GW2: 0.3, GW3: 0.1 };
-
+// Initial 15-man squad structure
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -30,12 +28,35 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC ---
+// --- 1. DATA SYNC & INITIALIZATION ---
 
 async function syncData() {
     const ticker = document.getElementById('ticker');
+    const TIME_KEY = 'kopala_cache_timestamp';
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; 
+
+    const cachedPlayers = localStorage.getItem('kopala_player_cache');
+    const cachedFixtures = localStorage.getItem('kopala_fixtures_cache');
+    const cachedTeams = localStorage.getItem('kopala_teams_cache');
+    const cachedTime = localStorage.getItem(TIME_KEY);
+    
+    const isCacheFresh = cachedTime && (Date.now() - cachedTime < TWENTY_FOUR_HOURS);
+
+    // Load from cache first for speed
+    if (cachedPlayers && cachedFixtures) {
+        playerDB = JSON.parse(cachedPlayers);
+        fixturesDB = JSON.parse(cachedFixtures);
+        teamsDB = JSON.parse(cachedTeams || '{}');
+        loadSquad();
+        renderPitch();
+        if (isCacheFresh && ticker) {
+            ticker.innerHTML = "🚨 <span style='color:#00ff87'>Get your team rated by AI</span>";
+            return; 
+        }
+    }
+
     try {
-        if (ticker) ticker.textContent = "Syncing live Opta-style data...";
+        if (ticker) ticker.textContent = "Syncing live Premier League data...";
         const [bootRes, fixRes] = await Promise.all([
             fetch(`${API_BASE}bootstrap-static/`),
             fetch(`${API_BASE}fixtures/`)
@@ -43,11 +64,13 @@ async function syncData() {
         const data = await bootRes.json();
         const rawFixtures = await fixRes.json();
 
+        // Map Team IDs to Names/Slugs
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
             teamsDB[t.id] = slug;
         });
 
+        // Map Player Data
         playerDB = data.elements.map(p => ({
             id: p.id,
             name: p.web_name,
@@ -55,101 +78,27 @@ async function syncData() {
             teamShort: teamsDB[p.team] || 'default',
             pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
             price: (p.now_cost / 10).toFixed(1),
-            xp: parseFloat(p.ep_next) || 0,
-            form: parseFloat(p.form) || 0,
-            ict: parseFloat(p.ict_index) || 0
+            xp: parseFloat(p.ep_next) || 0
         })).sort((a,b) => b.xp - a.xp);
 
         fixturesDB = rawFixtures;
+
+        // Cache Data
+        localStorage.setItem('kopala_player_cache', JSON.stringify(playerDB));
+        localStorage.setItem('kopala_fixtures_cache', JSON.stringify(fixturesDB));
+        localStorage.setItem('kopala_teams_cache', JSON.stringify(teamsDB));
+        localStorage.setItem(TIME_KEY, Date.now().toString());
+        
         loadSquad();
         renderPitch();
-        if (ticker) ticker.innerHTML = "🔥 <span style='color:#00ff87'>AI Engine: Aggressive Mode Active</span>";
+        if (ticker) ticker.innerHTML = "✨ <span style='color:#00ff87'>AI Engine: Live Sync Complete</span>";
     } catch (e) {
         console.error("Sync Error:", e);
+        if (ticker) ticker.innerHTML = "📡 <span style='color:orange'>Using Offline Cached Data</span>";
     }
 }
 
-// --- 2. AGGRESSIVE AI CALCULATIONS ---
-
-function getAggressiveXP(player) {
-    if (!player) return 0;
-    const fixtures = getNextFixtures(player.teamId);
-    if (!fixtures.length) return player.xp;
-
-    // Weighting fixtures (Aggressive focus on GW1)
-    let score = 0;
-    fixtures.forEach((f, i) => {
-        const weight = i === 0 ? AI_WEIGHTS.GW1 : (i === 1 ? AI_WEIGHTS.GW2 : AI_WEIGHTS.GW3);
-        const difficultyMultiplier = (6 - f.diff) / 3; // Easy fixture (2) = 1.33x boost
-        score += (player.xp * difficultyMultiplier * weight);
-    });
-    
-    // Bonus for high ICT (Influence, Creativity, Threat) - The "Hub" secret sauce
-    if (player.ict > 10) score += 0.5; 
-    
-    return parseFloat(score.toFixed(2));
-}
-
-function analyzeTeam() {
-    if (squad.some(s => s.name === "")) return alert("Complete your team first!");
-    
-    const analysis = squad.map(slot => {
-        const p = playerDB.find(pdb => pdb.name === slot.name);
-        return { ...slot, playerObj: p, aggScore: getAggressiveXP(p) };
-    });
-
-    // 1. Captain Decision (Aggressive upside)
-    const cap = [...analysis].sort((a, b) => b.aggScore - a.aggScore)[0];
-
-    // 2. Transfer Suggestions (Weakest starter out)
-    const starters = analysis.filter(s => !s.isBench);
-    const budget = 100 - analysis.reduce((acc, s) => acc + parseFloat(s.playerObj.price), 0);
-    const weakLink = starters.sort((a, b) => a.aggScore - b.aggScore)[0];
-
-    const tips = [];
-    // Find a replacement with higher aggressive xP
-    const replacement = playerDB.find(p => 
-        p.pos === weakLink.pos && 
-        parseFloat(p.price) <= (parseFloat(weakLink.playerObj.price) + budget) &&
-        !squad.some(s => s.name === p.name) &&
-        getAggressiveXP(p) > (weakLink.aggScore + 1.5) // Only suggest if +1.5 xP gain
-    );
-
-    if (replacement) {
-        tips.push(`🚀 <b>HIGH UPSIDE MOVE:</b> Sell ${weakLink.name} ➔ Buy ${replacement.name} (+${(getAggressiveXP(replacement) - weakLink.aggScore).toFixed(1)} xP)`);
-    } else {
-        tips.push(`✅ <b>SQUAD STRENGTH:</b> Your starting XI is highly aggressive for this Gameweek.`);
-    }
-
-    displayModal(cap.name, tips);
-}
-
-// --- 3. UI RENDERERS ---
-
-function createSlotUI(slotData) {
-    const div = document.createElement('div');
-    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    const p = playerDB.find(p => p.name === slotData.name);
-    const jersey = p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamShort) : 'default';
-    const fixtures = p ? getNextFixtures(p.teamId) : [];
-    const aggXp = p ? getAggressiveXP(p) : 0;
-
-    div.innerHTML = `
-        <div class="jersey ${jersey}" onclick="handleSwap(${slotData.id})"></div>
-        <div class="player-card">
-            <span class="p-name">${slotData.name || slotData.pos}</span>
-            <span class="p-xp">${p ? `Agg-xP: ${aggXp}` : ''}</span>
-            <div class="card-fixtures">${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}</div>`).join('')}</div>
-        </div>
-        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
-            <option value="">-- Select --</option>
-            ${playerDB.filter(pdb => pdb.pos === slotData.pos).map(pdb => `<option value="${pdb.name}" ${slotData.name === pdb.name ? 'selected' : ''}>${pdb.name} (£${pdb.price}m)</option>`).join('')}
-        </select>
-    `;
-    return div;
-}
-
-// --- 4. CORE ENGINE (SQUAD MANAGEMENT) ---
+// --- 2. SQUAD RULES & INTERACTION ---
 
 function handleSwap(id) {
     if (selectedSlotId === null) {
@@ -157,16 +106,23 @@ function handleSwap(id) {
     } else {
         const p1 = squad.find(s => s.id === selectedSlotId);
         const p2 = squad.find(s => s.id === id);
+
         if (p1.id !== p2.id) {
+            // FPL Rule: Only GKP can swap with GKP
             if ((p1.pos === 'GKP' || p2.pos === 'GKP') && p1.pos !== p2.pos) {
-                alert("Goalkeepers only swap with Goalkeepers!");
+                alert("Goalkeepers can only be swapped with other Goalkeepers.");
             } else {
                 const tempBench = p1.isBench;
                 p1.isBench = p2.isBench;
                 p2.isBench = tempBench;
+
                 if (!isValidFormation()) {
-                    p2.isBench = p1.isBench; p1.isBench = tempBench;
-                } else { saveSquad(); }
+                    alert("Invalid Formation! FPL requires 3-5 DEF, 2-5 MID, 1-3 FWD.");
+                    p2.isBench = p1.isBench; 
+                    p1.isBench = tempBench; // Revert
+                } else {
+                    saveSquad();
+                }
             }
         }
         selectedSlotId = null;
@@ -175,10 +131,14 @@ function handleSwap(id) {
 }
 
 function updatePlayer(id, name) {
-    const slot = squad.find(s => s.id === id);
-    if (!name) { slot.name = ""; saveSquad(); renderPitch(); return; }
-    
+    if (!name) {
+        squad.find(s => s.id === id).name = "";
+        saveSquad(); renderPitch(); return;
+    }
+
     const player = playerDB.find(p => p.name === name);
+    
+    // Team Constraint (Max 3)
     const teamCount = squad.filter(s => {
         if (s.id === id) return false;
         const p = playerDB.find(pdb => pdb.name === s.name);
@@ -186,14 +146,128 @@ function updatePlayer(id, name) {
     }).length;
 
     if (teamCount >= 3) {
-        alert("Max 3 players per team!");
-        renderPitch(); return;
+        alert(`Rule Violation: You already have 3 players from ${player.teamShort.toUpperCase()}.`);
+        renderPitch(); 
+        return;
     }
 
-    slot.name = name;
+    squad.find(s => s.id === id).name = name;
     saveSquad();
     renderPitch();
 }
+
+function changeFormation(formationStr) {
+    const [d, m, f] = formationStr.split('-').map(Number);
+    squad.forEach(s => s.isBench = true);
+    squad.find(s => s.pos === 'GKP').isBench = false;
+
+    const activate = (pos, limit) => {
+        let count = 0;
+        squad.filter(s => s.pos === pos).forEach(s => {
+            if (count < limit) { s.isBench = false; count++; }
+        });
+    };
+
+    activate('DEF', d); activate('MID', m); activate('FWD', f);
+    saveSquad();
+    renderPitch();
+}
+
+function isValidFormation() {
+    const active = squad.filter(s => !s.isBench);
+    const d = active.filter(s => s.pos === 'DEF').length;
+    const m = active.filter(s => s.pos === 'MID').length;
+    const f = active.filter(s => s.pos === 'FWD').length;
+    return d >= 3 && d <= 5 && m >= 2 && m <= 5 && f >= 1 && f <= 3;
+}
+
+// --- 3. AI CALCULATIONS (XP & RATING) ---
+
+function getThreeWeekXP(player) {
+    if (!player) return 0;
+    const fixtures = getNextFixtures(player.teamId);
+    let totalXP = player.xp; 
+    
+    // Projection logic for GW+1 and GW+2 based on fixture difficulty
+    fixtures.slice(1, 3).forEach(f => {
+        const multiplier = (6 - f.diff) / 3; 
+        totalXP += (player.xp * multiplier);
+    });
+    
+    return parseFloat(totalXP.toFixed(1));
+}
+
+function analyzeTeam() {
+    if (squad.some(s => s.name === "")) return alert("Finish your squad first!");
+    
+    const analysis = squad.map(slot => {
+        const p = playerDB.find(pdb => pdb.name === slot.name);
+        return { 
+            ...slot, 
+            xp: p.xp, 
+            price: parseFloat(p.price), 
+            threeWk: getThreeWeekXP(p),
+            totalScore: getThreeWeekXP(p)
+        };
+    });
+
+    const cap = [...analysis].sort((a, b) => b.totalScore - a.totalScore)[0];
+    const sortedLow = [...analysis].sort((a, b) => a.totalScore - b.totalScore);
+    const gkpBench = analysis.filter(p => p.pos === 'GKP').sort((a,b) => a.totalScore - b.totalScore)[0];
+    const bench = [gkpBench.name, ...sortedLow.filter(p => p.id !== gkpBench.id).slice(0, 3).map(p=>p.name)];
+
+    const budget = (100 - analysis.reduce((acc, p) => acc + p.price, 0));
+    const tips = [];
+    
+    sortedLow.slice(0, 3).forEach(weak => {
+        const up = playerDB.find(p => 
+            p.pos === weak.pos && 
+            parseFloat(p.price) <= (weak.price + budget) && 
+            !squad.some(s => s.name === p.name) &&
+            (squad.filter(s => playerDB.find(pdb => pdb.name === s.name)?.teamId === p.teamId).length < 3)
+        );
+        if (up) tips.push(`OUT: ${weak.name} ➔ IN: ${up.name} (£${up.price}m)`);
+    });
+
+    displayModal(cap.name, bench, tips);
+}
+
+function displayModal(cap, bench, transfers) {
+    const modal = document.getElementById('analysis-modal');
+    document.getElementById('analysis-results').innerHTML = `
+        <div class="analysis-section"><h3>👑 Captain Suggestion</h3><p>${cap}</p></div>
+        <div class="analysis-section"><h3>🪑 Bench Priority</h3><p>${bench.join(', ')}</p></div>
+        <div class="analysis-section"><h3>🔄 AI Transfers</h3>${transfers.map(t => `<div class="transfer-item">${t}</div>`).join('')}</div>
+    `;
+    modal.style.display = "block";
+    document.getElementById('close-modal').onclick = () => modal.style.display = "none";
+}
+
+function runAIWildcard() {
+    let budget = 100.0;
+    const newSquad = [];
+    const teamCounts = {};
+    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
+
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        for (let i = 0; i < posLimits[pos]; i++) {
+            const buffer = 4.2 * (15 - newSquad.length);
+            const choice = playerDB.find(p => 
+                p.pos === pos && !newSquad.some(s => s.name === p.name) && 
+                (teamCounts[p.teamId] || 0) < 3 && parseFloat(p.price) <= (budget - buffer)
+            );
+            if (choice) {
+                newSquad.push({ id: newSquad.length, pos: pos, name: choice.name, isBench: false });
+                teamCounts[choice.teamId] = (teamCounts[choice.teamId] || 0) + 1;
+                budget -= parseFloat(choice.price);
+            }
+        }
+    });
+    squad = newSquad; 
+    changeFormation('4-4-2');
+}
+
+// --- 4. RENDERERS ---
 
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
@@ -215,50 +289,67 @@ function renderPitch() {
     updateStats();
 }
 
-function updateStats() {
-    let aggTotal = 0, currentVal = 0;
-    squad.forEach(s => {
-        const p = playerDB.find(x => x.name === s.name);
-        if (p) {
-            currentVal += parseFloat(p.price);
-            if (!s.isBench) aggTotal += getAggressiveXP(p);
-        }
-    });
+function createSlotUI(slotData) {
+    const div = document.createElement('div');
+    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
+    const p = playerDB.find(p => p.name === slotData.name);
+    const jersey = p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamShort) : 'default';
+    const fixtures = p ? getNextFixtures(p.teamId) : [];
+    const xP3 = p ? getThreeWeekXP(p) : 0;
 
-    const itb = (100 - currentVal).toFixed(1);
-    const rating = Math.min(100, (aggTotal / 65) * 100).toFixed(0);
-    
-    if(document.getElementById('budget-val')) document.getElementById('budget-val').textContent = `£${itb}m`;
-    if(document.getElementById('team-rating')) {
-        document.getElementById('team-rating').textContent = `${rating}%`;
-        document.getElementById('team-rating').style.color = rating > 80 ? '#00ff87' : '#ff005a';
-    }
+    div.innerHTML = `
+        <div class="jersey ${jersey}" onclick="handleSwap(${slotData.id})"></div>
+        <div class="player-card">
+            <span class="p-name">${slotData.name || slotData.pos}</span>
+            <span class="p-xp">${p ? `3-Wk xP: ${xP3}` : ''}</span>
+            <div class="card-fixtures">${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}</div>`).join('')}</div>
+        </div>
+        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
+            <option value="">-- Pick --</option>
+            ${playerDB.filter(pdb => pdb.pos === slotData.pos).map(pdb => `<option value="${pdb.name}" ${slotData.name === pdb.name ? 'selected' : ''}>${pdb.name} (£${pdb.price}m)</option>`).join('')}
+        </select>
+    `;
+    return div;
 }
 
 function getNextFixtures(teamId) {
+    if (!fixturesDB.length) return [];
     return fixturesDB.filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
         .slice(0, 3).map(f => {
             const isHome = f.team_h === teamId;
-            return { opp: (teamsDB[isHome ? f.team_a : f.team_h] || "???").substring(0,3).toUpperCase(), diff: isHome ? f.team_h_difficulty : f.team_a_difficulty };
+            return { 
+                opp: (teamsDB[isHome ? f.team_a : f.team_h] || "???").substring(0,3).toUpperCase(), 
+                diff: isHome ? f.team_h_difficulty : f.team_a_difficulty 
+            };
         });
 }
 
-function isValidFormation() {
-    const active = squad.filter(s => !s.isBench);
-    const d = active.filter(s => s.pos === 'DEF').length;
-    const m = active.filter(s => s.pos === 'MID').length;
-    const f = active.filter(s => s.pos === 'FWD').length;
-    return d >= 3 && d <= 5 && m >= 2 && m <= 5 && f >= 1 && f <= 3;
-}
+function updateStats() {
+    let currentXp = 0, threeWeekXp = 0, val = 0;
+    
+    squad.forEach(s => {
+        const p = playerDB.find(x => x.name === s.name);
+        if (p) {
+            val += parseFloat(p.price);
+            if (!s.isBench) {
+                currentXp += p.xp;
+                threeWeekXp += getThreeWeekXP(p);
+            }
+        }
+    });
 
-function displayModal(cap, tips) {
-    const modal = document.getElementById('analysis-modal');
-    document.getElementById('analysis-results').innerHTML = `
-        <div class="analysis-section"><h3>👑 Aggressive Captain</h3><p>${cap}</p></div>
-        <div class="analysis-section"><h3>⚡ AI Strategy Moves</h3>${tips.map(t => `<div class="transfer-item">${t}</div>`).join('')}</div>
-    `;
-    modal.style.display = "block";
-    document.getElementById('close-modal').onclick = () => modal.style.display = "none";
+    const itb = (100 - val).toFixed(1);
+    const rating = Math.min(100, (threeWeekXp / 185) * 100).toFixed(0);
+    
+    // Update DOM
+    const budgetEl = document.getElementById('budget-val');
+    if(budgetEl) { budgetEl.textContent = `£${itb}m`; budgetEl.style.color = itb < 0 ? '#ff005a' : '#00ff87'; }
+    if(document.getElementById('v-xp')) document.getElementById('v-xp').textContent = currentXp.toFixed(1);
+    if(document.getElementById('three-week-xp')) document.getElementById('three-week-xp').textContent = threeWeekXp.toFixed(1);
+    if(document.getElementById('team-rating')) {
+        document.getElementById('team-rating').textContent = `${rating}%`;
+        document.getElementById('team-rating').style.color = rating > 75 ? '#00ff87' : (rating > 50 ? '#e1ff00' : '#ff005a');
+    }
 }
 
 function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
@@ -267,7 +358,11 @@ function loadSquad() {
     if (saved) squad = JSON.parse(saved);
 }
 
+// --- 5. EVENT LISTENERS ---
+
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
+    if (document.getElementById('wildcard-btn')) document.getElementById('wildcard-btn').onclick = runAIWildcard;
     if (document.getElementById('analyze-btn')) document.getElementById('analyze-btn').onclick = analyzeTeam;
+    if (document.getElementById('formation-select')) document.getElementById('formation-select').onchange = (e) => changeFormation(e.target.value);
 });
