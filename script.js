@@ -1,6 +1,6 @@
 /**
  * KOPALA FPL - Professional Core Logic
- * Integrated: Fallback Proxies, PWA Fixes, & Robust Data Parsing
+ * Integrated: Real Data, BPS, Hits Tracking, Overflow Fixes & Scroll Utilities
  */
 
 const state = {
@@ -9,72 +9,44 @@ const state = {
     currentGW: 18, 
 };
 
-// We use a list of proxies. If one is blocked (403), the script tries the next.
-const PROXIES = [
-    "https://api.allorigins.win/get?url=",
-    "https://thingproxy.freeboard.io/fetch/"
-];
-
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Initialize Navigation, PWA, and Scroll Utilities
     initNavigation();
     initPWAInstall();
-    initScrollUtilities(); 
+    initScrollUtilities(); // Added for Back to Top
     
-    // Load Database with proxy rotation
+    // 2. Load Player Names & Current Gameweek
     await loadPlayerDatabase();
 
+    // 3. Connect Dashboard Button Logic
     initDashboardLogic();
 
+    // 4. Auto-load Dashboard if ID is already saved
     if (state.fplId) {
         renderView('dashboard');
     }
 });
 
 /**
- * 1. DATA ENGINE (FPL API FETCHING WITH FALLBACKS)
+ * 1. DATA ENGINE (FPL API FETCHING)
  */
-async function apiFetch(targetUrl) {
-    for (let proxy of PROXIES) {
-        try {
-            const response = await fetch(`${proxy}${encodeURIComponent(targetUrl)}`);
-            if (!response.ok) continue;
-
-            let data;
-            // AllOrigins wraps data in a .contents string
-            if (proxy.includes("allorigins")) {
-                const wrapper = await response.json();
-                data = JSON.parse(wrapper.contents);
-            } else {
-                // ThingProxy/CORS-Anywhere return raw JSON
-                data = await response.json();
-            }
-            
-            if (data) return data;
-        } catch (err) {
-            console.warn(`Proxy ${proxy} failed, trying next...`);
-        }
-    }
-    throw new Error("All proxies failed to reach FPL API.");
-}
-
 async function loadPlayerDatabase() {
+    const proxy = "https://corsproxy.io/?";
+    const url = "https://fantasy.premierleague.com/api/bootstrap-static/";
+    
     try {
-        const data = await apiFetch("https://fantasy.premierleague.com/api/bootstrap-static/");
+        const response = await fetch(proxy + encodeURIComponent(url));
+        const data = await response.json();
         
-        if (data && data.elements) {
-            data.elements.forEach(p => {
-                state.playerMap[p.id] = p.web_name;
-            });
+        data.elements.forEach(p => {
+            state.playerMap[p.id] = p.web_name;
+        });
 
-            const activeGW = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
-            if (activeGW) {
-                state.currentGW = activeGW.id;
-                const gwLabel = document.getElementById('gw-label');
-                if (gwLabel) gwLabel.textContent = `GW ${state.currentGW} DEADLINE`;
-            }
-        }
+        const activeGW = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
+        if (activeGW) state.currentGW = activeGW.id;
+        
     } catch (err) {
-        console.error("FPL Database Sync Failed:", err);
+        console.error("FPL Database Sync Failed", err);
     }
 }
 
@@ -82,66 +54,74 @@ async function fetchLiveFPLData() {
     if (!state.fplId) return;
     
     const dispName = document.getElementById('disp-name');
-    if (dispName) dispName.textContent = "Syncing Live Stats...";
+    dispName.textContent = "Syncing Live Stats...";
 
+    const proxy = "https://corsproxy.io/?";
     const managerUrl = `https://fantasy.premierleague.com/api/entry/${state.fplId}/`;
     const picksUrl = `https://fantasy.premierleague.com/api/entry/${state.fplId}/event/${state.currentGW}/picks/`;
 
     try {
-        const mData = await apiFetch(managerUrl);
-        const pData = await apiFetch(picksUrl);
+        const mResp = await fetch(proxy + encodeURIComponent(managerUrl));
+        const mData = await mResp.json();
 
-        if (dispName) dispName.textContent = `${mData.player_first_name} ${mData.player_last_name}`;
+        const pResp = await fetch(proxy + encodeURIComponent(picksUrl));
+        const pData = await pResp.json();
+
+        // --- Populate UI & Apply Overflow Fixes ---
         
-        const dispGW = document.getElementById('disp-gw');
-        if (dispGW) dispGW.textContent = mData.summary_event_points || 0;
+        document.getElementById('disp-name').textContent = `${mData.player_first_name} ${mData.player_last_name}`;
+        document.getElementById('disp-gw').textContent = mData.summary_event_points || 0;
+        document.getElementById('disp-total').textContent = mData.summary_overall_points.toLocaleString();
         
-        const dispTotal = document.getElementById('disp-total');
-        if (dispTotal) dispTotal.textContent = mData.summary_overall_points.toLocaleString();
-        
+        // 2. Live Rank with Dynamic Scaling to prevent "beyond the box"
         const rankEl = document.getElementById('disp-rank');
-        if (rankEl) {
-            const rankText = mData.summary_overall_rank ? mData.summary_overall_rank.toLocaleString() : "N/A";
-            rankEl.textContent = rankText;
-            rankEl.style.fontSize = rankText.length > 8 ? "0.85rem" : rankText.length > 6 ? "1rem" : "1.2rem";
+        const rankText = mData.summary_overall_rank ? mData.summary_overall_rank.toLocaleString() : "N/A";
+        rankEl.textContent = rankText;
+        
+        if (rankText.length > 8) {
+            rankEl.style.fontSize = "0.85rem";
+        } else if (rankText.length > 6) {
+            rankEl.style.fontSize = "1rem";
+        } else {
+            rankEl.style.fontSize = "1.2rem";
         }
 
-        const dispTransfers = document.getElementById('disp-transfers');
-        if (dispTransfers && pData.entry_history) {
-            const tx = pData.entry_history.event_transfers || 0;
-            const cost = pData.entry_history.event_transfers_cost || 0;
-            dispTransfers.textContent = cost > 0 ? `${tx} (-${cost})` : `${tx}`;
-        }
+        // 3. Weekly Transfers & Hits
+        const tx = pData.entry_history.event_transfers || 0;
+        const cost = pData.entry_history.event_transfers_cost || 0;
+        document.getElementById('disp-transfers').textContent = cost > 0 ? `${tx} (-${cost})` : `${tx}`;
+
+        document.getElementById('disp-safety').textContent = "Live";
 
         fetchLiveBPS();
 
     } catch (err) {
-        if (dispName) dispName.textContent = "Team ID Not Found";
+        dispName.textContent = "Team ID Not Found";
         console.error("Dashboard Sync Error:", err);
     }
 }
 
 async function fetchLiveBPS() {
+    const proxy = "https://corsproxy.io/?";
     const url = `https://fantasy.premierleague.com/api/event/${state.currentGW}/live/`;
 
     try {
-        const data = await apiFetch(url);
+        const response = await fetch(proxy + encodeURIComponent(url));
+        const data = await response.json();
 
-        if (data && data.elements) {
-            const topPerformers = data.elements
-                .sort((a, b) => b.stats.bps - a.stats.bps)
-                .slice(0, 3);
+        const topPerformers = data.elements
+            .sort((a, b) => b.stats.bps - a.stats.bps)
+            .slice(0, 3);
 
-            const bpsList = document.getElementById('bps-list');
-            if (bpsList) {
-                bpsList.innerHTML = `<p style="font-size:0.65rem; font-weight:800; opacity:0.5; margin-bottom:10px; text-transform:uppercase;">Top Bonus (GW${state.currentGW})</p>` + 
-                topPerformers.map(p => `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; padding:12px; background:var(--fpl-surface); border-radius:12px; border: 1px solid var(--fpl-border);">
-                        <span style="font-weight:700;">${state.playerMap[p.id] || 'Unknown'}</span>
-                        <span style="color:var(--fpl-primary); font-weight:900;">+${p.stats.bps} BPS</span>
-                    </div>
-                `).join('');
-            }
+        const bpsList = document.getElementById('bps-list');
+        if (bpsList) {
+            bpsList.innerHTML = `<p style="font-size:0.65rem; font-weight:800; opacity:0.5; margin-bottom:10px; text-transform:uppercase;">Top Bonus (GW${state.currentGW})</p>` + 
+            topPerformers.map(p => `
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; padding:12px; background:var(--fpl-surface); border-radius:12px; border: 1px solid var(--fpl-border);">
+                    <span style="font-weight:700;">${state.playerMap[p.id] || 'Unknown'}</span>
+                    <span style="color:var(--fpl-primary); font-weight:900;">+${p.stats.bps} BPS</span>
+                </div>
+            `).join('');
         }
     } catch (err) {
         console.error("Live BPS Sync Error", err);
@@ -201,12 +181,12 @@ function renderView(view) {
     const dash = document.getElementById('live-dashboard');
 
     if (view === 'dashboard') {
-        if (entry) entry.classList.add('hidden');
-        if (dash) dash.classList.remove('hidden');
+        entry.classList.add('hidden');
+        dash.classList.remove('hidden');
         fetchLiveFPLData();
     } else {
-        if (entry) entry.classList.remove('hidden');
-        if (dash) dash.classList.add('hidden');
+        entry.classList.remove('hidden');
+        dash.classList.add('hidden');
         const fplInput = document.getElementById('fpl-id');
         if (fplInput) fplInput.value = '';
     }
@@ -248,42 +228,21 @@ function initScrollUtilities() {
     });
 }
 
-/**
- * 5. PWA INSTALL LOGIC (FIXED)
- */
 function initPWAInstall() {
     const installBtn = document.getElementById('pwa-install-btn');
     let deferredPrompt;
 
     window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent default browser banner
         e.preventDefault();
-        // Save the event to trigger it later on click
         deferredPrompt = e;
-        // Show our custom button
-        if (installBtn) {
-            installBtn.style.display = 'flex';
-            installBtn.classList.remove('hidden');
-        }
+        if (installBtn) installBtn.style.display = 'flex';
     });
 
     installBtn?.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        
-        // Show the native prompt
-        deferredPrompt.prompt();
-        
-        // Check user choice
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User Choice: ${outcome}`);
-        
-        // Prompt can only be used once
-        deferredPrompt = null;
-        installBtn.style.display = 'none';
-    });
-
-    window.addEventListener('appinstalled', () => {
-        deferredPrompt = null;
-        if (installBtn) installBtn.style.display = 'none';
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        }
     });
 }
