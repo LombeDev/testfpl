@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /**
  * 1. DATA ENGINE (FPL API FETCHING)
- * Using AllOrigins proxy to bypass CORS/403 Forbidden errors
+ * Updated to use AllOrigins proxy to bypass 403 Forbidden errors
  */
 async function loadPlayerDatabase() {
     const proxy = "https://api.allorigins.win/get?url=";
@@ -37,10 +37,10 @@ async function loadPlayerDatabase() {
     
     try {
         const response = await fetch(`${proxy}${encodeURIComponent(url)}`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error('Proxy unreachable');
         
         const wrapper = await response.json();
-        const data = JSON.parse(wrapper.contents);
+        const data = JSON.parse(wrapper.contents); // AllOrigins returns data inside .contents
         
         if (data && data.elements) {
             data.elements.forEach(p => {
@@ -48,7 +48,12 @@ async function loadPlayerDatabase() {
             });
 
             const activeGW = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
-            if (activeGW) state.currentGW = activeGW.id;
+            if (activeGW) {
+                state.currentGW = activeGW.id;
+                // Update HTML label if it exists
+                const gwLabel = document.getElementById('gw-label');
+                if (gwLabel) gwLabel.textContent = `GW ${state.currentGW} DEADLINE`;
+            }
         }
         
     } catch (err) {
@@ -77,8 +82,7 @@ async function fetchLiveFPLData() {
         const pWrapper = await pResp.json();
         const pData = JSON.parse(pWrapper.contents);
 
-        // --- Populate UI & Apply Overflow Fixes ---
-        
+        // --- Populate UI ---
         if (dispName) {
             dispName.textContent = `${mData.player_first_name} ${mData.player_last_name}`;
         }
@@ -89,22 +93,15 @@ async function fetchLiveFPLData() {
         const dispTotal = document.getElementById('disp-total');
         if (dispTotal) dispTotal.textContent = mData.summary_overall_points.toLocaleString();
         
-        // Live Rank Scaling
         const rankEl = document.getElementById('disp-rank');
         if (rankEl) {
             const rankText = mData.summary_overall_rank ? mData.summary_overall_rank.toLocaleString() : "N/A";
             rankEl.textContent = rankText;
             
-            if (rankText.length > 8) {
-                rankEl.style.fontSize = "0.85rem";
-            } else if (rankText.length > 6) {
-                rankEl.style.fontSize = "1rem";
-            } else {
-                rankEl.style.fontSize = "1.2rem";
-            }
+            // Dynamic scaling for large ranks
+            rankEl.style.fontSize = rankText.length > 8 ? "0.85rem" : rankText.length > 6 ? "1rem" : "1.2rem";
         }
 
-        // Weekly Transfers & Hits
         const dispTransfers = document.getElementById('disp-transfers');
         if (dispTransfers && pData.entry_history) {
             const tx = pData.entry_history.event_transfers || 0;
@@ -112,10 +109,6 @@ async function fetchLiveFPLData() {
             dispTransfers.textContent = cost > 0 ? `${tx} (-${cost})` : `${tx}`;
         }
 
-        const dispSafety = document.getElementById('disp-safety');
-        if (dispSafety) dispSafety.textContent = "Live";
-
-        // Fetch Bonus Points
         fetchLiveBPS();
 
     } catch (err) {
@@ -155,7 +148,7 @@ async function fetchLiveBPS() {
 }
 
 /**
- * 2. DASHBOARD LOGIC (INPUTS & MODAL)
+ * 2. DASHBOARD LOGIC
  */
 function initDashboardLogic() {
     const loginBtn = document.getElementById('change-id-btn');
@@ -179,22 +172,22 @@ function initDashboardLogic() {
         if (e.target.closest('.reset-fpl-id')) {
             e.preventDefault();
             if (confirmModal) {
-                confirmModal.style.display = 'flex';
                 confirmModal.classList.remove('hidden');
+                confirmModal.style.display = 'flex';
             }
         }
     });
 
     cancelModalBtn?.addEventListener('click', () => {
-        confirmModal.style.display = 'none';
         confirmModal.classList.add('hidden');
+        confirmModal.style.display = 'none';
     });
 
     confirmClearBtn?.addEventListener('click', () => {
         localStorage.removeItem('kopala_fpl_id');
         state.fplId = null;
-        confirmModal.style.display = 'none';
         confirmModal.classList.add('hidden');
+        confirmModal.style.display = 'none';
         renderView('login');
     });
 }
@@ -267,7 +260,6 @@ function initPWAInstall() {
     installBtn?.addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
             deferredPrompt = null;
             installBtn.style.display = 'none';
         }
