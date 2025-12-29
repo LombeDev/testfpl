@@ -40,6 +40,18 @@
             overflow-x: hidden;
         }
 
+        /* Accessibility: Visually hidden but readable by screen readers */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
         /* --- SCROLL PROGRESS BAR --- */
         .progress-container {
             width: 100%;
@@ -83,6 +95,24 @@
 
         .brand span { color: var(--fpl-primary); margin-left: 5px; }
 
+        /* Accessibility Fix: menu-icon converted from div to button */
+        .menu-icon {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .menu-icon span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--fpl-on-container);
+        }
+
         /* --- THEME PICKER --- */
         .btn-round {
             width: 42px; height: 42px; border-radius: 50%;
@@ -103,7 +133,8 @@
         }
 
         .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
-        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
+        /* Accessibility: Changed from div to button in body */
+        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); padding: 0; }
 
         /* --- CARD STRUCTURE --- */
         .card {
@@ -191,6 +222,35 @@
         }
         
         .hidden { display: none !important; }
+
+        /* Pulse Animation */
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #00ff87;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 135, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+        }
+
+        .event-item {
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .fixture-row:last-child {
+            border-bottom: none !important;
+        }
     </style>
 </head>
 <body>
@@ -198,7 +258,7 @@
     <div id="side-drawer" class="drawer">
         <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
             <h2 class="brand">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
+            <button id="close-btn" aria-label="Close menu" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
@@ -218,7 +278,9 @@
         </div>
 
         <div class="nav-left" style="display: flex; align-items: center;">
-            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
+            <button id="menu-btn" class="menu-icon" aria-label="Open menu">
+                <span></span><span></span><span></span>
+            </button>
             <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
@@ -232,22 +294,22 @@
         
         <div class="nav-right">
             <div class="theme-menu-container">
-                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
+                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()" aria-label="Change theme color">
                     <i class="fa-solid fa-palette"></i>
                 </button>
                 <div id="theme-dropdown" class="theme-dropdown">
                     <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
                     <div class="swatch-grid">
-                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
-                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
-                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
-                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
-                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
-                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
+                        <button class="swatch" aria-label="Pink" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></button>
+                        <button class="swatch" aria-label="Green" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></button>
+                        <button class="swatch" aria-label="Purple" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></button>
+                        <button class="swatch" aria-label="Cyan" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></button>
+                        <button class="swatch" aria-label="Yellow" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></button>
+                        <button class="swatch" aria-label="Sky" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></button>
+                        <button class="swatch" aria-label="Orange" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></button>
+                        <button class="swatch" aria-label="Violet" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></button>
+                        <button class="swatch" aria-label="Blue" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></button>
+                        <button class="swatch" aria-label="Grey" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></button>
                     </div>
                     <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">
                         🌙 Midnight Mode
@@ -265,7 +327,7 @@
         <div id="loading-overlay" class="hidden">Updating FPL Data...</div>
 
         <div id="deadline-card" class="card">
-            <h3 class="accent-title">Next Deadline</h3>
+            <h2 class="accent-title">Next Deadline</h2>
             <div id="countdown-timer">
                 <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
                 <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
@@ -277,121 +339,69 @@
             </div>
         </div>
 
-<div id="match-center-card" class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-stadium" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
-            <h3 class="accent-title" style="margin: 0;">Bonus Points</h3>
+        <div id="match-center-card" class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-stadium" aria-hidden="true" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
+                    <h2 class="accent-title" style="margin: 0;">Bonus Points</h2>
+                </div>
+                <span id="live-indicator" class="hidden" style="display: flex; align-items: center; gap: 5px; color: #00ff87; font-size: 0.7rem; font-weight: 900;">
+                    <span class="pulse-dot"></span> LIVE
+                </span>
+            </div>
+
+            <div id="fixtures-container">
+                <div style="text-align: center; padding: 20px; opacity: 0.5;">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <p style="font-size: 0.8rem; margin-top: 10px;">Checking for live matches...</p>
+                </div>
+            </div>
         </div>
-        <span id="live-indicator" class="hidden" style="display: flex; align-items: center; gap: 5px; color: #00ff87; font-size: 0.7rem; font-weight: 900;">
-            <span class="pulse-dot"></span> LIVE
-        </span>
-    </div>
 
-    <div id="fixtures-container">
-        <div style="text-align: center; padding: 20px; opacity: 0.5;">
-            <i class="fa-solid fa-circle-notch fa-spin"></i>
-            <p style="font-size: 0.8rem; margin-top: 10px;">Checking for live matches...</p>
-        </div>
-    </div>
-</div>
-
-<style>
-    /* Pulse Animation for the Live Dot */
-    .pulse-dot {
-        width: 8px;
-        height: 8px;
-        background-color: #00ff87;
-        border-radius: 50%;
-        display: inline-block;
-        animation: pulse-green 2s infinite;
-    }
-
-    @keyframes pulse-green {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 135, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
-    }
-
-    /* Event log styling */
-    .event-item {
-        font-size: 0.75rem;
-        margin-bottom: 4px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-weight: 600;
-    }
-
-    .fixture-row:last-child {
-        border-bottom: none !important;
-    }
-</style>
-
-
-        
         <div id="id-entry-section" class="card">
-            <h3 class="accent-title">Live Rank</h3>
+            <h2 class="accent-title">Live Rank</h2>
+            <label for="fpl-id" class="sr-only">Enter FPL Team ID</label>
             <input type="number" id="fpl-id" placeholder="Enter FPL Team ID" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--fpl-border); margin-bottom:15px; box-sizing:border-box;">
             <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">Go</button>
         </div>
 
-       <div id="live-dashboard" class="hidden">
-    <div class="card">
-        <h3 class="accent-title">Manager Dashboard</h3>
-        <p style="text-align:center; font-weight:800; font-size: 1.1rem; margin-bottom: 5px; color: var(--fpl-on-container);" id="disp-name">--</p>
-        
-        <div class="dashboard-grid">
-            <div class="timer-unit">
-                <span class="timer-value" id="disp-gw">0</span>
-                <span class="timer-label">GW Pts</span>
-            </div>
-            <div class="timer-unit">
-                <span class="timer-value" id="disp-total">0</span>
-                <span class="timer-label">Total</span>
-            </div>
-            <div class="timer-unit">
-                <span class="timer-value" id="disp-rank">--</span>
-                <span class="timer-label">Rank</span>
-            </div>
-            
-            <div class="timer-unit">
-                <span class="timer-value" id="disp-transfers">0</span>
-                <span class="timer-label">Transfers</span>
-            </div>
-            <div class="timer-unit">
-                <span class="timer-value" id="disp-safety">Live</span>
-                <span class="timer-label">Status</span>
-            </div>
-            <div class="timer-unit reset-fpl-id" style="cursor:pointer; border-color: rgba(255,0,0,0.2);">
-                <span class="timer-value" style="color:red;"><i class="fa-solid fa-right-from-bracket"></i></span>
-                <span class="timer-label" style="color:red;">Reset</span>
+        <div id="live-dashboard" class="hidden">
+            <div class="card">
+                <h2 class="accent-title">Manager Dashboard</h2>
+                <p style="text-align:center; font-weight:800; font-size: 1.1rem; margin-bottom: 5px; color: var(--fpl-on-container);" id="disp-name">--</p>
+                <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Rank</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="disp-transfers">0</span><span class="timer-label">Transfers</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="disp-safety">Live</span><span class="timer-label">Status</span></div>
+                    <button class="timer-unit reset-fpl-id" style="cursor:pointer; border-color: rgba(255,0,0,0.2); background: none;">
+                        <span class="timer-value" style="color:red;"><i class="fa-solid fa-right-from-bracket"></i></span>
+                        <span class="timer-label" style="color:red;">Reset</span>
+                    </button>
+                </div>
+                <div id="bps-list" style="margin-top:20px;"></div>
             </div>
         </div>
-        
-        <div id="bps-list" style="margin-top:20px;"></div>
-    </div>
-</div>
 
         <div id="live-king-card" class="card" style="display:none;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                 <span style="background: var(--fpl-primary); color: white; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 900;">LIVE</span>
-                <h3 class="accent-title" style="margin:0;">KING OF THE GW</h3>
+                <h2 class="accent-title" style="margin:0;">KING OF THE GW</h2>
             </div>
             <div id="live-king-content"></div>
         </div>
         
         <div id="price-card" class="card" style="display:none;">
-            <h3 class="accent-title">Daily Price Changes</h3>
+            <h2 class="accent-title">Daily Price Changes</h2>
             <div id="risers-list"></div>
             <div id="fallers-list"></div>
         </div>
-
     </main>
 
     <div id="confirm-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;">
         <div class="card" style="width:100%; max-width:400px; text-align:center;">
-            <h3 class="accent-title">Clear FPL ID?</h3>
+            <h2 class="accent-title">Clear FPL ID?</h2>
             <p>This will remove your saved team data from this device.</p>
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button id="cancel-clear" style="flex:1; padding:12px; border-radius:12px; border:1px solid var(--fpl-border); background:none; color:inherit; cursor:pointer;">Cancel</button>
@@ -400,17 +410,28 @@
         </div>
     </div>
 
-    <script>
-        // Theme & UI Helpers
-        window.onscroll = function() { updateProgressBar() };
+    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
 
+    <script>
+        // Performance: Optimized scroll handler using requestAnimationFrame
+        let ticking = false;
         function updateProgressBar() {
-            var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-            var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            var scrolled = (winScroll / height) * 100;
+            const winScroll = document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
             const bar = document.getElementById("myBar");
             if(bar) bar.style.width = scrolled + "%";
+            ticking = false;
         }
+
+        window.onscroll = function() {
+            if (!ticking) {
+                window.requestAnimationFrame(updateProgressBar);
+                ticking = true;
+            }
+        };
 
         function toggleThemeMenu() {
             const menu = document.getElementById('theme-dropdown');
@@ -423,7 +444,6 @@
             const surfaceColor = `${color}0A`; 
             document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
             
-            // Sync Meta Tag for PWA Address Bar
             const metaTheme = document.getElementById('meta-theme-color');
             if(metaTheme) metaTheme.setAttribute('content', color);
 
@@ -447,7 +467,6 @@
             toggleThemeMenu();
         }
 
-        // Close dropdown when clicking outside
         window.onclick = function(e) {
             if (!e.target.closest('.theme-menu-container')) {
                 const d = document.getElementById('theme-dropdown');
@@ -467,7 +486,6 @@
             }
         });
 
-        // Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
@@ -480,12 +498,8 @@
         }
     </script>
 
-     <button id="back-to-top" class="back-to-top" aria-label="Back to top">
-    <i class="fa-solid fa-arrow-up"></i>
-
-    <script src="script.js"></script>
-    <script src="deadline.js"></script>
-    <script src="match-center.js"></script>
-</button>
+    <script src="script.js" defer></script>
+    <script src="deadline.js" defer></script>
+    <script src="match-center.js" defer></script>
 </body>
 </html>
