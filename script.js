@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize Navigation, PWA, and Scroll Utilities
     initNavigation();
     initPWAInstall();
-    initScrollUtilities(); // Added for Back to Top
+    initScrollUtilities(); 
     
     // 2. Load Player Names & Current Gameweek
     await loadPlayerDatabase();
@@ -29,24 +29,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /**
  * 1. DATA ENGINE (FPL API FETCHING)
+ * Using AllOrigins proxy to bypass CORS/403 Forbidden errors
  */
 async function loadPlayerDatabase() {
-    const proxy = "https://corsproxy.io/?";
+    const proxy = "https://api.allorigins.win/get?url=";
     const url = "https://fantasy.premierleague.com/api/bootstrap-static/";
     
     try {
-        const response = await fetch(proxy + encodeURIComponent(url));
-        const data = await response.json();
+        const response = await fetch(`${proxy}${encodeURIComponent(url)}`);
+        if (!response.ok) throw new Error('Network response was not ok');
         
-        data.elements.forEach(p => {
-            state.playerMap[p.id] = p.web_name;
-        });
+        const wrapper = await response.json();
+        const data = JSON.parse(wrapper.contents);
+        
+        if (data && data.elements) {
+            data.elements.forEach(p => {
+                state.playerMap[p.id] = p.web_name;
+            });
 
-        const activeGW = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
-        if (activeGW) state.currentGW = activeGW.id;
+            const activeGW = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
+            if (activeGW) state.currentGW = activeGW.id;
+        }
         
     } catch (err) {
-        console.error("FPL Database Sync Failed", err);
+        console.error("FPL Database Sync Failed:", err);
     }
 }
 
@@ -54,74 +60,94 @@ async function fetchLiveFPLData() {
     if (!state.fplId) return;
     
     const dispName = document.getElementById('disp-name');
-    dispName.textContent = "Syncing Live Stats...";
+    if (dispName) dispName.textContent = "Syncing Live Stats...";
 
-    const proxy = "https://corsproxy.io/?";
+    const proxy = "https://api.allorigins.win/get?url=";
     const managerUrl = `https://fantasy.premierleague.com/api/entry/${state.fplId}/`;
     const picksUrl = `https://fantasy.premierleague.com/api/entry/${state.fplId}/event/${state.currentGW}/picks/`;
 
     try {
-        const mResp = await fetch(proxy + encodeURIComponent(managerUrl));
-        const mData = await mResp.json();
+        // Fetch Manager Summary
+        const mResp = await fetch(`${proxy}${encodeURIComponent(managerUrl)}`);
+        const mWrapper = await mResp.json();
+        const mData = JSON.parse(mWrapper.contents);
 
-        const pResp = await fetch(proxy + encodeURIComponent(picksUrl));
-        const pData = await pResp.json();
+        // Fetch Event Picks (for Hits/Transfers)
+        const pResp = await fetch(`${proxy}${encodeURIComponent(picksUrl)}`);
+        const pWrapper = await pResp.json();
+        const pData = JSON.parse(pWrapper.contents);
 
         // --- Populate UI & Apply Overflow Fixes ---
         
-        document.getElementById('disp-name').textContent = `${mData.player_first_name} ${mData.player_last_name}`;
-        document.getElementById('disp-gw').textContent = mData.summary_event_points || 0;
-        document.getElementById('disp-total').textContent = mData.summary_overall_points.toLocaleString();
+        if (dispName) {
+            dispName.textContent = `${mData.player_first_name} ${mData.player_last_name}`;
+        }
         
-        // 2. Live Rank with Dynamic Scaling to prevent "beyond the box"
+        const dispGW = document.getElementById('disp-gw');
+        if (dispGW) dispGW.textContent = mData.summary_event_points || 0;
+        
+        const dispTotal = document.getElementById('disp-total');
+        if (dispTotal) dispTotal.textContent = mData.summary_overall_points.toLocaleString();
+        
+        // Live Rank Scaling
         const rankEl = document.getElementById('disp-rank');
-        const rankText = mData.summary_overall_rank ? mData.summary_overall_rank.toLocaleString() : "N/A";
-        rankEl.textContent = rankText;
-        
-        if (rankText.length > 8) {
-            rankEl.style.fontSize = "0.85rem";
-        } else if (rankText.length > 6) {
-            rankEl.style.fontSize = "1rem";
-        } else {
-            rankEl.style.fontSize = "1.2rem";
+        if (rankEl) {
+            const rankText = mData.summary_overall_rank ? mData.summary_overall_rank.toLocaleString() : "N/A";
+            rankEl.textContent = rankText;
+            
+            if (rankText.length > 8) {
+                rankEl.style.fontSize = "0.85rem";
+            } else if (rankText.length > 6) {
+                rankEl.style.fontSize = "1rem";
+            } else {
+                rankEl.style.fontSize = "1.2rem";
+            }
         }
 
-        // 3. Weekly Transfers & Hits
-        const tx = pData.entry_history.event_transfers || 0;
-        const cost = pData.entry_history.event_transfers_cost || 0;
-        document.getElementById('disp-transfers').textContent = cost > 0 ? `${tx} (-${cost})` : `${tx}`;
+        // Weekly Transfers & Hits
+        const dispTransfers = document.getElementById('disp-transfers');
+        if (dispTransfers && pData.entry_history) {
+            const tx = pData.entry_history.event_transfers || 0;
+            const cost = pData.entry_history.event_transfers_cost || 0;
+            dispTransfers.textContent = cost > 0 ? `${tx} (-${cost})` : `${tx}`;
+        }
 
-        document.getElementById('disp-safety').textContent = "Live";
+        const dispSafety = document.getElementById('disp-safety');
+        if (dispSafety) dispSafety.textContent = "Live";
 
+        // Fetch Bonus Points
         fetchLiveBPS();
 
     } catch (err) {
-        dispName.textContent = "Team ID Not Found";
+        if (dispName) dispName.textContent = "Team ID Not Found";
         console.error("Dashboard Sync Error:", err);
     }
 }
 
 async function fetchLiveBPS() {
-    const proxy = "https://corsproxy.io/?";
+    const proxy = "https://api.allorigins.win/get?url=";
     const url = `https://fantasy.premierleague.com/api/event/${state.currentGW}/live/`;
 
     try {
-        const response = await fetch(proxy + encodeURIComponent(url));
-        const data = await response.json();
+        const response = await fetch(`${proxy}${encodeURIComponent(url)}`);
+        const wrapper = await response.json();
+        const data = JSON.parse(wrapper.contents);
 
-        const topPerformers = data.elements
-            .sort((a, b) => b.stats.bps - a.stats.bps)
-            .slice(0, 3);
+        if (data && data.elements) {
+            const topPerformers = data.elements
+                .sort((a, b) => b.stats.bps - a.stats.bps)
+                .slice(0, 3);
 
-        const bpsList = document.getElementById('bps-list');
-        if (bpsList) {
-            bpsList.innerHTML = `<p style="font-size:0.65rem; font-weight:800; opacity:0.5; margin-bottom:10px; text-transform:uppercase;">Top Bonus (GW${state.currentGW})</p>` + 
-            topPerformers.map(p => `
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px; padding:12px; background:var(--fpl-surface); border-radius:12px; border: 1px solid var(--fpl-border);">
-                    <span style="font-weight:700;">${state.playerMap[p.id] || 'Unknown'}</span>
-                    <span style="color:var(--fpl-primary); font-weight:900;">+${p.stats.bps} BPS</span>
-                </div>
-            `).join('');
+            const bpsList = document.getElementById('bps-list');
+            if (bpsList) {
+                bpsList.innerHTML = `<p style="font-size:0.65rem; font-weight:800; opacity:0.5; margin-bottom:10px; text-transform:uppercase;">Top Bonus (GW${state.currentGW})</p>` + 
+                topPerformers.map(p => `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; padding:12px; background:var(--fpl-surface); border-radius:12px; border: 1px solid var(--fpl-border);">
+                        <span style="font-weight:700;">${state.playerMap[p.id] || 'Unknown'}</span>
+                        <span style="color:var(--fpl-primary); font-weight:900;">+${p.stats.bps} BPS</span>
+                    </div>
+                `).join('');
+            }
         }
     } catch (err) {
         console.error("Live BPS Sync Error", err);
@@ -181,12 +207,12 @@ function renderView(view) {
     const dash = document.getElementById('live-dashboard');
 
     if (view === 'dashboard') {
-        entry.classList.add('hidden');
-        dash.classList.remove('hidden');
+        entry?.classList.add('hidden');
+        dash?.classList.remove('hidden');
         fetchLiveFPLData();
     } else {
-        entry.classList.remove('hidden');
-        dash.classList.add('hidden');
+        entry?.classList.remove('hidden');
+        dash?.classList.add('hidden');
         const fplInput = document.getElementById('fpl-id');
         if (fplInput) fplInput.value = '';
     }
@@ -241,6 +267,7 @@ function initPWAInstall() {
     installBtn?.addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
             deferredPrompt = null;
             installBtn.style.display = 'none';
         }
