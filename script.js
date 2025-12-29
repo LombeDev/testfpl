@@ -9,6 +9,9 @@ const state = {
     currentGW: 18, 
 };
 
+// Global Proxy Configuration
+const PROXY = "https://api.allorigins.win/get?url=";
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize Navigation, PWA, and Scroll Utilities
     initNavigation();
@@ -29,19 +32,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /**
  * 1. DATA ENGINE (FPL API FETCHING)
- * Updated to use AllOrigins proxy to bypass 403 Forbidden errors
  */
 async function loadPlayerDatabase() {
-    const proxy = "https://api.allorigins.win/get?url=";
     const url = "https://fantasy.premierleague.com/api/bootstrap-static/";
     
     try {
-        const response = await fetch(`${proxy}${encodeURIComponent(url)}`);
-        if (!response.ok) throw new Error('Proxy unreachable');
+        const response = await fetch(`${PROXY}${encodeURIComponent(url)}`);
+        if (!response.ok) throw new Error('Proxy error');
         
         const wrapper = await response.json();
-        const data = JSON.parse(wrapper.contents); // AllOrigins returns data inside .contents
+        const data = JSON.parse(wrapper.contents);
         
+        // Safety check to prevent the ".forEach of undefined" error
         if (data && data.elements) {
             data.elements.forEach(p => {
                 state.playerMap[p.id] = p.web_name;
@@ -50,12 +52,10 @@ async function loadPlayerDatabase() {
             const activeGW = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
             if (activeGW) {
                 state.currentGW = activeGW.id;
-                // Update HTML label if it exists
                 const gwLabel = document.getElementById('gw-label');
                 if (gwLabel) gwLabel.textContent = `GW ${state.currentGW} DEADLINE`;
             }
         }
-        
     } catch (err) {
         console.error("FPL Database Sync Failed:", err);
     }
@@ -67,25 +67,22 @@ async function fetchLiveFPLData() {
     const dispName = document.getElementById('disp-name');
     if (dispName) dispName.textContent = "Syncing Live Stats...";
 
-    const proxy = "https://api.allorigins.win/get?url=";
     const managerUrl = `https://fantasy.premierleague.com/api/entry/${state.fplId}/`;
     const picksUrl = `https://fantasy.premierleague.com/api/entry/${state.fplId}/event/${state.currentGW}/picks/`;
 
     try {
-        // Fetch Manager Summary
-        const mResp = await fetch(`${proxy}${encodeURIComponent(managerUrl)}`);
-        const mWrapper = await mResp.json();
-        const mData = JSON.parse(mWrapper.contents);
+        // Fetch Manager Data
+        const mResp = await fetch(`${PROXY}${encodeURIComponent(managerUrl)}`);
+        const mWrap = await mResp.json();
+        const mData = JSON.parse(mWrap.contents);
 
-        // Fetch Event Picks (for Hits/Transfers)
-        const pResp = await fetch(`${proxy}${encodeURIComponent(picksUrl)}`);
-        const pWrapper = await pResp.json();
-        const pData = JSON.parse(pWrapper.contents);
+        // Fetch Picks Data
+        const pResp = await fetch(`${PROXY}${encodeURIComponent(picksUrl)}`);
+        const pWrap = await pResp.json();
+        const pData = JSON.parse(pWrap.contents);
 
-        // --- Populate UI ---
-        if (dispName) {
-            dispName.textContent = `${mData.player_first_name} ${mData.player_last_name}`;
-        }
+        // Update UI
+        if (dispName) dispName.textContent = `${mData.player_first_name} ${mData.player_last_name}`;
         
         const dispGW = document.getElementById('disp-gw');
         if (dispGW) dispGW.textContent = mData.summary_event_points || 0;
@@ -97,8 +94,6 @@ async function fetchLiveFPLData() {
         if (rankEl) {
             const rankText = mData.summary_overall_rank ? mData.summary_overall_rank.toLocaleString() : "N/A";
             rankEl.textContent = rankText;
-            
-            // Dynamic scaling for large ranks
             rankEl.style.fontSize = rankText.length > 8 ? "0.85rem" : rankText.length > 6 ? "1rem" : "1.2rem";
         }
 
@@ -118,11 +113,10 @@ async function fetchLiveFPLData() {
 }
 
 async function fetchLiveBPS() {
-    const proxy = "https://api.allorigins.win/get?url=";
     const url = `https://fantasy.premierleague.com/api/event/${state.currentGW}/live/`;
 
     try {
-        const response = await fetch(`${proxy}${encodeURIComponent(url)}`);
+        const response = await fetch(`${PROXY}${encodeURIComponent(url)}`);
         const wrapper = await response.json();
         const data = JSON.parse(wrapper.contents);
 
@@ -148,7 +142,7 @@ async function fetchLiveBPS() {
 }
 
 /**
- * 2. DASHBOARD LOGIC
+ * 2. DASHBOARD LOGIC (INPUTS & MODAL)
  */
 function initDashboardLogic() {
     const loginBtn = document.getElementById('change-id-btn');
@@ -172,22 +166,22 @@ function initDashboardLogic() {
         if (e.target.closest('.reset-fpl-id')) {
             e.preventDefault();
             if (confirmModal) {
-                confirmModal.classList.remove('hidden');
                 confirmModal.style.display = 'flex';
+                confirmModal.classList.remove('hidden');
             }
         }
     });
 
     cancelModalBtn?.addEventListener('click', () => {
-        confirmModal.classList.add('hidden');
         confirmModal.style.display = 'none';
+        confirmModal.classList.add('hidden');
     });
 
     confirmClearBtn?.addEventListener('click', () => {
         localStorage.removeItem('kopala_fpl_id');
         state.fplId = null;
-        confirmModal.classList.add('hidden');
         confirmModal.style.display = 'none';
+        confirmModal.classList.add('hidden');
         renderView('login');
     });
 }
@@ -200,12 +194,12 @@ function renderView(view) {
     const dash = document.getElementById('live-dashboard');
 
     if (view === 'dashboard') {
-        entry?.classList.add('hidden');
-        dash?.classList.remove('hidden');
+        if (entry) entry.classList.add('hidden');
+        if (dash) dash.classList.remove('hidden');
         fetchLiveFPLData();
     } else {
-        entry?.classList.remove('hidden');
-        dash?.classList.add('hidden');
+        if (entry) entry.classList.remove('hidden');
+        if (dash) dash.classList.add('hidden');
         const fplInput = document.getElementById('fpl-id');
         if (fplInput) fplInput.value = '';
     }
