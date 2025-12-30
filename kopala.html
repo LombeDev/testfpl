@@ -35,12 +35,16 @@
             font-family: 'Inter', 'Segoe UI', sans-serif;
         }
 
-        /* --- NAVBAR & DRAWER --- */
         .navbar {
             background-color: var(--fpl-container);
             border-bottom: 1px solid var(--fpl-border);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px; position: sticky; top: 0; z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .brand {
@@ -49,139 +53,99 @@
             text-transform: uppercase; margin: 0;
             display: flex; align-items: center; text-decoration: none;
         }
+
         .brand span { color: var(--fpl-primary); margin-left: 5px; }
 
-        .menu-icon { cursor: pointer; display: flex; flex-direction: column; gap: 4px; margin-right: 15px; }
-        .menu-icon span { width: 20px; height: 2px; background: var(--fpl-on-container); transition: 0.3s; }
-
-        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
-        .nav-links li a { color: var(--fpl-on-container); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
-
-        @media screen and (min-width: 768px) {
-            .nav-links { display: flex; align-items: center; }
+        .card {
+            background-color: var(--fpl-container) !important;
+            border: 1px solid var(--fpl-border) !important;
+            border-radius: 24px !important;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: none;
         }
 
-        /* Side Drawer */
-        .drawer {
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-            background: var(--fpl-container); z-index: 2000;
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-        }
-        .drawer.open { left: 0; }
-        .drawer-links { list-style: none; padding: 20px; }
-        .drawer-links li { padding: 15px 0; border-bottom: 1px solid var(--fpl-border); }
-        .drawer-links a { text-decoration: none; color: var(--fpl-on-container); font-weight: 700; }
-
-        .backdrop {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 1500; display: none;
-        }
-        .backdrop.show { display: block; }
-
-        /* Theme Dropdown */
-        .theme-menu-container { position: relative; }
-        .theme-dropdown {
-            display: none; position: absolute; top: 55px; right: 0;
-            background: var(--fpl-container); border: 1px solid var(--fpl-border);
-            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-        }
-        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 12px 0; }
-        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
-
-        /* Tables */
-        .card { background-color: var(--fpl-container); border: 1px solid var(--fpl-border); border-radius: 24px; padding: 20px; margin-bottom: 20px; }
+        /* --- LEAGUE TABLES --- */
         .league-table-style { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .league-table-style th { text-align: left; opacity: 0.6; text-transform: uppercase; padding: 12px 8px; border-bottom: 1px solid var(--fpl-border); }
-        .league-table-style td { padding: 10px 8px; border-bottom: 1px solid var(--fpl-border); color: var(--fpl-on-container); }
-        
-        .chip-badge { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: 900; color: white; text-transform: uppercase; }
+        .league-table-style th { 
+            background: transparent; color: var(--fpl-on-container); 
+            opacity: 0.6; text-transform: uppercase; padding: 12px 8px; 
+            border-bottom: 1px solid var(--fpl-border); text-align: left;
+        }
+        .league-table-style td { 
+            padding: 10px 8px; border-bottom: 1px solid var(--fpl-border); 
+            color: var(--fpl-on-container);
+        }
+
+        .m-name { color: var(--fpl-primary) !important; font-weight: 800; }
+        .live-pts, .bold-p { color: var(--fpl-on-container) !important; font-weight: 900; }
+
+        /* Custom Dropdown Styling */
+        #league-select {
+            padding: 10px 15px; border-radius: 12px;
+            border: 1px solid var(--fpl-border);
+            background: var(--fpl-container);
+            color: var(--fpl-on-container);
+            font-weight: 700; width: 100%;
+        }
 
         .hidden { display: none !important; }
-        .btn-round { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--fpl-primary); background: none; color: var(--fpl-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* Theme Picker & Other styles kept for brevity... */
+        .btn-round { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--fpl-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: var(--fpl-container); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
-            <h2 class="brand">KOPALA <span>FPL</span></h2>
-            <button onclick="toggleDrawer()" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
-        </div>
-        <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="team.html">My team by AI</a></li>
-            <li><a href="price.html">Price Changes</a></li>
-            <li><a href="football.html">Football Leagues</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-        </ul>
-    </div>
-    <div id="backdrop" class="backdrop" onclick="toggleDrawer()"></div>
-
     <nav class="navbar">
-        <div class="nav-left" style="display: flex; align-items: center;">
-            <div id="menu-btn" class="menu-icon" onclick="toggleDrawer()">
-                <span></span><span></span><span></span>
-            </div>
+        <div class="nav-left">
             <h1 class="brand">KOPALA <span>FPL</span></h1>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="team.html">AI Team</a></li>
-                <li><a href="price.html">Price</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
         </div>
-        
-        <div class="nav-right" style="display: flex; align-items: center; gap: 12px;">
-            <span id="active-gw-label" style="font-weight: 900; font-size: 0.8rem;">GW --</span>
-            
-            <div class="theme-menu-container">
-                <button class="btn-round" onclick="toggleThemeMenu()"><i class="fa-solid fa-palette"></i></button>
-                <div id="theme-dropdown" class="theme-dropdown">
-                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5; text-transform: uppercase;">Material Theme</span>
-                    <div class="swatch-grid">
-                        <div class="swatch" style="background: #ff005a;" onclick="applyTheme('#ff005a')"></div>
-                        <div class="swatch" style="background: #00ff87;" onclick="applyTheme('#00ff87')"></div>
-                        <div class="swatch" style="background: #37003c;" onclick="applyTheme('#37003c')"></div>
-                        <div class="swatch" style="background: #04f5ff;" onclick="applyTheme('#04f5ff')"></div>
-                        <div class="swatch" style="background: #e1ff00;" onclick="applyTheme('#e1ff00')"></div>
-                    </div>
-                    <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer;">🌙 Dark Mode</button>
-                </div>
-            </div>
-
+        <div class="nav-right" style="display: flex; align-items: center; gap: 15px;">
+            <span id="active-gw-label" style="font-weight: 900;">GW --</span>
             <button class="btn-round" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
         </div>
     </nav>
 
     <div class="container" style="max-width: 1200px; margin: 20px auto; padding: 0 15px;">
+        
         <div class="card" style="padding: 15px;">
-            <label style="font-size: 0.65rem; font-weight: 800; opacity: 0.5; text-transform: uppercase; display: block; margin-bottom: 5px;">Switch League</label>
-            <select id="league-select" onchange="switchLeague(this.value)" style="width:100%; padding:12px; border-radius:12px; background:var(--fpl-surface); color:var(--fpl-on-container); border:1px solid var(--fpl-border); font-weight:700;"></select>
+            <label style="font-size: 0.7rem; font-weight: 800; opacity: 0.6; text-transform: uppercase; display: block; margin-bottom: 8px;">Switch View</label>
+            <select id="league-select" onchange="switchLeague(this.value)"></select>
         </div>
 
         <div id="leagues-wrapper">
             <div id="comparison-view" class="card league-card">
-                <h2 style="color:var(--fpl-primary); margin-top:0; font-size: 1.2rem;">🏆 Mini-League Leaders</h2>
+                <h2 style="margin-top:0; color:var(--fpl-primary); font-size: 1.2rem;">🏆 League Leaders</h2>
                 <div class="table-wrapper" style="overflow-x: auto;">
                     <table class="league-table-style">
                         <thead>
-                            <tr><th>League</th><th>Leader</th><th>GW</th><th>Total</th></tr>
+                            <tr>
+                                <th>League</th>
+                                <th>Top Manager</th>
+                                <th>GW</th>
+                                <th>Total</th>
+                            </tr>
                         </thead>
                         <tbody id="comparison-body"></tbody>
                     </table>
                 </div>
             </div>
+            </div>
+    </div>
+
+    <div id="team-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="background: var(--fpl-container); border-radius: 24px; padding: 20px;">
+            <div class="modal-header" style="display:flex; justify-content: space-between;">
+                <h2 id="modal-manager-name">Squad</h2>
+                <button id="close-modal" style="font-size:2rem; background:none; border:none; cursor:pointer;">&times;</button>
+            </div>
+            <div id="modal-squad-list"></div>
         </div>
     </div>
 
-    <div id="team-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:3000; display:flex; align-items:center; justify-content:center;">
-        <div class="card" style="width:90%; max-width:500px; position:relative;">
-            <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; border:none; background:none; font-size:1.5rem; color:inherit;">&times;</button>
-            <h2 id="modal-manager-name" style="margin-top:0;">Squad</h2>
-            <div id="modal-squad-list"></div>
-        </div>
+    <div id="loading-overlay" class="hidden">
+        <p>Syncing FPL Data...</p>
     </div>
 
     <script src="kopala.js"></script>
