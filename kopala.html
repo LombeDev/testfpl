@@ -5,33 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KOPALA FPL MINI LEAGUE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="kopala.css">
     <style>
-       
-        /* --- LEAGUE TABLES --- */
-        .league-table-style { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .league-table-style th { 
-            background: transparent; color: var(--fpl-on-container); 
-            opacity: 0.6; text-transform: uppercase; padding: 12px 8px; 
-            border-bottom: 1px solid var(--fpl-border); text-align: left;
-        }
-        .league-table-style td { 
-            padding: 10px 8px; border-bottom: 1px solid var(--fpl-border); 
-            color: var(--fpl-on-container);
-        }
-
-        .m-name { color: var(--fpl-primary) !important; font-weight: 800; }
-        .live-pts, .bold-p { color: var(--fpl-on-container) !important; font-weight: 900; }
-
-        /* Custom Dropdown Styling */
-        #league-select {
-            padding: 10px 15px; border-radius: 12px;
-            border: 1px solid var(--fpl-border);
-            background: var(--fpl-container);
-            color: var(--fpl-on-container);
-            font-weight: 700; width: 100%;
-        }
-
-     
         /* --- MATERIAL YOU DYNAMIC CORE --- */
         :root {
             --fpl-primary: #ff005a; 
@@ -40,6 +16,11 @@
             --fpl-on-container: #37003c;
             --fpl-border: rgba(0,0,0,0.06);
             --transition-speed: 0.6s;
+            
+            --fpl-purple: #37003c;
+            --fpl-green: #00ff87;
+            --fpl-pink: #ff005a;
+            --fpl-blue: #04f5ff;
         }
 
         body.dark-mode {
@@ -57,25 +38,6 @@
             font-family: 'Inter', 'Segoe UI', sans-serif;
         }
 
-        /* --- PROGRESS BAR STYLES --- */
-        .progress-container {
-            width: 100%;
-            height: 3px;
-            background: transparent;
-            overflow: hidden;
-            position: sticky;
-            top: 58px; /* Matches Navbar height */
-            z-index: 1100;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: var(--fpl-primary);
-            transition: width 0.3s ease;
-            box-shadow: 0 0 12px rgba(var(--fpl-primary-rgb), 0.6);
-        }
-
         /* --- THEMED NAVBAR --- */
         .navbar {
             background-color: var(--fpl-container);
@@ -83,7 +45,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
+            padding: 12px 20px;
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -106,10 +68,11 @@
             transition: color var(--transition-speed);
         }
 
+        /* --- THEME PICKER SYSTEM --- */
         .theme-menu-container { position: relative; display: inline-block; }
         
-        .btn-round-theme {
-            width: 38px; height: 38px; border-radius: 50%;
+        .btn-round {
+            width: 40px; height: 40px; border-radius: 50%;
             background-color: var(--fpl-surface);
             color: var(--fpl-primary);
             border: 2px solid var(--fpl-primary);
@@ -117,179 +80,234 @@
             cursor: pointer; transition: all 0.3s ease;
         }
 
+        .btn-round:hover { transform: scale(1.1); background-color: var(--fpl-primary); color: white !important; }
+
         .theme-dropdown {
-            display: none;
-            position: absolute; top: 50px; right: 0;
+            display: none; position: absolute; top: 55px; right: 0;
             background: var(--fpl-container); border: 1px solid var(--fpl-border);
             border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
         }
 
-        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
+        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 12px 0; }
         .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
 
-        .league-btn.active, .toggle-btn.active {
-            background-color: var(--fpl-primary) !important;
-            color: white !important;
-            box-shadow: 0 4px 15px rgba(var(--fpl-primary-rgb), 0.3);
-        }
-
-        .card {
-            background: var(--fpl-container);
-            border: 1px solid var(--fpl-border);
-            border-radius: 24px;
-            box-shadow: none;
-            overflow: hidden;
+        /* --- TABLE & CARD THEMING --- */
+        .card, .heatmap-card {
+            background-color: var(--fpl-container) !important;
+            border: 1px solid var(--fpl-border) !important;
+            border-radius: 24px !important;
+            padding: 20px;
             margin-bottom: 20px;
+            box-shadow: none;
+            transition: background-color var(--transition-speed);
         }
 
-        .page-title { color: var(--fpl-primary); font-weight: 900; text-transform: uppercase; }
-
-        .search-btn-round {
-            background: var(--fpl-surface);
-            border-radius: 50%;
-            width: 38px; height: 38px;
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid var(--fpl-border);
-            cursor: pointer; color: var(--fpl-primary);
+        #league-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        #league-table th { 
+            background: transparent; 
+            color: var(--fpl-on-container); 
+            opacity: 0.6;
+            text-transform: uppercase; 
+            padding: 12px 8px; 
+            border-bottom: 1px solid var(--fpl-border); 
         }
-
-        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
-        .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
         
+        #league-table td { 
+            padding: 10px 8px; 
+            border-bottom: 1px solid var(--fpl-border); 
+            color: var(--fpl-on-container);
+        }
+
+        .m-name { color: var(--fpl-primary) !important; font-weight: 800; }
+        .live-pts, .bold-p { color: var(--fpl-on-container) !important; font-weight: 900; }
+        
+        /* Refresh/Sync Button */
+        .search-btn {
+            background: var(--fpl-surface) !important;
+            border: 1px solid var(--fpl-border) !important;
+            color: var(--fpl-primary) !important;
+            transition: all 0.3s ease;
+        }
+
+        /* Nav Links */
+        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
+        .nav-links li a { color: var(--fpl-on-container); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .nav-links li a:hover { color: var(--fpl-primary); }
+
         @media screen and (min-width: 768px) {
             #menu-btn { display: none !important; }
             .nav-links { display: flex; align-items: center; }
         }
 
-        #last-updated { background: var(--fpl-container) !important; color: var(--fpl-on-container) !important; border: 1px solid var(--fpl-border) !important; padding: 5px 10px; border-radius: 12px; font-size: 0.8rem;}
+        footer { text-align: center; padding: 40px; opacity: 0.6; color: var(--fpl-on-container); }
     </style>
 </head>
 <body>
+
     <div id="side-drawer" class="drawer">
         <div style="padding: 20px; background: var(--fpl-container); color: var(--fpl-on-container); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
             <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem; cursor:pointer;">&times;</button>
+            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Kopala FPL</a></li>
             <li><a href="team.html">My team by AI</a></li>
             <li><a href="price.html">Price Change Predictor</a></li>
+            <li><a href="football.html">Football Leagues</a></li>
             <li><a href="contact.html">Contact Us</a></li>
         </ul>
     </div>
 
-    <div id="main-backdrop" class="backdrop"></div>
+    <div id="backdrop" class="backdrop"></div>
 
     <nav class="navbar">
         <div class="nav-left" style="display: flex; align-items: center;">
-            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
-            <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
+            <div id="menu-btn" class="menu-icon">
+                <span></span><span></span><span></span>
+            </div>
+            <h1 class="brand">KOPALA <span>FPL</span></h1>
 
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
-                <li><a href="kopala.html">Kopala FPL</a></li>
                 <li><a href="team.html">My team by AI</a></li>
                 <li><a href="price.html">Price Change Predictor</a></li>
-                <li><a href="contact.html">Contact Us</a></li>
+                <li><a href="football.html">Football Leagues</a></li>
+                <li><a href="contact.html">Contact us</a></li>
             </ul>
         </div>
         
         <div class="nav-right" style="display: flex; align-items: center; gap: 15px;">
+            <span id="active-gw-label" class="gw-text" style="color: var(--fpl-on-container); font-weight: 900;">GW --</span>
+            
             <div class="theme-menu-container">
-                <button id="theme-master-btn" class="btn-round-theme" onclick="toggleThemeMenu()">
+                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
                     <i class="fa-solid fa-palette"></i>
                 </button>
                 <div id="theme-dropdown" class="theme-dropdown">
-                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
+                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5; text-transform: uppercase;">Material Theme</span>
                     <div class="swatch-grid">
-                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a')"></div>
-                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87')"></div>
-                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c')"></div>
-                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff')"></div>
-                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00')"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff')"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00')"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4')"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea')"></div>
-                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888')"></div>
+                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
+                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
+                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
+                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
+                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
+                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
                     </div>
                     <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer;">
-                        🌙 Midnight Mode
+                        🌙 Dark Mode
                     </button>
                 </div>
             </div>
-            <button class="search-btn-round" onclick="forceRefresh()" title="Refresh Live Scores">
-                <i class="fa-solid fa-sync-alt"></i>
-            </button>
-        </div>
-    </nav>
- 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    </style>
-</head>
-<body>
 
-    <nav class="navbar">
-        <div class="nav-left">
-            <h1 class="brand">KOPALA <span>FPL</span></h1>
-        </div>
-        <div class="nav-right" style="display: flex; align-items: center; gap: 15px;">
-            <span id="active-gw-label" style="font-weight: 900;">GW --</span>
-            <button class="btn-round" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
+            <button class="icon-btn search-btn" onclick="location.reload()" style="width: 35px; height: 35px; border-radius: 50%; cursor: pointer;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
         </div>
     </nav>
 
     <div class="container" style="max-width: 1200px; margin: 20px auto; padding: 0 15px;">
-        
-        <div class="card" style="padding: 15px;">
-            <label style="font-size: 0.7rem; font-weight: 800; opacity: 0.6; text-transform: uppercase; display: block; margin-bottom: 8px;">Switch View</label>
-            <select id="league-select" onchange="switchLeague(this.value)"></select>
+        <div class="card">
+            <div class="table-wrapper" style="overflow-x: auto;">
+                <table id="league-table">
+                    <thead>
+                        <tr>
+                            <th class="rank-col">#</th>
+                            <th class="manager-col">Manager</th>
+                            <th class="pts-col">GW</th>
+                            <th class="total-col">TOT</th>
+                            <th class="cap-col">Captain</th>
+                            <th class="diff-col">Diffs</th>
+                            <th class="trans-col">Trans</th>
+                        </tr>
+                    </thead>
+                    <tbody id="league-body">
+                        </tbody>
+                </table>
+            </div>
         </div>
 
-        <div id="leagues-wrapper">
-            <div id="comparison-view" class="card league-card">
-                <h2 style="margin-top:0; color:var(--fpl-primary); font-size: 1.2rem;">🏆 League Leaders</h2>
-                <div class="table-wrapper" style="overflow-x: auto;">
-                    <table class="league-table-style">
-                        <thead>
-                            <tr>
-                                <th>League</th>
-                                <th>Top Manager</th>
-                                <th>GW</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="comparison-body"></tbody>
-                    </table>
-                </div>
-            </div>
-            </div>
-    </div>
-
-    <div id="team-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="background: var(--fpl-container); border-radius: 24px; padding: 20px;">
-            <div class="modal-header" style="display:flex; justify-content: space-between;">
-                <h2 id="modal-manager-name">Squad</h2>
-                <button id="close-modal" style="font-size:2rem; background:none; border:none; cursor:pointer;">&times;</button>
-            </div>
-            <div id="modal-squad-list"></div>
+        <div id="captain-heatmap" class="heatmap-card">
+            <h3 style="font-size: 14px; color: var(--fpl-primary); margin-top: 0; text-transform: uppercase; font-weight: 800;">Captaincy</h3>
+            <div id="heatmap-content">Waiting for data...</div>
         </div>
     </div>
 
     <div id="loading-overlay" class="hidden">
-        <p>Syncing FPL Data...</p>
+        <div class="fpl-spinner"></div>
+        <p style="font-weight: bold; color: var(--fpl-purple);">Syncing Mini-League Data...</p>
     </div>
 
+    <footer>
+        <p>&copy; 2026 Kopala FPL. Data synced with official FPL API.</p>
+    </footer>
+
+    <div id="team-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="background: var(--fpl-container); color: var(--fpl-on-container); border-radius: 24px;">
+            <div class="modal-header">
+                <h2 id="modal-manager-name">Manager Squad</h2>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+            <div id="modal-squad-list" class="squad-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleThemeMenu() {
+            const menu = document.getElementById('theme-dropdown');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function applyMaterialTheme(color, shouldToggle = false) {
+            document.body.classList.remove('dark-mode');
+            document.documentElement.style.setProperty('--fpl-primary', color);
+            const surfaceColor = `${color}0A`; 
+            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
+            localStorage.setItem('kopala_ai_theme', color);
+            localStorage.setItem('kopala_is_dark', 'false');
+            if(shouldToggle) toggleThemeMenu();
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            if(isDark) {
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme, false);
+            }
+            localStorage.setItem('kopala_is_dark', isDark);
+            toggleThemeMenu();
+        }
+
+        window.onclick = function(e) {
+            if (!e.target.closest('.theme-menu-container')) {
+                const d = document.getElementById('theme-dropdown');
+                if (d) d.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
+            
+            // Set menu to hidden explicitly
+            document.getElementById('theme-dropdown').style.display = 'none';
+
+            if (wasDark) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme, false); // false prevents the menu from opening
+            }
+        });
+    </script>
     <script src="kopala.js"></script>
+    <script src="menu.js"></script>
 </body>
 </html>
