@@ -1,25 +1,22 @@
 const API_BASE = "/fpl-api/";
-const LEAGUE_ID = "101712";
+// 1. Define an array of league IDs you want to display
+const LEAGUE_IDS = ["101712", "147133", "258"]; 
 
 let playerMap = {};
 let teamMap = {};
 let managerSquads = {}; 
 
 /**
- * Initialization & Data Fetching
+ * Initialization: Fetch shared static data first, then load each league
  */
-async function fetchProLeague() {
+async function initDashboard() {
     const loader = document.getElementById("loading-overlay");
     if (loader) loader.classList.remove("hidden");
 
     try {
-        const [staticRes, leagueRes] = await Promise.all([
-            fetch(`${API_BASE}bootstrap-static/`),
-            fetch(`${API_BASE}leagues-classic/${LEAGUE_ID}/standings/`)
-        ]);
-
+        // Fetch static data (players/teams) once only
+        const staticRes = await fetch(`${API_BASE}bootstrap-static/`);
         const staticData = await staticRes.json();
-        const leagueData = await leagueRes.json();
 
         // Map Teams and Players
         staticData.teams.forEach(t => teamMap[t.id] = t.short_name);
@@ -35,32 +32,68 @@ async function fetchProLeague() {
         const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
         document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
 
-        renderTable(leagueData.standings.results);
-        loadLeagueIntelligence(leagueData.standings.results, currentEvent);
+        // 2. Loop through each League ID and fetch/render it
+        for (const id of LEAGUE_IDS) {
+            await fetchAndRenderLeague(id, currentEvent);
+        }
 
     } catch (err) { 
-        console.error("Error fetching FPL data:", err); 
+        console.error("Error initializing dashboard:", err); 
+    } finally {
+        if (loader) loader.classList.add("hidden");
     }
 }
 
 /**
- * Maps Team IDs to CSS Classes for Jersey Kits
+ * Fetches and creates a new table for a specific League
  */
-function getTeamClass(teamId) {
-    const mapping = {
-        1: 'arsenal', 2: 'aston_villa', 3: 'bournemouth', 4: 'brentford', 5: 'brighton', 
-        6: 'chelsea', 7: 'crystal_p', 8: 'everton', 9: 'fulham', 10: 'ipswich', 
-        11: 'leicester', 12: 'liverpool', 13: 'man_city', 14: 'man_utd', 15: 'newcastle', 
-        16: 'nottm_forest', 17: 'southampton', 18: 'tottenham', 19: 'west_ham', 20: 'wolves'
-    };
-    return mapping[teamId] || 'default';
+async function fetchAndRenderLeague(leagueId, eventId) {
+    try {
+        const leagueRes = await fetch(`${API_BASE}leagues-classic/${leagueId}/standings/`);
+        const leagueData = await leagueRes.json();
+        const leagueName = leagueData.league.name;
+
+        // Create a unique section for this league
+        const container = document.getElementById("leagues-container");
+        const leagueSection = document.createElement("div");
+        leagueSection.className = "league-section";
+        leagueSection.innerHTML = `
+            <h2 class="league-title">${leagueName}</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Manager</th>
+                            <th>GW Pts</th>
+                            <th>Total</th>
+                            <th>Captain</th>
+                            <th>Diffs</th>
+                            <th>Transfers</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-${leagueId}"></tbody>
+                </table>
+            </div>
+        `;
+        container.appendChild(leagueSection);
+
+        // Render the rows into the newly created tbody
+        renderTableRows(leagueId, leagueData.standings.results);
+        
+        // Fetch intelligence for managers in this league
+        await loadLeagueIntelligence(leagueData.standings.results, eventId);
+
+    } catch (err) {
+        console.error(`Error fetching league ${leagueId}:`, err);
+    }
 }
 
 /**
- * Renders the Main League Table
+ * Renders Rows for a specific League ID
  */
-function renderTable(managers) {
-    const body = document.getElementById("league-body");
+function renderTableRows(leagueId, managers) {
+    const body = document.getElementById(`body-${leagueId}`);
     body.innerHTML = managers.map((m) => `
         <tr id="row-${m.entry}">
             <td class="rank-col">${m.rank}</td>
@@ -85,164 +118,12 @@ function renderTable(managers) {
     `).join('');
 }
 
-/**
- * Fetches individual manager details (Picks & Transfers)
- */
-async function loadLeagueIntelligence(managers, eventId) {
-    const ownership = {};
-    const managerDetails = {};
-
-    await Promise.all(managers.map(async (m) => {
-        try {
-            const [picksRes, transRes] = await Promise.all([
-                fetch(`${API_BASE}entry/${m.entry}/event/${eventId}/picks/`),
-                fetch(`${API_BASE}entry/${m.entry}/transfers/`)
-            ]);
-            const picks = await picksRes.json();
-            const trans = await transRes.json();
-            
-            managerDetails[m.entry] = { 
-                picks, 
-                trans: trans.filter(t => t.event === eventId) 
-            };
-            managerSquads[m.entry] = picks;
-            
-            // Track ownership for Differential logic
-            picks.picks.forEach(p => {
-                ownership[p.element] = (ownership[p.element] || 0) + 1;
-            });
-        } catch (e) { console.warn(`Failed to fetch manager ${m.entry}:`, e); }
-    }));
-
-    managers.forEach(m => {
-        const data = managerDetails[m.entry];
-        if (!data) return;
-
-        // Update Value
-        const valSpan = document.getElementById(`val-${m.entry}`);
-        if(valSpan) valSpan.innerText = `£${(data.picks.entry_history.value / 10).toFixed(1)}m`;
-
-        // Update Captain & Active Chips
-        const cap = data.picks.picks.find(p => p.is_captain);
-        const chip = data.picks.active_chip;
-        const capCell = document.getElementById(`cap-${m.entry}`);
-        if(capCell) {
-            capCell.innerHTML = `
-                ${playerMap[cap.element].name} 
-                ${chip ? `<span class="chip-badge chip-wildcard">${chip.toUpperCase()}</span>` : ''}
-            `;
-        }
-
-        // Update Differentials (Owned by only 1 person in the viewable table)
-        const diffs = data.picks.picks.filter(p => ownership[p.element] === 1);
-        const diffDiv = document.getElementById(`diffs-${m.entry}`);
-        if(diffDiv) {
-            diffDiv.innerHTML = diffs.map(p => 
-                `<span class="mini-tag tag-diff">${playerMap[p.element].name}</span>`).join('') || '—';
-        }
-
-        // Update Transfers In
-        const transDiv = document.getElementById(`trans-${m.entry}`);
-        if(transDiv) {
-            transDiv.innerHTML = data.trans.map(t => 
-                `<span class="mini-tag tag-in">${playerMap[t.element_in].name}</span>`).join('') || 'None';
-        }
-
-        // Update Transfer Hits (Cost)
-        const hitsDiv = document.getElementById(`hits-${m.entry}`);
-        const hits = data.picks.entry_history.event_transfer_cost;
-        if(hitsDiv && hits > 0) hitsDiv.innerText = `-${hits}`;
-    });
-
-    const loader = document.getElementById("loading-overlay");
-    if (loader) loader.classList.add("hidden");
-}
+// ... Keep your existing handleManagerClick, getTeamClass, and loadLeagueIntelligence functions ...
 
 /**
- * Handles Click on Manager Name to show the Jersey Pitch Modal
+ * Update the DOMContentLoaded listener
  */
-function handleManagerClick(id, name) {
-    const data = managerSquads[id];
-    if (!data) return;
-
-    const modal = document.getElementById("team-modal");
-    const list = document.getElementById("modal-squad-list");
-    document.getElementById("modal-manager-name").innerText = name;
-
-    const starters = { 1: [], 2: [], 3: [], 4: [] };
-    const bench = [];
-    let squadTotal = 0;
-
-    data.picks.forEach(p => {
-        const player = playerMap[p.element];
-        const pts = player.points * p.multiplier;
-        if (p.multiplier > 0) squadTotal += pts;
-        
-        const kitClass = player.pos === 1 ? 'gkp_color' : getTeamClass(player.team);
-
-        const playerHTML = `
-            <div class="slot" style="width: 65px; display:flex; flex-direction:column; align-items:center; position:relative;">
-                ${p.is_captain ? '<div class="cap-star-pitch">★</div>' : ''}
-                <div class="jersey ${kitClass}"></div>
-                <div class="modal-player-tag">
-                    <span class="m-p-name">${player.name}</span>
-                    <span class="m-p-pts">${player.points}${p.multiplier > 1 ? ' (x'+p.multiplier+')' : ''}</span>
-                </div>
-            </div>`;
-        
-        if (p.position > 11) bench.push(playerHTML);
-        else starters[player.pos].push(playerHTML);
-    });
-
-    list.innerHTML = `
-        <div class="modal-pitch">
-            <div class="modal-row">${starters[1].join('')}</div>
-            <div class="modal-row">${starters[2].join('')}</div>
-            <div class="modal-row">${starters[3].join('')}</div>
-            <div class="modal-row">${starters[4].join('')}</div>
-            <div class="bench-wrap">
-                <div class="bench-label">Substitutes</div>
-                <div class="modal-row">${bench.join('')}</div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <span class="total-label">Live Score</span>
-            <span class="total-value">${squadTotal} PTS</span>
-        </div>
-    `;
-    modal.classList.remove("hidden");
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
-}
-
-/**
- * UI Utility: Swipe Hint handling
- */
-function initSwipeHint() {
-    const hint = document.getElementById('scroll-hint');
-    const tableWrapper = document.querySelector('.table-wrapper');
-
-    if (!hint || !tableWrapper) return;
-
-    // Hide hint if user scrolls the table
-    tableWrapper.addEventListener('scroll', () => {
-        hint.classList.add('hidden-hint');
-    }, { once: true });
-
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        hint.classList.add('hidden-hint');
-    }, 5000);
-}
-
-/**
- * Event Listeners
- */
-document.getElementById("close-modal").onclick = () => {
-    document.getElementById("team-modal").classList.add("hidden");
-    document.body.style.overflow = ''; // Restore background scroll
-};
-
 document.addEventListener("DOMContentLoaded", () => {
-    fetchProLeague();
+    initDashboard();
     initSwipeHint();
 });
