@@ -1,7 +1,9 @@
 const API_BASE = "/fpl-api/";
 const LEAGUES = [
-    { id: "101712", name: "Kopala Pro League" },
-    { id: "147133", name: "Kopala Championship" } // Add more here
+    { id: "101712", name: "Kopala FPL" },
+    { id: "1745660", name: "Zedian Premier League" },
+    { id: "1019777", name: "A league has no name" },
+    { id: "147133", name: "Bayport" } // Add more here
 ];
 
 let playerMap = {};
