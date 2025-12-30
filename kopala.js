@@ -1,129 +1,160 @@
 const API_BASE = "/fpl-api/";
-// 1. Define an array of league IDs you want to display
-const LEAGUE_IDS = ["101712", "147133", "258"]; 
+const LEAGUES = [
+    { id: "101712", name: "Kopala Pro League" },
+    { id: "147133", name: "Kopala Championship" } // Add more here
+];
 
 let playerMap = {};
 let teamMap = {};
 let managerSquads = {}; 
+let topManagersData = [];
 
-/**
- * Initialization: Fetch shared static data first, then load each league
- */
-async function initDashboard() {
+async function fetchAllLeagues() {
     const loader = document.getElementById("loading-overlay");
     if (loader) loader.classList.remove("hidden");
 
     try {
-        // Fetch static data (players/teams) once only
+        // 1. Static Data
         const staticRes = await fetch(`${API_BASE}bootstrap-static/`);
         const staticData = await staticRes.json();
-
-        // Map Teams and Players
         staticData.teams.forEach(t => teamMap[t.id] = t.short_name);
         staticData.elements.forEach(p => {
-            playerMap[p.id] = { 
-                name: p.web_name, 
-                points: p.event_points, 
-                team: p.team, 
-                pos: p.element_type 
-            };
+            playerMap[p.id] = { name: p.web_name, points: p.event_points, team: p.team, pos: p.element_type };
         });
 
         const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
         document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
 
-        // 2. Loop through each League ID and fetch/render it
-        for (const id of LEAGUE_IDS) {
-            await fetchAndRenderLeague(id, currentEvent);
+        // 2. Setup Dropdown
+        const selector = document.getElementById("league-select");
+        selector.innerHTML = `<option value="compare">🏆 Comparison Mode</option>` + 
+                             LEAGUES.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+
+        // 3. Fetch Each League
+        topManagersData = [];
+        const wrapper = document.getElementById("leagues-wrapper");
+        
+        for (const league of LEAGUES) {
+            await fetchAndRenderLeague(league.id, currentEvent);
         }
 
-    } catch (err) { 
-        console.error("Error initializing dashboard:", err); 
-    } finally {
-        if (loader) loader.classList.add("hidden");
-    }
+        switchLeague("compare");
+
+    } catch (err) { console.error(err); }
+    if (loader) loader.classList.add("hidden");
 }
 
-/**
- * Fetches and creates a new table for a specific League
- */
 async function fetchAndRenderLeague(leagueId, eventId) {
-    try {
-        const leagueRes = await fetch(`${API_BASE}leagues-classic/${leagueId}/standings/`);
-        const leagueData = await leagueRes.json();
-        const leagueName = leagueData.league.name;
+    const res = await fetch(`${API_BASE}leagues-classic/${leagueId}/standings/`);
+    const data = await res.json();
+    const managers = data.standings.results;
 
-        // Create a unique section for this league
-        const container = document.getElementById("leagues-container");
-        const leagueSection = document.createElement("div");
-        leagueSection.className = "league-section";
-        leagueSection.innerHTML = `
-            <h2 class="league-title">${leagueName}</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Manager</th>
-                            <th>GW Pts</th>
-                            <th>Total</th>
-                            <th>Captain</th>
-                            <th>Diffs</th>
-                            <th>Transfers</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-${leagueId}"></tbody>
-                </table>
-            </div>
-        `;
-        container.appendChild(leagueSection);
-
-        // Render the rows into the newly created tbody
-        renderTableRows(leagueId, leagueData.standings.results);
-        
-        // Fetch intelligence for managers in this league
-        await loadLeagueIntelligence(leagueData.standings.results, eventId);
-
-    } catch (err) {
-        console.error(`Error fetching league ${leagueId}:`, err);
+    // Capture leader for comparison
+    if(managers[0]) {
+        topManagersData.push({
+            league: data.league.name,
+            name: managers[0].player_name,
+            team: managers[0].entry_name,
+            gw: managers[0].event_total,
+            total: managers[0].total
+        });
     }
+
+    const leagueCard = document.createElement("div");
+    leagueCard.className = "card league-card";
+    leagueCard.id = `card-${leagueId}`;
+    leagueCard.innerHTML = `
+        <h2 style="color:var(--fpl-primary);">${data.league.name}</h2>
+        <table class="league-table-style">
+            <thead>
+                <tr>
+                    <th>#</th><th>Manager</th><th>GW</th><th>TOT</th><th>Captain</th><th>Diffs</th><th>Trans</th>
+                </tr>
+            </thead>
+            <tbody id="body-${leagueId}"></tbody>
+        </table>
+    `;
+    document.getElementById("leagues-wrapper").appendChild(leagueCard);
+
+    renderRows(leagueId, managers);
+    await loadIntelligence(managers, eventId);
 }
 
-/**
- * Renders Rows for a specific League ID
- */
-function renderTableRows(leagueId, managers) {
+function renderRows(leagueId, managers) {
     const body = document.getElementById(`body-${leagueId}`);
-    body.innerHTML = managers.map((m) => `
-        <tr id="row-${m.entry}">
-            <td class="rank-col">${m.rank}</td>
-            <td class="manager-col" onclick="handleManagerClick(${m.entry}, '${m.player_name}')">
-                <div class="m-info-wrapper">
-                    <span class="m-name">${m.player_name}</span>
-                    <span class="t-name">${m.entry_name}</span>
-                    <span id="val-${m.entry}" class="val-text">£--.-m</span>
-                </div>
+    body.innerHTML = managers.map(m => `
+        <tr>
+            <td>${m.rank}</td>
+            <td onclick="handleManagerClick(${m.entry}, '${m.player_name}')">
+                <div class="m-name">${m.player_name}</div>
+                <div style="font-size:9px; opacity:0.6;">${m.entry_name}</div>
+                <div id="val-${m.entry}" style="font-size:9px; font-weight:bold;">£--.-m</div>
             </td>
-            <td class="pts-col">
-                <div class="live-pts" style="font-weight:900;">${m.event_total}</div>
-                <div id="hits-${m.entry}" style="font-size:7px; color:#ff2882; font-weight:bold;"></div>
+            <td>
+                <div class="live-pts">${m.event_total}</div>
+                <div id="hits-${m.entry}" style="color:red; font-size:8px;"></div>
             </td>
-            <td class="total-col">
-                <div class="bold-p" style="font-weight:900;">${m.total}</div>
-            </td>
-            <td id="cap-${m.entry}" class="cap-col">—</td>
-            <td class="diff-col"><div id="diffs-${m.entry}" class="diff-col-scroll"></div></td>
-            <td class="trans-col"><div id="trans-${m.entry}" class="trans-col-scroll"></div></td>
+            <td class="bold-p">${m.total}</td>
+            <td id="cap-${m.entry}">--</td>
+            <td id="diffs-${m.entry}">--</td>
+            <td id="trans-${m.entry}">--</td>
         </tr>
     `).join('');
 }
 
-// ... Keep your existing handleManagerClick, getTeamClass, and loadLeagueIntelligence functions ...
+function switchLeague(val) {
+    document.querySelectorAll('.league-card').forEach(c => c.classList.add('hidden'));
+    if (val === "compare") {
+        document.getElementById("comparison-view").classList.remove('hidden');
+        renderComparison();
+    } else {
+        document.getElementById(`card-${val}`).classList.remove('hidden');
+    }
+}
 
-/**
- * Update the DOMContentLoaded listener
- */
-document.addEventListener("DOMContentLoaded", () => {
-    initDashboard();
-    initSwipeHint();
-});
+function renderComparison() {
+    document.getElementById("comparison-body").innerHTML = topManagersData.map(m => `
+        <tr>
+            <td style="color:var(--fpl-primary); font-weight:bold;">${m.league}</td>
+            <td><b>${m.name}</b><br><small>${m.team}</small></td>
+            <td>${m.gw}</td>
+            <td class="bold-p">${m.total}</td>
+        </tr>
+    `).join('');
+}
+
+async function loadIntelligence(managers, eventId) {
+    const ownership = {};
+    const details = {};
+
+    await Promise.all(managers.map(async (m) => {
+        const [pRes, tRes] = await Promise.all([
+            fetch(`${API_BASE}entry/${m.entry}/event/${eventId}/picks/`),
+            fetch(`${API_BASE}entry/${m.entry}/transfers/`)
+        ]);
+        const picks = await pRes.json();
+        const trans = await tRes.json();
+        details[m.entry] = { picks, trans: trans.filter(t => t.event === eventId) };
+        managerSquads[m.entry] = picks;
+        picks.picks.forEach(p => ownership[p.element] = (ownership[p.element] || 0) + 1);
+    }));
+
+    managers.forEach(m => {
+        const d = details[m.entry];
+        if(!d) return;
+        document.getElementById(`val-${m.entry}`).innerText = `£${(d.picks.entry_history.value / 10).toFixed(1)}m`;
+        const cap = d.picks.picks.find(p => p.is_captain);
+        document.getElementById(`cap-${m.entry}`).innerText = playerMap[cap.element].name;
+        
+        const diffs = d.picks.picks.filter(p => ownership[p.element] === 1);
+        document.getElementById(`diffs-${m.entry}`).innerHTML = diffs.slice(0,2).map(p => `<small>${playerMap[p.element].name}</small>`).join(', ');
+
+        const hits = d.picks.entry_history.event_transfer_cost;
+        if(hits > 0) document.getElementById(`hits-${m.entry}`).innerText = `-${hits}`;
+    });
+}
+
+// Modal handling
+document.getElementById("close-modal").onclick = () => document.getElementById("team-modal").classList.add("hidden");
+
+document.addEventListener("DOMContentLoaded", fetchAllLeagues);
