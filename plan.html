@@ -3,44 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPL Planner Clone</title>
+    <title>FPL Planner Pro</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="plan.css">
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="header-logo">Plan season</div>
-            <div class="stats-bar">
-                <div class="stat"><span>Bank</span><strong id="bank-val">£1.5m</strong></div>
-                <div class="stat"><span>ITB</span><strong id="itb-val">£0.0m</strong></div>
-            </div>
-            <div class="search-box">
-                <input type="text" id="player-search" placeholder="Search for a player...">
-            </div>
-            <div id="search-results" class="search-results">
+            <div class="header">
+                <h2>FPL.TEAM CLONE</h2>
+                <div class="budget-ui">
+                    <div class="stat"><span>Bank</span><strong id="bank-val">£0.0</strong></div>
+                    <div class="stat"><span>Squad</span><strong id="squad-count">0/15</strong></div>
                 </div>
-        </aside>
-
-        <main class="main-content">
-            <div class="gw-selector">
-                <button class="gw-btn">◀</button>
-                <span>Gameweek 20</span>
-                <button class="gw-btn">▶</button>
             </div>
             
-            <div class="pitch" id="pitch">
-                <div class="row" id="row-GKP"></div>
-                <div class="row" id="row-DEF"></div>
-                <div class="row" id="row-MID"></div>
-                <div class="row" id="row-FWD"></div>
-                
-                <div class="bench-container">
-                    <div class="row" id="row-BENCH"></div>
+            <div class="market-section">
+                <input type="text" id="player-search" placeholder="Search transfer market...">
+                <div id="market-list" class="market-list">
+                    </div>
+            </div>
+        </aside>
+
+        <main class="pitch-container">
+            <div class="pitch" id="pitch-layout">
+                <div class="pitch-row" data-pos="1" id="row-1"></div> <div class="pitch-row" data-pos="2" id="row-2"></div> <div class="pitch-row" data-pos="3" id="row-3"></div> <div class="pitch-row" data-pos="4" id="row-4"></div> <div class="bench-area">
+                    <div class="pitch-row" id="row-bench"></div>
                 </div>
             </div>
         </main>
     </div>
-    <script src="plan.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
