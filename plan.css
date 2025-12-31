@@ -1,8 +1,81 @@
 :root {
     --fpl-purple: #37003c;
-    --pitch-line: rgba(255,255,255,0.2);
-    --fdr-2: #01ff85; --fdr-3: #e7e7e7; --fdr-4: #ff47dc; --fdr-5: #ff005a;
+    --fpl-green: #00ff85;
+    --fdr-2: #01ff85; /* Easy */
+    --fdr-3: #e7e7e7; /* Moderate */
+    --fdr-4: #ff47dc; /* Hard */
+    --fdr-5: #ff005a; /* Very Hard */
 }
+
+body { margin: 0; font-family: 'Inter', sans-serif; background: #1a1a1a; color: white; overflow: hidden; }
+.app-container { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar { width: 320px; background: #242424; border-right: 1px solid #333; padding: 20px; }
+.stats-bar { display: flex; justify-content: space-between; margin-bottom: 20px; background: #111; padding: 10px; border-radius: 4px; }
+.stat span { display: block; font-size: 10px; color: #aaa; text-transform: uppercase; }
+
+/* Pitch */
+.main-content { flex: 1; display: flex; flex-direction: column; padding: 20px; position: relative; }
+.pitch {
+    flex: 1;
+    background: radial-gradient(circle, #00a550 0%, #005a2b 100%);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 10px;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+}
+
+.row { display: flex; justify-content: center; gap: 15px; min-height: 100px; }
+
+/* Player Card */
+.player-card {
+    width: 75px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    position: relative;
+}
+
+.player-card:hover { transform: scale(1.05); }
+
+.shirt {
+    width: 50px;
+    height: 55px;
+    background: url('https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_0-66.webp') no-repeat center;
+    background-size: contain;
+    margin: 0 auto;
+}
+
+.info-box {
+    background: var(--fpl-purple);
+    text-align: center;
+    border-radius: 2px;
+    margin-top: 4px;
+}
+
+.name { font-size: 10px; font-weight: bold; padding: 2px; white-space: nowrap; overflow: hidden; }
+
+/* Fixture Strip */
+.fixture-strip { display: flex; height: 16px; border-top: 1px solid #222; }
+.f-box {
+    flex: 1;
+    font-size: 9px;
+    color: black;
+    font-weight: 900;
+    text-align: center;
+    line-height: 16px;
+}
+
+.fdr-2 { background: var(--fdr-2); }
+.fdr-3 { background: var(--fdr-3); }
+.fdr-4 { background: var(--fdr-4); color: white; }
+.fdr-5 { background: var(--fdr-5); color: white; }
+
+.bench-container { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-top: 10px; }
+
+
 
 body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #111; color: white; }
 .app-container { display: flex; height: 100vh; }
