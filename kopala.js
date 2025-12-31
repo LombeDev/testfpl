@@ -1,17 +1,23 @@
 const API_BASE = "/fpl-api/";
 
-// This map allows the app to track which league is currently being displayed
-let currentLeagueId = "101712"; 
+// 1. Define your leagues here
+const LEAGUES_LIST = [
+    { name: "Man Utd", id: "101712" },
+    { name: "Zambia", id: "313" },
+    { name: "Gameweek 1", id: "55555" }, // Replace with real IDs
+    { name: "Overall", id: "313" },
+    { name: "SuperSport League", id: "77777" },
+    { name: "Second Chance", id: "88888" }
+];
+
 let playerMap = {};
 let teamMap = {};
 let managerSquads = {}; 
 
 /**
- * Initialization & Data Fetching
- * @param {string} leagueId - The ID of the FPL league to load
+ * Main function to fetch and display a specific league
  */
-async function fetchProLeague(leagueId = "101712") {
-    currentLeagueId = leagueId; // Update the global tracker
+async function fetchProLeague(leagueId) {
     const loader = document.getElementById("loading-overlay");
     if (loader) loader.classList.remove("hidden");
 
@@ -36,12 +42,9 @@ async function fetchProLeague(leagueId = "101712") {
         });
 
         const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
-        
-        // Update GW Label if it exists in your HTML
-        const gwLabel = document.getElementById("active-gw-label");
-        if (gwLabel) gwLabel.textContent = `GW ${currentEvent}`;
+        document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
 
-        // Render the specific league data
+        // Render the managers into the existing table body
         renderTable(leagueData.standings.results);
         loadLeagueIntelligence(leagueData.standings.results, currentEvent);
 
@@ -52,7 +55,34 @@ async function fetchProLeague(leagueId = "101712") {
 }
 
 /**
- * Maps Team IDs to CSS Classes for Jersey Kits
+ * Renders the League Selection List (The UI from your screenshot)
+ * We inject this into the table-wrapper when no league is selected
+ */
+function renderLeagueSelector() {
+    const body = document.getElementById("league-body");
+    const tableHeader = document.querySelector("#league-table thead");
+    
+    // Hide the standard table header for the selector view
+    if (tableHeader) tableHeader.style.display = "none";
+
+    body.innerHTML = LEAGUES_LIST.map(league => `
+        <tr style="border-bottom: 8px solid var(--fpl-surface);">
+            <td colspan="7" style="padding: 15px; background: var(--fpl-container);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 1.1rem; color: var(--fpl-on-container);">${league.name}</span>
+                    <button onclick="fetchProLeague('${league.id}')" 
+                            style="background: var(--fpl-blue); color: #333; border: none; padding: 8px 15px; 
+                            border-radius: 6px; font-weight: 800; font-size: 10px; cursor: pointer; text-transform: uppercase;">
+                        View League
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Maps Team IDs to CSS Classes
  */
 function getTeamClass(teamId) {
     const mapping = {
@@ -65,11 +95,14 @@ function getTeamClass(teamId) {
 }
 
 /**
- * Renders the Main League Table
+ * Renders the Standings Table
  */
 function renderTable(managers) {
     const body = document.getElementById("league-body");
-    if (!body) return;
+    const tableHeader = document.querySelector("#league-table thead");
+    
+    // Show the table header again
+    if (tableHeader) tableHeader.style.display = "table-header-group";
 
     body.innerHTML = managers.map((m) => `
         <tr id="row-${m.entry}">
@@ -96,7 +129,7 @@ function renderTable(managers) {
 }
 
 /**
- * Fetches individual manager details (Picks & Transfers)
+ * Intelligence logic (Captain, Diffs, etc)
  */
 async function loadLeagueIntelligence(managers, eventId) {
     const ownership = {};
@@ -163,7 +196,7 @@ async function loadLeagueIntelligence(managers, eventId) {
 }
 
 /**
- * Handles Click on Manager Name to show the Jersey Pitch Modal
+ * Modal Handling (Jersey Pitch)
  */
 function handleManagerClick(id, name) {
     const data = managerSquads[id];
@@ -218,31 +251,15 @@ function handleManagerClick(id, name) {
     document.body.style.overflow = 'hidden'; 
 }
 
-function initSwipeHint() {
-    const hint = document.getElementById('scroll-hint');
-    const tableWrapper = document.querySelector('.table-wrapper');
-    if (!hint || !tableWrapper) return;
-    tableWrapper.addEventListener('scroll', () => {
-        hint.classList.add('hidden-hint');
-    }, { once: true });
-    setTimeout(() => {
-        hint.classList.add('hidden-hint');
-    }, 5000);
-}
-
 /**
- * Event Listeners
+ * Event Listeners & Init
  */
-const closeModal = document.getElementById("close-modal");
-if (closeModal) {
-    closeModal.onclick = () => {
-        document.getElementById("team-modal").classList.add("hidden");
-        document.body.style.overflow = ''; 
-    };
-}
+document.getElementById("close-modal").onclick = () => {
+    document.getElementById("team-modal").classList.add("hidden");
+    document.body.style.overflow = ''; 
+};
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Initial load with default league
-    fetchProLeague("101712");
-    initSwipeHint();
+    // Start with the League Selection list
+    renderLeagueSelector();
 });
