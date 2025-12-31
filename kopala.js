@@ -2,12 +2,11 @@ const API_BASE = "/fpl-api/";
 
 // 1. Define your leagues here
 const LEAGUES_LIST = [
-    { name: "Man Utd", id: "101712" },
-    { name: "Zambia", id: "313" },
-    { name: "Gameweek 1", id: "55555" }, // Replace with real IDs
-    { name: "Overall", id: "313" },
-    { name: "SuperSport League", id: "77777" },
-    { name: "Second Chance", id: "88888" }
+    { name: "Kopala FPL", id: "101712" },
+    { name: "Bayporteers", id: "147133" },
+    { name: "Zedian Premier League", id: "1745660" }, // Replace with real IDs
+    { name: "Zambia", id: "258" },
+    { name: "Second Chance", id: "333" }
 ];
 
 let playerMap = {};
