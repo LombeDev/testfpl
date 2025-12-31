@@ -1,47 +1,64 @@
-// Mock Player Database (Normally from FPL API)
-const players = [
-    { id: 1, name: "Salah", pos: "MID", team: "LIV", price: 12.5, fdr: [3, 2, 5, 4] },
-    { id: 2, name: "Haaland", pos: "FWD", team: "MCI", price: 15.2, fdr: [2, 3, 2, 2] },
-    { id: 3, name: "Gabriel", pos: "DEF", team: "ARS", price: 6.2, fdr: [4, 3, 2, 3] },
-    { id: 4, name: "Raya", pos: "GKP", team: "ARS", price: 5.5, fdr: [4, 3, 2, 3] },
-    { id: 5, name: "Palmer", pos: "MID", team: "CHE", price: 10.8, fdr: [2, 5, 3, 2] }
-];
+const FPL_DATA = "https://corsproxy.io/?https://fantasy.premierleague.com/api/bootstrap-static/";
+let squad = Array(15).fill(null);
+let selectedSlot = null;
 
-// Current State
-let myTeam = [...players]; // Simplified: putting all mock players in the team
+async function loadData() {
+    const res = await fetch(FPL_DATA);
+    const data = await res.json();
+    setupMarket(data.elements);
+    renderPitch();
+}
 
-function renderTeam() {
+function renderPitch() {
     // Clear rows
-    ['GKP', 'DEF', 'MID', 'FWD', 'BENCH'].forEach(pos => {
-        document.getElementById(`row-${pos}`).innerHTML = '';
-    });
+    [1, 2, 3, 4].forEach(r => document.getElementById(`row-${r}`).innerHTML = '');
+    document.getElementById('row-bench').innerHTML = '';
 
-    myTeam.forEach(player => {
-        const rowId = player.pos === 'BENCH' ? 'row-BENCH' : `row-${player.pos}`;
-        const container = document.getElementById(rowId);
-        
+    squad.forEach((player, index) => {
         const card = document.createElement('div');
-        card.className = 'player-card';
-        card.innerHTML = `
-            <div class="shirt"></div>
-            <div class="info-box">
-                <div class="name">${player.name}</div>
-                <div class="fixture-strip">
-                    ${player.fdr.map(lvl => `<div class="f-box fdr-${lvl}"></div>`).join('')}
+        card.className = "player-card";
+        if(player) {
+            card.innerHTML = `
+                <div class="shirt-container">
+                    <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_0-66.webp" width="50">
                 </div>
-            </div>
-        `;
+                <div class="player-label">${player.web_name}</div>
+                <div class="fix-label">CHE (H)</div>
+            `;
+        } else {
+            card.innerHTML = `<div class="shirt-container" style="opacity:0.4"></div><div class="player-label">Empty</div>`;
+        }
         
-        card.onclick = () => selectPlayer(player);
-        container.appendChild(card);
+        card.onclick = () => {
+            selectedSlot = index;
+            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+        };
+
+        // Auto-sorting into positions (Basic 15-man layout)
+        if (index < 11 && player) {
+            document.getElementById(`row-${player.element_type}`).appendChild(card);
+        } else {
+            document.getElementById('row-bench').appendChild(card);
+        }
     });
 }
 
-function selectPlayer(player) {
-    // Highlight sidebar search for replacing this player
-    document.getElementById('player-search').placeholder = `Replace ${player.name}...`;
-    document.getElementById('player-search').focus();
+function setupMarket(players) {
+    const list = document.getElementById('market-results');
+    players.slice(0, 20).forEach(p => {
+        const item = document.createElement('div');
+        item.style.padding = "10px";
+        item.style.borderBottom = "1px solid #fff";
+        item.innerHTML = `${p.web_name} - £${p.now_cost/10}`;
+        item.onclick = () => {
+            if(selectedSlot !== null) {
+                squad[selectedSlot] = p;
+                renderPitch();
+            }
+        };
+        list.appendChild(item);
+    });
 }
 
-// Initial Run
-document.addEventListener('DOMContentLoaded', renderTeam);
+loadData();
