@@ -247,6 +247,29 @@
         .pulse-dot { width: 8px; height: 8px; background-color: #00ff87; border-radius: 50%; display: inline-block; animation: pulse-green 2s infinite; }
 
         .event-item { font-size: 0.75rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
+
+        /* --- Vertical Scroll for Price Lists --- */
+#risers-list, #fallers-list {
+    max-height: 120px; /* Limits the height to keep the card small */
+    overflow-y: auto;  /* Enables vertical scrolling */
+    padding-right: 8px; /* Prevents text from hitting the scrollbar */
+    margin-bottom: 15px;
+    border-bottom: 1px dashed var(--fpl-border); /* Subtle separator */
+}
+
+/* Optional: Slim Scrollbar Styling */
+#risers-list::-webkit-scrollbar, 
+#fallers-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+#risers-list::-webkit-scrollbar-thumb, 
+#fallers-list::-webkit-scrollbar-thumb {
+    background: var(--fpl-primary);
+    border-radius: 10px;
+}
+
+        
     </style>
 </head>
 <body>
