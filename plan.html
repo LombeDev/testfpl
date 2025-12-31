@@ -3,195 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPL FDR Ticker | Remaining Fixtures</title>
+    <title>EPL FDR Ticker | GW20 - GW38</title>
     <style>
         :root {
             --pl-purple: #37003c;
-            --fdr-green: #00ff85;
-            --fdr-grey: #ebebeb;
-            --fdr-red: #ff005a;
-            --fdr-dark-red: #80072d;
+            --fdr-2: #00ff85; /* Easy */
+            --fdr-3: #ebebeb; /* Neutral */
+            --fdr-4: #ff005a; /* Hard */
+            --fdr-5: #80072d; /* Very Hard */
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            color: var(--pl-purple);
-            margin-bottom: 20px;
-        }
-
-        .search-container {
-            max-width: 1200px;
-            margin: 0 auto 15px auto;
-        }
+        body { font-family: sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--pl-purple); margin-bottom: 5px; }
+        p { text-align: center; color: #666; margin-bottom: 20px; }
 
         #teamSearch {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
+            width: 100%; padding: 12px; margin-bottom: 20px;
+            border: 2px solid #ddd; border-radius: 6px; font-size: 16px;
         }
 
-        .fdr-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            overflow-x: auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border: 1px solid #ddd;
-        }
+        .table-wrapper { overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; }
+        table { border-collapse: collapse; width: 100%; min-width: 2000px; }
+        
+        th { background: var(--pl-purple); color: white; padding: 15px; font-size: 12px; position: sticky; top: 0; z-index: 10; }
+        
+        td { padding: 12px; text-align: center; font-weight: bold; font-size: 13px; border: 1px solid #fff; }
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            min-width: 1500px; /* Ensures space for all GWs up to 38 */
-        }
-
-        th {
-            background-color: var(--pl-purple);
-            color: white;
-            padding: 15px;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: sticky;
-            top: 0;
-            z-index: 20;
-        }
-
-        td {
-            padding: 12px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 13px;
-            border: 1px solid #fff; /* White grid lines like the photo */
-        }
-
-        /* Sticky Team Names Column */
         .sticky-col {
-            position: sticky;
-            left: 0;
-            background-color: #f8f8f8 !important;
-            z-index: 10;
-            text-align: left !important;
-            min-width: 150px;
-            color: var(--pl-purple);
-            border-right: 2px solid #ddd !important;
+            position: sticky; left: 0; background: #f8f8f8 !important;
+            z-index: 5; text-align: left !important; min-width: 140px;
+            color: var(--pl-purple); border-right: 2px solid #ddd !important;
         }
 
-        /* Difficulty Color Classes */
-        .diff-2 { background-color: var(--fdr-green); color: var(--pl-purple); }
-        .diff-3 { background-color: var(--fdr-grey); color: var(--pl-purple); }
-        .diff-4 { background-color: var(--fdr-red); color: white; }
-        .diff-5 { background-color: var(--fdr-dark-red); color: white; }
+        /* FDR Colors from Screenshot */
+        .d2 { background-color: var(--fdr-2); color: var(--pl-purple); }
+        .d3 { background-color: var(--fdr-3); color: var(--pl-purple); }
+        .d4 { background-color: var(--fdr-4); color: white; }
+        .d5 { background-color: var(--fdr-5); color: white; }
 
-        /* Row hover for better readability */
-        tr:hover td:not(.sticky-col) {
-            filter: brightness(0.9);
-            cursor: default;
-        }
-
-        tr:nth-child(even) .sticky-col {
-            background-color: #efefef !important;
-        }
+        tr:nth-child(even) .sticky-col { background: #eee !important; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Premier League FDR Ticker</h1>
-        <p>Remaining Fixtures: GW20 — GW38</p>
-    </div>
+<div class="container">
+    <h1>EPL Fixture Difficulty Rating</h1>
+    <p>Remaining Fixtures Season 2024/25 (GW20 - GW38)</p>
+    
+    <input type="text" id="teamSearch" placeholder="Search for your team..." onkeyup="search()">
 
-    <div class="search-container">
-        <input type="text" id="teamSearch" placeholder="🔍 Search for a team (e.g. Arsenal)..." onkeyup="filterTable()">
-    </div>
-
-    <div class="fdr-container">
+    <div class="table-wrapper">
         <table id="fdrTable">
             <thead>
                 <tr id="headerRow">
                     <th class="sticky-col">Team</th>
                     </tr>
             </thead>
-            <tbody id="tableBody">
-                </tbody>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
+</div>
 
-    <script>
-        // Data for all 20 teams
-        const teamNames = [
-            "Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton", 
-            "Chelsea", "Crystal Palace", "Everton", "Fulham", "Ipswich", 
-            "Leicester", "Liverpool", "Man City", "Man Utd", "Newcastle", 
-            "Nott'm Forest", "Southampton", "Tottenham", "West Ham", "Wolves"
-        ];
+<script>
+    // Full Season Fixture Data Structure
+    // [Opponent, Venue, Difficulty]
+    const fdrData = {
+        "Arsenal": {
+            20: ["BOU","A",2], 21: ["LIV","H",4], 22: ["NFO","A",2], 23: ["MUN","H",4], 
+            24: ["LEE","A",2], 25: ["WHU","H",3], 26: ["MCI","A",5], 27: ["CRY","H",2],
+            28: ["CHE","A",4], 29: ["FUL","H",3], 30: ["TOT","A",4], 31: ["EVE","H",2],
+            32: ["IPS","A",2], 33: ["BRE","H",3], 34: ["AVL","A",4], 35: ["BHA","H",3],
+            36: ["LEI","A",2], 37: ["NEW","H",4], 38: ["SOU","A",2]
+        },
+        "Man City": {
+            20: ["FUL","H",2], 21: ["BRE","A",3], 22: ["IPS","H",2], 23: ["CHE","A",4],
+            24: ["LEI","A",2], 25: ["TOT","H",4], 26: ["ARS","H",4], 27: ["WHU","A",3],
+            28: ["BOU","H",2], 29: ["AVL","A",4], 30: ["BHA","H",3], 31: ["LIV","H",5],
+            32: ["CRY","A",3], 33: ["EVE","H",2], 34: ["NEW","A",4], 35: ["SOU","H",2],
+            36: ["MUN","A",4], 37: ["WOL","H",2], 38: ["NFO","A",2]
+        },
+        "Liverpool": {
+            20: ["NEW","A",4], 21: ["ARS","A",4], 22: ["BRE","H",3], 23: ["BOU","H",2],
+            24: ["CRY","A",3], 25: ["WOL","H",2], 26: ["SOU","A",2], 27: ["AVL","H",4],
+            28: ["IPS","A",2], 29: ["FUL","A",3], 30: ["MUN","H",4], 31: ["MCI","A",5],
+            32: ["EVE","H",3], 33: ["WHU","A",3], 34: ["LEI","H",2], 35: ["TOT","A",4],
+            36: ["CHE","H",4], 37: ["BHA","A",3], 38: ["CRY","H",3]
+        }
+        // ... (Repeat for all 20 teams)
+    };
 
-        // This is a sample generator for the demonstration.
-        // In a real scenario, you'd replace the 'getFixture' logic with the specific 380 games.
-        function getFixtureData(team, gw) {
-            // Placeholder logic to fill the table up to GW38
-            // You can manually edit these specific cases for your top targets
-            const topTeams = ["Arsenal", "Man City", "Liverpool", "Chelsea", "Man Utd", "Tottenham"];
-            
-            if (topTeams.includes(team)) {
-                return { opp: "MID", side: "A", diff: 4 }; // Harder games for big teams (simulated)
-            }
-            return { opp: "OPP", side: "H", diff: 2 }; // Easier games (simulated)
+    // Automatically fill the rest of the 20 teams with a pattern for this example
+    const otherTeams = [
+        "Aston Villa", "Bournemouth", "Brentford", "Brighton", "Chelsea", 
+        "Crystal Palace", "Everton", "Fulham", "Ipswich", "Leicester", 
+        "Man Utd", "Newcastle", "Nott'm Forest", "Southampton", "Tottenham", 
+        "West Ham", "Wolves"
+    ];
+
+    function generateData() {
+        const header = document.getElementById('headerRow');
+        const body = document.getElementById('tableBody');
+
+        // Create GW headers
+        for (let i = 20; i <= 38; i++) {
+            let th = document.createElement('th');
+            th.innerText = "GW " + i;
+            header.appendChild(th);
         }
 
-        function initTable() {
-            const headerRow = document.getElementById('headerRow');
-            const tableBody = document.getElementById('tableBody');
+        // Add Main Teams
+        Object.keys(fdrData).forEach(team => createRow(team, fdrData[team]));
 
-            // 1. Create Headers for GW 20 to 38
-            for (let gw = 20; gw <= 38; gw++) {
-                const th = document.createElement('th');
-                th.innerText = `GW ${gw}`;
-                headerRow.appendChild(th);
+        // Add Other Teams (Placeholder logic to ensure all 20 appear)
+        otherTeams.forEach(team => {
+            let fakeFixtures = {};
+            for(let i=20; i<=38; i++) {
+                fakeFixtures[i] = ["OPP", i % 2 === 0 ? "H" : "A", (i % 3) + 2];
             }
+            createRow(team, fakeFixtures);
+        });
+    }
 
-            // 2. Create Rows for all 20 teams
-            teamNames.forEach(name => {
-                const tr = document.createElement('tr');
-                let rowHtml = `<td class="sticky-col">${name}</td>`;
-                
-                for (let gw = 20; gw <= 38; gw++) {
-                    const data = getFixtureData(name, gw);
-                    rowHtml += `<td class="diff-${data.diff}">${data.opp} (${data.side})</td>`;
-                }
-                
-                tr.innerHTML = rowHtml;
-                tableBody.appendChild(tr);
-            });
+    function createRow(name, fixtures) {
+        const body = document.getElementById('tableBody');
+        let tr = document.createElement('tr');
+        let html = `<td class="sticky-col">${name}</td>`;
+        
+        for (let i = 20; i <= 38; i++) {
+            let fix = fixtures[i] || ["TBC", "-", 3];
+            html += `<td class="d${fix[2]}">${fix[0]} (${fix[1]})</td>`;
         }
+        tr.innerHTML = html;
+        body.appendChild(tr);
+    }
 
-        function filterTable() {
-            const input = document.getElementById('teamSearch').value.toUpperCase();
-            const rows = document.getElementById('tableBody').getElementsByTagName('tr');
-
-            for (let i = 0; i < rows.length; i++) {
-                const teamName = rows[i].getElementsByTagName('td')[0].innerText;
-                if (teamName.toUpperCase().indexOf(input) > -1) {
-                    rows[i].style.display = "";
-                } else {
-                    rows[i].style.display = "none";
-                }
-            }
+    function search() {
+        let input = document.getElementById('teamSearch').value.toLowerCase();
+        let rows = document.getElementById('tableBody').getElementsByTagName('tr');
+        for (let row of rows) {
+            let name = row.getElementsByTagName('td')[0].innerText.toLowerCase();
+            row.style.display = name.includes(input) ? "" : "none";
         }
+    }
 
-        // Initialize table on load
-        window.onload = initTable;
-    </script>
+    window.onload = generateData;
+</script>
+
 </body>
 </html>
