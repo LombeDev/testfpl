@@ -331,7 +331,7 @@
                         <button class="swatch" aria-label="Grey" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></button>
                     </div>
                     <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">
-                        🌙 Midnight Mode
+                        🌙 Dark mode
                     </button>
                 </div>
             </div>
@@ -410,16 +410,7 @@
                 </div>
             </div>
 
-            <div id="transfer-market-card" class="card">
-                <h2 class="accent-title">Transfer Market</h2>
-                <div class="market-header in"><i class="fa-solid fa-arrow-up"></i> Top Transfers In</div>
-                <div id="top-transfers-in" style="margin-bottom: 15px;">
-                    </div>
-                <div class="market-header out"><i class="fa-solid fa-arrow-down"></i> Top Transfers Out</div>
-                <div id="top-transfers-out">
-                    </div>
-            </div>
-
+            
             <div id="id-entry-section" class="card">
                 <h2 class="accent-title">Live Rank</h2>
                 <label for="fpl-id" class="sr-only">Enter FPL Team ID</label>
@@ -428,7 +419,7 @@
             </div>
 
             <div id="price-card" class="card" style="display:none;">
-                <h2 class="accent-title">Daily Price Changes</h2>
+                <h2 class="accent-title">Prices</h2>
                 <div id="risers-list"></div>
                 <div id="fallers-list"></div>
             </div>
@@ -446,6 +437,17 @@
             </div>
         </div>
     </div>
+
+    <div id="transfer-market-card" class="card">
+                <h2 class="accent-title">Top Transfers</h2>
+                <div class="market-header in"><i class="fa-solid fa-arrow-up"></i> Top Transfers In</div>
+                <div id="top-transfers-in" style="margin-bottom: 15px;">
+                    </div>
+                <div class="market-header out"><i class="fa-solid fa-arrow-down"></i> Top Transfers Out</div>
+                <div id="top-transfers-out">
+                    </div>
+            </div>
+
 
     <button id="back-to-top" class="back-to-top" aria-label="Back to top">
         <i class="fa-solid fa-arrow-up"></i>
