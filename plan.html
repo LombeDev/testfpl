@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Planner Clone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="header-logo">FPL.TEAM CLONE</div>
+            <div class="stats-bar">
+                <div class="stat"><span>Bank</span><strong id="bank-val">£1.5m</strong></div>
+                <div class="stat"><span>ITB</span><strong id="itb-val">£0.0m</strong></div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="player-search" placeholder="Search for a player...">
+            </div>
+            <div id="search-results" class="search-results">
+                </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="gw-selector">
+                <button class="gw-btn">◀</button>
+                <span>Gameweek 20</span>
+                <button class="gw-btn">▶</button>
+            </div>
+            
+            <div class="pitch" id="pitch">
+                <div class="row" id="row-GKP"></div>
+                <div class="row" id="row-DEF"></div>
+                <div class="row" id="row-MID"></div>
+                <div class="row" id="row-FWD"></div>
+                
+                <div class="bench-container">
+                    <div class="row" id="row-BENCH"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
