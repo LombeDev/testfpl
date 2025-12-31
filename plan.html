@@ -3,34 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPL Planner Pro</title>
+    <title>FPL Team Planner</title>
     <link rel="stylesheet" href="plan.css">
 </head>
 <body>
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="header">
-                <h2>FPL.TEAM CLONE</h2>
-                <div class="budget-ui">
-                    <div class="stat"><span>Bank</span><strong id="bank-val">£0.0</strong></div>
-                    <div class="stat"><span>Squad</span><strong id="squad-count">0/15</strong></div>
-                </div>
-            </div>
-            
-            <div class="market-section">
-                <input type="text" id="player-search" placeholder="Search transfer market...">
-                <div id="market-list" class="market-list">
-                    </div>
-            </div>
-        </aside>
+    <div class="app-wrapper">
+        <header class="gw-header">
+            <div class="gw-title">GAMEWEEK 20</div>
+            <button class="next-btn">NEXT</button>
+        </header>
 
-        <main class="pitch-container">
-            <div class="pitch" id="pitch-layout">
-                <div class="pitch-row" data-pos="1" id="row-1"></div> <div class="pitch-row" data-pos="2" id="row-2"></div> <div class="pitch-row" data-pos="3" id="row-3"></div> <div class="pitch-row" data-pos="4" id="row-4"></div> <div class="bench-area">
-                    <div class="pitch-row" id="row-bench"></div>
+        <div class="stats-container">
+            <div class="stat-card"><span>Transfers</span><strong>0 / 1</strong></div>
+            <div class="stat-card"><span>Cost</span><strong>0 pts</strong></div>
+            <div class="stat-card"><span>Bank</span><strong class="green-text" id="bank-val">0.1</strong></div>
+            <div class="stat-card"><span>xPts</span><strong>50.0</strong></div>
+        </div>
+
+        <div class="main-layout">
+            <section class="pitch-container">
+                <div class="pitch-bg">
+                    <div class="row" id="row-1"></div> <div class="row" id="row-2"></div> <div class="row" id="row-3"></div> <div class="row" id="row-4"></div> <div class="bench-row" id="row-bench"></div>
                 </div>
-            </div>
-        </main>
+            </section>
+
+            <aside class="filter-sidebar">
+                <div class="tabs">
+                    <button class="tab active">PLAYERS</button>
+                    <button class="tab">SUMMARY</button>
+                </div>
+                <div class="filter-box">
+                    <div class="filter-group">
+                        <label>Ownership 100%</label>
+                        <input type="range" min="0" max="100" value="100">
+                    </div>
+                    <div class="filter-group">
+                        <label>Price £16m</label>
+                        <input type="range" min="4" max="16" step="0.5">
+                    </div>
+                    <select id="pos-filter"><option>Select Position</option></select>
+                    <select id="club-filter"><option>Select Club</option></select>
+                    <input type="text" id="name-search" placeholder="Search by name">
+                    <div id="market-results" class="market-list"></div>
+                </div>
+            </aside>
+        </div>
     </div>
     <script src="plan.js"></script>
 </body>
