@@ -1,21 +1,24 @@
 const API_BASE = "/fpl-api/";
-const LEAGUE_ID = "101712";
 
+// This map allows the app to track which league is currently being displayed
+let currentLeagueId = "101712"; 
 let playerMap = {};
 let teamMap = {};
 let managerSquads = {}; 
 
 /**
  * Initialization & Data Fetching
+ * @param {string} leagueId - The ID of the FPL league to load
  */
-async function fetchProLeague() {
+async function fetchProLeague(leagueId = "101712") {
+    currentLeagueId = leagueId; // Update the global tracker
     const loader = document.getElementById("loading-overlay");
     if (loader) loader.classList.remove("hidden");
 
     try {
         const [staticRes, leagueRes] = await Promise.all([
             fetch(`${API_BASE}bootstrap-static/`),
-            fetch(`${API_BASE}leagues-classic/${LEAGUE_ID}/standings/`)
+            fetch(`${API_BASE}leagues-classic/${leagueId}/standings/`)
         ]);
 
         const staticData = await staticRes.json();
@@ -33,13 +36,18 @@ async function fetchProLeague() {
         });
 
         const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
-        document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
+        
+        // Update GW Label if it exists in your HTML
+        const gwLabel = document.getElementById("active-gw-label");
+        if (gwLabel) gwLabel.textContent = `GW ${currentEvent}`;
 
+        // Render the specific league data
         renderTable(leagueData.standings.results);
         loadLeagueIntelligence(leagueData.standings.results, currentEvent);
 
     } catch (err) { 
         console.error("Error fetching FPL data:", err); 
+        if (loader) loader.classList.add("hidden");
     }
 }
 
@@ -61,6 +69,8 @@ function getTeamClass(teamId) {
  */
 function renderTable(managers) {
     const body = document.getElementById("league-body");
+    if (!body) return;
+
     body.innerHTML = managers.map((m) => `
         <tr id="row-${m.entry}">
             <td class="rank-col">${m.rank}</td>
@@ -107,7 +117,6 @@ async function loadLeagueIntelligence(managers, eventId) {
             };
             managerSquads[m.entry] = picks;
             
-            // Track ownership for Differential logic
             picks.picks.forEach(p => {
                 ownership[p.element] = (ownership[p.element] || 0) + 1;
             });
@@ -118,11 +127,9 @@ async function loadLeagueIntelligence(managers, eventId) {
         const data = managerDetails[m.entry];
         if (!data) return;
 
-        // Update Value
         const valSpan = document.getElementById(`val-${m.entry}`);
         if(valSpan) valSpan.innerText = `£${(data.picks.entry_history.value / 10).toFixed(1)}m`;
 
-        // Update Captain & Active Chips
         const cap = data.picks.picks.find(p => p.is_captain);
         const chip = data.picks.active_chip;
         const capCell = document.getElementById(`cap-${m.entry}`);
@@ -133,7 +140,6 @@ async function loadLeagueIntelligence(managers, eventId) {
             `;
         }
 
-        // Update Differentials (Owned by only 1 person in the viewable table)
         const diffs = data.picks.picks.filter(p => ownership[p.element] === 1);
         const diffDiv = document.getElementById(`diffs-${m.entry}`);
         if(diffDiv) {
@@ -141,14 +147,12 @@ async function loadLeagueIntelligence(managers, eventId) {
                 `<span class="mini-tag tag-diff">${playerMap[p.element].name}</span>`).join('') || '—';
         }
 
-        // Update Transfers In
         const transDiv = document.getElementById(`trans-${m.entry}`);
         if(transDiv) {
             transDiv.innerHTML = data.trans.map(t => 
                 `<span class="mini-tag tag-in">${playerMap[t.element_in].name}</span>`).join('') || 'None';
         }
 
-        // Update Transfer Hits (Cost)
         const hitsDiv = document.getElementById(`hits-${m.entry}`);
         const hits = data.picks.entry_history.event_transfer_cost;
         if(hitsDiv && hits > 0) hitsDiv.innerText = `-${hits}`;
@@ -211,24 +215,16 @@ function handleManagerClick(id, name) {
         </div>
     `;
     modal.classList.remove("hidden");
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
+    document.body.style.overflow = 'hidden'; 
 }
 
-/**
- * UI Utility: Swipe Hint handling
- */
 function initSwipeHint() {
     const hint = document.getElementById('scroll-hint');
     const tableWrapper = document.querySelector('.table-wrapper');
-
     if (!hint || !tableWrapper) return;
-
-    // Hide hint if user scrolls the table
     tableWrapper.addEventListener('scroll', () => {
         hint.classList.add('hidden-hint');
     }, { once: true });
-
-    // Auto-hide after 5 seconds
     setTimeout(() => {
         hint.classList.add('hidden-hint');
     }, 5000);
@@ -237,12 +233,16 @@ function initSwipeHint() {
 /**
  * Event Listeners
  */
-document.getElementById("close-modal").onclick = () => {
-    document.getElementById("team-modal").classList.add("hidden");
-    document.body.style.overflow = ''; // Restore background scroll
-};
+const closeModal = document.getElementById("close-modal");
+if (closeModal) {
+    closeModal.onclick = () => {
+        document.getElementById("team-modal").classList.add("hidden");
+        document.body.style.overflow = ''; 
+    };
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-    fetchProLeague();
+    // Initial load with default league
+    fetchProLeague("101712");
     initSwipeHint();
 });
