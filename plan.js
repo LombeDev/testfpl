@@ -1,64 +1,64 @@
-const FPL_DATA = "https://corsproxy.io/?https://fantasy.premierleague.com/api/bootstrap-static/";
-let squad = Array(15).fill(null);
-let selectedSlot = null;
+async function fetchFDR() {
+    // Proxy added to bypass CORS issues during local development
+    const proxy = "https://corsproxy.io/?";
+    const baseUrl = "https://fantasy.premierleague.com/api/";
 
-async function loadData() {
-    const res = await fetch(FPL_DATA);
-    const data = await res.json();
-    setupMarket(data.elements);
-    renderPitch();
+    try {
+        const [teamsRes, fixturesRes] = await Promise.all([
+            fetch(`${proxy}${baseUrl}bootstrap-static/`),
+            fetch(`${proxy}${baseUrl}fixtures/`)
+        ]);
+
+        const staticData = await teamsRes.json();
+        const fixtures = await fixturesRes.json();
+
+        // Map Teams for quick lookup
+        const teams = {};
+        staticData.teams.forEach(t => {
+            teams[t.id] = { name: t.name, short: t.short_name };
+        });
+
+        renderTable(teams, fixtures);
+    } catch (error) {
+        document.getElementById('fdr-container').innerHTML = "Error loading data.";
+        console.error(error);
+    }
 }
 
-function renderPitch() {
-    // Clear rows
-    [1, 2, 3, 4].forEach(r => document.getElementById(`row-${r}`).innerHTML = '');
-    document.getElementById('row-bench').innerHTML = '';
+function renderTable(teams, fixtures) {
+    const container = document.getElementById('fdr-container');
+    let html = `<table><tr><th class="team-name">Team</th>`;
+    
+    // Set how many Gameweeks to show (e.g., next 5)
+    const startGW = 20; // You can calculate this dynamically from staticData.events
+    const endGW = 25;
 
-    squad.forEach((player, index) => {
-        const card = document.createElement('div');
-        card.className = "player-card";
-        if(player) {
-            card.innerHTML = `
-                <div class="shirt-container">
-                    <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_0-66.webp" width="50">
-                </div>
-                <div class="player-label">${player.web_name}</div>
-                <div class="fix-label">CHE (H)</div>
-            `;
-        } else {
-            card.innerHTML = `<div class="shirt-container" style="opacity:0.4"></div><div class="player-label">Empty</div>`;
-        }
+    for (let i = startGW; i <= endGW; i++) html += `<th>GW${i}</th>`;
+    html += `</tr>`;
+
+    Object.keys(teams).forEach(teamId => {
+        html += `<tr><td class="team-name">${teams[teamId].name}</td>`;
         
-        card.onclick = () => {
-            selectedSlot = index;
-            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
-        };
-
-        // Auto-sorting into positions (Basic 15-man layout)
-        if (index < 11 && player) {
-            document.getElementById(`row-${player.element_type}`).appendChild(card);
-        } else {
-            document.getElementById('row-bench').appendChild(card);
-        }
-    });
-}
-
-function setupMarket(players) {
-    const list = document.getElementById('market-results');
-    players.slice(0, 20).forEach(p => {
-        const item = document.createElement('div');
-        item.style.padding = "10px";
-        item.style.borderBottom = "1px solid #fff";
-        item.innerHTML = `${p.web_name} - £${p.now_cost/10}`;
-        item.onclick = () => {
-            if(selectedSlot !== null) {
-                squad[selectedSlot] = p;
-                renderPitch();
+        for (let gw = startGW; gw <= endGW; gw++) {
+            // Find fixture for this team in this GW
+            const fix = fixtures.find(f => f.event === gw && (f.team_h == teamId || f.team_a == teamId));
+            
+            if (fix) {
+                const isHome = fix.team_h == teamId;
+                const opponentId = isHome ? fix.team_a : fix.team_h;
+                const diff = isHome ? fix.team_h_difficulty : fix.team_a_difficulty;
+                const venue = isHome ? "(H)" : "(A)";
+                
+                html += `<td class="diff-${diff}">${teams[opponentId].short} ${venue}</td>`;
+            } else {
+                html += `<td>-</td>`; // Blank Gameweek
             }
-        };
-        list.appendChild(item);
+        }
+        html += `</tr>`;
     });
+
+    html += `</table>`;
+    container.innerHTML = html;
 }
 
-loadData();
+fetchFDR();
