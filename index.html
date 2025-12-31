@@ -40,7 +40,31 @@
             overflow-x: hidden;
         }
 
-        /* Accessibility: Visually hidden but readable by screen readers */
+        /* --- DESKTOP GRID SYSTEM --- */
+        .container {
+            width: 100%;
+            max-width: 1200px !important;
+            margin: 20px auto;
+            padding: 0 15px;
+            display: grid;
+            grid-template-columns: 1fr; /* Mobile default */
+            gap: 20px;
+        }
+
+        @media screen and (min-width: 992px) {
+            .container {
+                grid-template-columns: 1fr 350px; /* 2-Column Desktop Layout */
+                align-items: start;
+            }
+            .sidebar-area {
+                position: sticky;
+                top: 80px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
         .sr-only {
             position: absolute;
             width: 1px;
@@ -95,7 +119,6 @@
 
         .brand span { color: var(--fpl-primary); margin-left: 5px; }
 
-        /* Accessibility Fix: menu-icon converted from div to button */
         .menu-icon {
             background: none;
             border: none;
@@ -133,7 +156,6 @@
         }
 
         .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
-        /* Accessibility: Changed from div to button in body */
         .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); padding: 0; }
 
         /* --- CARD STRUCTURE --- */
@@ -156,6 +178,12 @@
             margin-bottom: 15px;
             text-align: center;
         }
+
+        /* --- TRANSFER SIDEBAR SPECIFIC --- */
+        .market-header { font-size: 0.7rem; font-weight: 800; padding: 8px 12px; text-transform: uppercase; border-radius: 8px; margin-bottom: 10px; }
+        .market-header.in { background: rgba(0, 255, 135, 0.1); color: #008f4b; }
+        .market-header.out { background: rgba(255, 0, 90, 0.1); color: var(--fpl-primary); }
+        .transfer-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--fpl-border); font-size: 0.8rem; font-weight: 600; }
 
         /* --- DEADLINE TIMER --- */
         #countdown-timer {
@@ -193,26 +221,14 @@
             display: block;
         }
 
-        /* --- PWA INSTALL BUTTON STYLING --- */
         #pwa-install-btn {
-            display: none; 
-            position: fixed; 
-            bottom: 30px; 
-            right: 20px; 
-            z-index: 1001; 
-            background: var(--fpl-primary); 
-            color: white; 
-            border: none;
-            border-radius: 50px; 
-            padding: 12px 24px; 
-            font-weight: 800;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            cursor: pointer;
-            align-items: center;
-            gap: 8px;
+            display: none; position: fixed; bottom: 30px; right: 20px; z-index: 1001; 
+            background: var(--fpl-primary); color: white; border: none;
+            border-radius: 50px; padding: 12px 24px; font-weight: 800;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); cursor: pointer;
+            align-items: center; gap: 8px;
         }
 
-        /* --- NAVIGATION --- */
         .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
         .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
         
@@ -223,34 +239,14 @@
         
         .hidden { display: none !important; }
 
-        /* Pulse Animation */
-        .pulse-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #00ff87;
-            border-radius: 50%;
-            display: inline-block;
-            animation: pulse-green 2s infinite;
-        }
-
         @keyframes pulse-green {
             0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
             70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 135, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
         }
+        .pulse-dot { width: 8px; height: 8px; background-color: #00ff87; border-radius: 50%; display: inline-block; animation: pulse-green 2s infinite; }
 
-        .event-item {
-            font-size: 0.75rem;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-        }
-
-        .fixture-row:last-child {
-            border-bottom: none !important;
-        }
+        .event-item { font-size: 0.75rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -323,79 +319,97 @@
         <i class="fa-solid fa-circle-down"></i> INSTALL APP
     </button>
 
-    <main class="container" style="max-width: 800px; margin: 20px auto; padding: 0 15px;">
+    <main class="container">
         <div id="loading-overlay" class="hidden">Updating FPL Data...</div>
 
-        <div id="deadline-card" class="card">
-            <h2 class="accent-title">Next Deadline</h2>
-            <div id="countdown-timer">
-                <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
-                <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
-                <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
-                <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
-            </div>
-            <div id="gw-label" style="text-align: center; margin-top: 15px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
-                GW 18 DEADLINE
-            </div>
-        </div>
-
-        <div id="match-center-card" class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-stadium" aria-hidden="true" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
-                    <h2 class="accent-title" style="margin: 0;">Bonus Points</h2>
+        <div class="main-content-area">
+            
+            <div id="match-center-card" class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-stadium" aria-hidden="true" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
+                        <h2 class="accent-title" style="margin: 0;">Bonus Points</h2>
+                    </div>
+                    <span id="live-indicator" class="hidden" style="display: flex; align-items: center; gap: 5px; color: #00ff87; font-size: 0.7rem; font-weight: 900;">
+                        <span class="pulse-dot"></span> LIVE
+                    </span>
                 </div>
-                <span id="live-indicator" class="hidden" style="display: flex; align-items: center; gap: 5px; color: #00ff87; font-size: 0.7rem; font-weight: 900;">
-                    <span class="pulse-dot"></span> LIVE
-                </span>
-            </div>
 
-            <div id="fixtures-container">
-                <div style="text-align: center; padding: 20px; opacity: 0.5;">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i>
-                    <p style="font-size: 0.8rem; margin-top: 10px;">Checking for live matches...</p>
+                <div id="fixtures-container">
+                    <div style="text-align: center; padding: 20px; opacity: 0.5;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <p style="font-size: 0.8rem; margin-top: 10px;">Checking for live matches...</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div id="id-entry-section" class="card">
-            <h2 class="accent-title">Live Rank</h2>
-            <label for="fpl-id" class="sr-only">Enter FPL Team ID</label>
-            <input type="number" id="fpl-id" placeholder="Enter FPL Team ID" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--fpl-border); margin-bottom:15px; box-sizing:border-box;">
-            <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">Go</button>
-        </div>
-
-        <div id="live-dashboard" class="hidden">
-            <div class="card">
-                <h2 class="accent-title">Manager Dashboard</h2>
-                <p style="text-align:center; font-weight:800; font-size: 1.1rem; margin-bottom: 5px; color: var(--fpl-on-container);" id="disp-name">--</p>
-                <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                    <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Rank</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="disp-transfers">0</span><span class="timer-label">Transfers</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="disp-safety">Live</span><span class="timer-label">Status</span></div>
-                    <button class="timer-unit reset-fpl-id" style="cursor:pointer; border-color: rgba(255,0,0,0.2); background: none;">
-                        <span class="timer-value" style="color:red;"><i class="fa-solid fa-right-from-bracket"></i></span>
-                        <span class="timer-label" style="color:red;">Reset</span>
-                    </button>
+            <div id="live-dashboard" class="hidden">
+                <div class="card">
+                    <h2 class="accent-title">Manager Dashboard</h2>
+                    <p style="text-align:center; font-weight:800; font-size: 1.1rem; margin-bottom: 5px; color: var(--fpl-on-container);" id="disp-name">--</p>
+                    <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
+                        <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
+                        <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Rank</span></div>
+                        <div class="timer-unit"><span class="timer-value" id="disp-transfers">0</span><span class="timer-label">Transfers</span></div>
+                        <div class="timer-unit"><span class="timer-value" id="disp-safety">Live</span><span class="timer-label">Status</span></div>
+                        <button class="timer-unit reset-fpl-id" style="cursor:pointer; border-color: rgba(255,0,0,0.2); background: none;">
+                            <span class="timer-value" style="color:red;"><i class="fa-solid fa-right-from-bracket"></i></span>
+                            <span class="timer-label" style="color:red;">Reset</span>
+                        </button>
+                    </div>
+                    <div id="bps-list" style="margin-top:20px;"></div>
                 </div>
-                <div id="bps-list" style="margin-top:20px;"></div>
             </div>
+
+            <div id="live-king-card" class="card" style="display:none;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <span style="background: var(--fpl-primary); color: white; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 900;">LIVE</span>
+                    <h2 class="accent-title" style="margin:0;">KING OF THE GW</h2>
+                </div>
+                <div id="live-king-content"></div>
+            </div>
+
         </div>
 
-        <div id="live-king-card" class="card" style="display:none;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <span style="background: var(--fpl-primary); color: white; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 900;">LIVE</span>
-                <h2 class="accent-title" style="margin:0;">KING OF THE GW</h2>
+        <div class="sidebar-area">
+            
+            <div id="deadline-card" class="card">
+                <h2 class="accent-title">Next Deadline</h2>
+                <div id="countdown-timer">
+                    <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
+                    <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
+                </div>
+                <div id="gw-label" style="text-align: center; margin-top: 15px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
+                    GW 18 DEADLINE
+                </div>
             </div>
-            <div id="live-king-content"></div>
-        </div>
-        
-        <div id="price-card" class="card" style="display:none;">
-            <h2 class="accent-title">Daily Price Changes</h2>
-            <div id="risers-list"></div>
-            <div id="fallers-list"></div>
+
+            <div id="transfer-market-card" class="card">
+                <h2 class="accent-title">Transfer Market</h2>
+                <div class="market-header in"><i class="fa-solid fa-arrow-up"></i> Top Transfers In</div>
+                <div id="top-transfers-in" style="margin-bottom: 15px;">
+                    </div>
+                <div class="market-header out"><i class="fa-solid fa-arrow-down"></i> Top Transfers Out</div>
+                <div id="top-transfers-out">
+                    </div>
+            </div>
+
+            <div id="id-entry-section" class="card">
+                <h2 class="accent-title">Live Rank</h2>
+                <label for="fpl-id" class="sr-only">Enter FPL Team ID</label>
+                <input type="number" id="fpl-id" placeholder="Enter FPL Team ID" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--fpl-border); margin-bottom:15px; box-sizing:border-box;">
+                <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">Go</button>
+            </div>
+
+            <div id="price-card" class="card" style="display:none;">
+                <h2 class="accent-title">Daily Price Changes</h2>
+                <div id="risers-list"></div>
+                <div id="fallers-list"></div>
+            </div>
+
         </div>
     </main>
 
@@ -415,7 +429,6 @@
     </button>
 
     <script>
-        // Performance: Optimized scroll handler using requestAnimationFrame
         let ticking = false;
         function updateProgressBar() {
             const winScroll = document.documentElement.scrollTop;
@@ -485,17 +498,6 @@
                 applyMaterialTheme(savedTheme, false);
             }
         });
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => {
-                        console.log('✅ Service Worker Registered');
-                        reg.update();
-                    })
-                    .catch(err => console.log('❌ SW Failed', err));
-            });
-        }
     </script>
 
     <script src="script.js" defer></script>
