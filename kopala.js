@@ -1,9 +1,10 @@
 const API_BASE = "/fpl-api/";
 
+// 1. Define your leagues here
 const LEAGUES_LIST = [
     { name: "Kopala FPL", id: "101712" },
     { name: "Bayporteers", id: "147133" },
-    { name: "Zedian Premier League", id: "1745660" },
+    { name: "Zedian Premier League", id: "1745660" }, // Replace with real IDs
     { name: "Zambia", id: "258" },
     { name: "Second Chance", id: "333" }
 ];
@@ -13,45 +14,9 @@ let teamMap = {};
 let managerSquads = {}; 
 
 /**
- * Caching Logic: Determines if we need to fetch new data
- * Data is valid until the next 2:00 AM occurs.
- */
-function isCacheValid(timestamp) {
-    if (!timestamp) return false;
-    
-    const now = new Date();
-    const lastFetch = new Date(timestamp);
-    
-    // Create a date object for 2 AM today
-    const today2AM = new Date();
-    today2AM.setHours(2, 0, 0, 0);
-    
-    // If it's currently before 2AM, the "cutoff" was 2AM yesterday
-    if (now < today2AM) {
-        today2AM.setDate(today2AM.getDate() - 1);
-    }
-    
-    // Cache is valid if it was fetched AFTER the most recent 2 AM
-    return lastFetch > today2AM;
-}
-
-/**
- * Main function with Caching
+ * Main function to fetch and display a specific league
  */
 async function fetchProLeague(leagueId) {
-    const cacheKey = `fpl_cache_${leagueId}`;
-    const cachedData = localStorage.getItem(cacheKey);
-    
-    if (cachedData) {
-        const parsed = JSON.parse(cachedData);
-        if (isCacheValid(parsed.timestamp)) {
-            console.log("Loading from cache (valid until next 2AM)");
-            applyDataToUI(parsed.staticData, parsed.leagueData);
-            return;
-        }
-    }
-
-    // If no cache or cache expired, fetch fresh data
     const loader = document.getElementById("loading-overlay");
     if (loader) loader.classList.remove("hidden");
 
@@ -64,15 +29,23 @@ async function fetchProLeague(leagueId) {
         const staticData = await staticRes.json();
         const leagueData = await leagueRes.json();
 
-        // Save to cache with timestamp
-        const cacheObject = {
-            timestamp: new Date().getTime(),
-            staticData,
-            leagueData
-        };
-        localStorage.setItem(cacheKey, JSON.stringify(cacheObject));
+        // Map Teams and Players
+        staticData.teams.forEach(t => teamMap[t.id] = t.short_name);
+        staticData.elements.forEach(p => {
+            playerMap[p.id] = { 
+                name: p.web_name, 
+                points: p.event_points, 
+                team: p.team, 
+                pos: p.element_type 
+            };
+        });
 
-        applyDataToUI(staticData, leagueData);
+        const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
+        document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
+
+        // Render the managers into the existing table body
+        renderTable(leagueData.standings.results);
+        loadLeagueIntelligence(leagueData.standings.results, currentEvent);
 
     } catch (err) { 
         console.error("Error fetching FPL data:", err); 
@@ -81,33 +54,14 @@ async function fetchProLeague(leagueId) {
 }
 
 /**
- * Helper to process and show data
+ * Renders the League Selection List (The UI from your screenshot)
+ * We inject this into the table-wrapper when no league is selected
  */
-function applyDataToUI(staticData, leagueData) {
-    // Map Teams and Players
-    staticData.teams.forEach(t => teamMap[t.id] = t.short_name);
-    staticData.elements.forEach(p => {
-        playerMap[p.id] = { 
-            name: p.web_name, 
-            points: p.event_points, 
-            team: p.team, 
-            pos: p.element_type 
-        };
-    });
-
-    const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
-    const gwLabel = document.getElementById("active-gw-label");
-    if (gwLabel) gwLabel.textContent = `GW ${currentEvent}`;
-
-    renderTable(leagueData.standings.results);
-    loadLeagueIntelligence(leagueData.standings.results, currentEvent);
-}
-
-// --- KEEP ALL OTHER FUNCTIONS (renderLeagueSelector, renderTable, loadLeagueIntelligence, etc.) EXACTLY AS THEY WERE ---
-
 function renderLeagueSelector() {
     const body = document.getElementById("league-body");
     const tableHeader = document.querySelector("#league-table thead");
+    
+    // Hide the standard table header for the selector view
     if (tableHeader) tableHeader.style.display = "none";
 
     body.innerHTML = LEAGUES_LIST.map(league => `
@@ -126,6 +80,9 @@ function renderLeagueSelector() {
     `).join('');
 }
 
+/**
+ * Maps Team IDs to CSS Classes
+ */
 function getTeamClass(teamId) {
     const mapping = {
         1: 'arsenal', 2: 'aston_villa', 3: 'bournemouth', 4: 'brentford', 5: 'brighton', 
@@ -136,9 +93,14 @@ function getTeamClass(teamId) {
     return mapping[teamId] || 'default';
 }
 
+/**
+ * Renders the Standings Table
+ */
 function renderTable(managers) {
     const body = document.getElementById("league-body");
     const tableHeader = document.querySelector("#league-table thead");
+    
+    // Show the table header again
     if (tableHeader) tableHeader.style.display = "table-header-group";
 
     body.innerHTML = managers.map((m) => `
@@ -165,6 +127,9 @@ function renderTable(managers) {
     `).join('');
 }
 
+/**
+ * Intelligence logic (Captain, Diffs, etc)
+ */
 async function loadLeagueIntelligence(managers, eventId) {
     const ownership = {};
     const managerDetails = {};
@@ -229,6 +194,9 @@ async function loadLeagueIntelligence(managers, eventId) {
     if (loader) loader.classList.add("hidden");
 }
 
+/**
+ * Modal Handling (Jersey Pitch)
+ */
 function handleManagerClick(id, name) {
     const data = managerSquads[id];
     if (!data) return;
@@ -282,11 +250,15 @@ function handleManagerClick(id, name) {
     document.body.style.overflow = 'hidden'; 
 }
 
+/**
+ * Event Listeners & Init
+ */
 document.getElementById("close-modal").onclick = () => {
     document.getElementById("team-modal").classList.add("hidden");
     document.body.style.overflow = ''; 
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Start with the League Selection list
     renderLeagueSelector();
 });
