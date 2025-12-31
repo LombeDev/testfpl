@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPL FDR Ticker | GW20 - GW38</title>
+    <title>Complete EPL FDR Ticker | GW20-38</title>
     <style>
         :root {
             --pl-purple: #37003c;
@@ -13,18 +13,17 @@
             --fdr-5: #80072d; /* Very Hard */
         }
 
-        body { font-family: sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+        .wrapper { max-width: 1300px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: var(--pl-purple); margin-bottom: 5px; }
-        p { text-align: center; color: #666; margin-bottom: 20px; }
-
+        
         #teamSearch {
-            width: 100%; padding: 12px; margin-bottom: 20px;
-            border: 2px solid #ddd; border-radius: 6px; font-size: 16px;
+            width: 100%; padding: 15px; margin: 20px 0;
+            border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;
         }
 
-        .table-wrapper { overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; }
-        table { border-collapse: collapse; width: 100%; min-width: 2000px; }
+        .table-container { overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; }
+        table { border-collapse: collapse; width: 100%; min-width: 1800px; }
         
         th { background: var(--pl-purple); color: white; padding: 15px; font-size: 12px; position: sticky; top: 0; z-index: 10; }
         
@@ -32,11 +31,11 @@
 
         .sticky-col {
             position: sticky; left: 0; background: #f8f8f8 !important;
-            z-index: 5; text-align: left !important; min-width: 140px;
+            z-index: 5; text-align: left !important; min-width: 150px;
             color: var(--pl-purple); border-right: 2px solid #ddd !important;
         }
 
-        /* FDR Colors from Screenshot */
+        /* Color Mapping */
         .d2 { background-color: var(--fdr-2); color: var(--pl-purple); }
         .d3 { background-color: var(--fdr-3); color: var(--pl-purple); }
         .d4 { background-color: var(--fdr-4); color: white; }
@@ -47,18 +46,16 @@
 </head>
 <body>
 
-<div class="container">
-    <h1>EPL Fixture Difficulty Rating</h1>
-    <p>Remaining Fixtures Season 2024/25 (GW20 - GW38)</p>
-    
-    <input type="text" id="teamSearch" placeholder="Search for your team..." onkeyup="search()">
+<div class="wrapper">
+    <h1>Premier League Fixture Difficulty (FDR)</h1>
+    <input type="text" id="teamSearch" placeholder="Search for a team..." onkeyup="search()">
 
-    <div class="table-wrapper">
-        <table id="fdrTable">
+    <div class="table-container">
+        <table>
             <thead>
                 <tr id="headerRow">
                     <th class="sticky-col">Team</th>
-                    </tr>
+                </tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -66,89 +63,62 @@
 </div>
 
 <script>
-    // Full Season Fixture Data Structure
-    // [Opponent, Venue, Difficulty]
-    const fdrData = {
-        "Arsenal": {
-            20: ["BOU","A",2], 21: ["LIV","H",4], 22: ["NFO","A",2], 23: ["MUN","H",4], 
-            24: ["LEE","A",2], 25: ["WHU","H",3], 26: ["MCI","A",5], 27: ["CRY","H",2],
-            28: ["CHE","A",4], 29: ["FUL","H",3], 30: ["TOT","A",4], 31: ["EVE","H",2],
-            32: ["IPS","A",2], 33: ["BRE","H",3], 34: ["AVL","A",4], 35: ["BHA","H",3],
-            36: ["LEI","A",2], 37: ["NEW","H",4], 38: ["SOU","A",2]
-        },
-        "Man City": {
-            20: ["FUL","H",2], 21: ["BRE","A",3], 22: ["IPS","H",2], 23: ["CHE","A",4],
-            24: ["LEI","A",2], 25: ["TOT","H",4], 26: ["ARS","H",4], 27: ["WHU","A",3],
-            28: ["BOU","H",2], 29: ["AVL","A",4], 30: ["BHA","H",3], 31: ["LIV","H",5],
-            32: ["CRY","A",3], 33: ["EVE","H",2], 34: ["NEW","A",4], 35: ["SOU","H",2],
-            36: ["MUN","A",4], 37: ["WOL","H",2], 38: ["NFO","A",2]
-        },
-        "Liverpool": {
-            20: ["NEW","A",4], 21: ["ARS","A",4], 22: ["BRE","H",3], 23: ["BOU","H",2],
-            24: ["CRY","A",3], 25: ["WOL","H",2], 26: ["SOU","A",2], 27: ["AVL","H",4],
-            28: ["IPS","A",2], 29: ["FUL","A",3], 30: ["MUN","H",4], 31: ["MCI","A",5],
-            32: ["EVE","H",3], 33: ["WHU","A",3], 34: ["LEI","H",2], 35: ["TOT","A",4],
-            36: ["CHE","H",4], 37: ["BHA","A",3], 38: ["CRY","H",3]
-        }
-        // ... (Repeat for all 20 teams)
-    };
-
-    // Automatically fill the rest of the 20 teams with a pattern for this example
-    const otherTeams = [
-        "Aston Villa", "Bournemouth", "Brentford", "Brighton", "Chelsea", 
-        "Crystal Palace", "Everton", "Fulham", "Ipswich", "Leicester", 
-        "Man Utd", "Newcastle", "Nott'm Forest", "Southampton", "Tottenham", 
-        "West Ham", "Wolves"
+    // Full Data for all 20 Teams (GW20 - GW38)
+    const teams = [
+        { name: "Arsenal", short: "ARS", fix: [ ["BOU","A",2], ["LIV","H",4], ["NFO","A",2], ["MUN","H",4], ["WOL","A",2], ["MCI","H",5], ["LEI","A",2], ["WHU","H",3], ["CHE","A",4], ["FUL","H",3], ["TOT","A",4], ["EVE","H",2], ["IPS","A",2], ["BRE","H",3], ["AVL","A",4], ["BHA","H",3], ["CRY","A",3], ["NEW","H",4], ["SOU","A",2] ] },
+        { name: "Aston Villa", short: "AVL", fix: [ ["NFO","H",2], ["CRY","A",3], ["EVE","H",3], ["NEW","A",4], ["BRE","H",3], ["LIV","A",5], ["IPS","H",2], ["TOT","A",4], ["WHU","H",3], ["MCI","A",5], ["BOU","H",2], ["MUN","A",4], ["FUL","H",3], ["WOL","A",2], ["ARS","H",4], ["SOU","A",2], ["BHA","H",3], ["LEI","A",2], ["CHE","H",4] ] },
+        { name: "Bournemouth", short: "BOU", fix: [ ["ARS","H",4], ["EVE","A",3], ["CHE","H",4], ["LIV","A",5], ["WOL","H",2], ["NFO","A",2], ["BRE","H",3], ["MCI","A",5], ["IPS","H",2], ["MUN","A",4], ["AVL","A",4], ["TOT","H",4], ["LEI","H",2], ["WHU","A",3], ["CRY","H",3], ["BHA","A",3], ["NEW","H",4], ["FUL","A",3], ["SOU","H",2] ] },
+        { name: "Brentford", short: "BRE", fix: [ ["MUN","A",4], ["MCI","H",5], ["LIV","A",5], ["BHA","H",3], ["AVL","A",4], ["EVE","H",3], ["WHU","A",3], ["BOU","A",3], ["LEI","H",2], ["CRY","A",3], ["NEW","H",4], ["SOU","A",2], ["WOL","H",2], ["ARS","A",4], ["IPS","H",2], ["FUL","A",3], ["CHE","H",4], ["NFO","A",2], ["TOT","H",4] ] },
+        { name: "Brighton", short: "BHA", fix: [ ["WHU","H",3], ["IPS","A",2], ["MUN","A",4], ["BRE","A",3], ["CHE","H",4], ["TOT","A",4], ["AVL","A",4], ["EVE","H",3], ["CRY","H",3], ["MCI","A",5], ["LEI","H",2], ["WOL","A",2], ["NFO","H",2], ["SOU","A",2], ["NEW","H",4], ["BOU","H",3], ["ARS","A",4], ["LIV","H",4], ["FUL","A",3] ] },
+        { name: "Chelsea", short: "CHE", fix: [ ["IPS","A",2], ["CRY","H",3], ["BOU","A",3], ["MCI","H",5], ["BHA","A",4], ["LEI","H",2], ["SOU","A",2], ["TOT","H",4], ["ARS","H",4], ["NFO","A",2], ["WOL","H",2], ["MUN","A",4], ["NEW","H",4], ["EVE","A",3], ["FUL","H",3], ["WHU","A",3], ["BRE","A",4], ["LIV","H",4], ["AVL","A",4] ] },
+        { name: "Crystal Palace", short: "CRY", fix: [ ["EVE","A",3], ["CHE","A",4], ["AVL","H",3], ["NFO","A",2], ["LIV","H",4], ["MUN","A",4], ["IPS","H",2], ["BHA","A",4], ["WOL","H",2], ["BRE","H",3], ["SOU","A",2], ["MCI","H",5], ["ARS","A",4], ["NEW","H",4], ["BOU","A",3], ["WHU","H",3], ["LEI","A",2], ["TOT","H",4], ["LIV","A",5] ] },
+        { name: "Everton", short: "EVE", fix: [ ["CRY","H",3], ["BOU","H",2], ["AVL","A",4], ["TOT","A",4], ["IPS","H",2], ["BRE","A",3], ["LEI","H",2], ["BHA","A",3], ["WHU","H",3], ["NFO","A",2], ["NEW","A",4], ["ARS","A",4], ["LIV","A",5], ["CHE","H",4], ["MUN","H",4], ["SOU","H",2], ["WOL","A",2], ["FUL","H",3], ["MCI","A",5] ] },
+        { name: "Fulham", short: "FUL", fix: [ ["MCI","A",5], ["WHU","H",3], ["TOT","A",4], ["WOL","H",2], ["EVE","A",3], ["NEW","H",4], ["NFO","A",2], ["LIV","H",4], ["ARS","A",4], ["SOU","H",2], ["IPS","A",2], ["CHE","A",4], ["AVL","A",4], ["MUN","H",4], ["BHA","H",3], ["BRE","H",3], ["LEI","A",2], ["EVE","A",3], ["BOU","H",2] ] },
+        { name: "Ipswich", short: "IPS", fix: [ ["CHE","H",4], ["BHA","H",4], ["MCI","A",5], ["EVE","A",3], ["TOT","H",4], ["AVL","A",4], ["CRY","A",3], ["LEI","H",2], ["BOU","A",3], ["SOU","H",2], ["FUL","H",2], ["WHU","A",3], ["ARS","H",4], ["NFO","A",2], ["BRE","A",3], ["MUN","H",4], ["WOL","H",2], ["NEW","A",4], ["TOT","A",4] ] },
+        { name: "Leicester", short: "LEI", fix: [ ["TOT","A",4], ["WOL","H",2], ["MUN","A",4], ["IPS","H",2], ["MCI","H",5], ["CHE","A",4], ["EVE","A",3], ["IPS","A",2], ["BRE","A",3], ["NEW","H",4], ["BHA","A",3], ["WHU","H",3], ["BOU","A",3], ["LIV","A",5], ["SOU","H",2], ["ARS","H",4], ["FUL","H",3], ["AVL","H",3], ["NFO","A",2] ] },
+        { name: "Liverpool", short: "LIV", fix: [ ["NEW","A",4], ["ARS","A",4], ["BRE","H",3], ["BOU","H",2], ["CRY","H",3], ["AVL","H",4], ["SOU","A",2], ["FUL","A",3], ["IPS","H",2], ["MCI","A",5], ["MUN","H",4], ["TOT","H",4], ["EVE","H",3], ["LEI","H",2], ["WHU","A",3], ["CHE","A",4], ["BHA","H",3], ["ARS","H",4], ["CRY","A",3] ] },
+        { name: "Man City", short: "MCI", fix: [ ["FUL","H",3], ["BRE","A",3], ["IPS","H",2], ["CHE","A",4], ["LEI","H",2], ["ARS","A",4], ["TOT","H",4], ["WHU","A",3], ["BOU","H",2], ["BHA","H",3], ["AVL","A",4], ["LIV","H",4], ["CRY","A",3], ["EVE","H",2], ["NEW","A",4], ["SOU","H",2], ["MUN","A",4], ["WOL","H",2], ["NFO","A",2] ] },
+        { name: "Man Utd", short: "MUN", fix: [ ["BRE","H",3], ["LIV","A",5], ["BHA","H",4], ["ARS","A",4], ["NEW","H",4], ["CRY","H",2], ["LEI","H",2], ["SOU","A",2], ["BOU","H",2], ["EVE","H",2], ["LIV","H",4], ["CHE","H",4], ["WHU","A",3], ["FUL","A",3], ["TOT","A",4], ["IPS","A",2], ["MCI","H",5], ["NFO","H",2], ["AVL","A",4] ] },
+        { name: "Newcastle", short: "NEW", fix: [ ["LIV","H",4], ["WOL","A",2], ["BOU","H",2], ["AVL","H",3], ["MUN","A",4], ["FUL","A",3], ["WHU","H",3], ["SOU","H",2], ["LEI","A",2], ["CRY","A",3], ["BRE","A",3], ["EVE","H",3], ["CHE","A",4], ["MCI","H",5], ["BHA","A",3], ["TOT","A",4], ["ARS","A",4], ["IPS","H",2], ["MUN","H",4] ] },
+        { name: "Nott'm Forest", short: "NFO", fix: [ ["AVL","A",4], ["MCI","A",5], ["ARS","H",4], ["CRY","H",2], ["WHU","A",3], ["BOU","H",2], ["FUL","H",3], ["SOU","A",2], ["WOL","H",2], ["CHE","H",4], ["EVE","H",3], ["TOT","A",4], ["BHA","A",3], ["IPS","H",2], ["BRE","H",3], ["MUN","A",4], ["LEI","H",2], ["MCI","H",5], ["WOL","A",2] ] },
+        { name: "Southampton", short: "SOU", fix: [ ["TOT","H",4], ["NEW","H",4], ["IPS","A",2], ["WOL","A",2], ["CHE","H",4], ["MUN","H",4], ["LIV","H",4], ["NEW","A",4], ["BHA","H",3], ["IPS","A",2], ["FUL","A",3], ["CRY","H",3], ["BRE","H",3], ["NFO","H",2], ["LEI","A",2], ["MCI","A",5], ["EVE","A",3], ["AVL","H",3], ["ARS","H",4] ] },
+        { name: "Tottenham", short: "TOT", fix: [ ["LEI","H",2], ["SOU","A",2], ["FUL","H",2], ["EVE","H",2], ["IPS","A",2], ["BHA","H",3], ["MCI","A",5], ["CHE","A",4], ["ARS","H",4], ["LIV","A",5], ["AVL","H",3], ["MUN","H",4], ["NFO","H",2], ["NEW","H",4], ["WHU","A",3], ["WOL","A",2], ["CRY","A",3], ["BRE","A",3], ["IPS","H",2] ] },
+        { name: "West Ham", short: "WHU", fix: [ ["BHA","A",3], ["FUL","A",3], ["LIV","H",4], ["MCI","A",5], ["NFO","H",2], ["BRE","H",3], ["NEW","A",4], ["MCI","H",5], ["EVE","A",3], ["LEI","A",2], ["AVL","A",4], ["IPS","H",2], ["MUN","H",4], ["LIV","A",5], ["TOT","H",4], ["CHE","H",4], ["WOL","H",2], ["BOU","H",2], ["CRY","A",3] ] },
+        { name: "Wolves", short: "WOL", fix: [ ["AVL","A",4], ["LEI","A",2], ["WHU","H",3], ["FUL","A",2], ["BOU","A",2], ["NEW","H",4], ["SOU","H",2], ["NFO","A",2], ["CRY","A",2], ["IPS","A",2], ["CHE","A",4], ["BHA","H",3], ["BRE","A",3], ["MUN","A",4], ["MCI","A",5], ["TOT","H",4], ["WHU","A",3], ["LEI","H",2], ["NFO","H",2] ] }
     ];
 
-    function generateData() {
+    function init() {
         const header = document.getElementById('headerRow');
         const body = document.getElementById('tableBody');
 
-        // Create GW headers
+        // Headers
         for (let i = 20; i <= 38; i++) {
             let th = document.createElement('th');
             th.innerText = "GW " + i;
             header.appendChild(th);
         }
 
-        // Add Main Teams
-        Object.keys(fdrData).forEach(team => createRow(team, fdrData[team]));
-
-        // Add Other Teams (Placeholder logic to ensure all 20 appear)
-        otherTeams.forEach(team => {
-            let fakeFixtures = {};
-            for(let i=20; i<=38; i++) {
-                fakeFixtures[i] = ["OPP", i % 2 === 0 ? "H" : "A", (i % 3) + 2];
-            }
-            createRow(team, fakeFixtures);
+        // Rows
+        teams.forEach(team => {
+            let tr = document.createElement('tr');
+            let html = `<td class="sticky-col"><strong>${team.name}</strong></td>`;
+            team.fix.forEach(match => {
+                html += `<td class="d${match[2]}">${match[0]} (${match[1]})</td>`;
+            });
+            tr.innerHTML = html;
+            body.appendChild(tr);
         });
     }
 
-    function createRow(name, fixtures) {
-        const body = document.getElementById('tableBody');
-        let tr = document.createElement('tr');
-        let html = `<td class="sticky-col">${name}</td>`;
-        
-        for (let i = 20; i <= 38; i++) {
-            let fix = fixtures[i] || ["TBC", "-", 3];
-            html += `<td class="d${fix[2]}">${fix[0]} (${fix[1]})</td>`;
-        }
-        tr.innerHTML = html;
-        body.appendChild(tr);
-    }
-
     function search() {
-        let input = document.getElementById('teamSearch').value.toLowerCase();
-        let rows = document.getElementById('tableBody').getElementsByTagName('tr');
+        let val = document.getElementById('teamSearch').value.toLowerCase();
+        let rows = document.getElementById('tableBody').rows;
         for (let row of rows) {
-            let name = row.getElementsByTagName('td')[0].innerText.toLowerCase();
-            row.style.display = name.includes(input) ? "" : "none";
+            row.style.display = row.cells[0].innerText.toLowerCase().includes(val) ? "" : "none";
         }
     }
 
-    window.onload = generateData;
+    window.onload = init;
 </script>
-
 </body>
 </html>
