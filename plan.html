@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPL FDR Ticker | GW20-38</title>
+    <title>Compact EPL FDR</title>
     <style>
         :root {
             --pl-purple: #37003c;
@@ -14,135 +14,126 @@
         }
 
         body { 
-            font-family: 'Segoe UI', Helvetica, Arial, sans-serif; 
-            background: #f8f9fa; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: #fff; 
             margin: 0; 
-            padding: 15px; 
+            padding: 10px; 
+            color: #333;
         }
 
-        .wrapper { 
-            max-width: 1400px; 
-            margin: auto; 
-            background: white; 
-            padding: 15px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08); 
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
-        h1 { 
-            text-align: center; 
-            color: var(--pl-purple); 
-            margin: 0 0 10px 0; 
-            font-size: 1.4rem;
-        }
+        h1 { font-size: 16px; margin: 0; color: var(--pl-purple); }
         
         #teamSearch {
-            width: 100%; 
-            padding: 10px; 
-            margin-bottom: 15px;
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            font-size: 14px; 
-            box-sizing: border-box;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 12px;
+            width: 180px;
         }
 
         .table-container { 
             overflow-x: auto; 
-            border: 1px solid #ddd; 
-            border-radius: 4px; 
+            border: 1px solid #ccc;
         }
 
         table { 
             border-collapse: collapse; 
-            width: 100%; 
-            min-width: 1600px; /* Maintains horizontal layout */
+            width: max-content; /* Shrinks to content */
+            table-layout: fixed; /* Faster rendering & exact widths */
         }
         
         th { 
             background: var(--pl-purple); 
             color: white; 
-            padding: 8px 4px; 
-            font-size: 11px; /* Smaller font */
+            padding: 4px 2px; 
+            font-size: 10px; 
             position: sticky; 
             top: 0; 
-            z-index: 10; 
-            text-transform: uppercase;
+            z-index: 10;
+            width: 55px; /* Forced narrow width for GW columns */
         }
         
         td { 
-            padding: 6px 2px; /* Compact padding */
+            padding: 4px 1px; 
             text-align: center; 
-            font-weight: 700; 
-            font-size: 11px; /* Smaller font */
-            border: 1px solid #fff; 
+            font-weight: bold; 
+            font-size: 10px; 
+            border: 0.5px solid #fff; 
+            line-height: 1.1;
+            white-space: nowrap;
         }
 
+        /* Narrower Sticky Column */
         .sticky-col {
             position: sticky; 
             left: 0; 
-            background: #f1f1f1 !important;
-            z-index: 5; 
+            background: #eee !important;
+            z-index: 15; 
             text-align: left !important; 
-            min-width: 110px; /* Narrower team column */
+            width: 100px !important; /* Extremely narrow team name col */
             color: var(--pl-purple); 
-            border-right: 1px solid #ccc !important;
-            padding-left: 8px;
+            border-right: 2px solid #bbb !important;
+            padding-left: 5px;
+            font-size: 11px;
         }
 
-        /* FDR Colors */
+        /* FDR Color Levels */
         .d2 { background-color: var(--fdr-2); color: var(--pl-purple); }
         .d3 { background-color: var(--fdr-3); color: var(--pl-purple); }
         .d4 { background-color: var(--fdr-4); color: white; }
         .d5 { background-color: var(--fdr-5); color: white; }
 
-        tr:nth-child(even) .sticky-col { background: #e8e8e8 !important; }
-        
-        /* Highlight row on hover */
-        tr:hover td:not(.sticky-col) {
-            filter: contrast(1.1) brightness(0.95);
-        }
+        tr:hover td:not(.sticky-col) { opacity: 0.8; }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <h1>Premier League Fixture Difficulty (GW20 - 38)</h1>
+<div class="header-bar">
+    <h1>EPL FDR (GW20-38)</h1>
     <input type="text" id="teamSearch" placeholder="Filter teams..." onkeyup="search()">
+</div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr id="headerRow">
-                    <th class="sticky-col">Team</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr id="headerRow">
+                <th class="sticky-col">TEAM</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
 </div>
 
 <script>
+    // Full Data for all 20 Teams
     const teams = [
-        { name: "Arsenal", short: "ARS", fix: [ ["BOU","A",2], ["LIV","H",4], ["NFO","A",2], ["MUN","H",4], ["WOL","A",2], ["MCI","H",5], ["LEI","A",2], ["WHU","H",3], ["CHE","A",4], ["FUL","H",3], ["TOT","A",4], ["EVE","H",2], ["IPS","A",2], ["BRE","H",3], ["AVL","A",4], ["BHA","H",3], ["CRY","A",3], ["NEW","H",4], ["SOU","A",2] ] },
-        { name: "Aston Villa", short: "AVL", fix: [ ["NFO","H",2], ["CRY","A",3], ["EVE","H",3], ["NEW","A",4], ["BRE","H",3], ["LIV","A",5], ["IPS","H",2], ["TOT","A",4], ["WHU","H",3], ["MCI","A",5], ["BOU","H",2], ["MUN","A",4], ["FUL","H",3], ["WOL","A",2], ["ARS","H",4], ["SOU","A",2], ["BHA","H",3], ["LEI","A",2], ["CHE","H",4] ] },
-        { name: "Bournemouth", short: "BOU", fix: [ ["ARS","H",4], ["EVE","A",3], ["CHE","H",4], ["LIV","A",5], ["WOL","H",2], ["NFO","A",2], ["BRE","H",3], ["MCI","A",5], ["IPS","H",2], ["MUN","A",4], ["AVL","A",4], ["TOT","H",4], ["LEI","H",2], ["WHU","A",3], ["CRY","H",3], ["BHA","A",3], ["NEW","H",4], ["FUL","A",3], ["SOU","H",2] ] },
-        { name: "Brentford", short: "BRE", fix: [ ["MUN","A",4], ["MCI","H",5], ["LIV","A",5], ["BHA","H",3], ["AVL","A",4], ["EVE","H",3], ["WHU","A",3], ["BOU","A",3], ["LEI","H",2], ["CRY","A",3], ["NEW","H",4], ["SOU","A",2], ["WOL","H",2], ["ARS","A",4], ["IPS","H",2], ["FUL","A",3], ["CHE","H",4], ["NFO","A",2], ["TOT","H",4] ] },
-        { name: "Brighton", short: "BHA", fix: [ ["WHU","H",3], ["IPS","A",2], ["MUN","A",4], ["BRE","A",3], ["CHE","H",4], ["TOT","A",4], ["AVL","A",4], ["EVE","H",3], ["CRY","H",3], ["MCI","A",5], ["LEI","H",2], ["WOL","A",2], ["NFO","H",2], ["SOU","A",2], ["NEW","H",4], ["BOU","H",3], ["ARS","A",4], ["LIV","H",4], ["FUL","A",3] ] },
-        { name: "Chelsea", short: "CHE", fix: [ ["IPS","A",2], ["CRY","H",3], ["BOU","A",3], ["MCI","H",5], ["BHA","A",4], ["LEI","H",2], ["SOU","A",2], ["TOT","H",4], ["ARS","H",4], ["NFO","A",2], ["WOL","H",2], ["MUN","A",4], ["NEW","H",4], ["EVE","A",3], ["FUL","H",3], ["WHU","A",3], ["BRE","A",4], ["LIV","H",4], ["AVL","A",4] ] },
-        { name: "Crystal Palace", short: "CRY", fix: [ ["EVE","A",3], ["CHE","A",4], ["AVL","H",3], ["NFO","A",2], ["LIV","H",4], ["MUN","A",4], ["IPS","H",2], ["BHA","A",4], ["WOL","H",2], ["BRE","H",3], ["SOU","A",2], ["MCI","H",5], ["ARS","A",4], ["NEW","H",4], ["BOU","A",3], ["WHU","H",3], ["LEI","A",2], ["TOT","H",4], ["LIV","A",5] ] },
-        { name: "Everton", short: "EVE", fix: [ ["CRY","H",3], ["BOU","H",2], ["AVL","A",4], ["TOT","A",4], ["IPS","H",2], ["BRE","A",3], ["LEI","H",2], ["BHA","A",3], ["WHU","H",3], ["NFO","A",2], ["NEW","A",4], ["ARS","A",4], ["LIV","A",5], ["CHE","H",4], ["MUN","H",4], ["SOU","H",2], ["WOL","A",2], ["FUL","H",3], ["MCI","A",5] ] },
-        { name: "Fulham", short: "FUL", fix: [ ["MCI","A",5], ["WHU","H",3], ["TOT","A",4], ["WOL","H",2], ["EVE","A",3], ["NEW","H",4], ["NFO","A",2], ["LIV","H",4], ["ARS","A",4], ["SOU","H",2], ["IPS","A",2], ["CHE","A",4], ["AVL","A",4], ["MUN","H",4], ["BHA","H",3], ["BRE","H",3], ["LEI","A",2], ["EVE","A",3], ["BOU","H",2] ] },
-        { name: "Ipswich", short: "IPS", fix: [ ["CHE","H",4], ["BHA","H",4], ["MCI","A",5], ["EVE","A",3], ["TOT","H",4], ["AVL","A",4], ["CRY","A",3], ["LEI","H",2], ["BOU","A",3], ["SOU","H",2], ["FUL","H",2], ["WHU","A",3], ["ARS","H",4], ["NFO","A",2], ["BRE","A",3], ["MUN","H",4], ["WOL","H",2], ["NEW","A",4], ["TOT","A",4] ] },
-        { name: "Leicester", short: "LEI", fix: [ ["TOT","A",4], ["WOL","H",2], ["MUN","A",4], ["IPS","H",2], ["MCI","H",5], ["CHE","A",4], ["EVE","A",3], ["IPS","A",2], ["BRE","A",3], ["NEW","H",4], ["BHA","A",3], ["WHU","H",3], ["BOU","A",3], ["LIV","A",5], ["SOU","H",2], ["ARS","H",4], ["FUL","H",3], ["AVL","H",3], ["NFO","A",2] ] },
-        { name: "Liverpool", short: "LIV", fix: [ ["NEW","A",4], ["ARS","A",4], ["BRE","H",3], ["BOU","H",2], ["CRY","H",3], ["AVL","H",4], ["SOU","A",2], ["FUL","A",3], ["IPS","H",2], ["MCI","A",5], ["MUN","H",4], ["TOT","H",4], ["EVE","H",3], ["LEI","H",2], ["WHU","A",3], ["CHE","A",4], ["BHA","H",3], ["ARS","H",4], ["CRY","A",3] ] },
-        { name: "Man City", short: "MCI", fix: [ ["FUL","H",3], ["BRE","A",3], ["IPS","H",2], ["CHE","A",4], ["LEI","H",2], ["ARS","A",4], ["TOT","H",4], ["WHU","A",3], ["BOU","H",2], ["BHA","H",3], ["AVL","A",4], ["LIV","H",4], ["CRY","A",3], ["EVE","H",2], ["NEW","A",4], ["SOU","H",2], ["MUN","A",4], ["WOL","H",2], ["NFO","A",2] ] },
-        { name: "Man Utd", short: "MUN", fix: [ ["BRE","H",3], ["LIV","A",5], ["BHA","H",4], ["ARS","A",4], ["NEW","H",4], ["CRY","H",2], ["LEI","H",2], ["SOU","A",2], ["BOU","H",2], ["EVE","H",2], ["LIV","H",4], ["CHE","H",4], ["WHU","A",3], ["FUL","A",3], ["TOT","A",4], ["IPS","A",2], ["MCI","H",5], ["NFO","H",2], ["AVL","A",4] ] },
-        { name: "Newcastle", short: "NEW", fix: [ ["LIV","H",4], ["WOL","A",2], ["BOU","H",2], ["AVL","H",3], ["MUN","A",4], ["FUL","A",3], ["WHU","H",3], ["SOU","H",2], ["LEI","A",2], ["CRY","A",3], ["BRE","A",3], ["EVE","H",3], ["CHE","A",4], ["MCI","H",5], ["BHA","A",3], ["TOT","A",4], ["ARS","A",4], ["IPS","H",2], ["MUN","H",4] ] },
-        { name: "Nott'm Forest", short: "NFO", fix: [ ["AVL","A",4], ["MCI","A",5], ["ARS","H",4], ["CRY","H",2], ["WHU","A",3], ["BOU","H",2], ["FUL","H",3], ["SOU","A",2], ["WOL","H",2], ["CHE","H",4], ["EVE","H",3], ["TOT","A",4], ["BHA","A",3], ["IPS","H",2], ["BRE","H",3], ["MUN","A",4], ["LEI","H",2], ["MCI","H",5], ["WOL","A",2] ] },
-        { name: "Southampton", short: "SOU", fix: [ ["TOT","H",4], ["NEW","H",4], ["IPS","A",2], ["WOL","A",2], ["CHE","H",4], ["MUN","H",4], ["LIV","H",4], ["NEW","A",4], ["BHA","H",3], ["IPS","A",2], ["FUL","A",3], ["CRY","H",3], ["BRE","H",3], ["NFO","H",2], ["LEI","A",2], ["MCI","A",5], ["EVE","A",3], ["AVL","H",3], ["ARS","H",4] ] },
-        { name: "Tottenham", short: "TOT", fix: [ ["LEI","H",2], ["SOU","A",2], ["FUL","H",2], ["EVE","H",2], ["IPS","A",2], ["BHA","H",3], ["MCI","A",5], ["CHE","A",4], ["ARS","H",4], ["LIV","A",5], ["AVL","H",3], ["MUN","H",4], ["NFO","H",2], ["NEW","H",4], ["WHU","A",3], ["WOL","A",2], ["CRY","A",3], ["BRE","A",3], ["IPS","H",2] ] },
-        { name: "West Ham", short: "WHU", fix: [ ["BHA","A",3], ["FUL","A",3], ["LIV","H",4], ["MCI","A",5], ["NFO","H",2], ["BRE","H",3], ["NEW","A",4], ["MCI","H",5], ["EVE","A",3], ["LEI","A",2], ["AVL","A",4], ["IPS","H",2], ["MUN","H",4], ["LIV","A",5], ["TOT","H",4], ["CHE","H",4], ["WOL","H",2], ["BOU","H",2], ["CRY","A",3] ] },
-        { name: "Wolves", short: "WOL", fix: [ ["AVL","A",4], ["LEI","A",2], ["WHU","H",3], ["FUL","A",2], ["BOU","A",2], ["NEW","H",4], ["SOU","H",2], ["NFO","A",2], ["CRY","A",2], ["IPS","A",2], ["CHE","A",4], ["BHA","H",3], ["BRE","A",3], ["MUN","A",4], ["MCI","A",5], ["TOT","H",4], ["WHU","A",3], ["LEI","H",2], ["NFO","H",2] ] }
+        { name: "Arsenal", fix: [ ["BOU","A",2], ["LIV","H",4], ["NFO","A",2], ["MUN","H",4], ["WOL","A",2], ["MCI","H",5], ["LEI","A",2], ["WHU","H",3], ["CHE","A",4], ["FUL","H",3], ["TOT","A",4], ["EVE","H",2], ["IPS","A",2], ["BRE","H",3], ["AVL","A",4], ["BHA","H",3], ["CRY","A",3], ["NEW","H",4], ["SOU","A",2] ] },
+        { name: "Aston Villa", fix: [ ["NFO","H",2], ["CRY","A",3], ["EVE","H",3], ["NEW","A",4], ["BRE","H",3], ["LIV","A",5], ["IPS","H",2], ["TOT","A",4], ["WHU","H",3], ["MCI","A",5], ["BOU","H",2], ["MUN","A",4], ["FUL","H",3], ["WOL","A",2], ["ARS","H",4], ["SOU","A",2], ["BHA","H",3], ["LEI","A",2], ["CHE","H",4] ] },
+        { name: "Bournemouth", fix: [ ["ARS","H",4], ["EVE","A",3], ["CHE","H",4], ["LIV","A",5], ["WOL","H",2], ["NFO","A",2], ["BRE","H",3], ["MCI","A",5], ["IPS","H",2], ["MUN","A",4], ["AVL","A",4], ["TOT","H",4], ["LEI","H",2], ["WHU","A",3], ["CRY","H",3], ["BHA","A",3], ["NEW","H",4], ["FUL","A",3], ["SOU","H",2] ] },
+        { name: "Brentford", fix: [ ["MUN","A",4], ["MCI","H",5], ["LIV","A",5], ["BHA","H",3], ["AVL","A",4], ["EVE","H",3], ["WHU","A",3], ["BOU","A",3], ["LEI","H",2], ["CRY","A",3], ["NEW","H",4], ["SOU","A",2], ["WOL","H",2], ["ARS","A",4], ["IPS","H",2], ["FUL","A",3], ["CHE","H",4], ["NFO","A",2], ["TOT","H",4] ] },
+        { name: "Brighton", fix: [ ["WHU","H",3], ["IPS","A",2], ["MUN","A",4], ["BRE","A",3], ["CHE","H",4], ["TOT","A",4], ["AVL","A",4], ["EVE","H",3], ["CRY","H",3], ["MCI","A",5], ["LEI","H",2], ["WOL","A",2], ["NFO","H",2], ["SOU","A",2], ["NEW","H",4], ["BOU","H",3], ["ARS","A",4], ["LIV","H",4], ["FUL","A",3] ] },
+        { name: "Chelsea", fix: [ ["IPS","A",2], ["CRY","H",3], ["BOU","A",3], ["MCI","H",5], ["BHA","A",4], ["LEI","H",2], ["SOU","A",2], ["TOT","H",4], ["ARS","H",4], ["NFO","A",2], ["WOL","H",2], ["MUN","A",4], ["NEW","H",4], ["EVE","A",3], ["FUL","H",3], ["WHU","A",3], ["BRE","A",4], ["LIV","H",4], ["AVL","A",4] ] },
+        { name: "Crystal Palace", fix: [ ["EVE","A",3], ["CHE","A",4], ["AVL","H",3], ["NFO","A",2], ["LIV","H",4], ["MUN","A",4], ["IPS","H",2], ["BHA","A",4], ["WOL","H",2], ["BRE","H",3], ["SOU","A",2], ["MCI","H",5], ["ARS","A",4], ["NEW","H",4], ["BOU","A",3], ["WHU","H",3], ["LEI","A",2], ["TOT","H",4], ["LIV","A",5] ] },
+        { name: "Everton", fix: [ ["CRY","H",3], ["BOU","H",2], ["AVL","A",4], ["TOT","A",4], ["IPS","H",2], ["BRE","A",3], ["LEI","H",2], ["BHA","A",3], ["WHU","H",3], ["NFO","A",2], ["NEW","A",4], ["ARS","A",4], ["LIV","A",5], ["CHE","H",4], ["MUN","H",4], ["SOU","H",2], ["WOL","A",2], ["FUL","H",3], ["MCI","A",5] ] },
+        { name: "Fulham", fix: [ ["MCI","A",5], ["WHU","H",3], ["TOT","A",4], ["WOL","H",2], ["EVE","A",3], ["NEW","H",4], ["NFO","A",2], ["LIV","H",4], ["ARS","A",4], ["SOU","H",2], ["IPS","A",2], ["CHE","A",4], ["AVL","A",4], ["MUN","H",4], ["BHA","H",3], ["BRE","H",3], ["LEI","A",2], ["EVE","A",3], ["BOU","H",2] ] },
+        { name: "Ipswich", fix: [ ["CHE","H",4], ["BHA","H",4], ["MCI","A",5], ["EVE","A",3], ["TOT","H",4], ["AVL","A",4], ["CRY","A",3], ["LEI","H",2], ["BOU","A",3], ["SOU","H",2], ["FUL","H",2], ["WHU","A",3], ["ARS","H",4], ["NFO","A",2], ["BRE","A",3], ["MUN","H",4], ["WOL","H",2], ["NEW","A",4], ["TOT","A",4] ] },
+        { name: "Leicester", fix: [ ["TOT","A",4], ["WOL","H",2], ["MUN","A",4], ["IPS","H",2], ["MCI","H",5], ["CHE","A",4], ["EVE","A",3], ["IPS","A",2], ["BRE","A",3], ["NEW","H",4], ["BHA","A",3], ["WHU","H",3], ["BOU","A",3], ["LIV","A",5], ["SOU","H",2], ["ARS","H",4], ["FUL","H",3], ["AVL","H",3], ["NFO","A",2] ] },
+        { name: "Liverpool", fix: [ ["NEW","A",4], ["ARS","A",4], ["BRE","H",3], ["BOU","H",2], ["CRY","H",3], ["AVL","H",4], ["SOU","A",2], ["FUL","A",3], ["IPS","H",2], ["MCI","A",5], ["MUN","H",4], ["TOT","H",4], ["EVE","H",3], ["LEI","H",2], ["WHU","A",3], ["CHE","A",4], ["BHA","H",3], ["ARS","H",4], ["CRY","A",3] ] },
+        { name: "Man City", fix: [ ["FUL","H",3], ["BRE","A",3], ["IPS","H",2], ["CHE","A",4], ["LEI","H",2], ["ARS","A",4], ["TOT","H",4], ["WHU","A",3], ["BOU","H",2], ["BHA","H",3], ["AVL","A",4], ["LIV","H",4], ["CRY","A",3], ["EVE","H",2], ["NEW","A",4], ["SOU","H",2], ["MUN","A",4], ["WOL","H",2], ["NFO","A",2] ] },
+        { name: "Man Utd", fix: [ ["BRE","H",3], ["LIV","A",5], ["BHA","H",4], ["ARS","A",4], ["NEW","H",4], ["CRY","H",2], ["LEI","H",2], ["SOU","A",2], ["BOU","H",2], ["EVE","H",2], ["LIV","H",4], ["CHE","H",4], ["WHU","A",3], ["FUL","A",3], ["TOT","A",4], ["IPS","A",2], ["MCI","H",5], ["NFO","H",2], ["AVL","A",4] ] },
+        { name: "Newcastle", fix: [ ["LIV","H",4], ["WOL","A",2], ["BOU","H",2], ["AVL","H",3], ["MUN","A",4], ["FUL","A",3], ["WHU","H",3], ["SOU","H",2], ["LEI","A",2], ["CRY","A",3], ["BRE","A",3], ["EVE","H",3], ["CHE","A",4], ["MCI","H",5], ["BHA","A",3], ["TOT","A",4], ["ARS","A",4], ["IPS","H",2], ["MUN","H",4] ] },
+        { name: "Nott'm Forest", fix: [ ["AVL","A",4], ["MCI","A",5], ["ARS","H",4], ["CRY","H",2], ["WHU","A",3], ["BOU","H",2], ["FUL","H",3], ["SOU","A",2], ["WOL","H",2], ["CHE","H",4], ["EVE","H",3], ["TOT","A",4], ["BHA","A",3], ["IPS","H",2], ["BRE","H",3], ["MUN","A",4], ["LEI","H",2], ["MCI","H",5], ["WOL","A",2] ] },
+        { name: "Southampton", fix: [ ["TOT","H",4], ["NEW","H",4], ["IPS","A",2], ["WOL","A",2], ["CHE","H",4], ["MUN","H",4], ["LIV","H",4], ["NEW","A",4], ["BHA","H",3], ["IPS","A",2], ["FUL","A",3], ["CRY","H",3], ["BRE","H",3], ["NFO","H",2], ["LEI","A",2], ["MCI","A",5], ["EVE","A",3], ["AVL","H",3], ["ARS","H",4] ] },
+        { name: "Tottenham", fix: [ ["LEI","H",2], ["SOU","A",2], ["FUL","H",2], ["EVE","H",2], ["IPS","A",2], ["BHA","H",3], ["MCI","A",5], ["CHE","A",4], ["ARS","H",4], ["LIV","A",5], ["AVL","H",3], ["MUN","H",4], ["NFO","H",2], ["NEW","H",4], ["WHU","A",3], ["WOL","A",2], ["CRY","A",3], ["BRE","A",3], ["IPS","H",2] ] },
+        { name: "West Ham", fix: [ ["BHA","A",3], ["FUL","A",3], ["LIV","H",4], ["MCI","A",5], ["NFO","H",2], ["BRE","H",3], ["NEW","A",4], ["MCI","H",5], ["EVE","A",3], ["LEI","A",2], ["AVL","A",4], ["IPS","H",2], ["MUN","H",4], ["LIV","A",5], ["TOT","H",4], ["CHE","H",4], ["WOL","H",2], ["BOU","H",2], ["CRY","A",3] ] },
+        { name: "Wolves", fix: [ ["AVL","A",4], ["LEI","A",2], ["WHU","H",3], ["FUL","A",2], ["BOU","A",2], ["NEW","H",4], ["SOU","H",2], ["NFO","A",2], ["CRY","A",2], ["IPS","A",2], ["CHE","A",4], ["BHA","H",3], ["BRE","A",3], ["MUN","A",4], ["MCI","A",5], ["TOT","H",4], ["WHU","A",3], ["LEI","H",2], ["NFO","H",2] ] }
     ];
 
     function init() {
@@ -157,9 +148,9 @@
 
         teams.forEach(team => {
             let tr = document.createElement('tr');
-            let html = `<td class="sticky-col">${team.name}</td>`;
+            let html = `<td class="sticky-col"><strong>${team.name}</strong></td>`;
             team.fix.forEach(match => {
-                html += `<td class="d${match[2]}">${match[0]}<br>(${match[1]})</td>`;
+                html += `<td class="d${match[2]}">${match[0]}<br>${match[1]}</td>`;
             });
             tr.innerHTML = html;
             body.appendChild(tr);
