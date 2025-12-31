@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete EPL FDR Ticker | GW20-38</title>
+    <title>EPL FDR Ticker | GW20-38</title>
     <style>
         :root {
             --pl-purple: #37003c;
@@ -13,42 +13,101 @@
             --fdr-5: #80072d; /* Very Hard */
         }
 
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-        .wrapper { max-width: 1300px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--pl-purple); margin-bottom: 5px; }
+        body { 
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif; 
+            background: #f8f9fa; 
+            margin: 0; 
+            padding: 15px; 
+        }
+
+        .wrapper { 
+            max-width: 1400px; 
+            margin: auto; 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08); 
+        }
+
+        h1 { 
+            text-align: center; 
+            color: var(--pl-purple); 
+            margin: 0 0 10px 0; 
+            font-size: 1.4rem;
+        }
         
         #teamSearch {
-            width: 100%; padding: 15px; margin: 20px 0;
-            border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;
+            width: 100%; 
+            padding: 10px; 
+            margin-bottom: 15px;
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            font-size: 14px; 
+            box-sizing: border-box;
         }
 
-        .table-container { overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; }
-        table { border-collapse: collapse; width: 100%; min-width: 1800px; }
+        .table-container { 
+            overflow-x: auto; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            min-width: 1600px; /* Maintains horizontal layout */
+        }
         
-        th { background: var(--pl-purple); color: white; padding: 15px; font-size: 12px; position: sticky; top: 0; z-index: 10; }
+        th { 
+            background: var(--pl-purple); 
+            color: white; 
+            padding: 8px 4px; 
+            font-size: 11px; /* Smaller font */
+            position: sticky; 
+            top: 0; 
+            z-index: 10; 
+            text-transform: uppercase;
+        }
         
-        td { padding: 12px; text-align: center; font-weight: bold; font-size: 13px; border: 1px solid #fff; }
+        td { 
+            padding: 6px 2px; /* Compact padding */
+            text-align: center; 
+            font-weight: 700; 
+            font-size: 11px; /* Smaller font */
+            border: 1px solid #fff; 
+        }
 
         .sticky-col {
-            position: sticky; left: 0; background: #f8f8f8 !important;
-            z-index: 5; text-align: left !important; min-width: 150px;
-            color: var(--pl-purple); border-right: 2px solid #ddd !important;
+            position: sticky; 
+            left: 0; 
+            background: #f1f1f1 !important;
+            z-index: 5; 
+            text-align: left !important; 
+            min-width: 110px; /* Narrower team column */
+            color: var(--pl-purple); 
+            border-right: 1px solid #ccc !important;
+            padding-left: 8px;
         }
 
-        /* Color Mapping */
+        /* FDR Colors */
         .d2 { background-color: var(--fdr-2); color: var(--pl-purple); }
         .d3 { background-color: var(--fdr-3); color: var(--pl-purple); }
         .d4 { background-color: var(--fdr-4); color: white; }
         .d5 { background-color: var(--fdr-5); color: white; }
 
-        tr:nth-child(even) .sticky-col { background: #eee !important; }
+        tr:nth-child(even) .sticky-col { background: #e8e8e8 !important; }
+        
+        /* Highlight row on hover */
+        tr:hover td:not(.sticky-col) {
+            filter: contrast(1.1) brightness(0.95);
+        }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    <h1>Premier League Fixture Difficulty (FDR)</h1>
-    <input type="text" id="teamSearch" placeholder="Search for a team..." onkeyup="search()">
+    <h1>Premier League Fixture Difficulty (GW20 - 38)</h1>
+    <input type="text" id="teamSearch" placeholder="Filter teams..." onkeyup="search()">
 
     <div class="table-container">
         <table>
@@ -63,7 +122,6 @@
 </div>
 
 <script>
-    // Full Data for all 20 Teams (GW20 - GW38)
     const teams = [
         { name: "Arsenal", short: "ARS", fix: [ ["BOU","A",2], ["LIV","H",4], ["NFO","A",2], ["MUN","H",4], ["WOL","A",2], ["MCI","H",5], ["LEI","A",2], ["WHU","H",3], ["CHE","A",4], ["FUL","H",3], ["TOT","A",4], ["EVE","H",2], ["IPS","A",2], ["BRE","H",3], ["AVL","A",4], ["BHA","H",3], ["CRY","A",3], ["NEW","H",4], ["SOU","A",2] ] },
         { name: "Aston Villa", short: "AVL", fix: [ ["NFO","H",2], ["CRY","A",3], ["EVE","H",3], ["NEW","A",4], ["BRE","H",3], ["LIV","A",5], ["IPS","H",2], ["TOT","A",4], ["WHU","H",3], ["MCI","A",5], ["BOU","H",2], ["MUN","A",4], ["FUL","H",3], ["WOL","A",2], ["ARS","H",4], ["SOU","A",2], ["BHA","H",3], ["LEI","A",2], ["CHE","H",4] ] },
@@ -91,19 +149,17 @@
         const header = document.getElementById('headerRow');
         const body = document.getElementById('tableBody');
 
-        // Headers
         for (let i = 20; i <= 38; i++) {
             let th = document.createElement('th');
-            th.innerText = "GW " + i;
+            th.innerText = "GW" + i;
             header.appendChild(th);
         }
 
-        // Rows
         teams.forEach(team => {
             let tr = document.createElement('tr');
-            let html = `<td class="sticky-col"><strong>${team.name}</strong></td>`;
+            let html = `<td class="sticky-col">${team.name}</td>`;
             team.fix.forEach(match => {
-                html += `<td class="d${match[2]}">${match[0]} (${match[1]})</td>`;
+                html += `<td class="d${match[2]}">${match[0]}<br>(${match[1]})</td>`;
             });
             tr.innerHTML = html;
             body.appendChild(tr);
