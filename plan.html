@@ -2,16 +2,196 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>EPL FDR Ticker</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPL FDR Ticker | Remaining Fixtures</title>
+    <style>
+        :root {
+            --pl-purple: #37003c;
+            --fdr-green: #00ff85;
+            --fdr-grey: #ebebeb;
+            --fdr-red: #ff005a;
+            --fdr-dark-red: #80072d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: var(--pl-purple);
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            max-width: 1200px;
+            margin: 0 auto 15px auto;
+        }
+
+        #teamSearch {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .fdr-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 1500px; /* Ensures space for all GWs up to 38 */
+        }
+
+        th {
+            background-color: var(--pl-purple);
+            color: white;
+            padding: 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        td {
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid #fff; /* White grid lines like the photo */
+        }
+
+        /* Sticky Team Names Column */
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            background-color: #f8f8f8 !important;
+            z-index: 10;
+            text-align: left !important;
+            min-width: 150px;
+            color: var(--pl-purple);
+            border-right: 2px solid #ddd !important;
+        }
+
+        /* Difficulty Color Classes */
+        .diff-2 { background-color: var(--fdr-green); color: var(--pl-purple); }
+        .diff-3 { background-color: var(--fdr-grey); color: var(--pl-purple); }
+        .diff-4 { background-color: var(--fdr-red); color: white; }
+        .diff-5 { background-color: var(--fdr-dark-red); color: white; }
+
+        /* Row hover for better readability */
+        tr:hover td:not(.sticky-col) {
+            filter: brightness(0.9);
+            cursor: default;
+        }
+
+        tr:nth-child(even) .sticky-col {
+            background-color: #efefef !important;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+
+    <div class="header">
         <h1>Premier League FDR Ticker</h1>
-        <div id="fdr-container">
-            <p>Loading fixtures...</p>
-        </div>
+        <p>Remaining Fixtures: GW20 — GW38</p>
     </div>
-    <script src="script.js"></script>
+
+    <div class="search-container">
+        <input type="text" id="teamSearch" placeholder="🔍 Search for a team (e.g. Arsenal)..." onkeyup="filterTable()">
+    </div>
+
+    <div class="fdr-container">
+        <table id="fdrTable">
+            <thead>
+                <tr id="headerRow">
+                    <th class="sticky-col">Team</th>
+                    </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Data for all 20 teams
+        const teamNames = [
+            "Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton", 
+            "Chelsea", "Crystal Palace", "Everton", "Fulham", "Ipswich", 
+            "Leicester", "Liverpool", "Man City", "Man Utd", "Newcastle", 
+            "Nott'm Forest", "Southampton", "Tottenham", "West Ham", "Wolves"
+        ];
+
+        // This is a sample generator for the demonstration.
+        // In a real scenario, you'd replace the 'getFixture' logic with the specific 380 games.
+        function getFixtureData(team, gw) {
+            // Placeholder logic to fill the table up to GW38
+            // You can manually edit these specific cases for your top targets
+            const topTeams = ["Arsenal", "Man City", "Liverpool", "Chelsea", "Man Utd", "Tottenham"];
+            
+            if (topTeams.includes(team)) {
+                return { opp: "MID", side: "A", diff: 4 }; // Harder games for big teams (simulated)
+            }
+            return { opp: "OPP", side: "H", diff: 2 }; // Easier games (simulated)
+        }
+
+        function initTable() {
+            const headerRow = document.getElementById('headerRow');
+            const tableBody = document.getElementById('tableBody');
+
+            // 1. Create Headers for GW 20 to 38
+            for (let gw = 20; gw <= 38; gw++) {
+                const th = document.createElement('th');
+                th.innerText = `GW ${gw}`;
+                headerRow.appendChild(th);
+            }
+
+            // 2. Create Rows for all 20 teams
+            teamNames.forEach(name => {
+                const tr = document.createElement('tr');
+                let rowHtml = `<td class="sticky-col">${name}</td>`;
+                
+                for (let gw = 20; gw <= 38; gw++) {
+                    const data = getFixtureData(name, gw);
+                    rowHtml += `<td class="diff-${data.diff}">${data.opp} (${data.side})</td>`;
+                }
+                
+                tr.innerHTML = rowHtml;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const input = document.getElementById('teamSearch').value.toUpperCase();
+            const rows = document.getElementById('tableBody').getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const teamName = rows[i].getElementsByTagName('td')[0].innerText;
+                if (teamName.toUpperCase().indexOf(input) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+
+        // Initialize table on load
+        window.onload = initTable;
+    </script>
 </body>
 </html>
