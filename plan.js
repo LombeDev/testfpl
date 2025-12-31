@@ -1,37 +1,51 @@
 async function fetchFDR() {
     const container = document.getElementById('fdr-container');
     
-    // This proxy wraps the FPL response in a way that bypasses browser security
-    const proxy = "https://api.allorigins.win/get?url=";
-    const baseUrl = "https://fantasy.premierleague.com/api/";
+    // Using a different, more permissive proxy
+    const proxy = "https://corsproxy.io/?";
+    const url = "https://fantasy.premierleague.com/api/bootstrap-static/";
+    const fixUrl = "https://fantasy.premierleague.com/api/fixtures/";
 
     try {
-        // Fetching both datasets through the proxy
+        console.log("Fetching data...");
+        
         const [staticRes, fixturesRes] = await Promise.all([
-            fetch(`${proxy}${encodeURIComponent(baseUrl + 'bootstrap-static/')}`),
-            fetch(`${proxy}${encodeURIComponent(baseUrl + 'fixtures/')}`)
+            fetch(proxy + encodeURIComponent(url)),
+            fetch(proxy + encodeURIComponent(fixUrl))
         ]);
 
-        const staticDataRaw = await staticRes.json();
-        const fixturesRaw = await fixturesRes.json();
+        if (!staticRes.ok || !fixturesRes.ok) throw new Error("API Limit Reached or Proxy Down");
 
-        // AllOrigins wraps data in a 'contents' string, so we must parse it
-        const staticData = JSON.parse(staticDataRaw.contents);
-        const fixtures = JSON.parse(fixturesRaw.contents);
+        const staticData = await staticRes.json();
+        const fixtures = await fixturesRes.json();
 
-        // 1. Get Current Gameweek
-        const currentGW = staticData.events.find(e => e.is_next)?.id || 1;
-        
-        // 2. Map Teams (ID -> Name & Short Name)
+        // Check if data actually exists
+        if (!staticData.teams || !fixtures.length) {
+            throw new Error("Data received was empty.");
+        }
+
+        // 1. Identify the current/next Gameweek
+        const nextEvent = staticData.events.find(e => e.is_next);
+        const currentGW = nextEvent ? nextEvent.id : 1;
+        const endGW = currentGW + 5;
+
+        // 2. Map Teams
         const teams = {};
         staticData.teams.forEach(t => {
             teams[t.id] = { name: t.name, short: t.short_name };
         });
 
-        renderTable(teams, fixtures, currentGW, currentGW + 5);
+        // 3. Render
+        renderTable(teams, fixtures, currentGW, endGW);
+        console.log("Success!");
+
     } catch (error) {
-        container.innerHTML = `<p style="color:red">Failed to load FPL data. Check your connection.</p>`;
-        console.error("Error:", error);
+        container.innerHTML = `
+            <div style="background: #fee; color: #b00; padding: 20px; border-radius: 8px;">
+                <strong>Error:</strong> ${error.message}<br>
+                <small>Check the browser console (F12) for more details.</small>
+            </div>`;
+        console.error("Full Error:", error);
     }
 }
 
@@ -42,11 +56,10 @@ function renderTable(teams, fixtures, startGW, endGW) {
     for (let i = startGW; i <= endGW; i++) html += `<th>GW ${i}</th>`;
     html += `</tr></thead><tbody>`;
 
-    // Sort teams alphabetically
-    const teamIds = Object.keys(teams).sort((a, b) => teams[a].name.localeCompare(teams[b].name));
+    const teamIds = Object.keys(teams);
 
     teamIds.forEach(teamId => {
-        html += `<tr><td class="team-name">${teams[teamId].name}</td>`;
+        html += `<tr><td class="team-name"><strong>${teams[teamId].name}</strong></td>`;
         
         for (let gw = startGW; gw <= endGW; gw++) {
             const match = fixtures.find(f => f.event === gw && (f.team_h == teamId || f.team_a == teamId));
@@ -57,10 +70,9 @@ function renderTable(teams, fixtures, startGW, endGW) {
                 const diff = isHome ? match.team_h_difficulty : match.team_a_difficulty;
                 const venue = isHome ? "H" : "A";
                 
-                // We use the 'diff' number to apply the CSS class for coloring
                 html += `<td class="diff-${diff}">${teams[opponentId].short} (${venue})</td>`;
             } else {
-                html += `<td class="diff-3">---</td>`; // Blank Gameweek
+                html += `<td class="diff-3">-</td>`;
             }
         }
         html += `</tr>`;
