@@ -1,13 +1,82 @@
-body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
-table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold; }
-th { background-color: #37003c; color: white; }
+/* Container to isolate styles from the rest of your page */
+#fdr-section-wrapper {
+    --fdr-2: #00ff85; /* Easy */
+    --fdr-3: #ebebeb; /* Neutral */
+    --fdr-4: #ff005a; /* Hard */
+    --fdr-5: #80072d; /* Very Hard */
+    --pl-purple: #37003c;
+    
+    margin: 20px 0;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+}
 
-/* FDR Color Classes */
-.diff-1 { background-color: #01fc7a; color: #37003c; } /* Very Easy */
-.diff-2 { background-color: #01fc7a; color: #37003c; } /* Easy */
-.diff-3 { background-color: #e7e7e7; color: #37003c; } /* Neutral */
-.diff-4 { background-color: #ff1751; color: white; }   /* Hard */
-.diff-5 { background-color: #80072d; color: white; }   /* Very Hard */
+#fdr-section-wrapper .table-scroll {
+    overflow-x: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
 
-.team-name { text-align: left; background: #eee; position: sticky; left: 0; }
+#fdr-section-wrapper table {
+    border-collapse: collapse;
+    width: max-content;
+    table-layout: fixed;
+}
+
+/* Header styling */
+#fdr-section-wrapper th {
+    background-color: var(--pl-purple);
+    color: white;
+    font-size: 11px;
+    padding: 6px 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Cell styling for fixtures */
+#fdr-section-wrapper td {
+    width: 48px; /* Compact width */
+    height: 32px; /* Compact height */
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid #ffffff; /* White grid lines like screenshot */
+    text-transform: uppercase;
+}
+
+/* The Sticky Team Column */
+#fdr-section-wrapper .sticky-team {
+    position: sticky;
+    left: 0;
+    background-color: #ffffff !important;
+    z-index: 15;
+    text-align: left !important;
+    width: 130px !important;
+    padding-left: 8px;
+    border-right: 2px solid #ddd !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: none; /* Keep team names normal case */
+}
+
+/* Small Team Logos */
+#fdr-section-wrapper .team-logo {
+    width: 18px;  /* Small size to match screenshot */
+    height: 18px;
+    object-fit: contain;
+}
+
+/* Difficulty Color Classes */
+#fdr-section-wrapper .d-2 { background-color: var(--fdr-2); color: var(--pl-purple); }
+#fdr-section-wrapper .d-3 { background-color: var(--fdr-3); color: var(--pl-purple); }
+#fdr-section-wrapper .d-4 { background-color: var(--fdr-4); color: #ffffff; }
+#fdr-section-wrapper .d-5 { background-color: var(--fdr-5); color: #ffffff; }
+
+/* Venue label (H/a) */
+#fdr-section-wrapper .v-label {
+    display: block;
+    font-size: 8px;
+    font-weight: 400;
+    margin-top: 1px;
+}
