@@ -1,85 +1,64 @@
-async function fetchFDR() {
-    const container = document.getElementById('fdr-container');
-    
-    // Using a different, more permissive proxy
-    const proxy = "https://corsproxy.io/?";
-    const url = "https://fantasy.premierleague.com/api/bootstrap-static/";
-    const fixUrl = "https://fantasy.premierleague.com/api/fixtures/";
-
+async function initFDRSection() {
     try {
-        console.log("Fetching data...");
-        
-        const [staticRes, fixturesRes] = await Promise.all([
-            fetch(proxy + encodeURIComponent(url)),
-            fetch(proxy + encodeURIComponent(fixUrl))
+        const [staticRes, fixRes] = await Promise.all([
+            fetch('/fpl-api/bootstrap-static/'),
+            fetch('/fpl-api/fixtures/')
         ]);
+        
+        const data = await staticRes.json();
+        const allFixtures = await fixRes.json();
+        const currentGW = data.events.find(ev => ev.is_current).id;
+        const teams = data.teams;
 
-        if (!staticRes.ok || !fixturesRes.ok) throw new Error("API Limit Reached or Proxy Down");
-
-        const staticData = await staticRes.json();
-        const fixtures = await fixturesRes.json();
-
-        // Check if data actually exists
-        if (!staticData.teams || !fixtures.length) {
-            throw new Error("Data received was empty.");
+        // Create Headers
+        const header = document.getElementById('fdrHeader');
+        for (let i = currentGW; i <= 38; i++) {
+            const th = document.createElement('th');
+            th.innerText = i;
+            header.appendChild(th);
         }
 
-        // 1. Identify the current/next Gameweek
-        const nextEvent = staticData.events.find(e => e.is_next);
-        const currentGW = nextEvent ? nextEvent.id : 1;
-        const endGW = currentGW + 5;
+        // Create Rows
+        const body = document.getElementById('fdrBody');
+        teams.forEach(team => {
+            const tr = document.createElement('tr');
+            
+            // Team Name + Logo (Official FPL CDN)
+            const logoUrl = `https://resources.premierleague.com/premierleague/badges/t${team.code}.png`;
+            let rowHtml = `
+                <td class="sticky-team">
+                    <img src="${logoUrl}" class="team-logo">
+                    <span>${team.name}</span>
+                </td>`;
 
-        // 2. Map Teams
-        const teams = {};
-        staticData.teams.forEach(t => {
-            teams[t.id] = { name: t.name, short: t.short_name };
+            for (let gw = currentGW; gw <= 38; gw++) {
+                const match = allFixtures.find(f => f.event === gw && (f.team_a === team.id || f.team_h === team.id));
+                
+                if (match) {
+                    const isHome = match.team_h === team.id;
+                    const opp = teams.find(t => t.id === (isHome ? match.team_a : match.team_h)).short_name;
+                    const diff = isHome ? match.team_h_difficulty : match.team_a_difficulty;
+                    const venue = isHome ? 'H' : 'a'; // lowercase 'a' as seen in screenshot
+                    rowHtml += `<td class="d-${diff}">${opp}<span class="v-label">(${venue})</span></td>`;
+                } else {
+                    rowHtml += `<td class="d-3">-</td>`; // Blank gameweeks
+                }
+            }
+            tr.innerHTML = rowHtml;
+            body.appendChild(tr);
         });
 
-        // 3. Render
-        renderTable(teams, fixtures, currentGW, endGW);
-        console.log("Success!");
+        // Search logic
+        document.getElementById('fdrSearch').addEventListener('keyup', (e) => {
+            const val = e.target.value.toLowerCase();
+            Array.from(body.rows).forEach(row => {
+                row.style.display = row.cells[0].innerText.toLowerCase().includes(val) ? "" : "none";
+            });
+        });
 
-    } catch (error) {
-        container.innerHTML = `
-            <div style="background: #fee; color: #b00; padding: 20px; border-radius: 8px;">
-                <strong>Error:</strong> ${error.message}<br>
-                <small>Check the browser console (F12) for more details.</small>
-            </div>`;
-        console.error("Full Error:", error);
+    } catch (err) {
+        console.error("FDR Load Error:", err);
     }
 }
 
-function renderTable(teams, fixtures, startGW, endGW) {
-    const container = document.getElementById('fdr-container');
-    let html = `<table><thead><tr><th class="team-name">Team</th>`;
-    
-    for (let i = startGW; i <= endGW; i++) html += `<th>GW ${i}</th>`;
-    html += `</tr></thead><tbody>`;
-
-    const teamIds = Object.keys(teams);
-
-    teamIds.forEach(teamId => {
-        html += `<tr><td class="team-name"><strong>${teams[teamId].name}</strong></td>`;
-        
-        for (let gw = startGW; gw <= endGW; gw++) {
-            const match = fixtures.find(f => f.event === gw && (f.team_h == teamId || f.team_a == teamId));
-            
-            if (match) {
-                const isHome = match.team_h == teamId;
-                const opponentId = isHome ? match.team_a : match.team_h;
-                const diff = isHome ? match.team_h_difficulty : match.team_a_difficulty;
-                const venue = isHome ? "H" : "A";
-                
-                html += `<td class="diff-${diff}">${teams[opponentId].short} (${venue})</td>`;
-            } else {
-                html += `<td class="diff-3">-</td>`;
-            }
-        }
-        html += `</tr>`;
-    });
-
-    html += `</tbody></table>`;
-    container.innerHTML = html;
-}
-
-fetchFDR();
+document.addEventListener('DOMContentLoaded', initFDRSection);
