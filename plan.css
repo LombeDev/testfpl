@@ -1,78 +1,82 @@
-:root {
-    --pl-purple: #37003c;
+/* Container to isolate styles from the rest of your page */
+#fdr-section-wrapper {
     --fdr-2: #00ff85; /* Easy */
     --fdr-3: #ebebeb; /* Neutral */
     --fdr-4: #ff005a; /* Hard */
     --fdr-5: #80072d; /* Very Hard */
+    --pl-purple: #37003c;
+    
+    margin: 20px 0;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
 }
 
-body { 
-    font-family: 'Segoe UI', Arial, sans-serif; 
-    background: #fff; 
-    margin: 0; 
-    padding: 5px; /* Reduced page padding */
+#fdr-section-wrapper .table-scroll {
+    overflow-x: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
 }
 
-/* TABLE CORE: The spacing fix */
-table { 
-    border-collapse: separate; /* Required for spacing */
-    border-spacing: 2px;       /* This creates the 'gaps' between fixtures */
+#fdr-section-wrapper table {
+    border-collapse: collapse;
     width: max-content;
     table-layout: fixed;
 }
 
-th { 
-    background: var(--pl-purple); 
-    color: white; 
-    padding: 2px 1px;          /* Minimal padding */
-    font-size: 8px;            /* Shrink header font */
-    text-transform: uppercase;
-    position: sticky; 
-    top: 0; 
-    z-index: 10;
-    width: 45px;               /* Narrower GW columns */
-}
-
-td { 
-    padding: 3px 1px;          /* Tight padding */
-    text-align: center; 
-    font-weight: 800;          /* Heavy weight but small size */
-    font-size: 8.5px;          /* Reduced font size */
-    line-height: 1;
-    white-space: nowrap;
-    border-radius: 2px;        /* Rounded corners on the 'blocks' */
-}
-
-/* STICKY TEAM COLUMN */
-.sticky-col, .sticky-team {
-    position: sticky; 
-    left: 0; 
-    background: #f8f8f8 !important;
-    z-index: 15; 
-    text-align: left !important; 
-    width: 80px !important;    /* Shrink team name column */
-    color: var(--pl-purple); 
-    border-right: 1px solid #ddd !important;
-    padding-left: 4px;
-    font-size: 10px;           /* Team names slightly larger for legibility */
-}
-
-/* FDR Color Levels */
-.d2 { background-color: var(--fdr-2); color: var(--pl-purple); }
-.d3 { background-color: var(--fdr-3); color: var(--pl-purple); }
-.d4 { background-color: var(--fdr-4); color: white; }
-.d5 { background-color: var(--fdr-5); color: white; }
-
-/* Control Bar Shrink */
-.fdr-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 8px;
+/* Header styling */
+#fdr-section-wrapper th {
+    background-color: var(--pl-purple);
+    color: white;
     font-size: 11px;
+    padding: 6px 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
-#fdrSearch {
-    padding: 2px 5px;
+
+/* Cell styling for fixtures */
+#fdr-section-wrapper td {
+    width: 48px; /* Compact width */
+    height: 32px; /* Compact height */
+    text-align: center;
     font-size: 10px;
-    border-radius: 4px;
+    font-weight: 700;
+    border: 1px solid #ffffff; /* White grid lines like screenshot */
+    text-transform: uppercase;
+}
+
+/* The Sticky Team Column */
+#fdr-section-wrapper .sticky-team {
+    position: sticky;
+    left: 0;
+    background-color: #ffffff !important;
+    z-index: 15;
+    text-align: left !important;
+    width: 130px !important;
+    padding-left: 8px;
+    border-right: 2px solid #ddd !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: none; /* Keep team names normal case */
+}
+
+/* Small Team Logos */
+#fdr-section-wrapper .team-logo {
+    width: 18px;  /* Small size to match screenshot */
+    height: 18px;
+    object-fit: contain;
+}
+
+/* Difficulty Color Classes */
+#fdr-section-wrapper .d-2 { background-color: var(--fdr-2); color: var(--pl-purple); }
+#fdr-section-wrapper .d-3 { background-color: var(--fdr-3); color: var(--pl-purple); }
+#fdr-section-wrapper .d-4 { background-color: var(--fdr-4); color: #ffffff; }
+#fdr-section-wrapper .d-5 { background-color: var(--fdr-5); color: #ffffff; }
+
+/* Venue label (H/a) */
+#fdr-section-wrapper .v-label {
+    display: block;
+    font-size: 8px;
+    font-weight: 400;
+    margin-top: 1px;
 }
