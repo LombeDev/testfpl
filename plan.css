@@ -80,3 +80,52 @@
     font-weight: 400;
     margin-top: 1px;
 }
+
+
+
+/* Date Banner (Blue bar) */
+.date-banner {
+    background-color: #00f0ff; /* Light blue from screenshot */
+    color: #37003c;
+    text-align: center;
+    font-weight: bold;
+    padding: 8px;
+    margin: 15px 0 10px 0;
+    width: 100%;
+    font-size: 14px;
+}
+
+/* Fixture Row Layout */
+.fixture-list-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    align-items: center;
+    padding: 10px 0;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.team-side {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.team-side.home { justify-content: flex-end; text-align: right; }
+.team-side.away { justify-content: flex-start; text-align: left; }
+
+.team-side img {
+    width: 30px;
+    height: 30px;
+    margin: 0 10px;
+}
+
+.match-time {
+    background: #f2f2f2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+}
