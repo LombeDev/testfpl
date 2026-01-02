@@ -129,3 +129,92 @@
     font-weight: bold;
     font-size: 12px;
 }
+
+
+#fixtures-module {
+    max-width: 600px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+}
+
+.fixtures-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.fixtures-header h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+    text-align: center;
+}
+
+#gw-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+}
+
+.next-btn {
+    position: absolute;
+    right: 0;
+    top: 5px;
+    background: #00ff87;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+/* Date Banner (Blue bar) */
+.date-banner {
+    background-color: #00f0ff;
+    color: #37003c;
+    text-align: center;
+    font-weight: 800;
+    padding: 8px;
+    margin: 15px 0 10px 0;
+    font-size: 13px;
+    width: 100%;
+}
+
+/* Fixture Grid Layout */
+.fixture-row {
+    display: grid;
+    grid-template-columns: 1fr 70px 1fr;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.team-box {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.team-box.home { justify-content: flex-end; text-align: right; }
+.team-box.away { justify-content: flex-start; text-align: left; }
+
+.team-box img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.home img { margin-left: 10px; }
+.away img { margin-right: 10px; }
+
+.kickoff-time {
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: #000;
+}
