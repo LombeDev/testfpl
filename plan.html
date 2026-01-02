@@ -130,14 +130,16 @@
 </head>
 <body>
 
-    <div class="fixtures-container">
-        <div class="fixtures-header">
-            <div class="header-text">
-                <h1>Fixtures</h1>
-                <p id="gw-title">Gameweek 20</p>
-            </div>
-            <button class="next-nav-btn" onclick="loadNextGW()">NEXT</button>
-        </div>
+    <div class="fixtures-header">
+    <button class="prev-nav-btn" onclick="loadPrevGW()">PREV</button>
+    
+    <div class="header-text">
+        <h1>Fixtures</h1>
+        <p id="gw-title">Gameweek 20</p>
+    </div>
+    
+    <button class="next-nav-btn" onclick="loadNextGW()">NEXT</button>
+</div>>
 
         <div id="fdrBody">
             <p style="opacity: 0.5; margin-top: 50px;">Loading fixtures...</p>
