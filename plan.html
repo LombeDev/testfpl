@@ -126,51 +126,24 @@
             .team-side img { width: 28px; height: 28px; }
             .date-banner { font-size: 12px; }
         }
-
-
-        .fixtures-header {
-    display: flex;
-    justify-content: space-between; /* Spreads buttons to the edges */
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.prev-nav-btn, .next-nav-btn {
-    background-color: var(--fpl-green);
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 900;
-    font-size: 11px;
-    cursor: pointer;
-    text-transform: uppercase;
-}
-
-/* Optional: Make the PREV button a different color or outline if preferred */
-.prev-nav-btn {
-    background-color: #eee; 
-    color: var(--pl-purple);
-}
     </style>
 </head>
 <body>
 
-    <div class="fixtures-header">
-    <button class="prev-nav-btn" onclick="loadPrevGW()">PREV</button>
-    
-    <div class="header-text">
-        <h1>Fixtures</h1>
-        <p id="gw-title">Gameweek 20</p>
-    </div>
-    
-    <button class="next-nav-btn" onclick="loadNextGW()">NEXT</button>
-</div>>
+    <div class="fixtures-container">
+        <div class="fixtures-header">
+            <div class="header-text">
+                <h1>Fixtures</h1>
+                <p id="gw-title">Gameweek 20</p>
+            </div>
+            <button class="next-nav-btn" onclick="loadNextGW()">NEXT</button>
+        </div>
 
         <div id="fdrBody">
             <p style="opacity: 0.5; margin-top: 50px;">Loading fixtures...</p>
         </div>
     </div>
 
-    <script src="planfix.js" defer></script>
+    <script src="fixtures.js" defer></script>
 </body>
 </html>
