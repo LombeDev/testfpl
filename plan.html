@@ -3,134 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compact EPL FDR</title>
-    <link rel="stylesheet" href="plan.css">
+    <title>Kopala FPL | Match & Plan</title>
     <style>
         :root {
             --pl-purple: #37003c;
-            --fdr-2: #00ff85; /* Easy */
-            --fdr-3: #ebebeb; /* Neutral */
-            --fdr-4: #ff005a; /* Hard */
-            --fdr-5: #80072d; /* Very Hard */
+            --fpl-cyan: #00f0ff;
+            --fpl-green: #00ff87;
+            --fdr-2: #00ff85;
+            --fdr-3: #ebebeb;
+            --fdr-4: #ff005a;
+            --fdr-5: #80072d;
         }
 
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background: #fff; 
-            margin: 0; 
-            padding: 10px; 
-            color: #333;
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 10px;
         }
 
-        .header-bar {
+        .section-container {
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            padding-bottom: 15px;
+        }
+
+        /* --- FIXTURES SECTION --- */
+        .fixtures-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        .next-nav-btn {
+            position: absolute;
+            right: 20px;
+            background-color: var(--fpl-green);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 900;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .date-banner {
+            background-color: var(--fpl-cyan);
+            color: var(--pl-purple);
+            font-weight: 800;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .fixture-list-row {
+            display: grid;
+            grid-template-columns: 1fr 65px 1fr;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .team-side { display: flex; align-items: center; font-size: 14px; font-weight: 700; }
+        .team-side.home { justify-content: flex-end; }
+        .team-side.away { justify-content: flex-start; }
+        .team-side img { width: 30px; height: 30px; }
+        .home img { margin-left: 10px; }
+        .away img { margin-right: 10px; }
+        .match-time { font-size: 12px; font-weight: 800; text-align: center; }
+
+        /* --- FDR SECTION --- */
+        .fdr-controls {
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
 
-        h1 { font-size: 16px; margin: 0; color: var(--pl-purple); }
-        
-        #teamSearch {
-            padding: 4px 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 12px;
-            width: 180px;
-        }
-
-        .table-container { 
+        .table-scroll { 
             overflow-x: auto; 
-            border: 1px solid #ccc;
+            padding: 10px;
         }
 
         table { 
-            border-collapse: collapse; 
-            width: max-content; /* Shrinks to content */
-            table-layout: fixed; /* Faster rendering & exact widths */
+            border-collapse: separate; 
+            border-spacing: 2px; /* Gaps between fixtures as requested */
+            width: max-content;
         }
-        
+
         th { 
             background: var(--pl-purple); 
             color: white; 
-            padding: 4px 2px; 
-            font-size: 10px; 
-            position: sticky; 
-            top: 0; 
-            z-index: 10;
-            width: 55px; /* Forced narrow width for GW columns */
-        }
-        
-        td { 
-            padding: 4px 1px; 
-            text-align: center; 
-            font-weight: bold; 
-            font-size: 10px; 
-            border: 0.5px solid #fff; 
-            line-height: 1.1;
-            white-space: nowrap;
+            padding: 4px; 
+            font-size: 9px; 
+            min-width: 45px;
         }
 
-        /* Narrower Sticky Column */
-        .sticky-col {
+        td { 
+            padding: 5px 2px; 
+            text-align: center; 
+            font-weight: 800; 
+            font-size: 9px; 
+            border-radius: 3px; 
+        }
+
+        .sticky-team {
             position: sticky; 
             left: 0; 
-            background: #eee !important;
-            z-index: 15; 
-            text-align: left !important; 
-            width: 100px !important; /* Extremely narrow team name col */
-            color: var(--pl-purple); 
-            border-right: 2px solid #bbb !important;
+            background: #fff !important; 
+            z-index: 5; 
+            width: 90px;
+            text-align: left !important;
             padding-left: 5px;
-            font-size: 11px;
+            border-right: 2px solid #eee;
         }
 
-        /* FDR Color Levels */
-        .d2 { background-color: var(--fdr-2); color: var(--pl-purple); }
-        .d3 { background-color: var(--fdr-3); color: var(--pl-purple); }
-        .d4 { background-color: var(--fdr-4); color: white; }
-        .d5 { background-color: var(--fdr-5); color: white; }
+        .team-logo-small { width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; }
 
-        tr:hover td:not(.sticky-col) { opacity: 0.8; }
+        /* FDR Colors */
+        .d-2 { background-color: var(--fdr-2); color: var(--pl-purple); }
+        .d-3 { background-color: var(--fdr-3); color: var(--pl-purple); }
+        .d-4 { background-color: var(--fdr-4); color: white; }
+        .d-5 { background-color: var(--fdr-5); color: white; }
+        .v-label { font-size: 7px; opacity: 0.8; margin-left: 2px; }
+
     </style>
 </head>
 <body>
 
-<section id="fdr-section-wrapper">
-    <div class="fdr-controls">
-        <span style="font-weight:bold; color:#37003c;">FDR
-Gameweek </span>
-        <input type="text" id="fdrSearch" placeholder="Search team..." 
-               style="font-size:12px; padding:4px; border:1px solid #ccc; border-radius:3px;">
-    </div>
-
-    <div class="table-scroll">
-        <table id="fdrTable">
-            <thead><tr id="fdrHeader"><th class="sticky-team">Team</th></tr></thead>
-            <tbody id="fdrBody">
-                </tbody>
-        </table>
-    </div>
-</section>
-
-    <section id="fixtures-module" class="card">
-    <div class="fixtures-header">
-        <div class="title-group">
-            <h1>Fixtures</h1>
-            <p id="gw-title">Gameweek 20</p>
+    <div class="section-container">
+        <div class="fixtures-header">
+            <div style="text-align:center;">
+                <h2 style="margin:0; font-size:22px;">Fixtures</h2>
+                <p id="fixture-gw-label" style="margin:0; font-size:12px; font-weight:700;">Gameweek 20</p>
+            </div>
+            <button class="next-nav-btn">NEXT</button>
         </div>
-        <button class="next-btn" onclick="nextGW()">NEXT</button>
+        <div id="fixture-list-target">
+            </div>
     </div>
 
-    <div id="fdrBody">
-        <div style="text-align: center; padding: 20px; opacity: 0.5;">
-            <i class="fa-solid fa-spinner fa-spin"></i> Loading Fixtures...
+    <div class="section-container">
+        <div class="fdr-controls">
+            <span style="font-weight:900; color:var(--pl-purple); font-size:14px;">FDR PLANNER</span>
+            <input type="text" id="fdrSearch" placeholder="Search team..." style="padding:5px; font-size:12px; border:1px solid #ddd; border-radius:4px;">
+        </div>
+        <div class="table-scroll">
+            <table id="fdrTable">
+                <thead><tr id="fdrHeader"><th class="sticky-team">Team</th></tr></thead>
+                <tbody id="fdrBody">
+                    </tbody>
+            </table>
         </div>
     </div>
-</section>
 
-    <script src="plan.js" defer></script>
-    <script src="planfix.js" defer></script>
+    <script src="app.js"></script>
 </body>
-
 </html>
