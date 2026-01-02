@@ -1,94 +1,122 @@
 /* ============================================================
-   KOPALA FPL - OFFICIAL LOOK REVERSE-ENGINEERED (v4.0)
+   KOPALA FPL - 1:1 AUTHENTIC UI REPLICA (v4.5)
    ============================================================ */
 
 :root {
     --fpl-purple: #37003c;
     --fpl-green: #00ff87;
-    --fpl-pink: #ff005a; /* Official FPL Match Background */
+    --fpl-pink: #ff005a;        /* Top screenshot fixture bar */
+    --fpl-pale-purple: #f2e7f2; /* Bottom screenshot fixture bar */
+    --fpl-text-purple: #37003c;
     --pitch-green: #2d9e63;
-    --bg-light: #f8fafc;
-    --border: #e2e8f0;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg-light); color: #1a1a1a; }
+body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f8fafc; color: #1a1a1a; }
 
-/* --- NAVIGATION & TICKER --- */
-.navbar { background: var(--fpl-purple); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-.brand { font-weight: 900; letter-spacing: -1px; font-size: 1.2rem; }
-.brand span { color: var(--fpl-green); }
-
-.ticker { background: #000; color: var(--fpl-green); padding: 8px; font-size: 11px; font-weight: bold; text-align: center; }
-
-/* --- PITCH AREA --- */
+/* --- PITCH LAYOUT --- */
 .main-container { max-width: 500px; margin: 0 auto; padding: 10px; }
 .pitch-outer-wrap { 
     background: var(--pitch-green); 
     border-radius: 8px; 
-    padding: 15px 5px; 
+    padding: 20px 5px; 
     position: relative;
     background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.05) 40px, rgba(0,0,0,0.05) 80px);
 }
-.row { display: flex; justify-content: center; gap: 4px; margin-bottom: 20px; position: relative; z-index: 2; }
+.row { display: flex; justify-content: center; gap: 4px; margin-bottom: 25px; position: relative; z-index: 2; }
 
-/* --- THE PLAYER SLOT (THE CORE CARD) --- */
+/* --- THE PLAYER SLOT --- */
 .slot {
-    width: 88px;
+    width: 95px;
+    height: 130px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: flex-end; /* Keeps tags anchored at the bottom */
     position: relative;
     cursor: pointer;
 }
 
-/* "i" Info Icon - Top Right */
+/* --- ACTION ICONS (MATCHED TO SCREENSHOTS) --- */
+/* Info Icon (Right) */
 .slot::after {
     content: 'i';
     position: absolute;
-    top: -2px; right: 8px;
-    width: 16px; height: 16px;
-    background: white; color: var(--fpl-purple);
+    top: 0; right: 5px;
+    width: 18px; height: 18px;
+    background: white; color: black;
     border-radius: 50%; display: flex; justify-content: center; align-items: center;
-    font-size: 10px; font-weight: 900; font-style: italic; z-index: 10;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-
-/* Yellow Swap Icon - Top Left */
-.jersey-actions { position: absolute; top: -2px; left: 8px; z-index: 10; }
-.action-dot {
-    width: 16px; height: 16px; border-radius: 50%;
-    background: #e1ff00; color: #37003c;
-    font-size: 11px; font-weight: 800;
-    display: flex; justify-content: center; align-items: center;
+    font-size: 11px; font-weight: 900; font-style: italic; z-index: 10;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* --- THE JERSEY (PRO SHAPE) --- */
+.jersey-actions {
+    position: absolute;
+    top: 0; left: 5px;
+    display: flex; flex-direction: column; gap: 4px;
+    z-index: 10;
+}
+
+.action-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 10px; font-weight: 900;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.dot-swap { background: #e1ff00; color: #37003c; } /* Yellow arrows icon */
+.dot-remove { background: #ff005a; color: white; } /* Red X icon */
+
+/* --- THE JERSEY (FLOATING BEHIND) --- */
 .jersey {
-    width: 58px; height: 50px;
+    width: 72px; height: 65px;
+    position: absolute;
+    top: 5px;
+    z-index: 1;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
     background-color: var(--team-main, #ccc);
-    position: relative; z-index: 1;
-    clip-path: polygon(30% 0%, 70% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
-    margin-bottom: -6px;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
 }
 
-/* --- NAME & MATCH TAGS --- */
-.player-card { width: 100%; z-index: 5; border-radius: 3px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+/* --- THE DATA CARD (STICKER LOOK) --- */
+.player-card {
+    width: 100%;
+    background: white;
+    border-radius: 8px; /* Smooth rounded corners from screenshots */
+    overflow: hidden;
+    z-index: 5;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
 .p-name {
-    display: block; background: white; color: var(--fpl-purple);
-    font-size: 11px; font-weight: 800; text-align: center; padding: 3px 0;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    border-bottom: 1px solid #f0f0f0;
-}
-.card-fixtures {
-    background: var(--fpl-pink); color: white;
-    font-size: 10px; font-weight: 800; text-align: center; padding: 3px 0;
-    text-transform: uppercase;
+    display: block;
+    padding: 5px 2px;
+    background: white;
+    color: var(--fpl-text-purple);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* --- ALL 20 PREMIER LEAGUE TEAM DESIGNS --- */
+/* The Fixture Bar (Dynamic Colors) */
+.card-fixtures {
+    padding: 5px 0;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+    background: var(--fpl-pale-purple); /* Default matches O'Reilly/Gabriel screenshot */
+    color: var(--fpl-purple);
+}
+
+/* Bright Pink Variant (Matches Verbruggen screenshot) */
+.slot.high-xp .card-fixtures {
+    background: var(--fpl-pink);
+    color: white;
+}
+
+/* --- 20-TEAM JERSEY LIBRARY --- */
 .jersey.arsenal          { --team-main: #ef0107; border-top: 6px solid #fff; }
 .jersey.aston_villa      { --team-main: #95bfe5; border-left: 12px solid #670e36; border-right: 12px solid #670e36; }
 .jersey.bournemouth      { --team-main: #da291c; background-image: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 10px 100%; }
@@ -109,28 +137,14 @@ body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg-light)
 .jersey.tottenham        { --team-main: #ffffff; border-top: 8px solid #132257; }
 .jersey.west_ham         { --team-main: #7a263a; border-top: 6px solid #1bb1e7; }
 .jersey.wolves           { --team-main: #fdb913; border-bottom: 5px solid #231f20; }
-.jersey.gkp_color        { --team-main: #e1ff00; } 
-.jersey.default          { --team-main: #ccc; opacity: 0.4; }
+.jersey.gkp_color        { --team-main: #00ff87; } /* Brighton GK Green */
+.jersey.default          { --team-main: #ccc; opacity: 0.5; }
 
-/* --- DASHBOARD STATS --- */
-.stats-summary {
-    display: flex; justify-content: space-around; background: white;
-    padding: 20px; border-radius: 12px; margin: 15px 0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--border);
+/* --- INTERACTION --- */
+.hidden-picker {
+    position: absolute;
+    inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer; z-index: 15;
 }
-.stat-box { text-align: center; }
-.stat-label { font-size: 0.7rem; color: #777; font-weight: 700; text-transform: uppercase; }
-.stat-value { font-size: 1.5rem; font-weight: 800; color: var(--fpl-purple); }
-#team-rating { color: var(--fpl-pink); }
 
-/* --- AI WILDCARD BUTTON (MATCHED TO IMAGE) --- */
-.ai-action-btn {
-    background-color: #f8faff; color: #0f172a; border: 1px solid var(--border);
-    border-radius: 50px; font-weight: 600; padding: 10px 24px;
-    cursor: pointer; transition: all 0.2s; display: inline-flex;
-    align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 10px 0;
-}
-.ai-action-btn:hover { border-color: var(--fpl-pink); color: var(--fpl-pink); background: #fff; }
-
-/* --- HIDDEN INTERACTION --- */
-.hidden-picker { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 15; }
+.slot:hover .jersey { transform: translateY(-5px); }
