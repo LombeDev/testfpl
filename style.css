@@ -1,16 +1,16 @@
-/* --- GLOBAL FIXES & VARIABLES --- */
+/* --- 1. GLOBAL VARIABLES & SYSTEM FIXES --- */
 :root {
     --primary-green: #249771;
-    --dark-blue: #0f172a; /* Main Hub Theme */
-    --fpl-purple: #37003c;
-    --fpl-pink: #ff005a;
+    --dark-blue: #0f172a;
+    --hub-dark: #1a1a1a;        /* FFH Header Background */
+    --hub-gray: #2d2d2d;        /* FFH Drawer Background */
+    --hub-blue: #00a3ff;        /* FFH Upgrade Button */
+    --hub-border: #333333;      /* FFH Drawer Border */
     --text-gray: #4a5568;
     --bg-light: #f5f5f7;
     --card-bg: #ffffff;
     --text-dim: #718096;
-    --fpl-primary: #ff005a;
-    --fpl-surface: #ffffff;
-    --fpl-border: #eeeeee;
+    --fpl-pink: #ff005a;
     --organic-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -23,7 +23,6 @@
 
 html, body {
     width: 100%;
-    scroll-behavior: smooth;
 }
 
 body {
@@ -31,26 +30,25 @@ body {
     color: var(--text-gray);
     line-height: 1.5;
     background-color: #f8fafc;
-    /* Extra padding at bottom so content isn't hidden by the Bottom Nav */
-    padding-bottom: 85px; 
+    padding-bottom: 85px; /* Offset for Bottom Nav */
 }
 
-/* --- CENTERED TOP NAVBAR --- */
+/* --- 2. THE NAVBAR (CENTERED BRAND) --- */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 15px;
     height: 60px;
-    background: #1a1a1a; /* Dark theme like the Hub header */
-    border-bottom: 1px solid #333;
+    background: var(--hub-dark); 
+    border-bottom: 1px solid var(--hub-border);
     position: sticky;
     top: 0;
     width: 100%;
     z-index: 1000;
 }
 
-/* Logic to force brand to the absolute center */
+/* Slot logic: Equal width side-slots force center content to stay centered */
 .nav-left, .nav-right { 
     flex: 1; 
     display: flex; 
@@ -62,6 +60,7 @@ body {
     gap: 12px; 
 }
 
+/* The Brand name 'Kopala FPL' */
 .brand { 
     flex: 0;
     font-size: 1.1rem; 
@@ -69,26 +68,80 @@ body {
     color: #ffffff; 
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    text-align: center;
+    white-space: nowrap;
 }
-
 .brand span { color: var(--primary-green); }
+
+/* The Blue Upgrade Button from your screenshot */
+.upgrade-btn {
+    background: var(--hub-blue);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+}
 
 .menu-icon { 
     display: flex; 
     flex-direction: column; 
     gap: 4px; 
-    cursor: pointer; 
-    padding: 10px 5px; 
+    padding: 10px 0;
+}
+.menu-icon span { width: 22px; height: 2px; background: #fff; }
+
+/* --- 3. THE DRAWER (SLIDE-OUT MENU) --- */
+.drawer {
+    position: fixed; 
+    top: 0; 
+    left: -100%; 
+    width: 85%; 
+    max-width: 320px;
+    height: 100%;
+    background: var(--hub-gray); 
+    z-index: 3000; 
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: white;
+}
+.drawer.open { left: 0; }
+
+.drawer-links { list-style: none; padding: 20px 0; }
+
+.drawer-links li { 
+    padding: 18px 20px; 
+    border-bottom: 1px solid var(--hub-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.menu-icon span { 
-    width: 22px; 
-    height: 2px; 
-    background: #fff; 
+.drawer-links a { 
+    text-decoration: none; 
+    color: #fff; 
+    font-weight: 600; 
+    font-size: 1.05rem;
+    flex: 1;
 }
 
-/* --- MOBILE BOTTOM NAVIGATION (The "Dock") --- */
+/* The arrow icons in the side menu */
+.drawer-links li::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid #888;
+    border-right: 2px solid #888;
+    transform: rotate(45deg);
+}
+
+.backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); display: none; z-index: 2500;
+}
+.backdrop.active { display: block; }
+
+/* --- 4. BOTTOM MOBILE NAV DOCK --- */
 .mobile-bottom-nav {
     position: fixed;
     bottom: 0;
@@ -99,9 +152,8 @@ body {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #eee;
     z-index: 2000;
-    /* Handles iPhone notch/home bar */
     padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -116,139 +168,68 @@ body {
     font-size: 10px;
     font-weight: 700;
     gap: 4px;
-    transition: color 0.2s ease;
 }
 
 .bottom-nav-item.active {
-    color: var(--primary-green);
+    color: var(--hub-blue);
 }
 
-.bottom-nav-item i {
-    font-size: 20px;
-}
-
-/* --- DRAWER & BACKDROP --- */
-.drawer {
-    position: fixed; 
-    top: 0; 
-    left: -100%; 
-    width: 85%; 
-    max-width: 320px;
-    height: 100%;
-    background: #1a1a1a; /* Match header */
-    z-index: 3000; 
-    transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    padding-top: 20px;
-}
-.drawer.open { left: 0; }
-
-.backdrop {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7); display: none; z-index: 2500;
-    backdrop-filter: blur(4px);
-}
-.backdrop.active { display: block; }
-
-.drawer-links { list-style: none; padding: 20px; }
-.drawer-links li { padding: 18px 0; border-bottom: 1px solid #333; }
-.drawer-links a { text-decoration: none; color: #fff; font-weight: 600; font-size: 1.1rem; display: block; }
-
-/* --- DASHBOARD GRID --- */
+/* --- 5. EXISTING DATA COMPONENTS --- */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin: 20px 0;
+    gap: 12px;
+    margin-top: 20px;
 }
 
 .timer-unit {
-    background: var(--card-bg);
-    padding: 12px 5px;
+    background: #fff;
+    padding: 15px 5px;
     border-radius: 12px;
     text-align: center;
-    border: 1px solid var(--fpl-border);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    border: 1px solid #eee;
 }
 
-.timer-value {
-    font-size: 1.1rem;
-    font-weight: 900;
-    color: var(--fpl-primary);
-}
+.timer-value { font-size: 1.2rem; font-weight: 900; color: var(--primary-green); }
 
-.timer-label {
-    font-size: 0.6rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    opacity: 0.6;
-}
-
-/* --- FIXTURE CARDS --- */
 .fixture-card {
     background: #fff;
     border-radius: 12px;
     border: 1px solid #eee;
     margin-bottom: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.03);
-}
-
-.fixture-content {
-    display: flex;
-    padding: 12px;
-    align-items: center;
-}
-
-.score-col {
-    flex: 3;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .score-box {
-    background: var(--fpl-purple);
+    background: #37003c;
     color: #fff;
-    padding: 5px 12px;
+    padding: 6px 10px;
     border-radius: 6px;
     font-weight: 900;
-    font-size: 1.2rem;
-    display: flex;
-    gap: 5px;
-    font-family: monospace;
 }
 
-.team-logo { width: 24px; height: 24px; object-fit: contain; }
-.team-abbr { font-weight: 800; font-size: 0.8rem; color: #333; }
-
-/* --- PRICE MARKET --- */
 .price-row {
     display: flex;
     justify-content: space-between;
-    padding: 14px 10px;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
 }
 
-.player-name { font-weight: 800; color: var(--fpl-purple); font-size: 0.95rem; }
-.change-up { color: #008a4a; font-weight: 900; }
-.change-down { color: var(--fpl-pink); font-weight: 900; }
+.change-up { color: #008a4a; font-weight: bold; }
+.change-down { color: var(--fpl-pink); font-weight: bold; }
 
-/* --- DESKTOP VIEW --- */
+/* --- 6. DESKTOP ADAPTATION --- */
 @media screen and (min-width: 768px) {
     body { padding-bottom: 0; }
     .mobile-bottom-nav { display: none; }
-    .navbar { padding: 0 40px; }
-    .nav-links { display: flex; list-style: none; gap: 25px; }
-    .nav-links a { color: #fff; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+    .navbar { padding: 0 30px; }
+    .nav-links { display: flex; list-style: none; gap: 20px; }
+    .nav-links a { color: #fff; text-decoration: none; font-weight: 700; }
 }
 
-/* --- ANIMATIONS --- */
-@keyframes pulse-border {
-    0%, 100% { border-color: rgba(255, 0, 90, 0.2); }
-    50% { border-color: rgba(255, 0, 90, 0.8); }
-}
-
-.bonus-log {
-    border: 1px dashed var(--fpl-primary);
-    animation: pulse-border 2s infinite;
+/* Animation from existing code */
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
 }
