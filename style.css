@@ -1,15 +1,16 @@
-I want to improve the nav on mobile so that it's like fantasy football hub or fantasy football scout or fpl.team here is the current css : /* --- GLOBAL FIXES --- */
+/* --- GLOBAL FIXES & VARIABLES --- */
 :root {
     --primary-green: #249771;
-    --dark-blue: #0f172a;
+    --dark-blue: #0f172a; /* Main Hub Theme */
+    --fpl-purple: #37003c;
+    --fpl-pink: #ff005a;
     --text-gray: #4a5568;
     --bg-light: #f5f5f7;
     --card-bg: #ffffff;
     --text-dim: #718096;
-    --accent: #249771;
-    --down: #e53e3e;
-    --fpl-pink: #ff005a;
-    /* Organic Motion Timing Function */
+    --fpl-primary: #ff005a;
+    --fpl-surface: #ffffff;
+    --fpl-border: #eeeeee;
     --organic-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -17,587 +18,237 @@ I want to improve the nav on mobile so that it's like fantasy football hub or fa
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    -webkit-tap-highlight-color: transparent; /* Removes mobile tap flicker */
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* FIX: Removed overflow-x: hidden from html/body. 
-   'Sticky' fails if any parent has overflow: hidden.
-*/
 html, body {
     width: 100%;
+    scroll-behavior: smooth;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    margin: 0;
     color: var(--text-gray);
     line-height: 1.5;
-    background-color: #fff;
+    background-color: #f8fafc;
+    /* Extra padding at bottom so content isn't hidden by the Bottom Nav */
+    padding-bottom: 85px; 
 }
 
-/* --- NAVBAR (NOW STICKY) --- */
+/* --- CENTERED TOP NAVBAR --- */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 10px;
-    background: #ffffff; 
-    border-bottom: 1px solid #eee;
-    position: -webkit-sticky; 
+    padding: 0 15px;
+    height: 60px;
+    background: #1a1a1a; /* Dark theme like the Hub header */
+    border-bottom: 1px solid #333;
     position: sticky;
     top: 0;
     width: 100%;
     z-index: 1000;
 }
 
-.nav-left { display: flex; align-items: center; gap: 15px; }
+/* Logic to force brand to the absolute center */
+.nav-left, .nav-right { 
+    flex: 1; 
+    display: flex; 
+    align-items: center; 
+}
 
-.menu-icon { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 5px; transition: transform 0.2s var(--organic-bounce); }
-.menu-icon:active { transform: scale(0.85); }
-.menu-icon span { width: 20px; height: 2px; background: #000; }
+.nav-right { 
+    justify-content: flex-end; 
+    gap: 12px; 
+}
 
-.brand { font-size: 1.2rem; font-weight: 900; color: #ffffff; margin: 0; }
+.brand { 
+    flex: 0;
+    font-size: 1.1rem; 
+    font-weight: 900; 
+    color: #ffffff; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
 .brand span { color: var(--primary-green); }
 
-.nav-right { display: flex; align-items: center; gap: 8px; }
-
-/* Haptic Feedback on Icon Buttons */
-.icon-btn { 
-    background: var(--bg-light); border: none; border-radius: 50%; 
-    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; 
-    color: var(--dark-blue);
-    transition: transform 0.2s var(--organic-bounce), background 0.2s;
+.menu-icon { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px; 
+    cursor: pointer; 
+    padding: 10px 5px; 
 }
-.icon-btn:active { transform: scale(0.9); background: #e2e8f0; }
 
-.divider { width: 1px; height: 20px; background: #ddd; margin: 0 5px; }
+.menu-icon span { 
+    width: 22px; 
+    height: 2px; 
+    background: #fff; 
+}
+
+/* --- MOBILE BOTTOM NAVIGATION (The "Dock") --- */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    background: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+    z-index: 2000;
+    /* Handles iPhone notch/home bar */
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    gap: 4px;
+    transition: color 0.2s ease;
+}
+
+.bottom-nav-item.active {
+    color: var(--primary-green);
+}
+
+.bottom-nav-item i {
+    font-size: 20px;
+}
 
 /* --- DRAWER & BACKDROP --- */
 .drawer {
-    position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-    background: white; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: fixed; 
+    top: 0; 
+    left: -100%; 
+    width: 85%; 
+    max-width: 320px;
+    height: 100%;
+    background: #1a1a1a; /* Match header */
+    z-index: 3000; 
+    transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: 20px;
 }
 .drawer.open { left: 0; }
+
 .backdrop {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: none; z-index: 1500;
+    background: rgba(0,0,0,0.7); display: none; z-index: 2500;
+    backdrop-filter: blur(4px);
 }
 .backdrop.active { display: block; }
 
-.drawer-links { list-style: none; padding: 20px; margin: 0; }
-.drawer-links li { padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
-.drawer-links a { text-decoration: none; color: #333; font-weight: 600; transition: 0.2s; display: block; }
-.drawer-links a:active { color: var(--primary-green); transform: scale(0.98); }
+.drawer-links { list-style: none; padding: 20px; }
+.drawer-links li { padding: 18px 0; border-bottom: 1px solid #333; }
+.drawer-links a { text-decoration: none; color: #fff; font-weight: 600; font-size: 1.1rem; display: block; }
 
-/* --- MAIN CONTENT / CONTAINER --- */
-.main-content {
-    overflow-x: hidden;
-    width: 100%;
-}
-
-.container { 
-    width: 100%;
-    max-width: 500px; 
-    margin: 30px auto; 
-    padding: 0 5px;
-    min-height: 60vh; 
-}
-
-/* Haptic Feedback on Cards */
-.card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    transition: transform 0.3s var(--organic-bounce), box-shadow 0.3s ease;
-}
-.card:active { transform: scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
-
-.accent-title { border-left: 6px solid var(--primary-green); padding-left: 15px; }
-
-/* --- KOPALA EDGE STYLES --- */
-.edge-container { margin-top: 40px; }
-.edge-title { 
-    font-size: 0.9rem; font-weight: 900; letter-spacing: 2px; 
-    color: var(--dark-blue); margin-bottom: 20px; 
-    display: flex; align-items: center; gap: 10px;
-}
-.edge-title::after { content: ""; flex: 1; height: 2px; background: #eee; }
-
-.edge-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-
-.edge-card {
-    background: #fff; border: 1px solid #f0f0f0; border-radius: 12px;
-    padding: 25px; position: relative;
-    transition: transform 0.3s var(--organic-bounce), box-shadow 0.3s ease;
-}
-.edge-card:active { transform: scale(0.97); }
-
-.edge-card h3 { font-size: 1rem; color: var(--dark-blue); margin: 15px 0 8px 0; font-weight: 800; }
-.edge-card p { font-size: 0.85rem; color: var(--text-gray); margin: 0; line-height: 1.4; }
-
-.highlighted { border-left: 4px solid var(--primary-green); }
-
-/* --- GEOMETRIC ICONS --- */
-.geo-icon { width: 30px; height: 30px; position: relative; transition: transform 0.5s var(--organic-bounce); }
-.edge-card:hover .geo-icon { transform: rotate(15deg) scale(1.1); }
-
-.circle-split { background: linear-gradient(90deg, var(--primary-green) 50%, var(--fpl-pink) 50%); border-radius: 50%; }
-.square-stack::before { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--primary-green); }
-.square-stack::after { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--fpl-pink); top: 5px; left: 5px; }
-.triangle-point { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 25px solid var(--primary-green); }
-.bars-minimal { border-left: 6px solid #ddd; border-right: 6px solid var(--primary-green); height: 25px; }
-.circle-dot { border: 3px solid var(--dark-blue); border-radius: 50%; }
-.circle-dot::after { content: ''; position: absolute; width: 8px; height: 8px; background: var(--fpl-pink); top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; }
-.strike-line { background: var(--fpl-pink); height: 4px; top: 13px; transform: rotate(-45deg); width: 30px; }
-
-/* --- COUNTDOWN & PRICE DATA --- */
-h3.timer-header {
-    margin-top: 0;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-}
-
-#countdown-timer { text-align: center; }
-
-.timer-grid {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    font-weight: 800;
-    font-size: 24px;
-    color: var(--accent);
-}
-
-.timer-unit {
-    font-size: 10px;
-    display: block;
-    color: var(--text-dim);
-    font-weight: 400;
-}
-
-/* Interactivity on Price Rows */
-.price-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 10px;
-    border-bottom: 1px solid #eeeeee;
-    transition: transform 0.2s var(--organic-bounce), background 0.2s ease;
-    cursor: pointer;
-}
-.price-row:active { transform: scale(0.96); background: #f8fafc; }
-.price-row:last-child { border-bottom: none; }
-
-.player-info { display: flex; flex-direction: column; }
-.player-name { font-weight: 600; font-size: 15px; color: var(--dark-blue); }
-.team-name { font-size: 12px; color: var(--text-dim); }
-.price-data { text-align: right; }
-.price-val { font-weight: 700; color: var(--dark-blue); }
-.change-up { color: #008a4a; font-weight: bold; }
-.change-down { color: var(--down); font-weight: bold; }
-
-/* --- FOOTER --- */
-footer { background: var(--dark-blue); color: white; padding: 40px 15px; margin-top: 60px; text-align: center; }
-
-/* --- DESKTOP ADJUSTMENT --- */
-@media (min-width: 480px) {
-    .edge-grid { grid-template-columns: 1fr 1fr; }
-    .container { padding: 0 20px; }
-}
-
-
-/* Vertical Scroll Container */
-.price-list-vertical {
-    max-height: 250px; 
-    overflow-y: auto;  
-    padding-right: 5px;
-}
-
-/* Custom Scrollbar */
-.price-list-vertical::-webkit-scrollbar {
-    width: 4px;
-}
-.price-list-vertical::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 10px;
-}
-
-.price-row-mini {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.riser-text { color: #008a4a; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; margin-top: 10px; }
-.faller-text { color: #e53e3e; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; margin-top: 10px; }
-.divider { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
-
-/* --- Desktop Navigation Styling --- */
-
-.nav-links {
-    display: none;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    gap: 20px;
-}
-
-.nav-links li a {
-    color: #ffffff; 
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 700;
-    white-space: nowrap;
-    transition: color 0.3s var(--organic-bounce), transform 0.2s;
-}
-
-.nav-links li a:hover {
-    color: #00ff87; 
-}
-.nav-links li a:active { transform: scale(0.95); }
-
-@media screen and (min-width: 768px) {
-    #menu-btn {
-        display: none !important;
-    }
-
-    .nav-links {
-        display: flex;
-        align-items: center;
-    }
-
-    .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 20px;
-        background-color: #1a1a1a; 
-    }
-
-    .nav-left {
-        display: flex;
-        align-items: center;
-        gap: 40px; 
-    }
-}
-
-.player-name {
-    font-weight: 800;
-    display: block;
-    color: #37003c;
-}
-
-.team-name {
-    font-size: 11px;
-    color: #666;
-}
-
-.change-up { color: #00ff87; font-weight: bold; }
-.change-down { color: #ff005a; font-weight: bold; }
-
-.market-card h3 {
-    padding: 10px;
-    background: #37003c;
-    color: white;
-    font-size: 14px;
-    border-radius: 8px 8px 0 0;
-}
-
-
-
-#confirm-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
-    z-index: 9999 !important; /* Always on top of everything */
-    display: none; /* Controlled by JS */
-    align-items: center;
-    justify-content: center;
-}
-    
-/* --- IMPROVED DASHBOARD GRID --- */
+/* --- DASHBOARD GRID --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
-    gap: 12px;
-    margin-top: 20px;
-    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px 0;
 }
 
 .timer-unit {
-    background-color: var(--fpl-surface);
-    padding: 15px 5px;
-    border-radius: 16px;
+    background: var(--card-bg);
+    padding: 12px 5px;
+    border-radius: 12px;
     text-align: center;
     border: 1px solid var(--fpl-border);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-width: 0; /* Prevents grid blowout */
-    transition: transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .timer-value {
-    font-size: 1.2rem; /* Adjusted size to prevent overflow */
+    font-size: 1.1rem;
     font-weight: 900;
     color: var(--fpl-primary);
-    display: block;
-    word-break: break-word; /* Forces long numbers to wrap if absolutely necessary */
-    line-height: 1.2;
-}
-
-/* Specific fix for the large Rank number */
-#disp-rank {
-    font-size: 1rem; 
 }
 
 .timer-label {
     font-size: 0.6rem;
     font-weight: 700;
+    text-transform: uppercase;
     opacity: 0.6;
-    text-transform: uppercase;
-    margin-top: 4px;
 }
 
-@media (max-width: 400px) {
-    .timer-value { font-size: 1rem; }
-    .dashboard-grid { gap: 8px; }
-}
-
-
-/* --- BACK TO TOP BUTTON --- */
-.back-to-top {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 45px;
-    height: 45px;
-    background-color: var(--fpl-primary);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.back-to-top.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-.back-to-top:hover {
-    transform: translateY(-5px);
-    background-color: #37003c; /* Slightly darker shade */
-}
-
-/* Ensure smooth scrolling for the whole page */
-html {
-    scroll-behavior: smooth;
-}
-
-
-.bonus-log {
-    border: 1px dashed var(--fpl-primary);
-    animation: pulse-border 2s infinite;
-}
-
-@keyframes pulse-border {
-    0% { border-color: rgba(255, 0, 90, 0.2); }
-    50% { border-color: rgba(255, 0, 90, 0.8); }
-    100% { border-color: rgba(255, 0, 90, 0.2); }
-}
-
-
-
-//* --- UPDATED FIXTURE & MATCH CENTER STYLES --- */
-
-/* Container safety - ensuring no horizontal scroll */
-#fixtures-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 2px;
-}
-
-/* Date Group Header Styling (Friday, Saturday, etc.) */
-.date-group-header {
-    background: linear-gradient(90deg, #00ff87, #00ebff);
-    color: #37003c;
-    text-align: center;
-    padding: 8px;
-    font-weight: 900;
-    font-size: 0.8rem;
-    border-radius: 8px;
-    margin: 15px 0 5px 0;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-/* The Main Card */
+/* --- FIXTURE CARDS --- */
 .fixture-card {
     background: #fff;
     border-radius: 12px;
     border: 1px solid #eee;
+    margin-bottom: 12px;
     overflow: hidden;
-    width: 100%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.03);
 }
 
-/* Horizontal Content Wrapper */
 .fixture-content {
     display: flex;
-    align-items: stretch; 
-    padding: 10px;
-    gap: 5px;
+    padding: 12px;
+    align-items: center;
 }
 
-/* Column 1: Events (Left) */
-.events-col {
-    flex: 1; /* Proportional sizing */
-    border-right: 1px solid #f0f0f0;
-    padding-right: 8px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    font-size: 0.75rem;
-    min-width: 0; /* Prevents text from pushing width */
-}
-
-/* Column 2: The Scoreboard (Middle) - STRENGTHENED */
 .score-col {
-    flex: 2.5; 
+    flex: 3;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-width: 160px; /* Prevents 'crunching' with logos */
 }
 
-.score-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    width: 100%;
-}
-
-.team-unit {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    flex: 1;
-    justify-content: center;
-}
-
-.team-logo {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-}
-
-.team-abbr {
-    font-weight: 800;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: #333;
-}
-
-/* The dark score box from your image */
 .score-box {
-    background: #37003c; /* FPL Purple */
+    background: var(--fpl-purple);
     color: #fff;
-    padding: 6px 10px;
+    padding: 5px 12px;
     border-radius: 6px;
-    font-family: 'Monaco', 'Consolas', monospace;
     font-weight: 900;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     display: flex;
-    gap: 4px;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    min-width: 60px;
+    gap: 5px;
+    font-family: monospace;
 }
 
-/* Column 3: Bonus (Right) */
-.bonus-col {
-    flex: 1.2; 
-    background: #f9f9f9;
-    border-radius: 8px;
-    padding: 8px;
-    margin-left: 5px;
+.team-logo { width: 24px; height: 24px; object-fit: contain; }
+.team-abbr { font-weight: 800; font-size: 0.8rem; color: #333; }
+
+/* --- PRICE MARKET --- */
+.price-row {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 14px 10px;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-.bonus-header {
-    font-size: 0.55rem;
-    font-weight: 900;
-    opacity: 0.4;
-    margin-bottom: 5px;
-    text-transform: uppercase;
+.player-name { font-weight: 800; color: var(--fpl-purple); font-size: 0.95rem; }
+.change-up { color: #008a4a; font-weight: 900; }
+.change-down { color: var(--fpl-pink); font-weight: 900; }
+
+/* --- DESKTOP VIEW --- */
+@media screen and (min-width: 768px) {
+    body { padding-bottom: 0; }
+    .mobile-bottom-nav { display: none; }
+    .navbar { padding: 0 40px; }
+    .nav-links { display: flex; list-style: none; gap: 25px; }
+    .nav-links a { color: #fff; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
 }
 
-/* Specific GW Label */
-.gw-label {
-    font-size: 0.55rem;
-    font-weight: 800;
-    opacity: 0.3;
-    margin-top: 4px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-
+/* --- ANIMATIONS --- */
+@keyframes pulse-border {
+    0%, 100% { border-color: rgba(255, 0, 90, 0.2); }
+    50% { border-color: rgba(255, 0, 90, 0.8); }
 }
 
-/* --- MOBILE OPTIMIZATIONS --- */
-@media (max-width: 450px) {
-    .events-col { 
-
-Make sure the name Kopala FPL is in the center 
-        display: none; /* Auto-hide events on small phones to keep score large */
-    }
-    .score-col { 
-        flex: 3; 
-    }
-    .team-logo {
-        width: 18px;
-        height: 18px;
-    }
-    .team-abbr {
-        font-size: 0.7rem;
-    }
-    .score-box {
-        font-size: 1rem;
-        padding: 4px 8px;
-    }
-}
-
-
-
-@keyframes blink {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-    100% { opacity: 1; transform: scale(1); }
+.bonus-log {
+    border: 1px dashed var(--fpl-primary);
+    animation: pulse-border 2s infinite;
 }
