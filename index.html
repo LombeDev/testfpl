@@ -46,7 +46,7 @@
             margin: 20px auto;
             padding: 0 15px;
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr; 
             gap: 20px;
         }
 
@@ -110,91 +110,58 @@
             text-align: center;
         }
 
-        /* --- FPL NAME GENERATOR SPECIFIC STYLES --- */
-        .gen-input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .gen-input {
-            flex: 1;
-            padding: 12px 15px;
-            border-radius: 12px;
-            border: 1px solid var(--fpl-border);
-            background: var(--fpl-surface);
-            color: var(--fpl-on-container);
-            font-family: inherit;
-            outline: none;
-        }
-
-        #name-display-box {
+        /* --- GENERATOR SPECIFIC CSS --- */
+        #ai-name-display {
             background: var(--fpl-on-container);
             color: var(--fpl-primary);
-            padding: 25px;
+            padding: 20px;
             border-radius: 16px;
             text-align: center;
             font-size: 1.4rem;
             font-weight: 900;
-            margin-bottom: 15px;
+            margin: 15px 0;
             min-height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             text-transform: uppercase;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
         }
 
-        .gen-btn-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .primary-gen-btn {
-            flex: 2;
-            background: var(--fpl-primary);
-            color: white;
-            border: none;
-            padding: 14px;
+        .gen-input {
+            width: 100%;
+            padding: 15px;
             border-radius: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .secondary-gen-btn {
-            flex: 1;
+            border: 1px solid var(--fpl-border);
             background: var(--fpl-surface);
             color: var(--fpl-on-container);
-            border: 1px solid var(--fpl-border);
-            padding: 14px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .gen-btn-group { display: flex; gap: 10px; }
+        
+        .btn-gen {
+            flex: 2;
+            padding: 15px;
             border-radius: 12px;
-            font-weight: 700;
+            border: none;
+            background: var(--fpl-primary);
+            color: white;
+            font-weight: 800;
             cursor: pointer;
         }
 
-        .primary-gen-btn:active { transform: scale(0.98); }
-
-        .history-list {
-            margin-top: 15px;
-            padding: 0;
-            list-style: none;
-            font-size: 0.8rem;
-            opacity: 0.7;
+        .btn-copy-alt {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--fpl-border);
+            background: var(--fpl-surface);
+            color: var(--fpl-on-container);
+            cursor: pointer;
         }
 
-        .history-list li {
-            padding: 5px 0;
-            border-bottom: 1px solid var(--fpl-border);
-        }
-
-        @keyframes namePop {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .name-animate { animation: namePop 0.3s ease-out; }
-
-        /* Timer Units */
         .timer-unit {
             background-color: var(--fpl-surface);
             padding: 10px 5px;
@@ -204,9 +171,9 @@
             text-align: center;
             border: 1px solid var(--fpl-border);
         }
+
         .timer-value { font-size: 1.5rem; font-weight: 900; color: var(--fpl-primary); display: block; }
         .timer-label { font-size: 0.6rem; font-weight: 700; opacity: 0.6; text-transform: uppercase; display: block; }
-        
     </style>
 </head>
 <body>
@@ -215,7 +182,6 @@
         <div class="nav-left">
             <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
         </div>
-        
         <div class="nav-right">
             <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
                 <i class="fa-solid fa-palette"></i>
@@ -228,32 +194,30 @@
         <div class="main-content-area">
             
             <div id="match-center-card" class="card">
-                <h2 class="accent-title">Bonus Points Center</h2>
+                <h2 class="accent-title">Bonus Points</h2>
                 <div id="fixtures-container">
                     <div style="text-align: center; padding: 20px; opacity: 0.5;">
                         <i class="fa-solid fa-circle-notch fa-spin"></i>
-                        <p>Loading live matches...</p>
                     </div>
                 </div>
             </div>
 
-            <section id="name-gen-card" class="card">
-                <h2 class="accent-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Team Name Gen</h2>
+            <div id="name-generator-card" class="card">
+                <h2 class="accent-title">AI Team Name Generator</h2>
+                <input type="text" id="ai-player-input" class="gen-input" placeholder="Enter player name (e.g. Salah)">
                 
-                <div class="gen-input-group">
-                    <input type="text" id="player-search" class="gen-input" placeholder="Type a player name (e.g. Salah)">
+                <div id="ai-name-display">GENERATE A NAME</div>
+
+                <div class="gen-btn-group">
+                    <button id="ai-generate-btn" class="btn-gen">GENERATE</button>
+                    <button id="ai-copy-btn" class="btn-copy-alt"><i class="fa-regular fa-copy"></i></button>
                 </div>
-
-                <div id="name-display-box">READY?</div>
-
-                <div class="gen-btn-row">
-                    <button id="generate-name-btn" class="primary-gen-btn">GENERATE</button>
-                    <button id="copy-name-btn" class="secondary-gen-btn"><i class="fa-regular fa-copy"></i></button>
+                
+                <div style="margin-top:15px; font-size: 0.7rem; opacity: 0.6; text-align: center;">
+                    HISTORY: <span id="ai-history-text">None</span>
                 </div>
+            </div>
 
-                <ul id="gen-history" class="history-list"></ul>
-            </section>
-            
         </div>
 
         <div class="sidebar-area">
@@ -275,70 +239,68 @@
     </main>
 
     <script>
-        // --- DATABASE ---
-        const fplNames = {
-            "salah": ["Que Salah Salah", "Chicken Tikka Mo Salah", "Salah-vating Victory"],
-            "haaland": ["Haaland Globetrotters", "Haalandaise Sauce", "The Erling Force"],
-            "palmer": ["Ice Cold Palmer", "Palmer Violets", "Palmer Chameleon"],
-            "rice": ["Rice Rice Baby", "Basmati Rice", "GTA: Rice City"],
-            "saka": ["Major League Saka", "BooyaSaka", "Starboy"],
-            "slot": ["Drop It Like It's Slot", "The Slot Thickens", "Slot Machine"],
-            "general": ["Inter Yanan", "Tea & Busquets", "Ctrl Alt De Ligt", "Alisson Wonderland", "Stranger Mings", "McGinn and Tonic", "Hakuna Mateta", "Botman Begins", "Clyne of Duty", "Lord of the Ings", "Iwobi-Wan Kenobi", "Bayer Neverlusen"]
+        // --- NAME GENERATOR AI DATA ---
+        const fplDatabase = {
+            "salah": ["Que Salah Salah", "Chicken Tikka Mo Salah", "Salah-vating Victory", "When Harry Met Salah"],
+            "haaland": ["Haaland Globetrotters", "Haalandaise Sauce", "The Erling Force", "Erling Bird"],
+            "rice": ["Rice Rice Baby", "Basmati Rice", "GTA: Rice City", "The Rice is Right"],
+            "palmer": ["Ice Cold Palmer", "Palmer Violets", "Palmer Chameleon", "Keep Cold"],
+            "saka": ["Major League Saka", "BooyaSaka", "Saka Potatoes", "Starboy"],
+            "general": ["Inter Yanan", "Tea & Busquets", "Ctrl Alt De Ligt", "Alisson Wonderland", "Stranger Mings", "McGinn and Tonic", "Hakuna Mateta", "Botman Begins", "Clyne of Duty", "Lord of the Ings", "Iwobi-Wan Kenobi", "Bayer Neverlusen", "Gangsta's Allardyce", "360 No Pope"]
         };
 
-        // --- GENERATOR LOGIC ---
-        const genBtn = document.getElementById('generate-name-btn');
-        const searchInput = document.getElementById('player-search');
-        const displayBox = document.getElementById('name-display-box');
-        const historyList = document.getElementById('gen-history');
-        const copyBtn = document.getElementById('copy-name-btn');
+        const aiBtn = document.getElementById('ai-generate-btn');
+        const aiDisplay = document.getElementById('ai-name-display');
+        const aiInput = document.getElementById('ai-player-input');
+        const aiCopy = document.getElementById('ai-copy-btn');
+        const aiHistory = document.getElementById('ai-history-text');
 
-        genBtn.addEventListener('click', () => {
-            const query = searchInput.value.toLowerCase().trim();
-            let pool = fplNames.general;
+        aiBtn.addEventListener('click', () => {
+            const inputVal = aiInput.value.toLowerCase().trim();
+            let pool = fplDatabase.general;
 
-            for (let key in fplNames) {
-                if (key !== "general" && query.includes(key)) {
-                    pool = fplNames[key];
+            for (let key in fplDatabase) {
+                if (key !== "general" && inputVal.includes(key)) {
+                    pool = fplDatabase[key];
                     break;
                 }
             }
 
-            // Simple Flicker Animation
-            let count = 0;
-            genBtn.disabled = true;
-            const timer = setInterval(() => {
-                displayBox.innerText = fplNames.general[Math.floor(Math.random() * fplNames.general.length)];
-                count++;
-                if (count > 8) {
-                    clearInterval(timer);
-                    const final = pool[Math.floor(Math.random() * pool.length)];
-                    displayBox.innerText = final;
-                    displayBox.classList.add('name-animate');
-                    setTimeout(() => displayBox.classList.remove('name-animate'), 300);
-                    genBtn.disabled = false;
-                    
-                    // Add to History
-                    const li = document.createElement('li');
-                    li.innerText = final;
-                    historyList.prepend(li);
-                    if(historyList.children.length > 3) historyList.removeChild(historyList.lastChild);
+            // Slot machine animation
+            let i = 0;
+            aiBtn.disabled = true;
+            const scrollInterval = setInterval(() => {
+                aiDisplay.innerText = fplDatabase.general[Math.floor(Math.random() * fplDatabase.general.length)];
+                i++;
+                if (i > 10) {
+                    clearInterval(scrollInterval);
+                    const finalName = pool[Math.floor(Math.random() * pool.length)];
+                    aiDisplay.innerText = finalName;
+                    aiHistory.innerText = finalName;
+                    aiBtn.disabled = false;
                 }
-            }, 50);
+            }, 60);
         });
 
-        copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(displayBox.innerText);
-            const originalIcon = copyBtn.innerHTML;
-            copyBtn.innerHTML = "✔";
-            setTimeout(() => copyBtn.innerHTML = originalIcon, 1500);
+        aiCopy.addEventListener('click', () => {
+            navigator.clipboard.writeText(aiDisplay.innerText);
+            alert("Copied!");
         });
 
-        // --- YOUR EXISTING THEME LOGIC ---
+        // --- THEME LOGIC (PRESERVING YOURS) ---
+        function toggleThemeMenu() {
+            const menu = document.getElementById('theme-dropdown');
+            if(menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
         function applyMaterialTheme(color) {
             document.documentElement.style.setProperty('--fpl-primary', color);
             localStorage.setItem('kopala_ai_theme', color);
         }
     </script>
+
+    <script src="script.js" defer></script>
+    <script src="deadline.js" defer></script>
+    <script src="match-center.js" defer></script>
 </body>
 </html>
