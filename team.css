@@ -498,3 +498,37 @@ body{
 }
 
 
+
+/* --- 2025/26 EPL JERSEY LIBRARY --- */
+.jersey.gkp_color { background-color: #e1ff00 !important; border-bottom: 4px solid #000; }
+
+.jersey.arsenal          { background-color: #ef0107; border-bottom: 4px solid #ffffff; }
+.jersey.aston_villa      { background-color: #95bfe5; border-bottom: 4px solid #670e36; }
+.jersey.bournemouth      { background-color: #da291c; border-bottom: 4px solid #000000; }
+.jersey.brentford        { background-color: #e30613; border-bottom: 4px solid #ffffff; }
+.jersey.brighton         { background-color: #0057b8; border-bottom: 4px solid #ffffff; }
+.jersey.chelsea          { background-color: #034694; border-bottom: 4px solid #034694; }
+.jersey.crystal_palace   { background-color: #1b458f; border-bottom: 4px solid #c4122e; }
+.jersey.everton          { background-color: #003399; border-bottom: 4px solid #ffffff; }
+.jersey.fulham           { background-color: #ffffff; border-bottom: 4px solid #000000; }
+.jersey.ipswich          { background-color: #005696; border-bottom: 4px solid #ffffff; }
+.jersey.leicester        { background-color: #003090; border-bottom: 4px solid #ffffff; }
+.jersey.liverpool        { background-color: #c8102e; border-bottom: 4px solid #f6eb61; }
+.jersey.man_city         { background-color: #6cabdd; border-bottom: 4px solid #ffffff; }
+.jersey.man_utd          { background-color: #da291c; border-bottom: 4px solid #ffffff; }
+.jersey.newcastle        { background-color: #000000; border-bottom: 4px solid #ffffff; }
+.jersey.nottm_forest     { background-color: #dd0000; border-bottom: 4px solid #ffffff; }
+.jersey.southampton      { background-color: #d71920; border-bottom: 4px solid #ffffff; }
+.jersey.tottenham        { background-color: #ffffff; border-bottom: 4px solid #132257; }
+.jersey.west_ham         { background-color: #7a263a; border-bottom: 4px solid #1bb1e7; }
+.jersey.wolves           { background-color: #fdb913; border-bottom: 4px solid #231f20; }
+
+/* Empty slot circle */
+.jersey.default { 
+    background-color: rgba(255,255,255,0.15); 
+    border: 2px dashed rgba(255,255,255,0.3); 
+    clip-path: none; 
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+}
