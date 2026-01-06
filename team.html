@@ -203,8 +203,7 @@
     <main class="main-container">
         <div class="ticker" id="ticker">Connecting to FPL servers...</div>
         
-        <div class="status-bar">
-            <span>BANK: <b id="budget-val">£100.0m</b></span>
+          
         
         </div>
 
@@ -236,20 +235,24 @@
             <button id="analyze-btn" class="btn-primary">Analyse my team</button>
         </div>
 
-         <section class="stats-summary" style="display: grid; gap: 15px;">
-            <div class="stat-box">
-                <span class="stat-label">Predicted Points</span>
-                <span class="stat-value" id="v-xp">0</span>
-            </div>
-             <div class="stat-item">
-                <span class="label">3 GWs xP:</span>
-                <span id="three-week-xp" class="value">0.0</span>
-            </div>
-            <div class="stat-item">
-                <span class="label">AI Rating:</span>
-                <span id="team-rating" class="value" style="font-weight: bold;">0%</span>
-            </div>
-         </section>
+        <section class="stats-summary" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+    <div class="stat-box" style="text-align: center; border-right: 1px solid #eee;">
+        <span class="stat-label" style="display: block; font-size: 11px; color: #666; text-transform: uppercase; font-weight: 700;">GW Rating</span>
+        <span class="stat-value" id="v-xp" style="font-size: 22px; font-weight: 900; color: #37003c;">0.0</span>
+    </div>
+    <div class="stat-box" style="text-align: center; border-right: 1px solid #eee;">
+        <span class="stat-label" style="display: block; font-size: 11px; color: #666; text-transform: uppercase; font-weight: 700;">3 GWs xP</span>
+        <span class="stat-value" id="three-week-xp" style="font-size: 22px; font-weight: 900; color: #37003c;">0.0</span>
+    </div>
+    <div class="stat-box" style="text-align: center; border-right: 1px solid #eee;">
+        <span class="stat-label" style="display: block; font-size: 11px; color: #666; text-transform: uppercase; font-weight: 700;">AI Rating</span>
+        <span class="stat-value" id="team-rating" style="font-size: 22px; font-weight: 900; color: #00ff87;">0%</span>
+    </div>
+    <div class="stat-box" style="text-align: center;">
+        <span class="stat-label" style="display: block; font-size: 11px; color: #666; text-transform: uppercase; font-weight: 700;">Bank</span>
+        <span class="stat-value" id="budget-val" style="font-size: 22px; font-weight: 900; color: #ff005a;">£100.0m</span>
+    </div>
+</section>
     </main>
 
     <div id="analysis-modal" class="modal">
