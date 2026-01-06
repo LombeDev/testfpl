@@ -1,7 +1,7 @@
-/* team.css - Final Flat Professional Refresh
-   Updated: 2026-01-06
-   Style: Flat "Virgil" Cards with High-Contrast UI
-*/
+/**
+ * KOPALA FPL - FINAL PROFESSIONAL REFRESH (v4.3.3)
+ * Optimized for: 2025/26 Season & Edge-to-Edge Mobile
+ */
 
 /* ---- THEME VARIABLES ---- */
 :root {
@@ -14,34 +14,44 @@
   --shadow:     0 4px 20px rgba(7,11,13,0.1);
   --radius: 12px;
   --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  
+  /* Dynamic Safe Area Insets for Mobile Notches */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Base Reset */
+/* Base Reset & Edge-to-Edge Logic */
 * { box-sizing: border-box; }
-body {
+
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
   font-family: var(--font-sans);
   background: #f0f4f8;
   color: #071126;
   -webkit-font-smoothing: antialiased;
 }
 
+/* Full Width Container for Mobile */
 .main-container {
+  width: 100%;
   max-width: 1160px;
-  margin: 20px auto;
-  padding: 0 20px;
+  margin: 0 auto;
+  padding: 0; /* Touches edges on mobile */
 }
 
-/* ---- NAVBAR ---- */
+/* ---- NAVBAR (NATIVE LOOK) ---- */
 .navbar {
   background: var(--fpl-purple);
   color: white;
-  padding: 14px 20px;
+  padding: calc(var(--safe-top) + 14px) 20px 14px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  border-radius: 0; /* Native apps have flat top bars */
+  margin-bottom: 0;
 }
 .brand { font-weight: 900; font-size: 1.2rem; }
 .brand span { color: var(--fpl-green); }
@@ -49,22 +59,22 @@ body {
 /* ---- STATUS BAR & SUMMARY ---- */
 .status-bar {
   display: flex;
-  gap: 15px;
+  gap: 10px;
   align-items: center;
   justify-content: space-between;
   background: #fff;
   padding: 15px;
-  border-radius: var(--radius);
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #e2e8f0;
   box-shadow: var(--shadow);
 }
 
 .stat-item { text-align: center; flex: 1; }
-.stat-label { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; }
-.stat-value { font-size: 20px; font-weight: 900; color: #2d3436; }
+.stat-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; }
+.stat-value { font-size: 18px; font-weight: 900; color: #2d3436; }
 #team-rating { color: var(--fpl-green) !important; }
 
-/* ---- FLAT PITCH AREA ---- */
+/* ---- PITCH AREA (EDGE-TO-EDGE) ---- */
 .pitch-outer-wrap {
   background: var(--pitch-green);
   /* Classic FPL Stripes */
@@ -75,24 +85,30 @@ body {
     transparent 60px,
     transparent 120px
   );
-  border-radius: 16px;
-  padding: 30px 10px;
+  padding: 25px 5px; /* Minimal side padding */
   position: relative;
   box-shadow: inset 0 0 40px rgba(0,0,0,0.15);
+  min-height: 500px;
 }
 
 .pitch {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 20px;
   align-items: center;
 }
 
 /* ---- FLAT VIRGIL CARDS ---- */
-.row { display: flex; gap: 10px; justify-content: center; width: 100%; }
+.row { 
+  display: flex; 
+  gap: 4px; 
+  justify-content: center; 
+  width: 100%; 
+}
 
 .slot {
-  width: 95px;
+  flex: 1;
+  max-width: 20%; /* 5 players exactly across */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -101,182 +117,112 @@ body {
 
 .player-card-wrapper {
   width: 100%;
-  background: rgba(0, 0, 0, 0.15); /* Semi-trans glass effect on pitch */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2); 
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.player-card-wrapper:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
 /* Card Visual Header */
 .card-visual-area {
-  height: 60px;
+  height: 55px;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
-  padding: 10px 0;
 }
 
 .price-tag {
   position: absolute;
-  top: 4px; right: 4px;
-  background: rgba(0,0,0,0.8);
+  top: 2px; right: 2px;
+  background: rgba(0,0,0,0.85);
   color: #fff;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
-  padding: 1px 4px;
+  padding: 1px 3px;
   border-radius: 2px;
 }
 
-.status-icon-yellow {
-  position: absolute;
-  top: 4px; left: 4px;
-  background: #e1ff00;
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 8px; color: #000;
-}
-
-/* Info Plates (Two-Tone) */
+/* Info Plates */
 .p-name-box {
   background: #fff;
   color: var(--fpl-purple);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 900;
-  padding: 5px 2px;
+  padding: 4px 1px;
   text-align: center;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
-  border-bottom: 1px solid #eee;
+  text-overflow: ellipsis;
 }
 
-.p-fixture-box {
-  background: #e2e8f0;
-  color: #475569;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 3px 2px;
-  text-align: center;
-}
-
-/* ---- JERSEY LIBRARY (Flat Shapes) ---- */
+/* ---- 25/26 JERSEY LIBRARY ---- */
 .jersey {
-  width: 44px;
-  height: 40px;
+  width: 38px;
+  height: 35px;
   clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
   position: relative;
 }
 
-.jersey.arsenal        { background: #ef0107; border-bottom: 4px solid #fff; }
-.jersey.aston_villa    { background: #95bfe5; border-bottom: 4px solid #670e36; }
-.jersey.bournemouth    { background: #da291c; border-bottom: 4px solid #000; }
-.jersey.brentford      { background: #e30613; border-bottom: 4px solid #fff; }
-.jersey.brighton       { background: #0057b8; border-bottom: 4px solid #fff; }
-.jersey.chelsea        { background: #034694; border-bottom: 4px solid #fff; }
-.jersey.crystal_palace { background: #1b458f; border-bottom: 4px solid #c4122e; }
-.jersey.everton        { background: #003399; border-bottom: 4px solid #fff; }
-.jersey.fulham         { background: #ffffff; border-bottom: 4px solid #000; }
-.jersey.ipswich        { background: #005696; border-bottom: 4px solid #fff; }
-.jersey.leicester      { background: #003090; border-bottom: 4px solid #fff; }
-.jersey.liverpool      { background: #c8102e; border-bottom: 4px solid #f6eb61; }
-.jersey.man_city       { background: #6cabdd; border-bottom: 4px solid #fff; }
-.jersey.man_utd        { background: #da291c; border-bottom: 4px solid #ffffff; }
-.jersey.newcastle      { background: #000000; border-bottom: 4px solid #fff; }
-.jersey.nottm_forest   { background: #dd0000; border-bottom: 4px solid #fff; }
-.jersey.southampton    { background: #d71920; border-bottom: 4px solid #fff; }
+/* New 25/26 Club Styles */
+.jersey.arsenal        { background: #ef0107; border-left: 5px solid #fff; border-right: 5px solid #fff; }
+.jersey.liverpool      { background: #c8102e; border-top: 3px solid #ffffff; }
+.jersey.sunderland     { background: repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, #ffffff 8px, #ffffff 16px); }
+.jersey.leeds          { background: #ffffff; border: 2px solid #00509d; }
+.jersey.burnley        { background: #6c1d45; border-bottom: 5px solid #95d6f2; }
+.jersey.everton        { background: #003399; opacity: 0.95; border-bottom: 3px solid #fff;}
+
+/* Legacy/Standard Styles */
+.jersey.man_city       { background: #6cabdd; }
+.jersey.man_utd        { background: #da291c; border-bottom: 4px solid #fff; }
+.jersey.chelsea        { background: #034694; }
 .jersey.tottenham      { background: #ffffff; border-bottom: 4px solid #132257; }
-.jersey.west_ham       { background: #7a263a; border-bottom: 4px solid #1bb1e7; }
-.jersey.wolves         { background: #fdb913; border-bottom: 4px solid #231f20; }
+.jersey.aston_villa    { background: #95bfe5; border-bottom: 4px solid #670e36; }
+.jersey.newcastle      { background: repeating-linear-gradient(90deg, #000, #000 10px, #fff 10px, #fff 20px); }
 .jersey.gkp_color      { background: #e1ff00 !important; border-bottom: 4px solid #000; }
 
 .jersey.default { 
   background: rgba(255,255,255,0.2); 
-  border: 1px dashed #fff; clip-path: none; 
-  border-radius: 50%; width: 35px; height: 35px; 
+  border-radius: 50%; width: 30px; height: 30px; clip-path: none; 
 }
 
 /* Badges */
 .captain-badge {
   position: absolute;
-  top: -6px; right: -8px;
+  top: -6px; right: -6px;
   background: var(--fpl-purple);
   color: var(--fpl-green);
-  width: 20px; height: 20px;
+  width: 16px; height: 16px;
   border-radius: 50%;
-  font-size: 11px; font-weight: 900;
+  font-size: 9px; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
-  border: 2px solid #fff;
+  border: 1px solid #fff;
   z-index: 10;
 }
 
-/* Picker Controls */
+/* Mobile Picker Fix (Tap-friendly) */
 .hidden-picker {
-  width: 100%;
-  margin-top: 6px;
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 6px;
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
   opacity: 0;
-  transition: opacity 0.2s;
+  cursor: pointer;
+  z-index: 5;
 }
-.slot:hover .hidden-picker { opacity: 1; }
 
-/* Bench */
+/* Bench Area */
 #bench-container {
-  margin-top: 20px;
-  padding: 15px;
-  background: rgba(0,0,0,0.1);
-  border-radius: 10px;
+  margin-top: 0;
+  padding: 15px 5px calc(var(--safe-bottom) + 20px) 5px;
+  background: rgba(0,0,0,0.15);
+  border-top: 2px solid rgba(255,255,255,0.1);
 }
 
-/* Responsive Tweak */
-@media (max-width: 600px) {
-  .slot { width: 80px; }
-  .p-name-box { font-size: 9px; }
-  .jersey { width: 38px; height: 35px; }
+/* ---- RESPONSIVE OVERRIDES ---- */
+@media (max-width: 480px) {
+  .stat-value { font-size: 16px; }
+  .p-name-box { font-size: 8px; letter-spacing: -0.2px; }
+  .jersey { width: 32px; height: 30px; }
+  .price-tag { font-size: 8px; }
 }
-
-
-/* 25/26 JERSEY COLOR LIBRARY */
-.jersey.leeds { background-color: #ffffff; border: 2px solid #00509d; } /* All White */
-.jersey.sunderland { 
-    background: repeating-linear-gradient(90deg, #ff0000, #ff0000 10px, #ffffff 10px, #ffffff 20px); 
-} /* Red & White Stripes */
-.jersey.burnley { background-color: #6c1d45; border-bottom: 5px solid #95d6f2; } /* Claret with Blue Trim */
-.jersey.liverpool { background-color: #c8102e; border-top: 3px solid #ffffff; } /* Adidas Red/White */
-.jersey.everton { background-color: #003399; opacity: 0.9; } /* Waterfront Blue */
-.jersey.man_city { background-color: #6cabdd; } /* Sky Blue */
-.jersey.arsenal { background-color: #ef0107; border-left: 5px solid #ffffff; border-right: 5px solid #ffffff; }
-
-/* Slot highlight for current captain */
-.captain-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #37003c;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid white;
-}
-
-
-
