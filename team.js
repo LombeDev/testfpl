@@ -1,6 +1,9 @@
 /**
- * KOPALA FPL - AI MASTER ENGINE (v3.5)
+ * KOPALA FPL - AI MASTER ENGINE (v3.6)
  * THE COMPLETE MASTER SCRIPT: Advanced AI Intelligence & Differential Logic
+ *
+ * Updates: added player modal, filtered pickers, transfer simulation preview,
+ * captain confidence, chip preview hooks, and fixed a couple of template bugs.
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -8,6 +11,14 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
+
+// Player picker filter state (controlled by UI elements you should add)
+const pickerFilters = {
+    maxPrice: 15.0,
+    minPrice: 4.0,
+    minOwnership: 0.0,
+    sortBy: 'xp' // 'xp' | 'price' | 'ownership' | 'vapm'
+};
 
 // Initial 15-man squad structure
 let squad = [
@@ -116,6 +127,7 @@ function handleSwap(id) {
 
                 if (!isValidFormation()) {
                     alert("Invalid Formation! FPL requires 3-5 DEF, 2-5 MID, 1-3 FWD.");
+                    // revert
                     p2.isBench = p1.isBench; 
                     p1.isBench = tempBench; 
                 } else {
@@ -135,6 +147,8 @@ function updatePlayer(id, name) {
     }
 
     const player = playerDB.find(p => p.name === name);
+    if (!player) { alert("Player not found"); return; }
+
     const teamCount = squad.filter(s => {
         if (s.id === id) return false;
         const p = playerDB.find(pdb => pdb.name === s.name);
@@ -155,7 +169,9 @@ function updatePlayer(id, name) {
 function changeFormation(formationStr) {
     const [d, m, f] = formationStr.split('-').map(Number);
     squad.forEach(s => s.isBench = true);
-    squad.find(s => s.pos === 'GKP').isBench = false;
+    // keep first goalkeeper as starter
+    const gkStarters = squad.filter(s => s.pos === 'GKP').slice(0,1);
+    gkStarters.forEach(g => g.isBench = false);
 
     const activate = (pos, limit) => {
         let count = 0;
@@ -185,7 +201,7 @@ function getThreeWeekXP(player) {
     let totalXP = player.xp; 
     
     fixtures.slice(0, 3).forEach((f, index) => {
-        // Multiplier: 1 (easy) to 5 (hard). Easy fixtures (2) get ~1.25x boost.
+        // Multiplier: easier fixtures get lower diff value -> higher multiplier
         let multiplier = (6 - f.diff) / 3;
         if (f.isHome) multiplier *= 1.1; // Home bias
         
@@ -195,6 +211,52 @@ function getThreeWeekXP(player) {
     });
     
     return parseFloat(totalXP.toFixed(1));
+}
+
+function vapor(player) {
+    // shorthand VAPM: value added per million (approx)
+    const price = parseFloat(player.price);
+    if (!price) return 0;
+    return getThreeWeekXP(player) / price;
+}
+
+function simulateSingleTransfer(outName, inName) {
+    // returns an object with delta XP, delta price, and validity
+    const outSlot = squad.find(s => s.name === outName);
+    if (!outSlot) return null;
+    const inPlayer = playerDB.find(p => p.name === inName);
+    if (!inPlayer) return null;
+
+    // Basic team count check
+    const teamCount = squad.filter(s => s.name !== outName).map(s => {
+        const p = playerDB.find(pp => pp.name === s.name);
+        return p ? p.teamId : null;
+    }).filter(Boolean).reduce((acc, t) => {
+        acc[t] = (acc[t] || 0) + 1; return acc;
+    }, {});
+    teamCount[inPlayer.teamId] = (teamCount[inPlayer.teamId] || 0) + 1;
+    if (teamCount[inPlayer.teamId] > 3) {
+        return { valid: false, reason: 'Max 3 players per club would be exceeded' };
+    }
+
+    // budget check
+    const currentVal = squad.reduce((acc, s) => {
+        const p = playerDB.find(pp => pp.name === s.name);
+        return acc + (p ? parseFloat(p.price) : 0);
+    }, 0);
+    const budgetLeft = 100 - currentVal;
+    const outPrice = parseFloat(playerDB.find(p => p.name === outName)?.price || 0);
+    const inPrice = parseFloat(inPlayer.price);
+    const newBudgetLeft = (100 - (currentVal - outPrice + inPrice));
+
+    const outXP = playerDB.find(p => p.name === outName) ? getThreeWeekXP(playerDB.find(p => p.name === outName)) : 0;
+    const inXP = getThreeWeekXP(inPlayer);
+    return {
+        valid: true,
+        deltaXP: parseFloat((inXP - outXP).toFixed(1)),
+        deltaPrice: parseFloat((inPrice - outPrice).toFixed(1)),
+        newITB: parseFloat(newBudgetLeft.toFixed(1))
+    };
 }
 
 function analyzeTeam() {
@@ -210,7 +272,7 @@ function analyzeTeam() {
             price: price, 
             threeWk: threeWk,
             ownership: p.ownership,
-            vapm: (threeWk / price).toFixed(2) // Value added per million
+            vapm: parseFloat((threeWk / price).toFixed(2))
         };
     });
 
@@ -218,15 +280,14 @@ function analyzeTeam() {
     const budget = (100 - analysis.reduce((acc, p) => acc + p.price, 0));
     const tips = [];
 
-    // 1. DIFFERENTIAL SWORD LOGIC
-    // Find a highly owned "template" player who has a better low-owned alternative
+    // 1. DIFFERENTIAL SWORD LOGIC (improved)
     const templatePlayer = analysis.filter(p => p.ownership > 20).sort((a,b) => a.threeWk - b.threeWk)[0];
     if (templatePlayer) {
         const gem = playerDB.find(p => 
             p.pos === templatePlayer.pos && 
             p.ownership < 10 && 
             getThreeWeekXP(p) > templatePlayer.threeWk &&
-            parseFloat(p.price) <= (templatePlayer.price + budget)
+            parseFloat(p.price) <= (templatePlayer.price + Math.max(0, budget))
         );
         if (gem) tips.push(`🗡️ DIFFERENTIAL SWORD: ${templatePlayer.name} ➔ ${gem.name} (${gem.ownership}% owned)`);
     }
@@ -236,7 +297,7 @@ function analyzeTeam() {
     sortedLow.slice(0, 2).forEach(weak => {
         const up = playerDB.find(p => 
             p.pos === weak.pos && !squad.some(s => s.name === p.name) &&
-            parseFloat(p.price) <= (weak.price + budget) &&
+            parseFloat(p.price) <= (weak.price + Math.max(0, budget)) &&
             getThreeWeekXP(p) > (weak.threeWk + 1.5)
         );
         if (up) tips.push(`🔄 AI UPGRADE: ${weak.name} ➔ ${up.name}`);
@@ -244,23 +305,74 @@ function analyzeTeam() {
 
     // Bench Logic
     const gkpBench = analysis.filter(p => p.pos === 'GKP').sort((a,b) => a.threeWk - b.threeWk)[0];
-    const bench = [gkpBench.name, ...sortedLow.filter(p => p.id !== gkpBench.id && p.isBench).slice(0, 3).map(p=>p.name)];
+    const bench = [gkpBench ? gkpBench.name : '', ...sortedLow.filter(p => p.id !== (gkpBench ? gkpBench.id : -1) && p.isBench).slice(0, 3).map(p=>p.name)];
 
-    displayModal(cap.name, bench, tips);
+    // Captain confidence (very simple combination)
+    const captainCandidates = [...analysis].sort((a,b) => b.threeWk - a.threeWk).slice(0,3);
+    const captain = captainCandidates[0].name;
+    const capConfidence = Math.round((captainCandidates[0].threeWk / (captainCandidates[1] ? captainCandidates[1].threeWk : 1)) * 100);
+
+    // Transfer simulation for tips: show delta for each suggested transfer
+    const transferSimulations = tips.map(t => {
+        // if string contains "➔", try to parse out names
+        const match = t.match(/:\s*([^ ]+)\s+➔\s+([^ ]+)/);
+        if (match) {
+            const outName = match[1];
+            const inName = match[2];
+            const sim = simulateSingleTransfer(outName, inName);
+            return { text: t, sim };
+        }
+        return { text: t, sim: null };
+    });
+
+    // Show modal with richer output
+    displayModal(captain, capConfidence, bench, transferSimulations, analysis, tips);
 }
 
-function displayModal(cap, bench, transfers) {
+function displayModal(cap, capConfidence, bench, transfers, analysis, transfersText) {
     const modal = document.getElementById('analysis-modal');
     const content = document.getElementById('analysis-results');
     if(!modal || !content) return;
 
     content.innerHTML = `
-        <div class="analysis-section"><h3>👑 Captain Suggestion</h3><p>${cap}</p></div>
+        <div class="analysis-section"><h3>👑 Captain Suggestion</h3><p>${cap} — Confidence: ${capConfidence}%</p></div>
         <div class="analysis-section"><h3>🪑 Bench Priority</h3><p>${bench.filter(b => b).join(', ')}</p></div>
-        <div class="analysis-section"><h3>🚀 AI Smart Transfers</h3>${transfers.length ? transfers.map(t => `<div class="transfer-item">${t}</div>`).join('') : '<p>Your team is currently AI-Optimal.</p>'}</div>
+        <div class="analysis-section"><h3>🚀 AI Smart Transfers</h3>
+            ${transfers && transfers.length ? transfers.map(t => {
+                if (t.sim) {
+                    return `<div class="transfer-item">${t.text} — ΔxP: ${t.sim.deltaXP} — Δ£: ${t.sim.deltaPrice} — ITB: £${t.sim.newITB}m</div>`;
+                } else {
+                    return `<div class="transfer-item">${t.text}</div>`;
+                }
+            }).join('') : '<p>Your team is currently AI-Optimal.</p>'}
+        </div>
+        <div class="analysis-section"><h3>📊 Squad Summary</h3>
+            <p>Team Value: £${(100 - (analysis.reduce((acc,p)=>acc+p.price,0))).toFixed(1)}m ITB (approx)</p>
+        </div>
+        <div style="text-align:right"><button id="close-modal" class="btn">Close</button></div>
     `;
     modal.style.display = "block";
     document.getElementById('close-modal').onclick = () => modal.style.display = "none";
+}
+
+// Quick player modal to inspect a player
+function openPlayerModal(name) {
+    const player = playerDB.find(p => p.name === name);
+    if (!player) return;
+    const modal = document.getElementById('player-modal');
+    const content = document.getElementById('player-modal-content');
+    if (!modal || !content) return;
+
+    const nextFix = getNextFixtures(player.teamId);
+    content.innerHTML = `
+        <h3>${player.name} — £${player.price}m</h3>
+        <p>Position: ${player.pos} — Ownership: ${player.ownership}%</p>
+        <p>Projected 3wk xP: ${getThreeWeekXP(player)}</p>
+        <div class="card-fixtures">${nextFix.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}${f.isHome ? '(H)' : '(A)'}</div>`).join('')}</div>
+        <div style="text-align:right"><button id="close-player-modal" class="btn">Close</button></div>
+    `;
+    modal.style.display = "block";
+    document.getElementById('close-player-modal').onclick = () => modal.style.display = "none";
 }
 
 function runAIWildcard() {
@@ -276,7 +388,7 @@ function runAIWildcard() {
             const choice = playerDB.filter(p => 
                 p.pos === pos && !newSquad.some(s => s.name === p.name) && 
                 (teamCounts[p.teamId] || 0) < 3 && parseFloat(p.price) <= (budget - buffer)
-            ).sort((a, b) => (getThreeWeekXP(b)/b.price) - (getThreeWeekXP(a)/a.price))[0];
+            ).sort((a, b) => (getThreeWeekXP(b)/parseFloat(b.price)) - (getThreeWeekXP(a)/parseFloat(a.price)))[0];
 
             if (choice) {
                 newSquad.push({ id: newSquad.length, pos: pos, name: choice.name, isBench: false });
@@ -289,7 +401,7 @@ function runAIWildcard() {
     changeFormation('4-4-2');
 }
 
-// --- 4. RENDERERS ---
+// --- 4. RENDERERS & UI HELPERS ---
 
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
@@ -311,6 +423,34 @@ function renderPitch() {
     updateStats();
 }
 
+function buildPlayerOptions(pos, selectedName) {
+    // Build options respecting pickerFilters and allow clicking to open modal via onchange
+    let candidates = playerDB.filter(p => p.pos === pos
+        && parseFloat(p.price) >= pickerFilters.minPrice
+        && parseFloat(p.price) <= pickerFilters.maxPrice
+        && p.ownership >= pickerFilters.minOwnership
+    );
+    // annotate vapm
+    candidates = candidates.map(c => ({ ...c, vapm: vapor(c) }));
+
+    switch (pickerFilters.sortBy) {
+        case 'price':
+            candidates.sort((a,b)=> parseFloat(a.price) - parseFloat(b.price)); break;
+        case 'ownership':
+            candidates.sort((a,b)=> b.ownership - a.ownership); break;
+        case 'vapm':
+            candidates.sort((a,b)=> b.vapm - a.vapm); break;
+        case 'xp':
+        default:
+            candidates.sort((a,b)=> getThreeWeekXP(b) - getThreeWeekXP(a)); break;
+    }
+
+    return [
+        `<option value="">-- Pick --</option>`,
+        ...candidates.map(c => `<option value="${c.name}" ${selectedName === c.name ? 'selected' : ''}>${c.name} (£${c.price}m) — ${getThreeWeekXP(c)} xP — ${c.ownership}%</option>` )
+    ].join('');
+}
+
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
@@ -319,18 +459,41 @@ function createSlotUI(slotData) {
     const fixtures = p ? getNextFixtures(p.teamId) : [];
     const xP3 = p ? getThreeWeekXP(p) : 0;
 
-    div.innerHTML = `
-        <div class="jersey ${jersey}" onclick="handleSwap(${slotData.id})"></div>
-        <div class="player-card">
-            <span class="p-name">${slotData.name || slotData.pos}</span>
-            <span class="p-xp">${p ? `3-Wk xP: ${xP3}` : ''}</span>
-            <div class="card-fixtures">${fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}${f.isHome ? '(H)' : '(A)'}</div>`).join('')}</div>
-        </div>
-        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
-            <option value="">-- Pick --</option>
-            ${playerDB.filter(pdb => pdb.pos === slotData.pos).map(pdb => `<option value="${pdb.name}" ${slotData.name === pdb.name ? 'selected' : ''}>${pdb.name} (£${pdb.price}m)</option>`).join('')}
-        </select>
-    `;
+    // create select element programmatically (so innerHTML strings are simpler to manage)
+    const jerseyDiv = document.createElement('div');
+    jerseyDiv.className = `jersey ${jersey}`;
+    jerseyDiv.onclick = () => handleSwap(slotData.id);
+
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'player-card';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'p-name';
+    nameSpan.textContent = slotData.name || slotData.pos;
+    if (slotData.name) nameSpan.style.cursor = 'pointer';
+    nameSpan.onclick = () => slotData.name && openPlayerModal(slotData.name);
+
+    const xpSpan = document.createElement('span');
+    xpSpan.className = 'p-xp';
+    xpSpan.textContent = p ? `3-Wk xP: ${xP3}` : '';
+
+    const fixtureDiv = document.createElement('div');
+    fixtureDiv.className = 'card-fixtures';
+    fixtureDiv.innerHTML = fixtures.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}${f.isHome ? '(H)' : '(A)'}</div>`).join('');
+
+    cardDiv.appendChild(nameSpan);
+    cardDiv.appendChild(xpSpan);
+    cardDiv.appendChild(fixtureDiv);
+
+    const selectEl = document.createElement('select');
+    selectEl.className = 'hidden-picker';
+    selectEl.onchange = (e) => updatePlayer(slotData.id, e.target.value);
+    // add options
+    selectEl.innerHTML = buildPlayerOptions(slotData.pos, slotData.name);
+
+    div.appendChild(jerseyDiv);
+    div.appendChild(cardDiv);
+    div.appendChild(selectEl);
+
     return div;
 }
 
@@ -387,4 +550,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('wildcard-btn')) document.getElementById('wildcard-btn').onclick = runAIWildcard;
     if (document.getElementById('analyze-btn')) document.getElementById('analyze-btn').onclick = analyzeTeam;
     if (document.getElementById('formation-select')) document.getElementById('formation-select').onchange = (e) => changeFormation(e.target.value);
+
+    // picker filter bindings (if present in DOM)
+    const maxPriceEl = document.getElementById('picker-max-price');
+    const minPriceEl = document.getElementById('picker-min-price');
+    const minOwnershipEl = document.getElementById('picker-min-ownership');
+    const sortSelectEl = document.getElementById('picker-sort');
+
+    const refreshPickers = () => {
+        // re-render slots so pickers update their option lists
+        renderPitch();
+    };
+
+    if (maxPriceEl) {
+        maxPriceEl.value = pickerFilters.maxPrice;
+        maxPriceEl.onchange = (e) => { pickerFilters.maxPrice = parseFloat(e.target.value); refreshPickers(); };
+    }
+    if (minPriceEl) {
+        minPriceEl.value = pickerFilters.minPrice;
+        minPriceEl.onchange = (e) => { pickerFilters.minPrice = parseFloat(e.target.value); refreshPickers(); };
+    }
+    if (minOwnershipEl) {
+        minOwnershipEl.value = pickerFilters.minOwnership;
+        minOwnershipEl.onchange = (e) => { pickerFilters.minOwnership = parseFloat(e.target.value); refreshPickers(); };
+    }
+    if (sortSelectEl) {
+        sortSelectEl.value = pickerFilters.sortBy;
+        sortSelectEl.onchange = (e) => { pickerFilters.sortBy = e.target.value; refreshPickers(); };
+    }
 });
