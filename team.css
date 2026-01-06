@@ -1,250 +1,421 @@
 /* team.css
-   FPL-inspired pitch & player card styling
-   - Field lines + subtle depth
-   - Player cards with white info plate (name / fixture) like official FPL
-   - Jersey area uses image assets for each team
-   - Badge overlays (captain / vice / template) supported
+   Updated: 2026-01-06
+   Purpose: Styles tuned to the updated team.js and refreshed to a
+   professional "Fantasy Football Hub - My Team" look and feel.
+   - Adds polished pitch + card styles
+   - Ensures injected player modal & picker controls look native
+   - Makes hidden-picker usable (visible on hover) while keeping compact UI
+   - Improves responsiveness and visual hierarchy
 */
 
-/* Theme tokens */
+/* ---- THEME VARIABLES ---- */
 :root{
-  --field-dark: #0f8c4f;
-  --field-light:#07b36b;
-  --field-stripe: rgba(255,255,255,0.035);
-  --card-bg: #ffffff;
-  --accent: #00b37e;
-  --accent-2: #ff005a;
-  --muted: #6b7a8a;
-  --shadow: 0 20px 48px rgba(5,10,12,0.12);
-  --radius: 10px;
-  --font: "Inter", "Segoe UI", Roboto, system-ui, -apple-system, Arial;
+  --fpl-purple: #37003c;
+  --fpl-pink:   #ff005a;
+  --fpl-green:  #00ff87;
+  --pitch-green: #0da36b;
+  --card-bg:    #ffffff;
+  --muted:      #8b97a8;
+  --glass:      rgba(255,255,255,0.06);
+  --shadow:     0 8px 30px rgba(7,11,13,0.08);
+  --border:     #e6eef6;
+  --max-width: 1160px;
+  --radius: 12px;
+  --font-sans: 'Inter', 'Segoe UI', Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
 }
 
-/* Page base */
+/* base */
 *{box-sizing:border-box}
-body{font-family:var(--font); background:#e9f6ef; color:#0c2130; margin:0; padding:0}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  background:linear-gradient(180deg,#f6f8fb 0%, #f0f4f8 100%);
+  color:#071126;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
 
-/* Pitch container (centered) */
+/* container */
+.main-container{
+  max-width:var(--max-width);
+  margin:18px auto;
+  padding:18px;
+}
+
+/* NAVBAR & DRAWER */
+.navbar{
+  background:var(--fpl-purple);
+  color:white;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-radius:10px;
+  box-shadow:0 8px 30px rgba(55,0,60,0.08);
+}
+.brand{ font-weight:900; font-size:1.15rem; letter-spacing:-0.3px; color:#fff }
+.brand span{ color:var(--fpl-green); margin-left:6px }
+
+.drawer{ position:fixed; left:-320px; top:0; bottom:0; width:300px; background:var(--card-bg); z-index:1500; box-shadow:8px 0 30px rgba(0,0,0,0.12); transition:left .28s ease; border-radius:0 10px 10px 0; overflow:auto }
+.drawer.open{ left:0 }
+
+.backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1400; display:none }
+.backdrop.active{ display:block }
+
+/* TICKER & STATUS */
+.ticker{
+  background:#0b1220;
+  color:var(--fpl-green);
+  padding:8px 12px;
+  font-weight:700;
+  font-size:13px;
+  border-radius:8px;
+  display:inline-block;
+  box-shadow: 0 6px 18px rgba(13,163,107,0.06);
+}
+
+.status-bar{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  margin:14px 0;
+  padding:12px;
+  background:var(--card-bg);
+  border-radius:10px;
+  border:1px solid rgba(10,10,12,0.04);
+  box-shadow:var(--shadow);
+}
+
+/* FORMATION & PICKERS (inline) */
+.status-controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+.status-controls select,
+.status-controls input{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #e6eef6;
+  background:#fff;
+  font-weight:600;
+  color:#071126;
+  font-size:0.92rem;
+}
+
+/* PITCH AREA */
 .pitch-outer-wrap{
-  max-width:980px;
-  margin:20px auto;
+  background: linear-gradient(180deg, rgba(8,150,110,0.12), rgba(9,122,96,0.06));
   border-radius:14px;
   padding:18px;
-  background: linear-gradient(180deg, #0ea569 0%, #0b8e4f 100%);
   position:relative;
-  box-shadow:var(--shadow);
-  border:4px solid rgba(255,255,255,0.06);
-  overflow:hidden;
+  box-shadow: 0 18px 40px rgba(6,18,13,0.06);
+  border:1px solid rgba(8,150,110,0.06);
 }
 
-/* subtle horizontal stripes like FPL pitch */
-.pitch-outer-wrap::before{
-  content:"";
+/* center pitch label */
+.pitch-labels{
   position:absolute;
-  inset:0;
-  background-image: repeating-linear-gradient(180deg, transparent 0 52px, rgba(255,255,255,0.02) 52px, rgba(255,255,255,0.02) 104px);
+  inset:14px 12px auto 12px;
+  display:flex;
+  gap:14px;
+  justify-content:space-between;
   pointer-events:none;
-  z-index:0;
-}
-
-/* white pitch lines (top goal box / penalty / halfway) */
-.pitch-outer-wrap::after{
-  content:"";
-  position:absolute;
-  inset:18px;
-  background-image:
-    linear-gradient(transparent, transparent);
   z-index:1;
-  pointer-events:none;
+  width:calc(100% - 24px);
 }
 
-/* pitch inner */
+/* pitch container */
 .pitch{
-  position:relative;
-  z-index:2;
-  padding:36px 18px 28px;
+  padding:26px 12px 12px;
   display:flex;
   flex-direction:column;
   gap:18px;
   align-items:center;
+  justify-content:center;
 }
 
-/* Goal/box lines (pseudo-grid to mimic official look) */
-.pitch .field-lines {
-  position:absolute;
-  inset:26px;
-  border-radius:6px;
-  pointer-events:none;
-  z-index:1;
-}
-.pitch .field-lines::before, .pitch .field-lines::after {
-  content:"";
-  position:absolute;
-  left:10%;
-  right:10%;
-  border:2px solid rgba(255,255,255,0.12);
-  border-radius:6px;
-}
-.pitch .field-lines::before{ top:6%; height:20%; box-shadow:0 6px 24px rgba(0,0,0,0.06) }
-.pitch .field-lines::after{ bottom:6%; height:20%; }
-
-/* Rows & slot layout like official */
-.row{ display:flex; gap:18px; justify-content:center; align-items:flex-end; z-index:3 }
+/* rows and slots */
+.row{ display:flex; gap:12px; align-items:flex-end; justify-content:center; z-index:5 }
 .slot{
   width:120px;
+  min-height:86px;
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:8px;
+  justify-content:flex-start;
+  gap:6px;
+  transition:transform .18s ease, box-shadow .18s ease;
   position:relative;
-  transition: transform .18s ease;
 }
-.slot.selected{ transform:translateY(-6px) scale(1.03) }
+.slot.selected{ transform:translateY(-6px) scale(1.03); box-shadow:0 18px 40px rgba(10,20,30,0.08) }
 
-/* Jersey area - uses images (see JS snippet) */
+/* jersey */
 .jersey{
-  width:94px; height:110px;
-  border-radius:8px;
-  background:#ffffff;
+  width:60px;
+  height:54px;
+  cursor:pointer;
+  background-color:var(--team-main,#ddd);
+  clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+  transition: transform .18s ease, box-shadow .18s ease;
   display:flex;
   align-items:flex-start;
   justify-content:center;
   position:relative;
-  overflow:hidden;
-  box-shadow:0 10px 26px rgba(5,12,14,0.12);
-  border:3px solid rgba(255,255,255,0.12);
+  border-radius:6px;
+  box-shadow:0 6px 18px rgba(7,11,13,0.06);
 }
 
-/* jersey image sits inside */
-.jersey img.kit{
-  width:82%;
-  height:auto;
-  object-fit:contain;
-  display:block;
-  margin-top:6px;
-}
-
-/* small badge area (top-left) for captain/vice/template icons */
-.jersey .badge{
+/* small price/flag on jersey top-right */
+.jersey::after{
+  content: attr(data-price);
   position:absolute;
   top:6px;
-  left:8px;
-  width:26px; height:26px;
-  border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:12px; font-weight:900;
-  color:#fff;
-  box-shadow:0 4px 10px rgba(0,0,0,0.25);
-  border:2px solid rgba(0,0,0,0.08);
-}
-.jersey .badge.captain{ background:var(--accent-2) }   /* pink C */
-.jersey .badge.vice{ background:var(--accent) }        /* green VC */
-.jersey .badge.template{ background:#1f7ed6 }          /* blue diff marker */
-
-/* small price tag on top-right like FPL */
-.jersey .price-tag{
-  position:absolute;
-  top:8px;
-  right:8px;
+  right:6px;
+  font-size:11px;
+  padding:2px 6px;
+  border-radius:12px;
   background:rgba(0,0,0,0.6);
   color:#fff;
   font-weight:700;
-  font-size:12px;
-  padding:4px 6px;
-  border-radius:8px;
+  display:block;
 }
 
-/* Player info plate - white rounded box containing name and fixture */
+/* player card under jersey */
 .player-card{
   width:100%;
   background:var(--card-bg);
-  border-radius:8px;
-  padding:6px 8px;
-  box-shadow:0 6px 18px rgba(6,14,18,0.06);
+  border-radius:10px;
+  padding:8px 10px;
+  box-shadow:0 6px 18px rgba(10,20,30,0.04);
+  border:1px solid rgba(10,20,30,0.03);
   display:flex;
   flex-direction:column;
-  align-items:center;
   gap:6px;
-  border:1px solid rgba(10,20,30,0.03);
+  align-items:center;
 }
 
-/* Name on white plate */
-.name-plate{
-  width:100%;
-  background:#fff;
-  border-radius:6px;
-  padding:8px;
-  text-align:center;
+/* player name & small meta row */
+.p-name{
   font-weight:800;
-  font-size:0.92rem;
-  color:#0b2330;
-  box-shadow:inset 0 -1px 0 rgba(0,0,0,0.03);
-}
-
-/* fixture plate below name */
-.fixture-plate{
-  width:100%;
-  margin-top:4px;
-  background:linear-gradient(180deg,#fbfbfd,#f5f7fb);
-  border-radius:6px;
-  padding:6px;
-  font-weight:800;
-  color:#234455;
-  font-size:0.85rem;
+  font-size:0.95rem;
+  color:var(--fpl-purple);
   text-align:center;
-  border:1px solid rgba(10,20,30,0.03);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+  cursor:pointer;
 }
-
-/* small overlay indicators: vice/captain on the name plate */
-.name-plate .small-badge{
-  display:inline-block;
-  margin-right:6px;
-  background:var(--accent);
-  color:#fff;
-  padding:2px 6px;
-  border-radius:999px;
-  font-size:11px;
-  font-weight:900;
+.p-meta{
+  display:flex;
+  gap:8px;
+  width:100%;
+  justify-content:center;
+  align-items:center;
+  font-size:0.82rem;
+  color:var(--muted);
 }
+.p-xp{ color:var(--fpl-green); font-weight:800; font-size:0.82rem }
 
-/* fixtures row inside player-card */
+/* fixtures */
 .card-fixtures{
   display:flex;
   gap:6px;
   width:100%;
-  justify-content:center;
+  justify-content:space-between;
+  margin-top:4px;
+}
+.fix-item{
+  flex:1;
+  background:#f7fafc;
+  padding:6px 4px;
+  border-radius:6px;
+  font-size:12px;
+  color:#263445;
+  text-align:center;
+  border:1px solid rgba(10,20,30,0.03);
 }
 
-/* bench */
-.bench-area{ display:flex; gap:12px; margin-top:12px; justify-content:center; flex-wrap:wrap }
+/* difficulty indicators */
+.diff-2{ border-left:4px solid var(--fpl-green); }
+.diff-3{ border-left:4px solid #ffd166; }
+.diff-4{ border-left:4px solid var(--fpl-pink); }
 
-/* hidden native select - keep visible on hover */
+/* bench row */
+.bench-area{
+  margin-top:12px;
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+/* hidden picker - show on slot hover, keep accessible */
 .hidden-picker{
   width:100%;
-  display:block;
   margin-top:6px;
-  padding:8px;
-  border-radius:8px;
-  border:1px solid rgba(10,20,30,0.04);
-  background:#fff;
-  font-weight:800;
-  cursor:pointer;
   opacity:0;
-  transform:translateY(-6px);
-  transition:all .12s ease;
+  height:0;
+  border-radius:8px;
+  transition:all .18s ease;
   pointer-events:none;
 }
-.slot:hover .hidden-picker{ opacity:1; transform:translateY(0); pointer-events:auto }
+.slot:hover .hidden-picker{
+  opacity:1;
+  height:auto;
+  pointer-events:auto;
+  transform:translateY(0);
+  margin-top:6px;
+  display:block;
+}
 
-/* modal (analysis/player) - centered light card */
-.modal{ display:none; position:fixed; inset:0; background:rgba(5,10,14,0.55); z-index:4000; }
+/* style native select inside */
+.hidden-picker{
+  appearance:none;
+  -webkit-appearance:none;
+  background:#fff;
+  border:1px solid rgba(10,20,30,0.06);
+  padding:8px 10px;
+  color:#0f172a;
+  font-weight:700;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* picker small caret */
+.hidden-picker::-ms-expand{ display:none }
+
+/* STATS SUMMARY panel (right column in original layout) */
+.stats-summary{
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+  gap:14px;
+  margin-top:18px;
+}
+.stat-box, .stat-item{
+  background:var(--card-bg);
+  border-radius:12px;
+  padding:14px;
+  border:1px solid rgba(10,20,30,0.03);
+  box-shadow:0 8px 26px rgba(10,20,30,0.04);
+  text-align:center;
+}
+.stat-label{ font-size:0.75rem; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px }
+.stat-value{ font-size:1.6rem; font-weight:900; color:var(--fpl-purple) }
+
+/* action buttons */
+.btn-group{ display:flex; gap:12px; flex-wrap:wrap }
+.ai-action-btn, .btn-primary, .btn-reset{
+  display:inline-flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  padding:10px 18px;
+  border-radius:999px;
+  font-weight:800;
+  border:1px solid rgba(10,20,30,0.06);
+  background:linear-gradient(90deg, #fff 0%, #fbfbff 100%);
+  color:var(--fpl-purple);
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+  box-shadow:0 6px 18px rgba(7,11,13,0.04);
+}
+.ai-action-btn{
+  background: linear-gradient(90deg, rgba(55,0,60,0.98) 0%, rgba(0,255,135,0.06) 100%);
+  color:#fff;
+  border:none;
+  box-shadow:0 12px 30px rgba(0,255,135,0.08);
+}
+.ai-action-btn:hover{ transform:translateY(-3px) }
+
+/* TRANSFER CARD / ANALYSIS */
+.ai-card{
+  margin-top:18px;
+  background:var(--card-bg);
+  border-radius:14px;
+  padding:16px;
+  border:1px solid rgba(10,20,30,0.04);
+  box-shadow:var(--shadow);
+}
+.verdict-label{ display:flex; gap:8px; align-items:center; color:var(--fpl-purple); font-weight:900 }
+.transfer-row{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px;
+  border-radius:10px;
+  background:linear-gradient(180deg,#fff,#fbfbff);
+  border:1px solid rgba(10,20,30,0.03);
+}
+
+/* modal - reuse same modal classes as JS creates */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(5,8,12,0.6);
+  z-index:3000;
+  backdrop-filter: blur(4px);
+  padding:36px 20px;
+}
 .modal .modal-content{
-  max-width:720px; margin:6vh auto; background:#fff; color:#0c2130; padding:22px; border-radius:12px; border:1px solid rgba(7,11,13,0.04); box-shadow:0 20px 60px rgba(6,12,15,0.12)
+  max-width:720px;
+  margin:40px auto;
+  background:var(--card-bg);
+  border-radius:14px;
+  padding:22px;
+  border:1px solid rgba(55,0,60,0.06);
+  box-shadow:0 24px 60px rgba(7,11,13,0.12);
+  color:var(--fpl-purple);
 }
-.modal .analysis-section h3{ color:var(--accent); margin:0 0 8px }
 
-/* responsive */
-@media (max-width:720px){
-  .slot{ width:96px }
-  .jersey{ width:78px; height:90px }
+/* close button */
+.close-btn, #close-player-modal, #close-modal{
+  background:transparent;
+  border:none;
+  color:var(--muted);
+  font-size:20px;
+  cursor:pointer;
 }
+.close-btn:hover, #close-player-modal:hover, #close-modal:hover{ color:var(--fpl-pink) }
+
+/* analysis section inside modal */
+.analysis-section h3{
+  color:var(--fpl-green);
+  margin:0 0 8px 0;
+  font-size:1.05rem;
+}
+.transfer-item{
+  background: #fff;
+  border-left:4px solid var(--fpl-pink);
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:8px;
+  color:var(--fpl-purple);
+  font-weight:700;
+}
+
+/* player modal content */
+#player-modal-content h3{ margin:0 0 6px 0; font-size:1.2rem }
+#player-modal-content p{ margin:6px 0; color:#425066 }
+#player-modal .card-fixtures{ margin-top:10px }
+
+/* responsive tweaks */
+@media (max-width:920px){
+  .slot{ width:100px }
+  .jersey{ width:52px; height:46px }
+  .player-card{ padding:8px }
+  .main-container{ padding:10px }
+  .pitch-outer-wrap{ padding:12px }
+}
+@media (max-width:560px){
+  .row{ gap:8px }
+  .slot{ width:92px }
+  .stats-summary{ grid-template-columns:1fr; padding:12px }
+  .status-bar{ flex-direction:column; align-items:flex-start; gap:8px; }
+}
+
+/* small helpers */
+.text-muted{ color:var(--muted) }
+.u-center{ text-align:center }
+.hidden{ display:none }
