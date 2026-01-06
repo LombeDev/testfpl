@@ -544,3 +544,25 @@ body{
     width: 45px;
     height: 45px;
 }
+
+
+
+/* Captain Badge Styling */
+.captain-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #37003c; /* FPL Purple */
+    color: #00ff87;      /* FPL Green */
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 10;
+}
