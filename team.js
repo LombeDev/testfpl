@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v4.3.0)
- * UI: Flat Virgil-Style | Logic: 2025/26 Season Ready
+ * KOPALA FPL - MASTER ENGINE (v4.3.1)
+ * Fixes: Duplicate Player Prevention, 3-Per-Team Rule, Template Team Logic
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -8,8 +8,6 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
-window.currentCaptain = ""; 
-window.currentViceCaptain = ""; 
 
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
@@ -29,7 +27,7 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC & 25/26 MAPPING ---
+// --- 1. DATA SYNC ---
 async function syncData() {
     try {
         const [bootRes, fixRes] = await Promise.all([
@@ -41,12 +39,9 @@ async function syncData() {
 
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-            // Specific overrides for the 25/26 Jersey Library
             if (slug.includes('man_city')) slug = 'man_city';
             if (slug.includes('man_utd')) slug = 'man_utd';
             if (slug.includes('forest')) slug = 'nottm_forest';
-            if (slug.includes('palace')) slug = 'crystal_palace';
-            if (slug.includes('villa')) slug = 'aston_villa';
             teamsDB[t.id] = slug;
         });
 
@@ -68,109 +63,120 @@ async function syncData() {
     } catch (e) { console.error("Sync Error", e); }
 }
 
-// --- 2. STATS & AUTO-CAPTAINCY ENGINE ---
-function updateStats() {
-    let totalCost = 0;
-    let baseXP = 0;
-    let starerList = [];
-
+// --- 2. VALIDATION HELPERS ---
+function getTeamCounts() {
+    const counts = {};
     squad.forEach(slot => {
+        if (!slot.name) return;
         const p = playerDB.find(x => x.name === slot.name);
-        if (p) {
-            totalCost += parseFloat(p.price);
-            if (!slot.isBench) {
-                baseXP += p.xp;
-                starerList.push(p);
+        if (p) counts[p.teamId] = (counts[p.teamId] || 0) + 1;
+    });
+    return counts;
+}
+
+// --- 3. TEMPLATE TEAM (AI WILDCARD) ---
+function runAIWildcard() {
+    let budget = 100.0;
+    let tempSquad = [];
+    const teamCounts = {};
+    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
+
+    // Clear current names to start fresh
+    const sortedPlayers = [...playerDB].sort((a, b) => b.xp - a.xp || b.ownership - a.ownership);
+
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        let count = 0;
+        for (let p of sortedPlayers) {
+            if (count >= posLimits[pos]) break;
+
+            const price = parseFloat(p.price);
+            const remainingSlots = 15 - tempSquad.length;
+            const buffer = remainingSlots * 4.3; // Reserve money for remaining slots
+
+            if (p.pos === pos && 
+                (teamCounts[p.teamId] || 0) < 3 && 
+                price <= (budget - buffer)) {
+                
+                tempSquad.push(p.name);
+                teamCounts[p.teamId] = (teamCounts[p.teamId] || 0) + 1;
+                budget -= price;
+                count++;
             }
         }
     });
 
-    // Sort starters by Expected Points for C/V logic
-    starerList.sort((a, b) => b.xp - a.xp);
-    window.currentCaptain = starerList[0]?.name || "";
-    window.currentViceCaptain = starerList[1]?.name || "";
+    // Map temp names back to the squad array
+    let nameIdx = 0;
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        squad.filter(s => s.pos === pos).forEach(slot => {
+            slot.name = tempSquad.find(n => {
+                const p = playerDB.find(x => x.name === n);
+                return p && p.pos === slot.pos && !squad.some(s2 => s2.name === n);
+            }) || "";
+            // Remove the name from temp list so it's not reused
+            tempSquad = tempSquad.filter(n => n !== slot.name);
+        });
+    });
 
-    const bonusXP = starerList[0] ? starerList[0].xp : 0;
-    const totalPredictedPoints = (baseXP + bonusXP).toFixed(1);
-    const bankVal = (100 - totalCost).toFixed(1);
-
-    // Update UI Elements
-    if (document.getElementById('v-xp')) document.getElementById('v-xp').textContent = totalPredictedPoints;
-    const budgetEl = document.getElementById('budget-val');
-    if (budgetEl) {
-        budgetEl.textContent = `£${bankVal}m`;
-        budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#2d3436';
-    }
+    saveSquad();
+    renderPitch();
 }
 
-// --- 3. VIRGIL-STYLE UI RENDERING ---
+// --- 4. UI RENDERING ---
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
     
     const p = playerDB.find(p => p.name === slotData.name);
-    const jerseyClass = p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamSlug) : 'default';
-    const fixture = p ? getNextFixtures(p.teamId)[0] : null;
-    
-    // Status Logic (Yellow warning if p.status is not 'a')
-    const isFlagged = p && p.status !== 'a';
-    const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
-    const isVice = p && p.name === window.currentViceCaptain && !slotData.isBench;
+    const teamCounts = getTeamCounts();
+    const currentSquadNames = squad.map(s => s.name).filter(n => n && n !== slotData.name);
 
     div.innerHTML = `
         <div class="player-card-wrapper" onclick="handleSwap(${slotData.id})">
             <div class="card-visual-area">
-                ${isFlagged ? '<div class="status-icon-yellow"><i class="fa-solid fa-triangle-exclamation"></i></div>' : ''}
                 ${p ? `<div class="price-tag">£${p.price}</div>` : ''}
-                
-                <div class="jersey ${jerseyClass}">
-                    ${isCaptain ? '<div class="captain-badge">C</div>' : (isVice ? '<div class="captain-badge" style="background:#8b97a8">V</div>' : '')}
-                </div>
+                <div class="jersey ${p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamSlug) : 'default'}"></div>
             </div>
-            
             <div class="card-footer">
                 <div class="p-name-box">${slotData.name || slotData.pos}</div>
-                <div class="p-fixture-box">
-                    ${fixture ? `${fixture.opp} (${fixture.isHome ? 'H' : 'A'})` : '-'}
-                </div>
             </div>
         </div>
         
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
             <option value="">-- Pick --</option>
-            ${playerDB.filter(x => x.pos === slotData.pos)
-                .sort((a,b) => b.ownership - a.ownership)
-                .slice(0, 30)
-                .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name} (£${x.price})</option>`).join('')}
+            ${playerDB.filter(x => {
+                const isSamePos = x.pos === slotData.pos;
+                const isNotDuplicate = !currentSquadNames.includes(x.name);
+                const isUnderTeamLimit = (teamCounts[x.teamId] || 0) < 3 || (p && x.teamId === p.teamId);
+                return isSamePos && isNotDuplicate && isUnderTeamLimit;
+            })
+            .sort((a,b) => b.ownership - a.ownership)
+            .slice(0, 25)
+            .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name} (£${x.price})</option>`).join('')}
         </select>
     `;
     return div;
 }
 
+// --- 5. CORE FUNCTIONS ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
     if(!pitch || !bench) return;
     
-    updateStats(); 
     pitch.innerHTML = ''; bench.innerHTML = '';
-
-    // Field Rows
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
         const row = document.createElement('div');
         row.className = 'row';
         squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
         pitch.appendChild(row);
     });
-
-    // Bench Row
     const bRow = document.createElement('div');
     bRow.className = 'row';
     squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
     bench.appendChild(bRow);
 }
 
-// --- 4. ENGINE CONTROLS ---
 function updatePlayer(id, name) {
     const s = squad.find(slot => slot.id === id);
     if (s) {
@@ -187,15 +193,10 @@ function handleSwap(id) {
     } else {
         const p1 = squad.find(s => s.id === selectedSlotId);
         const p2 = squad.find(s => s.id === id);
-        
-        // Allowed if same position OR both are outfield starters
-        const isSamePos = p1.pos === p2.pos;
-        const bothOutfieldStarters = !p1.isBench && !p2.isBench && p1.pos !== 'GKP' && p2.pos !== 'GKP';
-
-        if (p1.id !== p2.id && (isSamePos || bothOutfieldStarters)) {
-            const tempName = p1.name;
+        if (p1.id !== p2.id && (p1.pos === p2.pos || (!p1.isBench && !p2.isBench))) {
+            const temp = p1.name;
             p1.name = p2.name;
-            p2.name = tempName;
+            p2.name = temp;
             saveSquad();
         }
         selectedSlotId = null;
@@ -203,21 +204,15 @@ function handleSwap(id) {
     }
 }
 
-function getNextFixtures(teamId) {
-    if (!fixturesDB.length) return [];
-    return fixturesDB.filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
-        .map(f => ({ 
-            opp: (teamsDB[f.team_h === teamId ? f.team_a : f.team_h] || "???").substring(0,3).toUpperCase(), 
-            isHome: f.team_h === teamId 
-        }));
-}
-
-function saveSquad() { localStorage.setItem('kopala_saved_squad_v4', JSON.stringify(squad)); }
+function saveSquad() { localStorage.setItem('kopala_v4_3', JSON.stringify(squad)); }
 function loadSquad() { 
-    const s = localStorage.getItem('kopala_saved_squad_v4'); 
+    const s = localStorage.getItem('kopala_v4_3'); 
     if(s) squad = JSON.parse(s); 
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // FIX: Ensure the button ID matches your HTML
+    const templateBtn = document.getElementById('wildcard-btn') || document.getElementById('ai-template-btn');
+    if (templateBtn) templateBtn.onclick = runAIWildcard;
     syncData();
 });
