@@ -480,21 +480,33 @@ body{
     box-shadow: 0 0 0 2px rgba(255, 0, 90, 0.1);
 }
 
-/* Styling the "BANK" part specifically since it's a span */
-.status-bar > span:first-child {
-    font-weight: 900;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+/* --- UPDATED STATS & BANK COLORS --- */
+
+/* Neutralize the Stats Values */
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #2d3436 !important; /* Neutral Dark Slate instead of Purple */
 }
 
+/* Specifically fix the Bank Display */
 #budget-val {
-    background: var(--fpl-on-container);
-    color: var(--fpl-primary) !important;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-family: monospace;
+  background: transparent !important; /* Remove any background blob */
+  color: #2d3436 !important;      /* Force Neutral Dark Slate */
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 900 !important;
+}
+
+/* Keep the AI Rating Green */
+#team-rating {
+  color: #00ff87 !important;
+}
+
+/* Keep Predicted Points Purple (Optional - change to #2d3436 if you want total neutrality) */
+#v-xp {
+  color: var(--fpl-purple) !important;
 }
 
 
