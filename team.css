@@ -1,571 +1,249 @@
-/* team.css
+/* team.css - Final Flat Professional Refresh
    Updated: 2026-01-06
-   Purpose: Styles tuned to the updated team.js and refreshed to a
-   professional "Fantasy Football Hub - My Team" look and feel.
-   - Adds polished pitch + card styles
-   - Ensures injected player modal & picker controls look native
-   - Makes hidden-picker usable (visible on hover) while keeping compact UI
-   - Improves responsiveness and visual hierarchy
+   Style: Flat "Virgil" Cards with High-Contrast UI
 */
 
 /* ---- THEME VARIABLES ---- */
-:root{
+:root {
   --fpl-purple: #37003c;
   --fpl-pink:   #ff005a;
   --fpl-green:  #00ff87;
-  --pitch-green: #0da36b;
+  --pitch-green: #02894e;
   --card-bg:    #ffffff;
   --muted:      #8b97a8;
-  --glass:      rgba(255,255,255,0.06);
-  --shadow:     0 8px 30px rgba(7,11,13,0.08);
-  --border:     #e6eef6;
-  --max-width: 1160px;
+  --shadow:     0 4px 20px rgba(7,11,13,0.1);
   --radius: 12px;
-  --font-sans: 'Inter', 'Segoe UI', Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+  --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
-/* base */
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family:var(--font-sans);
-  background:linear-gradient(180deg,#f6f8fb 0%, #f0f4f8 100%);
-  color:#071126;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
+/* Base Reset */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: #f0f4f8;
+  color: #071126;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* container */
-.main-container{
-  max-width:var(--max-width);
-  margin:18px auto;
-  padding:18px;
+.main-container {
+  max-width: 1160px;
+  margin: 20px auto;
+  padding: 0 20px;
 }
 
-/* NAVBAR & DRAWER */
-.navbar{
-  background:var(--fpl-purple);
-  color:white;
-  padding:14px 20px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  border-radius:10px;
-  box-shadow:0 8px 30px rgba(55,0,60,0.08);
+/* ---- NAVBAR ---- */
+.navbar {
+  background: var(--fpl-purple);
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 10px;
+  margin-bottom: 20px;
 }
-.brand{ font-weight:900; font-size:1.15rem; letter-spacing:-0.3px; color:#fff }
-.brand span{ color:var(--fpl-green); margin-left:6px }
+.brand { font-weight: 900; font-size: 1.2rem; }
+.brand span { color: var(--fpl-green); }
 
-.drawer{ position:fixed; left:-320px; top:0; bottom:0; width:300px; background:var(--card-bg); z-index:1500; box-shadow:8px 0 30px rgba(0,0,0,0.12); transition:left .28s ease; border-radius:0 10px 10px 0; overflow:auto }
-.drawer.open{ left:0 }
-
-.backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1400; display:none }
-.backdrop.active{ display:block }
-
-/* TICKER & STATUS */
-.ticker{
-  background:#0b1220;
-  color:var(--fpl-green);
-  padding:8px 12px;
-  font-weight:700;
-  font-size:13px;
-  border-radius:8px;
-  display:inline-block;
-  box-shadow: 0 6px 18px rgba(13,163,107,0.06);
-}
-
-.status-bar{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  justify-content:space-between;
-  margin:14px 0;
-  padding:12px;
-  background:var(--card-bg);
-  border-radius:10px;
-  border:1px solid rgba(10,10,12,0.04);
-  box-shadow:var(--shadow);
-}
-
-/* FORMATION & PICKERS (inline) */
-.status-controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
-.status-controls select,
-.status-controls input{
-  padding:8px 10px;
-  border-radius:10px;
-  border:1px solid #e6eef6;
-  background:#fff;
-  font-weight:600;
-  color:#071126;
-  font-size:0.92rem;
-}
-
-/* PITCH AREA */
-.pitch-outer-wrap{
-  background: linear-gradient(180deg, rgba(8,150,110,0.12), rgba(9,122,96,0.06));
-  border-radius:14px;
-  padding:18px;
-  position:relative;
-  box-shadow: 0 18px 40px rgba(6,18,13,0.06);
-  border:1px solid rgba(8,150,110,0.06);
-}
-
-/* center pitch label */
-.pitch-labels{
-  position:absolute;
-  inset:14px 12px auto 12px;
-  display:flex;
-  gap:14px;
-  justify-content:space-between;
-  pointer-events:none;
-  z-index:1;
-  width:calc(100% - 24px);
-}
-
-/* pitch container */
-.pitch{
-  padding:26px 12px 12px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-  align-items:center;
-  justify-content:center;
-}
-
-/* rows and slots */
-.row{ display:flex; gap:12px; align-items:flex-end; justify-content:center; z-index:5 }
-.slot{
-  width:120px;
-  min-height:86px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  gap:6px;
-  transition:transform .18s ease, box-shadow .18s ease;
-  position:relative;
-}
-.slot.selected{ transform:translateY(-6px) scale(1.03); box-shadow:0 18px 40px rgba(10,20,30,0.08) }
-
-/* jersey */
-.jersey{
-  width:60px;
-  height:54px;
-  cursor:pointer;
-  background-color:var(--team-main,#ddd);
-  clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
-  transition: transform .18s ease, box-shadow .18s ease;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  position:relative;
-  border-radius:6px;
-  box-shadow:0 6px 18px rgba(7,11,13,0.06);
-}
-
-/* small price/flag on jersey top-right */
-.jersey::after{
-  content: attr(data-price);
-  position:absolute;
-  top:6px;
-  right:6px;
-  font-size:11px;
-  padding:2px 6px;
-  border-radius:12px;
-  background:rgba(0,0,0,0.6);
-  color:#fff;
-  font-weight:700;
-  display:block;
-}
-
-/* player card under jersey */
-.player-card{
-  width:100%;
-  background:var(--card-bg);
-  border-radius:10px;
-  padding:8px 10px;
-  box-shadow:0 6px 18px rgba(10,20,30,0.04);
-  border:1px solid rgba(10,20,30,0.03);
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  align-items:center;
-}
-
-/* player name & small meta row */
-.p-name{
-  font-weight:800;
-  font-size:0.95rem;
-  color:var(--fpl-purple);
-  text-align:center;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:100%;
-  cursor:pointer;
-}
-.p-meta{
-  display:flex;
-  gap:8px;
-  width:100%;
-  justify-content:center;
-  align-items:center;
-  font-size:0.82rem;
-  color:var(--muted);
-}
-.p-xp{ color:var(--fpl-green); font-weight:800; font-size:0.82rem }
-
-/* fixtures */
-.card-fixtures{
-  display:flex;
-  gap:6px;
-  width:100%;
-  justify-content:space-between;
-  margin-top:4px;
-}
-.fix-item{
-  flex:1;
-  background:#f7fafc;
-  padding:6px 4px;
-  border-radius:6px;
-  font-size:12px;
-  color:#263445;
-  text-align:center;
-  border:1px solid rgba(10,20,30,0.03);
-}
-
-/* difficulty indicators */
-.diff-2{ border-left:4px solid var(--fpl-green); }
-.diff-3{ border-left:4px solid #ffd166; }
-.diff-4{ border-left:4px solid var(--fpl-pink); }
-
-/* bench row */
-.bench-area{
-  margin-top:12px;
-  display:flex;
-  gap:12px;
-  justify-content:center;
-  flex-wrap:wrap;
-}
-
-/* hidden picker - show on slot hover, keep accessible */
-.hidden-picker{
-  width:100%;
-  margin-top:6px;
-  opacity:0;
-  height:0;
-  border-radius:8px;
-  transition:all .18s ease;
-  pointer-events:none;
-}
-.slot:hover .hidden-picker{
-  opacity:1;
-  height:auto;
-  pointer-events:auto;
-  transform:translateY(0);
-  margin-top:6px;
-  display:block;
-}
-
-/* style native select inside */
-.hidden-picker{
-  appearance:none;
-  -webkit-appearance:none;
-  background:#fff;
-  border:1px solid rgba(10,20,30,0.06);
-  padding:8px 10px;
-  color:#0f172a;
-  font-weight:700;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-/* picker small caret */
-.hidden-picker::-ms-expand{ display:none }
-
-/* STATS SUMMARY panel (right column in original layout) */
-.stats-summary{
-  display:grid;
-  grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
-  gap:14px;
-  margin-top:18px;
-}
-.stat-box, .stat-item{
-  background:var(--card-bg);
-  border-radius:12px;
-  padding:14px;
-  border:1px solid rgba(10,20,30,0.03);
-  box-shadow:0 8px 26px rgba(10,20,30,0.04);
-  text-align:center;
-}
-.stat-label{ font-size:0.75rem; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px }
-.stat-value{ font-size:1.6rem; font-weight:900; color:var(--fpl-purple) }
-
-/* action buttons */
-.btn-group{ display:flex; gap:12px; flex-wrap:wrap }
-.ai-action-btn, .btn-primary, .btn-reset{
-  display:inline-flex;
-  gap:10px;
-  align-items:center;
-  justify-content:center;
-  padding:10px 18px;
-  border-radius:999px;
-  font-weight:800;
-  border:1px solid rgba(10,20,30,0.06);
-  background:linear-gradient(90deg, #fff 0%, #fbfbff 100%);
-  color:var(--fpl-purple);
-  cursor:pointer;
-  transition:transform .12s ease, box-shadow .12s ease;
-  box-shadow:0 6px 18px rgba(7,11,13,0.04);
-}
-.ai-action-btn{
-  background: linear-gradient(90deg, rgba(55,0,60,0.98) 0%, rgba(0,255,135,0.06) 100%);
-  color:#fff;
-  border:none;
-  box-shadow:0 12px 30px rgba(0,255,135,0.08);
-}
-.ai-action-btn:hover{ transform:translateY(-3px) }
-
-/* TRANSFER CARD / ANALYSIS */
-.ai-card{
-  margin-top:18px;
-  background:var(--card-bg);
-  border-radius:14px;
-  padding:16px;
-  border:1px solid rgba(10,20,30,0.04);
-  box-shadow:var(--shadow);
-}
-.verdict-label{ display:flex; gap:8px; align-items:center; color:var(--fpl-purple); font-weight:900 }
-.transfer-row{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  justify-content:space-between;
-  padding:10px;
-  border-radius:10px;
-  background:linear-gradient(180deg,#fff,#fbfbff);
-  border:1px solid rgba(10,20,30,0.03);
-}
-
-/* modal - reuse same modal classes as JS creates */
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(5,8,12,0.6);
-  z-index:3000;
-  backdrop-filter: blur(4px);
-  padding:36px 20px;
-}
-.modal .modal-content{
-  max-width:720px;
-  margin:40px auto;
-  background:var(--card-bg);
-  border-radius:14px;
-  padding:22px;
-  border:1px solid rgba(55,0,60,0.06);
-  box-shadow:0 24px 60px rgba(7,11,13,0.12);
-  color:var(--fpl-purple);
-}
-
-/* close button */
-.close-btn, #close-player-modal, #close-modal{
-  background:transparent;
-  border:none;
-  color:var(--muted);
-  font-size:20px;
-  cursor:pointer;
-}
-.close-btn:hover, #close-player-modal:hover, #close-modal:hover{ color:var(--fpl-pink) }
-
-/* analysis section inside modal */
-.analysis-section h3{
-  color:var(--fpl-green);
-  margin:0 0 8px 0;
-  font-size:1.05rem;
-}
-.transfer-item{
+/* ---- STATUS BAR & SUMMARY ---- */
+.status-bar {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: space-between;
   background: #fff;
-  border-left:4px solid var(--fpl-pink);
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:8px;
-  color:var(--fpl-purple);
-  font-weight:700;
+  padding: 15px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
 }
 
-/* player modal content */
-#player-modal-content h3{ margin:0 0 6px 0; font-size:1.2rem }
-#player-modal-content p{ margin:6px 0; color:#425066 }
-#player-modal .card-fixtures{ margin-top:10px }
+.stat-item { text-align: center; flex: 1; }
+.stat-label { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; }
+.stat-value { font-size: 20px; font-weight: 900; color: #2d3436; }
+#team-rating { color: var(--fpl-green) !important; }
 
-/* responsive tweaks */
-@media (max-width:920px){
-  .slot{ width:100px }
-  .jersey{ width:52px; height:46px }
-  .player-card{ padding:8px }
-  .main-container{ padding:10px }
-  .pitch-outer-wrap{ padding:12px }
-}
-@media (max-width:560px){
-  .row{ gap:8px }
-  .slot{ width:92px }
-  .stats-summary{ grid-template-columns:1fr; padding:12px }
-  .status-bar{ flex-direction:column; align-items:flex-start; gap:8px; }
-}
-
-/* small helpers */
-.text-muted{ color:var(--muted) }
-.u-center{ text-align:center }
-.hidden{ display:none }
-
-
-
-/* --- JS-INJECTED PICKER CONTROLS --- */
-
-/* This targets the wrapper div the JS creates */
-.status-bar div[style*="inline-flex"] {
-    display: flex !important;
-    flex-wrap: wrap;
-    gap: 12px !important;
-    margin-left: 0 !important; /* Resetting the JS inline margin */
-    padding: 10px;
-    background: rgba(0,0,0,0.02);
-    border-radius: 12px;
+/* ---- FLAT PITCH AREA ---- */
+.pitch-outer-wrap {
+  background: var(--pitch-green);
+  /* Classic FPL Stripes */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 60px,
+    transparent 60px,
+    transparent 120px
+  );
+  border-radius: 16px;
+  padding: 30px 10px;
+  position: relative;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.15);
 }
 
-/* Style the Labels */
-.status-bar label {
-    font-size: 0.7rem !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--fpl-on-container);
-    opacity: 0.6;
-    font-weight: 800 !important;
+.pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  align-items: center;
 }
 
-/* Style the Numeric Inputs (Min Price, Max Price, Min Own) */
-#picker-min-price, 
-#picker-max-price, 
-#picker-min-ownership {
-    border: 1px solid var(--fpl-border) !important;
-    background: var(--fpl-container) !important;
-    color: var(--fpl-on-container) !important;
-    border-radius: 8px !important;
-    padding: 5px 8px !important;
-    font-weight: 700 !important;
-    font-family: inherit;
-    outline: none;
-    transition: all 0.2s ease;
+/* ---- FLAT VIRGIL CARDS ---- */
+.row { display: flex; gap: 10px; justify-content: center; width: 100%; }
+
+.slot {
+  width: 95px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
 }
 
-/* Style the Sort Dropdown */
-#picker-sort {
-    border: 1px solid var(--fpl-border) !important;
-    background: var(--fpl-container) !important;
-    color: var(--fpl-on-container) !important;
-    border-radius: 8px !important;
-    padding: 5px 10px !important;
-    font-weight: 700 !important;
-    cursor: pointer;
-    outline: none;
+.player-card-wrapper {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.15); /* Semi-trans glass effect on pitch */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Hover & Focus Effects */
-#picker-min-price:focus, 
-#picker-max-price:focus, 
-#picker-sort:focus {
-    border-color: var(--fpl-primary) !important;
-    box-shadow: 0 0 0 2px rgba(255, 0, 90, 0.1);
+.player-card-wrapper:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
-/* --- UPDATED STATS & BANK COLORS --- */
+/* Card Visual Header */
+.card-visual-area {
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 10px 0;
+}
 
-/* Neutralize the Stats Values */
-.stat-value {
-  font-size: 1.6rem;
+.price-tag {
+  position: absolute;
+  top: 4px; right: 4px;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.status-icon-yellow {
+  position: absolute;
+  top: 4px; left: 4px;
+  background: #e1ff00;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; color: #000;
+}
+
+/* Info Plates (Two-Tone) */
+.p-name-box {
+  background: #fff;
+  color: var(--fpl-purple);
+  font-size: 10px;
   font-weight: 900;
-  color: #2d3436 !important; /* Neutral Dark Slate instead of Purple */
+  padding: 5px 2px;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  border-bottom: 1px solid #eee;
 }
 
-/* Specifically fix the Bank Display */
-#budget-val {
-  background: transparent !important; /* Remove any background blob */
-  color: #2d3436 !important;      /* Force Neutral Dark Slate */
-  padding: 0 !important;
-  border-radius: 0 !important;
-  font-family: var(--font-sans) !important;
-  font-weight: 900 !important;
+.p-fixture-box {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 2px;
+  text-align: center;
 }
 
-/* Keep the AI Rating Green */
-#team-rating {
-  color: #00ff87 !important;
-}
-
-/* Keep Predicted Points Purple (Optional - change to #2d3436 if you want total neutrality) */
-#v-xp {
-  color: var(--fpl-purple) !important;
-}
-
-
-
-/* --- 2025/26 EPL JERSEY LIBRARY --- */
-.jersey.gkp_color { background-color: #e1ff00 !important; border-bottom: 4px solid #000; }
-
-.jersey.arsenal          { background-color: #ef0107; border-bottom: 4px solid #ffffff; }
-.jersey.aston_villa      { background-color: #95bfe5; border-bottom: 4px solid #670e36; }
-.jersey.bournemouth      { background-color: #da291c; border-bottom: 4px solid #000000; }
-.jersey.brentford        { background-color: #e30613; border-bottom: 4px solid #ffffff; }
-.jersey.brighton         { background-color: #0057b8; border-bottom: 4px solid #ffffff; }
-.jersey.chelsea          { background-color: #034694; border-bottom: 4px solid #034694; }
-.jersey.crystal_palace   { background-color: #1b458f; border-bottom: 4px solid #c4122e; }
-.jersey.everton          { background-color: #003399; border-bottom: 4px solid #ffffff; }
-.jersey.fulham           { background-color: #ffffff; border-bottom: 4px solid #000000; }
-.jersey.ipswich          { background-color: #005696; border-bottom: 4px solid #ffffff; }
-.jersey.leicester        { background-color: #003090; border-bottom: 4px solid #ffffff; }
-.jersey.liverpool        { background-color: #c8102e; border-bottom: 4px solid #f6eb61; }
-.jersey.man_city         { background-color: #6cabdd; border-bottom: 4px solid #ffffff; }
-.jersey.man_utd          { background-color: #da291c; border-bottom: 4px solid #ffffff; }
-.jersey.newcastle        { background-color: #000000; border-bottom: 4px solid #ffffff; }
-.jersey.nottm_forest     { background-color: #dd0000; border-bottom: 4px solid #ffffff; }
-.jersey.southampton      { background-color: #d71920; border-bottom: 4px solid #ffffff; }
-.jersey.tottenham        { background-color: #ffffff; border-bottom: 4px solid #132257; }
-.jersey.west_ham         { background-color: #7a263a; border-bottom: 4px solid #1bb1e7; }
-.jersey.wolves           { background-color: #fdb913; border-bottom: 4px solid #231f20; }
-
-/* Empty slot circle */
-.jersey.default { 
-    background-color: rgba(255,255,255,0.15); 
-    border: 2px dashed rgba(255,255,255,0.3); 
-    clip-path: none; 
-    border-radius: 50%;
-    width: 45px;
-    height: 45px;
-}
-
-
-
+/* ---- JERSEY LIBRARY (Flat Shapes) ---- */
 .jersey {
-    position: relative; /* Anchor for the badge */
+  width: 44px;
+  height: 40px;
+  clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+  position: relative;
 }
 
+.jersey.arsenal        { background: #ef0107; border-bottom: 4px solid #fff; }
+.jersey.aston_villa    { background: #95bfe5; border-bottom: 4px solid #670e36; }
+.jersey.bournemouth    { background: #da291c; border-bottom: 4px solid #000; }
+.jersey.brentford      { background: #e30613; border-bottom: 4px solid #fff; }
+.jersey.brighton       { background: #0057b8; border-bottom: 4px solid #fff; }
+.jersey.chelsea        { background: #034694; border-bottom: 4px solid #fff; }
+.jersey.crystal_palace { background: #1b458f; border-bottom: 4px solid #c4122e; }
+.jersey.everton        { background: #003399; border-bottom: 4px solid #fff; }
+.jersey.fulham         { background: #ffffff; border-bottom: 4px solid #000; }
+.jersey.ipswich        { background: #005696; border-bottom: 4px solid #fff; }
+.jersey.leicester      { background: #003090; border-bottom: 4px solid #fff; }
+.jersey.liverpool      { background: #c8102e; border-bottom: 4px solid #f6eb61; }
+.jersey.man_city       { background: #6cabdd; border-bottom: 4px solid #fff; }
+.jersey.man_utd        { background: #da291c; border-bottom: 4px solid #ffffff; }
+.jersey.newcastle      { background: #000000; border-bottom: 4px solid #fff; }
+.jersey.nottm_forest   { background: #dd0000; border-bottom: 4px solid #fff; }
+.jersey.southampton    { background: #d71920; border-bottom: 4px solid #fff; }
+.jersey.tottenham      { background: #ffffff; border-bottom: 4px solid #132257; }
+.jersey.west_ham       { background: #7a263a; border-bottom: 4px solid #1bb1e7; }
+.jersey.wolves         { background: #fdb913; border-bottom: 4px solid #231f20; }
+.jersey.gkp_color      { background: #e1ff00 !important; border-bottom: 4px solid #000; }
+
+.jersey.default { 
+  background: rgba(255,255,255,0.2); 
+  border: 1px dashed #fff; clip-path: none; 
+  border-radius: 50%; width: 35px; height: 35px; 
+}
+
+/* Badges */
 .captain-badge {
-    position: absolute;
-    top: -5px;
-    right: -10px;
-    background: #37003c; /* FPL Purple */
-    color: #00ff87;      /* FPL Green */
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    font-size: 12px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid white;
-    z-index: 10;
+  position: absolute;
+  top: -6px; right: -8px;
+  background: var(--fpl-purple);
+  color: var(--fpl-green);
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  font-size: 11px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #fff;
+  z-index: 10;
 }
 
+/* Picker Controls */
+.hidden-picker {
+  width: 100%;
+  margin-top: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.slot:hover .hidden-picker { opacity: 1; }
+
+/* Bench */
+#bench-container {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 10px;
+}
+
+/* Responsive Tweak */
+@media (max-width: 600px) {
+  .slot { width: 80px; }
+  .p-name-box { font-size: 9px; }
+  .jersey { width: 38px; height: 35px; }
+}
