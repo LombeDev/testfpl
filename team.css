@@ -1,94 +1,88 @@
 /**
- * KOPALA FPL - INTEGRATED REFRESH (v4.3.6)
- * Merges your existing app theming with Edge-to-Edge Mobile & 25/26 Kits
+ * KOPALA FPL - MASTER REFRESH (v4.3.4)
+ * 2025/26 Season Edge-to-Edge Production CSS
  */
 
-/* ---- THEME VARIABLES (Consistent with your App) ---- */
+/* ---- THEME & SAFE AREAS ---- */
 :root {
   --fpl-purple: #37003c;
-  --fpl-pink:   #ff005a;
   --fpl-green:  #00ff87;
   --pitch-green: #02894e;
-  --card-bg:    #ffffff;
-  --muted:      #8b97a8;
-  --shadow:     0 4px 20px rgba(7,11,13,0.1);
-  --radius: 12px;
-  --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  
-  /* Mobile Notch Handling */
+  --card-glass: rgba(0, 0, 0, 0.3);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Base Reset for Edge-to-Edge */
 * { box-sizing: border-box; }
-body {
+html, body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-sans);
-  background: #f0f4f8; /* Your app background */
-  color: #071126;
-  overflow-x: hidden;
-}
-
-/* Full Width Container */
-.main-container {
   width: 100%;
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 0; 
+  background: #000;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ---- NAVBAR (Edge-to-Edge) ---- */
+/* Full Width Header */
 .navbar {
   background: var(--fpl-purple);
   color: white;
-  padding: calc(var(--safe-top) + 14px) 20px 14px 20px;
+  padding: calc(var(--safe-top) + 15px) 20px 15px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  z-index: 100;
 }
+
 .brand { font-weight: 900; font-size: 1.2rem; }
 .brand span { color: var(--fpl-green); }
 
-/* ---- STATUS BAR ---- */
+/* Status Bar */
 .status-bar {
-  display: flex;
-  gap: 10px;
   background: #fff;
-  padding: 15px 10px;
-  border-bottom: 1px solid #eee;
+  display: flex;
+  padding: 12px 5px;
+  border-bottom: 1px solid #ddd;
 }
-.stat-item { text-align: center; flex: 1; }
-.stat-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; }
-.stat-value { font-size: 18px; font-weight: 900; color: #2d3436; }
+.stat-item { flex: 1; text-align: center; }
+.stat-label { font-size: 9px; font-weight: 800; color: #888; text-transform: uppercase; }
+.stat-value { font-size: 16px; font-weight: 900; color: #222; }
 
-/* ---- THE PITCH (Edge-to-Edge) ---- */
+/* ---- THE PITCH ---- */
 .pitch-outer-wrap {
   background: var(--pitch-green);
+  /* 25/26 Grass Pattern */
   background-image: repeating-linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.05) 0px,
-    rgba(255, 255, 255, 0.05) 60px,
-    transparent 60px,
-    transparent 120px
+    rgba(255, 255, 255, 0.04) 0px,
+    rgba(255, 255, 255, 0.04) 50px,
+    transparent 50px,
+    transparent 100px
   );
+  width: 100%;
   padding: 20px 4px;
+  min-height: 70vh;
+}
+
+.pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
   width: 100%;
 }
 
-.row { 
-  display: flex; 
-  gap: 4px; 
-  justify-content: center; 
-  width: 100%; 
-  margin-bottom: 15px;
-}
-
-/* ---- SLOTS & CARDS ---- */
+/* ---- PLAYER CARDS (VIRGIL STYLE) ---- */
 .slot {
   flex: 1;
-  max-width: 20%;
+  max-width: 20%; /* 5 players max per row */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -97,19 +91,31 @@ body {
 
 .player-card-wrapper {
   width: 100%;
-  background: rgba(0, 0, 0, 0.15); /* Your semi-trans effect */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  background: var(--card-glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
   overflow: hidden;
+  cursor: pointer;
   position: relative;
 }
 
 .card-visual-area {
-  height: 55px;
+  height: 52px;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 8px 0;
+}
+
+.price-tag {
+  position: absolute;
+  top: 2px; right: 2px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 8px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: bold;
 }
 
 .p-name-box {
@@ -117,7 +123,7 @@ body {
   color: var(--fpl-purple);
   font-size: 9px;
   font-weight: 900;
-  padding: 5px 2px;
+  padding: 4px 1px;
   text-align: center;
   text-transform: uppercase;
   white-space: nowrap;
@@ -125,88 +131,83 @@ body {
   text-overflow: ellipsis;
 }
 
-.price-tag {
+/* Hidden Select covering the card for mobile tapping */
+.hidden-picker {
   position: absolute;
-  top: 3px; right: 3px;
-  background: rgba(0,0,0,0.8);
-  color: #fff;
-  font-size: 8px;
-  padding: 1px 3px;
-  border-radius: 2px;
+  top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+  z-index: 10;
 }
 
-
-/* ---- COMPLETE 20-TEAM JERSEY LIBRARY (25/26) ---- */
+/* ---- 2025/26 JERSEY LIBRARY ---- */
 .jersey {
-  width: 36px;
-  height: 34px;
+  width: 34px;
+  height: 32px;
   clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
   position: relative;
 }
 
-/* 1. Arsenal */
+/* Authentic Team Patterns */
 .jersey.arsenal        { background: #ef0107; border-left: 5px solid #fff; border-right: 5px solid #fff; }
-/* 2. Aston Villa */
-.jersey.aston_villa    { background: #95bfe5; border-bottom: 5px solid #670e36; }
-/* 3. Bournemouth */
-.jersey.bournemouth    { background: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 14px; }
-/* 4. Brentford */
-.jersey.brentford      { background: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px; }
-/* 5. Brighton */
-.jersey.brighton       { background: linear-gradient(90deg, #0057b8 50%, #fff 50%); background-size: 12px; }
-/* 6. Chelsea */
-.jersey.chelsea        { background: #034694; border-bottom: 2px solid #00e5ff; }
-/* 7. Crystal Palace */
-.jersey.crystal_palace { background: linear-gradient(90deg, #1b458f 50%, #c4122e 50%); background-size: 18px; }
-/* 8. Everton */
-.jersey.everton        { background: #003399; border-top: 2px solid #fff; }
-/* 9. Fulham */
-.jersey.fulham         { background: #fff; border-left: 5px solid #000; border-right: 5px solid #000; }
-/* 10. Ipswich Town */
-.jersey.ipswich        { background: #005696; border-bottom: 3px solid #fff; }
-/* 11. Leicester City */
-.jersey.leicester      { background: #003090; border-bottom: 3px solid #fdb913; }
-/* 12. Liverpool */
-.jersey.liverpool      { background: #c8102e; border-top: 3px solid #fff; }
-/* 13. Manchester City */
-.jersey.man_city       { background: #6cabdd; background-image: linear-gradient(135deg, rgba(255,255,255,0.4) 25%, transparent 25%); background-size: 20px 20px; }
-/* 14. Manchester United */
+.jersey.liverpool      { background: #c8102e; border-top: 3px solid #f6eb61; } /* Yellow collar detail */
+.jersey.man_city       { background: #6cabdd; background-image: linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%); background-size: 20px 20px; } /* Sash effect */
+.jersey.newcastle      { background: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px; } /* Stripes */
+.jersey.brighton       { background: linear-gradient(90deg, #0057b8 50%, #fff 50%); background-size: 12px; } /* Stripes */
+.jersey.brentford      { background: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px; } /* Stripes */
+.jersey.sunderland     { background: repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, #fff 8px, #fff 16px); } /* Stripes */
+.jersey.leeds          { background: #fff; border: 2px solid #00509d; } /* Pure White with blue trim */
+.jersey.burnley        { background: #6c1d45; border-bottom: 5px solid #95d6f2; } /* Claret/Blue */
 .jersey.man_utd        { background: #da291c; border-bottom: 4px solid #000; }
-/* 15. Newcastle United */
-.jersey.newcastle      { background: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px; }
-/* 16. Nottingham Forest */
-.jersey.nottm_forest   { background: #dd0000; border-top: 2px solid #fff; }
-/* 17. Tottenham Hotspur */
+.jersey.chelsea        { background: #034694; border-bottom: 2px solid #00e5ff; } /* Liquid blue accent */
 .jersey.tottenham      { background: #fff; border-bottom: 6px solid #132257; }
-/* 18. West Ham United */
+.jersey.aston_villa    { background: #95bfe5; border-bottom: 5px solid #670e36; }
+.jersey.everton        { background: #003399; border-top: 3px solid #fff; }
 .jersey.west_ham       { background: #7a263a; border-left: 5px solid #1bb1e7; border-right: 5px solid #1bb1e7; }
-/* 19. Wolves */
 .jersey.wolves         { background: #fdb913; border-bottom: 3px solid #231f20; }
-/* 20. Promoted: Sunderland / Leeds / Burnley */
-.jersey.sunderland     { background: repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, #fff 8px, #fff 16px); }
-.jersey.leeds          { background: #fff; border: 2px solid #00509d; }
-.jersey.burnley        { background: #6c1d45; border-bottom: 5px solid #95d6f2; }
+.jersey.fulham         { background: #fff; border-left: 5px solid #000; border-right: 5px solid #000; }
+.jersey.crystal_palace { background: linear-gradient(90deg, #1b458f 50%, #c4122e 50%); background-size: 18px; }
+.jersey.nottm_forest   { background: #dd0000; border-top: 2px solid #fff; }
+.jersey.bournemouth    { background: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 14px; }
+.jersey.leicester      { background: #003090; border-bottom: 3px solid #fdb913; }
+.jersey.ipswich        { background: #005696; border-bottom: 3px solid #fff; }
 
-/* ALL GOALKEEPERS */
-.jersey.gkp_color      { background: #e1ff00 !important; border-bottom: 4px solid #000; }
+/* ---- GOALKEEPER SYSTEM ---- */
+.jersey.gk-volt  { background: #e1ff00; border: 1px solid #c2db00; } /* Standard Neon */
+.jersey.gk-pink  { background: #ff00ea; border-bottom: 3px solid #000; } /* Pink Template */
+.jersey.gk-black { background: #1a1a1a; border-bottom: 3px solid #fff; } /* Black Template */
+.jersey.gk-cyan  { background: #00e5ff; border: 1px solid #00c2d9; } /* Blue Template */
 
-/* Blank state */
+/* Empty slot */
 .jersey.default { 
-  background: rgba(255,255,255,0.2); border-radius: 50%; width: 20px; height: 20px; clip-path: none; 
+  background: rgba(255,255,255,0.1); 
+  border-radius: 50%; width: 22px; height: 22px; clip-path: none; border: 1px dashed #fff; 
 }
 
+/* Captain Badge */
+.captain-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--fpl-purple);
+  color: var(--fpl-green);
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  font-size: 9px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid #fff;
+  z-index: 5;
+}
 
-
-
-/* Bench Area */
+/* ---- BENCH AREA ---- */
 #bench-container {
-  background: rgba(0,0,0,0.1);
-  padding: 15px 5px calc(var(--safe-bottom) + 15px);
+  background: rgba(0,0,0,0.2);
+  margin-top: 10px;
+  padding: 15px 5px calc(var(--safe-bottom) + 20px);
+  border-top: 2px solid rgba(255,255,255,0.1);
 }
 
-/* Responsive Mobile Fixes */
-@media (max-width: 480px) {
-  .jersey { width: 32px; height: 30px; }
+/* Responsive Scaling for older/smaller phones */
+@media (max-width: 380px) {
+  .jersey { width: 30px; height: 28px; }
   .p-name-box { font-size: 8px; }
-  .stat-value { font-size: 16px; }
+  .stat-value { font-size: 14px; }
 }
