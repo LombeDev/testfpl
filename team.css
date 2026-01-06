@@ -1,237 +1,571 @@
-/**
- * KOPALA FPL - MASTER ENGINE (v4.1.0)
- * Logic: High Ownership Priority + Auto-Captaincy + AI Rating
- */
+/* team.css
+   Updated: 2026-01-06
+   Purpose: Styles tuned to the updated team.js and refreshed to a
+   professional "Fantasy Football Hub - My Team" look and feel.
+   - Adds polished pitch + card styles
+   - Ensures injected player modal & picker controls look native
+   - Makes hidden-picker usable (visible on hover) while keeping compact UI
+   - Improves responsiveness and visual hierarchy
+*/
 
-const API_BASE = "/fpl-api/"; 
-let playerDB = [];
-let teamsDB = {}; 
-let fixturesDB = [];
-let selectedSlotId = null;
-window.currentCaptain = ""; // Global tracker for the highest xP starter
-
-let squad = [
-    { id: 0, pos: 'GKP', name: '', isBench: false },
-    { id: 1, pos: 'DEF', name: '', isBench: false },
-    { id: 2, pos: 'DEF', name: '', isBench: false },
-    { id: 3, pos: 'DEF', name: '', isBench: false },
-    { id: 4, pos: 'DEF', name: '', isBench: false },
-    { id: 5, pos: 'MID', name: '', isBench: false },
-    { id: 6, pos: 'MID', name: '', isBench: false },
-    { id: 7, pos: 'MID', name: '', isBench: false },
-    { id: 8, pos: 'MID', name: '', isBench: false },
-    { id: 9, pos: 'FWD', name: '', isBench: false },
-    { id: 10, pos: 'FWD', name: '', isBench: false },
-    { id: 11, pos: 'GKP', name: '', isBench: true },
-    { id: 12, pos: 'DEF', name: '', isBench: true },
-    { id: 13, pos: 'MID', name: '', isBench: true },
-    { id: 14, pos: 'FWD', name: '', isBench: true }
-];
-
-// --- 1. DATA SYNC ---
-async function syncData() {
-    try {
-        const [bootRes, fixRes] = await Promise.all([
-            fetch(`${API_BASE}bootstrap-static/`),
-            fetch(`${API_BASE}fixtures/`)
-        ]);
-        const data = await bootRes.json();
-        const rawFixtures = await fixRes.json();
-
-        data.teams.forEach(t => {
-            let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-            if (slug.includes('man_city')) slug = 'man_city';
-            if (slug.includes('man_utd')) slug = 'man_utd';
-            if (slug.includes('forest')) slug = 'nottm_forest';
-            teamsDB[t.id] = slug;
-        });
-
-        playerDB = data.elements.map(p => ({
-            id: p.id,
-            name: p.web_name,
-            teamId: p.team,
-            teamSlug: teamsDB[p.team] || 'default',
-            pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
-            price: (p.now_cost / 10).toFixed(1),
-            xp: parseFloat(p.ep_next) || 0,
-            ownership: parseFloat(p.selected_by_percent) || 0
-        }));
-
-        fixturesDB = rawFixtures;
-        loadSquad();
-        renderPitch();
-    } catch (e) { console.error("Sync Error", e); }
+/* ---- THEME VARIABLES ---- */
+:root{
+  --fpl-purple: #37003c;
+  --fpl-pink:   #ff005a;
+  --fpl-green:  #00ff87;
+  --pitch-green: #0da36b;
+  --card-bg:    #ffffff;
+  --muted:      #8b97a8;
+  --glass:      rgba(255,255,255,0.06);
+  --shadow:     0 8px 30px rgba(7,11,13,0.08);
+  --border:     #e6eef6;
+  --max-width: 1160px;
+  --radius: 12px;
+  --font-sans: 'Inter', 'Segoe UI', Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
 }
 
-// --- 2. STATS & RATING LOGIC ---
-function updateStats() {
-    let totalCost = 0;
-    let baseXP = 0;
-    let maxXP = 0;
-    let captainName = "";
-
-    squad.forEach(slot => {
-        const p = playerDB.find(x => x.name === slot.name);
-        if (p) {
-            totalCost += parseFloat(p.price);
-            if (!slot.isBench) {
-                const pXP = parseFloat(p.xp);
-                baseXP += pXP;
-                if (pXP > maxXP) {
-                    maxXP = pXP;
-                    captainName = p.name;
-                }
-            }
-        }
-    });
-
-    const totalPredictedPoints = (baseXP + maxXP).toFixed(1);
-    const bankVal = (100 - totalCost).toFixed(1);
-    
-    // AI Rating Logic: Elite benchmark is ~72 pts (includes captain bonus)
-    const eliteBenchmark = 72.0; 
-    const ratingPercent = Math.min(100, (totalPredictedPoints / eliteBenchmark) * 100).toFixed(0);
-
-    const xpEl = document.getElementById('v-xp');
-    if (xpEl) xpEl.textContent = totalPredictedPoints;
-    
-    const ratingEl = document.getElementById('team-rating');
-    if (ratingEl) {
-        ratingEl.textContent = `${ratingPercent}%`;
-        ratingEl.style.color = ratingPercent >= 80 ? '#00ff87' : (ratingPercent >= 50 ? '#ffd166' : '#ff005a');
-    }
-
-    const budgetEl = document.getElementById('budget-val');
-    if (budgetEl) {
-        budgetEl.textContent = `£${bankVal}m`;
-        budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#2d3436';
-    }
-
-    window.currentCaptain = captainName;
+/* base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  background:linear-gradient(180deg,#f6f8fb 0%, #f0f4f8 100%);
+  color:#071126;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
-// --- 3. UI RENDERING ---
-function renderPitch() {
-    const pitch = document.getElementById('pitch-container');
-    const bench = document.getElementById('bench-container');
-    if(!pitch || !bench) return;
-    
-    updateStats(); // Update stats first to identify captain
-    
-    pitch.innerHTML = ''; bench.innerHTML = '';
-
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        const row = document.createElement('div');
-        row.className = 'row';
-        squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
-        pitch.appendChild(row);
-    });
-
-    const bRow = document.createElement('div');
-    bRow.className = 'row';
-    squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
-    bench.appendChild(bRow);
+/* container */
+.main-container{
+  max-width:var(--max-width);
+  margin:18px auto;
+  padding:18px;
 }
 
-function createSlotUI(slotData) {
-    const div = document.createElement('div');
-    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    const p = playerDB.find(p => p.name === slotData.name);
-    
-    const jerseyClass = p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamSlug) : 'default';
-    const fixture = p ? getNextFixtures(p.teamId)[0] : null;
-    const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
+/* NAVBAR & DRAWER */
+.navbar{
+  background:var(--fpl-purple);
+  color:white;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-radius:10px;
+  box-shadow:0 8px 30px rgba(55,0,60,0.08);
+}
+.brand{ font-weight:900; font-size:1.15rem; letter-spacing:-0.3px; color:#fff }
+.brand span{ color:var(--fpl-green); margin-left:6px }
 
-    div.innerHTML = `
-        <div class="jersey ${jerseyClass}" onclick="handleSwap(${slotData.id})">
-            ${isCaptain ? '<div class="captain-badge">C</div>' : ''}
-        </div>
-        <div class="player-card">
-            <span class="p-name">${slotData.name || slotData.pos}</span>
-            <div class="card-fixtures">
-                ${fixture ? `<div class="fix-item diff-${fixture.diff}">${fixture.opp} ${fixture.isHome?'(H)':'(A)'}</div>` : ''}
-            </div>
-        </div>
-        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
-            <option value="">-- Pick --</option>
-            ${playerDB.filter(x => x.pos === slotData.pos).sort((a,b)=>b.ownership-a.ownership).slice(0,30).map(x => 
-                `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name} (${x.ownership}%)</option>`
-            ).join('')}
-        </select>
-    `;
-    return div;
+.drawer{ position:fixed; left:-320px; top:0; bottom:0; width:300px; background:var(--card-bg); z-index:1500; box-shadow:8px 0 30px rgba(0,0,0,0.12); transition:left .28s ease; border-radius:0 10px 10px 0; overflow:auto }
+.drawer.open{ left:0 }
+
+.backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1400; display:none }
+.backdrop.active{ display:block }
+
+/* TICKER & STATUS */
+.ticker{
+  background:#0b1220;
+  color:var(--fpl-green);
+  padding:8px 12px;
+  font-weight:700;
+  font-size:13px;
+  border-radius:8px;
+  display:inline-block;
+  box-shadow: 0 6px 18px rgba(13,163,107,0.06);
 }
 
-// --- 4. ENGINE CONTROLS ---
-function runAIWildcard() {
-    let budget = 100.0;
-    const newSquad = [];
-    const teamCounts = {};
-    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
-
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        for (let i = 0; i < posLimits[pos]; i++) {
-            const buffer = 4.4 * (15 - newSquad.length);
-            const choice = playerDB.filter(p => 
-                p.pos === pos && !newSquad.some(s => s.name === p.name) && 
-                (teamCounts[p.teamId] || 0) < 3 && parseFloat(p.price) <= (budget - buffer)
-            ).sort((a, b) => b.ownership - a.ownership || b.xp - a.xp)[0];
-
-            if (choice) {
-                newSquad.push({ id: newSquad.length, pos: pos, name: choice.name, isBench: newSquad.length > 10 });
-                teamCounts[choice.teamId] = (teamCounts[choice.teamId] || 0) + 1;
-                budget -= parseFloat(choice.price);
-            }
-        }
-    });
-    squad = newSquad;
-    changeFormation('3-4-3'); 
+.status-bar{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  margin:14px 0;
+  padding:12px;
+  background:var(--card-bg);
+  border-radius:10px;
+  border:1px solid rgba(10,10,12,0.04);
+  box-shadow:var(--shadow);
 }
 
-function handleSwap(id) {
-    if (selectedSlotId === null) { selectedSlotId = id; } 
-    else {
-        const p1 = squad.find(s => s.id === selectedSlotId);
-        const p2 = squad.find(s => s.id === id);
-        if (p1.id !== p2.id && (p1.pos === p2.pos || (p1.pos !== 'GKP' && p2.pos !== 'GKP'))) {
-            const temp = p1.isBench; p1.isBench = p2.isBench; p2.isBench = temp;
-            saveSquad();
-        }
-        selectedSlotId = null;
-    }
-    renderPitch();
+/* FORMATION & PICKERS (inline) */
+.status-controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+.status-controls select,
+.status-controls input{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #e6eef6;
+  background:#fff;
+  font-weight:600;
+  color:#071126;
+  font-size:0.92rem;
 }
 
-function updatePlayer(id, name) {
-    squad.find(s => s.id === id).name = name;
-    saveSquad(); renderPitch();
+/* PITCH AREA */
+.pitch-outer-wrap{
+  background: linear-gradient(180deg, rgba(8,150,110,0.12), rgba(9,122,96,0.06));
+  border-radius:14px;
+  padding:18px;
+  position:relative;
+  box-shadow: 0 18px 40px rgba(6,18,13,0.06);
+  border:1px solid rgba(8,150,110,0.06);
 }
 
-function changeFormation(f) {
-    const [d, m, fwd] = f.split('-').map(Number);
-    squad.forEach(s => s.isBench = true);
-    squad.filter(s => s.pos === 'GKP')[0].isBench = false;
-    const activate = (p, l) => { let c = 0; squad.filter(s => s.pos === p).forEach(s => { if(c<l){s.isBench=false; c++;}});};
-    activate('DEF', d); activate('MID', m); activate('FWD', fwd);
-    saveSquad(); renderPitch();
+/* center pitch label */
+.pitch-labels{
+  position:absolute;
+  inset:14px 12px auto 12px;
+  display:flex;
+  gap:14px;
+  justify-content:space-between;
+  pointer-events:none;
+  z-index:1;
+  width:calc(100% - 24px);
 }
 
-function getNextFixtures(teamId) {
-    return fixturesDB.filter(f => !f.finished && (f.team_h === teamId || f.team_a === teamId))
-        .map(f => ({ 
-            opp: (teamsDB[f.team_h === teamId ? f.team_a : f.team_h] || "???").substring(0,3).toUpperCase(), 
-            diff: f.team_h === teamId ? f.team_h_difficulty : f.team_a_difficulty, 
-            isHome: f.team_h === teamId 
-        }));
+/* pitch container */
+.pitch{
+  padding:26px 12px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  align-items:center;
+  justify-content:center;
 }
 
-function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
-function loadSquad() { const s = localStorage.getItem('kopala_saved_squad'); if(s) squad = JSON.parse(s); }
+/* rows and slots */
+.row{ display:flex; gap:12px; align-items:flex-end; justify-content:center; z-index:5 }
+.slot{
+  width:120px;
+  min-height:86px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  transition:transform .18s ease, box-shadow .18s ease;
+  position:relative;
+}
+.slot.selected{ transform:translateY(-6px) scale(1.03); box-shadow:0 18px 40px rgba(10,20,30,0.08) }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const wcBtn = document.getElementById('wildcard-btn');
-    if (wcBtn) wcBtn.onclick = runAIWildcard;
-    const fs = document.getElementById('formation-select');
-    if (fs) fs.onchange = (e) => changeFormation(e.target.value);
-    syncData();
-});
+/* jersey */
+.jersey{
+  width:60px;
+  height:54px;
+  cursor:pointer;
+  background-color:var(--team-main,#ddd);
+  clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+  transition: transform .18s ease, box-shadow .18s ease;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  position:relative;
+  border-radius:6px;
+  box-shadow:0 6px 18px rgba(7,11,13,0.06);
+}
+
+/* small price/flag on jersey top-right */
+.jersey::after{
+  content: attr(data-price);
+  position:absolute;
+  top:6px;
+  right:6px;
+  font-size:11px;
+  padding:2px 6px;
+  border-radius:12px;
+  background:rgba(0,0,0,0.6);
+  color:#fff;
+  font-weight:700;
+  display:block;
+}
+
+/* player card under jersey */
+.player-card{
+  width:100%;
+  background:var(--card-bg);
+  border-radius:10px;
+  padding:8px 10px;
+  box-shadow:0 6px 18px rgba(10,20,30,0.04);
+  border:1px solid rgba(10,20,30,0.03);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:center;
+}
+
+/* player name & small meta row */
+.p-name{
+  font-weight:800;
+  font-size:0.95rem;
+  color:var(--fpl-purple);
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+  cursor:pointer;
+}
+.p-meta{
+  display:flex;
+  gap:8px;
+  width:100%;
+  justify-content:center;
+  align-items:center;
+  font-size:0.82rem;
+  color:var(--muted);
+}
+.p-xp{ color:var(--fpl-green); font-weight:800; font-size:0.82rem }
+
+/* fixtures */
+.card-fixtures{
+  display:flex;
+  gap:6px;
+  width:100%;
+  justify-content:space-between;
+  margin-top:4px;
+}
+.fix-item{
+  flex:1;
+  background:#f7fafc;
+  padding:6px 4px;
+  border-radius:6px;
+  font-size:12px;
+  color:#263445;
+  text-align:center;
+  border:1px solid rgba(10,20,30,0.03);
+}
+
+/* difficulty indicators */
+.diff-2{ border-left:4px solid var(--fpl-green); }
+.diff-3{ border-left:4px solid #ffd166; }
+.diff-4{ border-left:4px solid var(--fpl-pink); }
+
+/* bench row */
+.bench-area{
+  margin-top:12px;
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+/* hidden picker - show on slot hover, keep accessible */
+.hidden-picker{
+  width:100%;
+  margin-top:6px;
+  opacity:0;
+  height:0;
+  border-radius:8px;
+  transition:all .18s ease;
+  pointer-events:none;
+}
+.slot:hover .hidden-picker{
+  opacity:1;
+  height:auto;
+  pointer-events:auto;
+  transform:translateY(0);
+  margin-top:6px;
+  display:block;
+}
+
+/* style native select inside */
+.hidden-picker{
+  appearance:none;
+  -webkit-appearance:none;
+  background:#fff;
+  border:1px solid rgba(10,20,30,0.06);
+  padding:8px 10px;
+  color:#0f172a;
+  font-weight:700;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* picker small caret */
+.hidden-picker::-ms-expand{ display:none }
+
+/* STATS SUMMARY panel (right column in original layout) */
+.stats-summary{
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+  gap:14px;
+  margin-top:18px;
+}
+.stat-box, .stat-item{
+  background:var(--card-bg);
+  border-radius:12px;
+  padding:14px;
+  border:1px solid rgba(10,20,30,0.03);
+  box-shadow:0 8px 26px rgba(10,20,30,0.04);
+  text-align:center;
+}
+.stat-label{ font-size:0.75rem; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px }
+.stat-value{ font-size:1.6rem; font-weight:900; color:var(--fpl-purple) }
+
+/* action buttons */
+.btn-group{ display:flex; gap:12px; flex-wrap:wrap }
+.ai-action-btn, .btn-primary, .btn-reset{
+  display:inline-flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  padding:10px 18px;
+  border-radius:999px;
+  font-weight:800;
+  border:1px solid rgba(10,20,30,0.06);
+  background:linear-gradient(90deg, #fff 0%, #fbfbff 100%);
+  color:var(--fpl-purple);
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+  box-shadow:0 6px 18px rgba(7,11,13,0.04);
+}
+.ai-action-btn{
+  background: linear-gradient(90deg, rgba(55,0,60,0.98) 0%, rgba(0,255,135,0.06) 100%);
+  color:#fff;
+  border:none;
+  box-shadow:0 12px 30px rgba(0,255,135,0.08);
+}
+.ai-action-btn:hover{ transform:translateY(-3px) }
+
+/* TRANSFER CARD / ANALYSIS */
+.ai-card{
+  margin-top:18px;
+  background:var(--card-bg);
+  border-radius:14px;
+  padding:16px;
+  border:1px solid rgba(10,20,30,0.04);
+  box-shadow:var(--shadow);
+}
+.verdict-label{ display:flex; gap:8px; align-items:center; color:var(--fpl-purple); font-weight:900 }
+.transfer-row{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px;
+  border-radius:10px;
+  background:linear-gradient(180deg,#fff,#fbfbff);
+  border:1px solid rgba(10,20,30,0.03);
+}
+
+/* modal - reuse same modal classes as JS creates */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(5,8,12,0.6);
+  z-index:3000;
+  backdrop-filter: blur(4px);
+  padding:36px 20px;
+}
+.modal .modal-content{
+  max-width:720px;
+  margin:40px auto;
+  background:var(--card-bg);
+  border-radius:14px;
+  padding:22px;
+  border:1px solid rgba(55,0,60,0.06);
+  box-shadow:0 24px 60px rgba(7,11,13,0.12);
+  color:var(--fpl-purple);
+}
+
+/* close button */
+.close-btn, #close-player-modal, #close-modal{
+  background:transparent;
+  border:none;
+  color:var(--muted);
+  font-size:20px;
+  cursor:pointer;
+}
+.close-btn:hover, #close-player-modal:hover, #close-modal:hover{ color:var(--fpl-pink) }
+
+/* analysis section inside modal */
+.analysis-section h3{
+  color:var(--fpl-green);
+  margin:0 0 8px 0;
+  font-size:1.05rem;
+}
+.transfer-item{
+  background: #fff;
+  border-left:4px solid var(--fpl-pink);
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:8px;
+  color:var(--fpl-purple);
+  font-weight:700;
+}
+
+/* player modal content */
+#player-modal-content h3{ margin:0 0 6px 0; font-size:1.2rem }
+#player-modal-content p{ margin:6px 0; color:#425066 }
+#player-modal .card-fixtures{ margin-top:10px }
+
+/* responsive tweaks */
+@media (max-width:920px){
+  .slot{ width:100px }
+  .jersey{ width:52px; height:46px }
+  .player-card{ padding:8px }
+  .main-container{ padding:10px }
+  .pitch-outer-wrap{ padding:12px }
+}
+@media (max-width:560px){
+  .row{ gap:8px }
+  .slot{ width:92px }
+  .stats-summary{ grid-template-columns:1fr; padding:12px }
+  .status-bar{ flex-direction:column; align-items:flex-start; gap:8px; }
+}
+
+/* small helpers */
+.text-muted{ color:var(--muted) }
+.u-center{ text-align:center }
+.hidden{ display:none }
+
+
+
+/* --- JS-INJECTED PICKER CONTROLS --- */
+
+/* This targets the wrapper div the JS creates */
+.status-bar div[style*="inline-flex"] {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 12px !important;
+    margin-left: 0 !important; /* Resetting the JS inline margin */
+    padding: 10px;
+    background: rgba(0,0,0,0.02);
+    border-radius: 12px;
+}
+
+/* Style the Labels */
+.status-bar label {
+    font-size: 0.7rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--fpl-on-container);
+    opacity: 0.6;
+    font-weight: 800 !important;
+}
+
+/* Style the Numeric Inputs (Min Price, Max Price, Min Own) */
+#picker-min-price, 
+#picker-max-price, 
+#picker-min-ownership {
+    border: 1px solid var(--fpl-border) !important;
+    background: var(--fpl-container) !important;
+    color: var(--fpl-on-container) !important;
+    border-radius: 8px !important;
+    padding: 5px 8px !important;
+    font-weight: 700 !important;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+/* Style the Sort Dropdown */
+#picker-sort {
+    border: 1px solid var(--fpl-border) !important;
+    background: var(--fpl-container) !important;
+    color: var(--fpl-on-container) !important;
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Hover & Focus Effects */
+#picker-min-price:focus, 
+#picker-max-price:focus, 
+#picker-sort:focus {
+    border-color: var(--fpl-primary) !important;
+    box-shadow: 0 0 0 2px rgba(255, 0, 90, 0.1);
+}
+
+/* --- UPDATED STATS & BANK COLORS --- */
+
+/* Neutralize the Stats Values */
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #2d3436 !important; /* Neutral Dark Slate instead of Purple */
+}
+
+/* Specifically fix the Bank Display */
+#budget-val {
+  background: transparent !important; /* Remove any background blob */
+  color: #2d3436 !important;      /* Force Neutral Dark Slate */
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 900 !important;
+}
+
+/* Keep the AI Rating Green */
+#team-rating {
+  color: #00ff87 !important;
+}
+
+/* Keep Predicted Points Purple (Optional - change to #2d3436 if you want total neutrality) */
+#v-xp {
+  color: var(--fpl-purple) !important;
+}
+
+
+
+/* --- 2025/26 EPL JERSEY LIBRARY --- */
+.jersey.gkp_color { background-color: #e1ff00 !important; border-bottom: 4px solid #000; }
+
+.jersey.arsenal          { background-color: #ef0107; border-bottom: 4px solid #ffffff; }
+.jersey.aston_villa      { background-color: #95bfe5; border-bottom: 4px solid #670e36; }
+.jersey.bournemouth      { background-color: #da291c; border-bottom: 4px solid #000000; }
+.jersey.brentford        { background-color: #e30613; border-bottom: 4px solid #ffffff; }
+.jersey.brighton         { background-color: #0057b8; border-bottom: 4px solid #ffffff; }
+.jersey.chelsea          { background-color: #034694; border-bottom: 4px solid #034694; }
+.jersey.crystal_palace   { background-color: #1b458f; border-bottom: 4px solid #c4122e; }
+.jersey.everton          { background-color: #003399; border-bottom: 4px solid #ffffff; }
+.jersey.fulham           { background-color: #ffffff; border-bottom: 4px solid #000000; }
+.jersey.ipswich          { background-color: #005696; border-bottom: 4px solid #ffffff; }
+.jersey.leicester        { background-color: #003090; border-bottom: 4px solid #ffffff; }
+.jersey.liverpool        { background-color: #c8102e; border-bottom: 4px solid #f6eb61; }
+.jersey.man_city         { background-color: #6cabdd; border-bottom: 4px solid #ffffff; }
+.jersey.man_utd          { background-color: #da291c; border-bottom: 4px solid #ffffff; }
+.jersey.newcastle        { background-color: #000000; border-bottom: 4px solid #ffffff; }
+.jersey.nottm_forest     { background-color: #dd0000; border-bottom: 4px solid #ffffff; }
+.jersey.southampton      { background-color: #d71920; border-bottom: 4px solid #ffffff; }
+.jersey.tottenham        { background-color: #ffffff; border-bottom: 4px solid #132257; }
+.jersey.west_ham         { background-color: #7a263a; border-bottom: 4px solid #1bb1e7; }
+.jersey.wolves           { background-color: #fdb913; border-bottom: 4px solid #231f20; }
+
+/* Empty slot circle */
+.jersey.default { 
+    background-color: rgba(255,255,255,0.15); 
+    border: 2px dashed rgba(255,255,255,0.3); 
+    clip-path: none; 
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+}
+
+
+
+.jersey {
+    position: relative; /* Anchor for the badge */
+}
+
+.captain-badge {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background: #37003c; /* FPL Purple */
+    color: #00ff87;      /* FPL Green */
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    z-index: 10;
+}
+
