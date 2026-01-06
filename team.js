@@ -1,6 +1,8 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v4.3.2)
- * Fixes: ITB, Predicted Points, and AI Rating Logic
+ * KOPALA FPL - MASTER ENGINE (v4.3.3)
+ * Full 2025/26 Season Update: 
+ * - Fixed: ITB, Predicted Points, Team Mapping, and AI Rating
+ * - Rule: Max 3 players per team, No duplicates
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -43,7 +45,7 @@ function calculateStats() {
             if (!slot.isBench) {
                 const xp = parseFloat(p.xp);
                 baseXP += xp;
-                // Track Captain (highest XP starter)
+                // Captaincy: Highest XP starter gets (C)
                 if (xp > maxXP) {
                     maxXP = xp;
                     captainName = p.name;
@@ -54,7 +56,7 @@ function calculateStats() {
 
     window.currentCaptain = captainName;
 
-    // 1. In The Bank
+    // 1. In The Bank (ITB)
     const bankVal = (100.0 - totalCost).toFixed(1);
     const budgetEl = document.getElementById('budget-val');
     if (budgetEl) {
@@ -62,18 +64,18 @@ function calculateStats() {
         budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#2d3436';
     }
 
-    // 2. Predicted Points (Starters + Captain Bonus)
+    // 2. Predicted Points (Total xP + Captain Bonus)
     const totalXP = (baseXP + maxXP).toFixed(1);
     const xpEl = document.getElementById('v-xp');
     if (xpEl) xpEl.textContent = totalXP;
 
-    // 3. AI Rating (Scales totalXP against a target of 75)
+    // 3. AI Rating (Target of 75 points for 100% rating)
     const ratingPercent = Math.min(100, Math.max(0, (totalXP / 75) * 100)).toFixed(0);
     const ratingEl = document.getElementById('team-rating');
     if (ratingEl) ratingEl.textContent = `${ratingPercent}%`;
 }
 
-// --- 2. DATA SYNC ---
+// --- 2. DATA SYNC & 2025/26 MAPPING ---
 async function syncData() {
     try {
         const [bootRes, fixRes] = await Promise.all([
@@ -83,8 +85,19 @@ async function syncData() {
         const data = await bootRes.json();
         const rawFixtures = await fixRes.json();
 
+        // Updated 2025/26 Team Slug Mapping
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+            
+            // Explicit overrides for 25/26 Clubs
+            if (slug.includes('man_city')) slug = 'man_city';
+            if (slug.includes('man_utd')) slug = 'man_utd';
+            if (slug.includes('forest')) slug = 'nottm_forest';
+            if (slug.includes('leeds')) slug = 'leeds';           // Promoted
+            if (slug.includes('burnley')) slug = 'burnley';       // Promoted
+            if (slug.includes('sunderland')) slug = 'sunderland'; // Promoted
+            if (slug.includes('spurs') || slug.includes('tottenham')) slug = 'spurs';
+            
             teamsDB[t.id] = slug;
         });
 
@@ -102,7 +115,10 @@ async function syncData() {
         fixturesDB = rawFixtures;
         loadSquad();
         renderPitch();
-    } catch (e) { console.error("Sync Error", e); }
+    } catch (e) { 
+        console.error("Sync Error: ", e); 
+        alert("Check API connection or console.");
+    }
 }
 
 // --- 3. UI RENDERING ---
@@ -111,7 +127,6 @@ function renderPitch() {
     const bench = document.getElementById('bench-container');
     if(!pitch || !bench) return;
     
-    // CRITICAL: Update stats before building cards
     calculateStats(); 
 
     pitch.innerHTML = ''; bench.innerHTML = '';
@@ -136,7 +151,7 @@ function createSlotUI(slotData) {
     const p = playerDB.find(p => p.name === slotData.name);
     const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
     
-    // Validation helpers for picker
+    // Squad State for Validation
     const currentSquadNames = squad.map(s => s.name).filter(n => n && n !== slotData.name);
     const teamCounts = {};
     squad.forEach(s => {
@@ -158,7 +173,7 @@ function createSlotUI(slotData) {
         </div>
         
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
-            <option value="">-- Pick --</option>
+            <option value="">-- Select --</option>
             ${playerDB.filter(x => {
                 const samePos = x.pos === slotData.pos;
                 const notDup = !currentSquadNames.includes(x.name);
@@ -166,14 +181,14 @@ function createSlotUI(slotData) {
                 return samePos && notDup && underLimit;
             })
             .sort((a,b) => b.ownership - a.ownership)
-            .slice(0, 20)
-            .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name}</option>`).join('')}
+            .slice(0, 30)
+            .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name} (£${x.price})</option>`).join('')}
         </select>
     `;
     return div;
 }
 
-// --- 4. CONTROLS ---
+// --- 4. ENGINE CONTROLS ---
 function updatePlayer(id, name) {
     const s = squad.find(slot => slot.id === id);
     if (s) {
@@ -190,6 +205,7 @@ function handleSwap(id) {
     } else {
         const p1 = squad.find(s => s.id === selectedSlotId);
         const p2 = squad.find(s => s.id === id);
+        // Swap logic: must be same position OR both must be outfield
         if (p1.id !== p2.id && (p1.pos === p2.pos || (!p1.isBench && !p2.isBench))) {
             const temp = p1.name;
             p1.name = p2.name;
@@ -201,21 +217,27 @@ function handleSwap(id) {
     }
 }
 
+// --- 5. TEMPLATE TEAM (AI WILDCARD) ---
 function runAIWildcard() {
     let budget = 100.0;
-    let names = [];
+    let selectedNames = [];
     const teamCounts = {};
     const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
 
-    const pool = [...playerDB].sort((a, b) => b.xp - a.xp);
+    // Sort by Expected Points (XP) then Ownership
+    const pool = [...playerDB].sort((a, b) => b.xp - a.xp || b.ownership - a.ownership);
 
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
         let count = 0;
         for (let p of pool) {
             if (count >= posLimits[pos]) break;
+            
             const price = parseFloat(p.price);
-            if (p.pos === pos && (teamCounts[p.teamId] || 0) < 3 && price <= (budget - (15 - names.length) * 4.3)) {
-                names.push(p.name);
+            const slotsLeft = 15 - selectedNames.length;
+            const minReserve = slotsLeft * 4.2; // Reserve ~£4.2m for each remaining slot
+
+            if (p.pos === pos && (teamCounts[p.teamId] || 0) < 3 && price <= (budget - minReserve)) {
+                selectedNames.push(p.name);
                 teamCounts[p.teamId] = (teamCounts[p.teamId] || 0) + 1;
                 budget -= price;
                 count++;
@@ -223,11 +245,17 @@ function runAIWildcard() {
         }
     });
 
-    squad.forEach((slot, i) => {
-        const matchingName = names.find(n => playerDB.find(x => x.name === n).pos === slot.pos);
+    // Reset squad and fill with AI choices
+    squad.forEach((slot) => {
+        const matchingName = selectedNames.find(n => {
+            const pObj = playerDB.find(x => x.name === n);
+            return pObj.pos === slot.pos;
+        });
         if (matchingName) {
             slot.name = matchingName;
-            names = names.filter(n => n !== matchingName);
+            selectedNames = selectedNames.filter(n => n !== matchingName);
+        } else {
+            slot.name = ""; // Clear if no player found
         }
     });
 
@@ -235,14 +263,17 @@ function runAIWildcard() {
     renderPitch();
 }
 
-function saveSquad() { localStorage.setItem('kopala_v4_3_2', JSON.stringify(squad)); }
+function saveSquad() { localStorage.setItem('kopala_v4_3_3', JSON.stringify(squad)); }
 function loadSquad() { 
-    const s = localStorage.getItem('kopala_v4_3_2'); 
+    const s = localStorage.getItem('kopala_v4_3_3'); 
     if(s) squad = JSON.parse(s); 
 }
 
+// --- 6. INITIALIZE ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Hook Template Button
     const btn = document.getElementById('wildcard-btn') || document.getElementById('ai-template-btn');
     if (btn) btn.onclick = runAIWildcard;
+    
     syncData();
 });
