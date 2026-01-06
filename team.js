@@ -1,8 +1,7 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v4.3.3)
- * Full 2025/26 Season Update: 
- * - Fixed: ITB, Predicted Points, Team Mapping, and AI Rating
- * - Rule: Max 3 players per team, No duplicates
+ * KOPALA FPL - MASTER ENGINE (v4.3.7)
+ * Full 2025/26 Season Production Script
+ * Features: Dynamic Formations, GK Swap Locks, 20-Team Mapping
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -11,6 +10,7 @@ let teamsDB = {};
 let fixturesDB = [];
 let selectedSlotId = null;
 
+// Initial Squad Structure
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -29,7 +29,7 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. CORE STATS ENGINE ---
+// --- 1. CORE STATS & FORMATION ENGINE ---
 function calculateStats() {
     let totalCost = 0;
     let baseXP = 0;
@@ -39,24 +39,18 @@ function calculateStats() {
     squad.forEach(slot => {
         const p = playerDB.find(x => x.name === slot.name);
         if (p) {
-            const price = parseFloat(p.price);
-            totalCost += price;
-
+            totalCost += parseFloat(p.price);
             if (!slot.isBench) {
                 const xp = parseFloat(p.xp);
                 baseXP += xp;
-                // Captaincy: Highest XP starter gets (C)
-                if (xp > maxXP) {
-                    maxXP = xp;
-                    captainName = p.name;
-                }
+                if (xp > maxXP) { maxXP = xp; captainName = p.name; }
             }
         }
     });
 
     window.currentCaptain = captainName;
 
-    // 1. In The Bank (ITB)
+    // Update ITB
     const bankVal = (100.0 - totalCost).toFixed(1);
     const budgetEl = document.getElementById('budget-val');
     if (budgetEl) {
@@ -64,18 +58,18 @@ function calculateStats() {
         budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#2d3436';
     }
 
-    // 2. Predicted Points (Total xP + Captain Bonus)
+    // Update Predicted Points
     const totalXP = (baseXP + maxXP).toFixed(1);
     const xpEl = document.getElementById('v-xp');
     if (xpEl) xpEl.textContent = totalXP;
 
-    // 3. AI Rating (Target of 75 points for 100% rating)
+    // Update AI Rating
     const ratingPercent = Math.min(100, Math.max(0, (totalXP / 75) * 100)).toFixed(0);
     const ratingEl = document.getElementById('team-rating');
     if (ratingEl) ratingEl.textContent = `${ratingPercent}%`;
 }
 
-// --- 2. DATA SYNC & 2025/26 MAPPING ---
+// --- 2. DATA SYNC (2025/26 Team Mappings) ---
 async function syncData() {
     try {
         const [bootRes, fixRes] = await Promise.all([
@@ -85,19 +79,16 @@ async function syncData() {
         const data = await bootRes.json();
         const rawFixtures = await fixRes.json();
 
-        // Updated 2025/26 Team Slug Mapping
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-            
-            // Explicit overrides for 25/26 Clubs
-            if (slug.includes('man_city')) slug = 'man_city';
-            if (slug.includes('man_utd')) slug = 'man_utd';
+            // Canonical Slug Mapping for CSS
+            if (slug.includes('city')) slug = 'man_city';
+            if (slug.includes('united') && slug.includes('man')) slug = 'man_utd';
             if (slug.includes('forest')) slug = 'nottm_forest';
-            if (slug.includes('leeds')) slug = 'leeds';           // Promoted
-            if (slug.includes('burnley')) slug = 'burnley';       // Promoted
-            if (slug.includes('sunderland')) slug = 'sunderland'; // Promoted
-            if (slug.includes('spurs') || slug.includes('tottenham')) slug = 'spurs';
-            
+            if (slug.includes('spurs') || slug.includes('tottenham')) slug = 'tottenham';
+            if (slug.includes('palace')) slug = 'crystal_palace';
+            if (slug.includes('wolves')) slug = 'wolves';
+            if (slug.includes('ham')) slug = 'west_ham';
             teamsDB[t.id] = slug;
         });
 
@@ -117,27 +108,30 @@ async function syncData() {
         renderPitch();
     } catch (e) { 
         console.error("Sync Error: ", e); 
-        alert("Check API connection or console.");
     }
 }
 
-// --- 3. UI RENDERING ---
+// --- 3. UI RENDERING & FORMATION LOGIC ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
     if(!pitch || !bench) return;
     
     calculateStats(); 
-
     pitch.innerHTML = ''; bench.innerHTML = '';
 
+    // Render Starting 11 by Row
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        const row = document.createElement('div');
-        row.className = 'row';
-        squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
-        pitch.appendChild(row);
+        const startersInPos = squad.filter(s => !s.isBench && s.pos === pos);
+        if (startersInPos.length > 0) {
+            const row = document.createElement('div');
+            row.className = 'row';
+            startersInPos.forEach(p => row.appendChild(createSlotUI(p)));
+            pitch.appendChild(row);
+        }
     });
 
+    // Render Bench
     const bRow = document.createElement('div');
     bRow.className = 'row bench-row';
     squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
@@ -151,7 +145,6 @@ function createSlotUI(slotData) {
     const p = playerDB.find(p => p.name === slotData.name);
     const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
     
-    // Squad State for Validation
     const currentSquadNames = squad.map(s => s.name).filter(n => n && n !== slotData.name);
     const teamCounts = {};
     squad.forEach(s => {
@@ -167,37 +160,19 @@ function createSlotUI(slotData) {
                     ${isCaptain ? '<div class="captain-badge">C</div>' : ''}
                 </div>
             </div>
-            <div class="card-footer">
-                <div class="p-name-box">${slotData.name || slotData.pos}</div>
-            </div>
+            <div class="p-name-box">${slotData.name || slotData.pos}</div>
         </div>
-        
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
             <option value="">-- Select --</option>
-            ${playerDB.filter(x => {
-                const samePos = x.pos === slotData.pos;
-                const notDup = !currentSquadNames.includes(x.name);
-                const underLimit = (teamCounts[x.teamId] || 0) < 3 || (p && x.teamId === p.teamId);
-                return samePos && notDup && underLimit;
-            })
-            .sort((a,b) => b.ownership - a.ownership)
-            .slice(0, 30)
-            .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name} (£${x.price})</option>`).join('')}
+            ${playerDB.filter(x => x.pos === slotData.pos && !currentSquadNames.includes(x.name) && ((teamCounts[x.teamId] || 0) < 3 || (p && x.teamId === p.teamId)))
+                .sort((a,b) => b.ownership - a.ownership).slice(0, 25)
+                .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name}</option>`).join('')}
         </select>
     `;
     return div;
 }
 
-// --- 4. ENGINE CONTROLS ---
-function updatePlayer(id, name) {
-    const s = squad.find(slot => slot.id === id);
-    if (s) {
-        s.name = name;
-        saveSquad();
-        renderPitch();
-    }
-}
-
+// --- 4. ENGINE CONTROLS (Swap & Formation) ---
 function handleSwap(id) {
     if (selectedSlotId === null) {
         selectedSlotId = id;
@@ -205,75 +180,51 @@ function handleSwap(id) {
     } else {
         const p1 = squad.find(s => s.id === selectedSlotId);
         const p2 = squad.find(s => s.id === id);
-        // Swap logic: must be same position OR both must be outfield
-        if (p1.id !== p2.id && (p1.pos === p2.pos || (!p1.isBench && !p2.isBench))) {
-            const temp = p1.name;
-            p1.name = p2.name;
-            p2.name = temp;
-            saveSquad();
+
+        if (p1.id !== p2.id) {
+            const involvesGK = p1.pos === 'GKP' || p2.pos === 'GKP';
+            const differentPos = p1.pos !== p2.pos;
+
+            // GK Rule: Only swap GKP with GKP
+            if (involvesGK && differentPos) {
+                alert("Goalkeepers can only be swapped with other Goalkeepers.");
+            } else {
+                // Swap identity to allow formation change
+                const tempName = p1.name;
+                const tempPos = p1.pos;
+                p1.name = p2.name; p1.pos = p2.pos;
+                p2.name = tempName; p2.pos = tempPos;
+
+                if (!validateFormation()) {
+                    alert("Invalid Formation! (Min: 3 DEF, 2 MID, 1 FWD)");
+                    p2.name = p1.name; p2.pos = p1.pos;
+                    p1.name = tempName; p1.pos = tempPos;
+                } else {
+                    saveSquad();
+                }
+            }
         }
         selectedSlotId = null;
         renderPitch();
     }
 }
 
-// --- 5. TEMPLATE TEAM (AI WILDCARD) ---
-function runAIWildcard() {
-    let budget = 100.0;
-    let selectedNames = [];
-    const teamCounts = {};
-    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
-
-    // Sort by Expected Points (XP) then Ownership
-    const pool = [...playerDB].sort((a, b) => b.xp - a.xp || b.ownership - a.ownership);
-
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        let count = 0;
-        for (let p of pool) {
-            if (count >= posLimits[pos]) break;
-            
-            const price = parseFloat(p.price);
-            const slotsLeft = 15 - selectedNames.length;
-            const minReserve = slotsLeft * 4.2; // Reserve ~£4.2m for each remaining slot
-
-            if (p.pos === pos && (teamCounts[p.teamId] || 0) < 3 && price <= (budget - minReserve)) {
-                selectedNames.push(p.name);
-                teamCounts[p.teamId] = (teamCounts[p.teamId] || 0) + 1;
-                budget -= price;
-                count++;
-            }
-        }
-    });
-
-    // Reset squad and fill with AI choices
-    squad.forEach((slot) => {
-        const matchingName = selectedNames.find(n => {
-            const pObj = playerDB.find(x => x.name === n);
-            return pObj.pos === slot.pos;
-        });
-        if (matchingName) {
-            slot.name = matchingName;
-            selectedNames = selectedNames.filter(n => n !== matchingName);
-        } else {
-            slot.name = ""; // Clear if no player found
-        }
-    });
-
-    saveSquad();
-    renderPitch();
+function validateFormation() {
+    const starters = squad.filter(s => !s.isBench);
+    const counts = { 'GKP': 0, 'DEF': 0, 'MID': 0, 'FWD': 0 };
+    starters.forEach(s => counts[s.pos]++);
+    return (counts['GKP'] === 1 && counts['DEF'] >= 3 && counts['MID'] >= 2 && counts['FWD'] >= 1);
 }
 
-function saveSquad() { localStorage.setItem('kopala_v4_3_3', JSON.stringify(squad)); }
+function updatePlayer(id, name) {
+    const s = squad.find(slot => slot.id === id);
+    if (s) { s.name = name; saveSquad(); renderPitch(); }
+}
+
+function saveSquad() { localStorage.setItem('kopala_v4_3_7', JSON.stringify(squad)); }
 function loadSquad() { 
-    const s = localStorage.getItem('kopala_v4_3_3'); 
+    const s = localStorage.getItem('kopala_v4_3_7'); 
     if(s) squad = JSON.parse(s); 
 }
 
-// --- 6. INITIALIZE ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Hook Template Button
-    const btn = document.getElementById('wildcard-btn') || document.getElementById('ai-template-btn');
-    if (btn) btn.onclick = runAIWildcard;
-    
-    syncData();
-});
+document.addEventListener('DOMContentLoaded', syncData);
