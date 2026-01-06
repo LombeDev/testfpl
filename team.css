@@ -547,22 +547,37 @@ body{
 
 
 
-/* Captain Badge Styling */
+/* Container must be relative for absolute children to stay inside */
+.jersey {
+    position: relative;
+    width: 60px; /* Adjust based on your jersey size */
+    height: 70px;
+    margin: 0 auto;
+    cursor: pointer;
+}
+
+/* The Captain Badge */
 .captain-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #37003c; /* FPL Purple */
-    color: #00ff87;      /* FPL Green */
-    width: 20px;
-    height: 20px;
+    /* Move to the top-right of the jersey */
+    top: -2px; 
+    right: -8px; 
+    
+    background: #37003c; /* FPL Signature Purple */
+    color: #00ff87;      /* FPL Signature Green */
+    
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    font-size: 12px;
+    
+    font-size: 14px;
     font-weight: 900;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 10;
+    
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 5;
+    pointer-events: none; /* Allows clicks to pass through to the jersey */
 }
