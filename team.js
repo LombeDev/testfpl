@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v4.3.1)
- * Fixes: Duplicate Player Prevention, 3-Per-Team Rule, Template Team Logic
+ * KOPALA FPL - MASTER ENGINE (v4.3.2)
+ * Fixes: ITB, Predicted Points, and AI Rating Logic
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -27,7 +27,53 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. DATA SYNC ---
+// --- 1. CORE STATS ENGINE ---
+function calculateStats() {
+    let totalCost = 0;
+    let baseXP = 0;
+    let maxXP = 0;
+    let captainName = "";
+
+    squad.forEach(slot => {
+        const p = playerDB.find(x => x.name === slot.name);
+        if (p) {
+            const price = parseFloat(p.price);
+            totalCost += price;
+
+            if (!slot.isBench) {
+                const xp = parseFloat(p.xp);
+                baseXP += xp;
+                // Track Captain (highest XP starter)
+                if (xp > maxXP) {
+                    maxXP = xp;
+                    captainName = p.name;
+                }
+            }
+        }
+    });
+
+    window.currentCaptain = captainName;
+
+    // 1. In The Bank
+    const bankVal = (100.0 - totalCost).toFixed(1);
+    const budgetEl = document.getElementById('budget-val');
+    if (budgetEl) {
+        budgetEl.textContent = `£${bankVal}m`;
+        budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#2d3436';
+    }
+
+    // 2. Predicted Points (Starters + Captain Bonus)
+    const totalXP = (baseXP + maxXP).toFixed(1);
+    const xpEl = document.getElementById('v-xp');
+    if (xpEl) xpEl.textContent = totalXP;
+
+    // 3. AI Rating (Scales totalXP against a target of 75)
+    const ratingPercent = Math.min(100, Math.max(0, (totalXP / 75) * 100)).toFixed(0);
+    const ratingEl = document.getElementById('team-rating');
+    if (ratingEl) ratingEl.textContent = `${ratingPercent}%`;
+}
+
+// --- 2. DATA SYNC ---
 async function syncData() {
     try {
         const [bootRes, fixRes] = await Promise.all([
@@ -39,9 +85,6 @@ async function syncData() {
 
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-            if (slug.includes('man_city')) slug = 'man_city';
-            if (slug.includes('man_utd')) slug = 'man_utd';
-            if (slug.includes('forest')) slug = 'nottm_forest';
             teamsDB[t.id] = slug;
         });
 
@@ -53,8 +96,7 @@ async function syncData() {
             pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
             price: (p.now_cost / 10).toFixed(1),
             xp: parseFloat(p.ep_next) || 0,
-            ownership: parseFloat(p.selected_by_percent) || 0,
-            status: p.status 
+            ownership: parseFloat(p.selected_by_percent) || 0
         }));
 
         fixturesDB = rawFixtures;
@@ -63,79 +105,52 @@ async function syncData() {
     } catch (e) { console.error("Sync Error", e); }
 }
 
-// --- 2. VALIDATION HELPERS ---
-function getTeamCounts() {
-    const counts = {};
-    squad.forEach(slot => {
-        if (!slot.name) return;
-        const p = playerDB.find(x => x.name === slot.name);
-        if (p) counts[p.teamId] = (counts[p.teamId] || 0) + 1;
-    });
-    return counts;
-}
+// --- 3. UI RENDERING ---
+function renderPitch() {
+    const pitch = document.getElementById('pitch-container');
+    const bench = document.getElementById('bench-container');
+    if(!pitch || !bench) return;
+    
+    // CRITICAL: Update stats before building cards
+    calculateStats(); 
 
-// --- 3. TEMPLATE TEAM (AI WILDCARD) ---
-function runAIWildcard() {
-    let budget = 100.0;
-    let tempSquad = [];
-    const teamCounts = {};
-    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
-
-    // Clear current names to start fresh
-    const sortedPlayers = [...playerDB].sort((a, b) => b.xp - a.xp || b.ownership - a.ownership);
+    pitch.innerHTML = ''; bench.innerHTML = '';
 
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        let count = 0;
-        for (let p of sortedPlayers) {
-            if (count >= posLimits[pos]) break;
-
-            const price = parseFloat(p.price);
-            const remainingSlots = 15 - tempSquad.length;
-            const buffer = remainingSlots * 4.3; // Reserve money for remaining slots
-
-            if (p.pos === pos && 
-                (teamCounts[p.teamId] || 0) < 3 && 
-                price <= (budget - buffer)) {
-                
-                tempSquad.push(p.name);
-                teamCounts[p.teamId] = (teamCounts[p.teamId] || 0) + 1;
-                budget -= price;
-                count++;
-            }
-        }
+        const row = document.createElement('div');
+        row.className = 'row';
+        squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
+        pitch.appendChild(row);
     });
 
-    // Map temp names back to the squad array
-    let nameIdx = 0;
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        squad.filter(s => s.pos === pos).forEach(slot => {
-            slot.name = tempSquad.find(n => {
-                const p = playerDB.find(x => x.name === n);
-                return p && p.pos === slot.pos && !squad.some(s2 => s2.name === n);
-            }) || "";
-            // Remove the name from temp list so it's not reused
-            tempSquad = tempSquad.filter(n => n !== slot.name);
-        });
-    });
-
-    saveSquad();
-    renderPitch();
+    const bRow = document.createElement('div');
+    bRow.className = 'row bench-row';
+    squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
+    bench.appendChild(bRow);
 }
 
-// --- 4. UI RENDERING ---
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
     
     const p = playerDB.find(p => p.name === slotData.name);
-    const teamCounts = getTeamCounts();
+    const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
+    
+    // Validation helpers for picker
     const currentSquadNames = squad.map(s => s.name).filter(n => n && n !== slotData.name);
+    const teamCounts = {};
+    squad.forEach(s => {
+        const pl = playerDB.find(x => x.name === s.name);
+        if(pl) teamCounts[pl.teamId] = (teamCounts[pl.teamId] || 0) + 1;
+    });
 
     div.innerHTML = `
         <div class="player-card-wrapper" onclick="handleSwap(${slotData.id})">
             <div class="card-visual-area">
                 ${p ? `<div class="price-tag">£${p.price}</div>` : ''}
-                <div class="jersey ${p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamSlug) : 'default'}"></div>
+                <div class="jersey ${p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamSlug) : 'default'}">
+                    ${isCaptain ? '<div class="captain-badge">C</div>' : ''}
+                </div>
             </div>
             <div class="card-footer">
                 <div class="p-name-box">${slotData.name || slotData.pos}</div>
@@ -145,38 +160,20 @@ function createSlotUI(slotData) {
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
             <option value="">-- Pick --</option>
             ${playerDB.filter(x => {
-                const isSamePos = x.pos === slotData.pos;
-                const isNotDuplicate = !currentSquadNames.includes(x.name);
-                const isUnderTeamLimit = (teamCounts[x.teamId] || 0) < 3 || (p && x.teamId === p.teamId);
-                return isSamePos && isNotDuplicate && isUnderTeamLimit;
+                const samePos = x.pos === slotData.pos;
+                const notDup = !currentSquadNames.includes(x.name);
+                const underLimit = (teamCounts[x.teamId] || 0) < 3 || (p && x.teamId === p.teamId);
+                return samePos && notDup && underLimit;
             })
             .sort((a,b) => b.ownership - a.ownership)
-            .slice(0, 25)
-            .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name} (£${x.price})</option>`).join('')}
+            .slice(0, 20)
+            .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name}</option>`).join('')}
         </select>
     `;
     return div;
 }
 
-// --- 5. CORE FUNCTIONS ---
-function renderPitch() {
-    const pitch = document.getElementById('pitch-container');
-    const bench = document.getElementById('bench-container');
-    if(!pitch || !bench) return;
-    
-    pitch.innerHTML = ''; bench.innerHTML = '';
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        const row = document.createElement('div');
-        row.className = 'row';
-        squad.filter(s => !s.isBench && s.pos === pos).forEach(p => row.appendChild(createSlotUI(p)));
-        pitch.appendChild(row);
-    });
-    const bRow = document.createElement('div');
-    bRow.className = 'row';
-    squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
-    bench.appendChild(bRow);
-}
-
+// --- 4. CONTROLS ---
 function updatePlayer(id, name) {
     const s = squad.find(slot => slot.id === id);
     if (s) {
@@ -204,15 +201,48 @@ function handleSwap(id) {
     }
 }
 
-function saveSquad() { localStorage.setItem('kopala_v4_3', JSON.stringify(squad)); }
+function runAIWildcard() {
+    let budget = 100.0;
+    let names = [];
+    const teamCounts = {};
+    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
+
+    const pool = [...playerDB].sort((a, b) => b.xp - a.xp);
+
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        let count = 0;
+        for (let p of pool) {
+            if (count >= posLimits[pos]) break;
+            const price = parseFloat(p.price);
+            if (p.pos === pos && (teamCounts[p.teamId] || 0) < 3 && price <= (budget - (15 - names.length) * 4.3)) {
+                names.push(p.name);
+                teamCounts[p.teamId] = (teamCounts[p.teamId] || 0) + 1;
+                budget -= price;
+                count++;
+            }
+        }
+    });
+
+    squad.forEach((slot, i) => {
+        const matchingName = names.find(n => playerDB.find(x => x.name === n).pos === slot.pos);
+        if (matchingName) {
+            slot.name = matchingName;
+            names = names.filter(n => n !== matchingName);
+        }
+    });
+
+    saveSquad();
+    renderPitch();
+}
+
+function saveSquad() { localStorage.setItem('kopala_v4_3_2', JSON.stringify(squad)); }
 function loadSquad() { 
-    const s = localStorage.getItem('kopala_v4_3'); 
+    const s = localStorage.getItem('kopala_v4_3_2'); 
     if(s) squad = JSON.parse(s); 
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // FIX: Ensure the button ID matches your HTML
-    const templateBtn = document.getElementById('wildcard-btn') || document.getElementById('ai-template-btn');
-    if (templateBtn) templateBtn.onclick = runAIWildcard;
+    const btn = document.getElementById('wildcard-btn') || document.getElementById('ai-template-btn');
+    if (btn) btn.onclick = runAIWildcard;
     syncData();
 });
