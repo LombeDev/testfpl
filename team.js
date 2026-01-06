@@ -1,5 +1,5 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v4.0.0)
+ * KOPALA FPL - MASTER ENGINE (v4.1.0)
  * Logic: High Ownership Priority + Auto-Captaincy + AI Rating
  */
 
@@ -8,7 +8,7 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
-window.currentCaptain = ""; // Track the highest xP starter
+window.currentCaptain = ""; // Global tracker for the highest xP starter
 
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
@@ -38,7 +38,6 @@ async function syncData() {
         const data = await bootRes.json();
         const rawFixtures = await fixRes.json();
 
-        // Map Team Slugs for 2025/26 Season
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
             if (slug.includes('man_city')) slug = 'man_city';
@@ -47,7 +46,6 @@ async function syncData() {
             teamsDB[t.id] = slug;
         });
 
-        // Map Player Data
         playerDB = data.elements.map(p => ({
             id: p.id,
             name: p.web_name,
@@ -65,38 +63,7 @@ async function syncData() {
     } catch (e) { console.error("Sync Error", e); }
 }
 
-// --- 2. AI SQUAD GENERATOR (Template/High Ownership) ---
-function runAIWildcard() {
-    let budget = 100.0;
-    const newSquad = [];
-    const teamCounts = {};
-    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
-
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        for (let i = 0; i < posLimits[pos]; i++) {
-            const buffer = 4.4 * (15 - newSquad.length);
-            const choice = playerDB.filter(p => 
-                p.pos === pos && !newSquad.some(s => s.name === p.name) && 
-                (teamCounts[p.teamId] || 0) < 3 && parseFloat(p.price) <= (budget - buffer)
-            ).sort((a, b) => b.ownership - a.ownership || b.xp - a.xp)[0];
-
-            if (choice) {
-                newSquad.push({ 
-                    id: newSquad.length, 
-                    pos: pos, 
-                    name: choice.name, 
-                    isBench: newSquad.length > 10 
-                });
-                teamCounts[choice.teamId] = (teamCounts[choice.teamId] || 0) + 1;
-                budget -= parseFloat(choice.price);
-            }
-        }
-    });
-    squad = newSquad;
-    changeFormation('3-4-3'); 
-}
-
-// --- 3. STATS & RATING LOGIC ---
+// --- 2. STATS & RATING LOGIC ---
 function updateStats() {
     let totalCost = 0;
     let baseXP = 0;
@@ -121,12 +88,12 @@ function updateStats() {
     const totalPredictedPoints = (baseXP + maxXP).toFixed(1);
     const bankVal = (100 - totalCost).toFixed(1);
     
-    // AI Rating Benchmark (72 pts is elite including captain)
+    // AI Rating Logic: Elite benchmark is ~72 pts (includes captain bonus)
     const eliteBenchmark = 72.0; 
     const ratingPercent = Math.min(100, (totalPredictedPoints / eliteBenchmark) * 100).toFixed(0);
 
-    // Update UI Elements
-    document.getElementById('v-xp').textContent = totalPredictedPoints;
+    const xpEl = document.getElementById('v-xp');
+    if (xpEl) xpEl.textContent = totalPredictedPoints;
     
     const ratingEl = document.getElementById('team-rating');
     if (ratingEl) {
@@ -143,13 +110,13 @@ function updateStats() {
     window.currentCaptain = captainName;
 }
 
-// --- 4. UI RENDERING ---
+// --- 3. UI RENDERING ---
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
     const bench = document.getElementById('bench-container');
     if(!pitch || !bench) return;
     
-    updateStats(); // Run stats first to get Captain ID
+    updateStats(); // Update stats first to identify captain
     
     pitch.innerHTML = ''; bench.innerHTML = '';
 
@@ -195,7 +162,32 @@ function createSlotUI(slotData) {
     return div;
 }
 
-// --- 5. INTERACTION HELPERS ---
+// --- 4. ENGINE CONTROLS ---
+function runAIWildcard() {
+    let budget = 100.0;
+    const newSquad = [];
+    const teamCounts = {};
+    const posLimits = { 'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3 };
+
+    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
+        for (let i = 0; i < posLimits[pos]; i++) {
+            const buffer = 4.4 * (15 - newSquad.length);
+            const choice = playerDB.filter(p => 
+                p.pos === pos && !newSquad.some(s => s.name === p.name) && 
+                (teamCounts[p.teamId] || 0) < 3 && parseFloat(p.price) <= (budget - buffer)
+            ).sort((a, b) => b.ownership - a.ownership || b.xp - a.xp)[0];
+
+            if (choice) {
+                newSquad.push({ id: newSquad.length, pos: pos, name: choice.name, isBench: newSquad.length > 10 });
+                teamCounts[choice.teamId] = (teamCounts[choice.teamId] || 0) + 1;
+                budget -= parseFloat(choice.price);
+            }
+        }
+    });
+    squad = newSquad;
+    changeFormation('3-4-3'); 
+}
+
 function handleSwap(id) {
     if (selectedSlotId === null) { selectedSlotId = id; } 
     else {
@@ -236,13 +228,10 @@ function getNextFixtures(teamId) {
 function saveSquad() { localStorage.setItem('kopala_saved_squad', JSON.stringify(squad)); }
 function loadSquad() { const s = localStorage.getItem('kopala_saved_squad'); if(s) squad = JSON.parse(s); }
 
-// --- 6. INITIALIZE ---
 document.addEventListener('DOMContentLoaded', () => {
     const wcBtn = document.getElementById('wildcard-btn');
     if (wcBtn) wcBtn.onclick = runAIWildcard;
-
     const fs = document.getElementById('formation-select');
     if (fs) fs.onchange = (e) => changeFormation(e.target.value);
-
     syncData();
 });
