@@ -277,3 +277,82 @@ body {
     justify-content: center;
     border: 1px solid white;
 }
+
+
+
+/* --- PITCH CONTAINER --- */
+#pitch-container {
+    background: #27a644; /* Pitch Green */
+    padding: 10px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px; /* Constraints for mobile feel */
+    margin: 0 auto;
+    border-radius: 8px;
+    min-height: 400px;
+}
+
+/* --- ROWS & SLOTS --- */
+.row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 5px; /* Tight gap for mobile */
+}
+
+.slot {
+    flex: 1;
+    max-width: 18%; /* Fits 5 players across nicely */
+    text-align: center;
+}
+
+/* --- PLAYER CARDS --- */
+.player-card-wrapper {
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.player-card-wrapper:active {
+    transform: scale(0.95); /* Touch feedback */
+}
+
+/* --- RESPONSIVE JERSEYS --- */
+.jersey {
+    width: 45px;  /* Desktop size */
+    height: 50px;
+    margin: 0 auto;
+    position: relative;
+    border-radius: 4px 4px 0 0;
+}
+
+.p-name-box {
+    background: #37003c;
+    color: white;
+    font-size: 10px; /* Small for mobile */
+    padding: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: -2px;
+}
+
+/* --- MOBILE SPECIFIC FIXES (< 480px) --- */
+@media (max-width: 480px) {
+    .jersey {
+        width: 35px; /* Smaller jerseys for phones */
+        height: 40px;
+    }
+    .p-name-box {
+        font-size: 8px; /* Tiny font for long names like 'Alexander-Arnold' */
+    }
+    .price-tag {
+        font-size: 9px;
+    }
+    .captain-badge {
+        width: 14px;
+        height: 14px;
+        font-size: 8px;
+    }
+}
