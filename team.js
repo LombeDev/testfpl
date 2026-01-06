@@ -1,9 +1,12 @@
 /**
- * KOPALA FPL - AI MASTER ENGINE (v3.6)
- * THE COMPLETE MASTER SCRIPT: Advanced AI Intelligence & Differential Logic
+ * KOPALA FPL - AI MASTER ENGINE (v3.6.1)
+ * The team.js file with small runtime DOM bootstrapping:
+ * - Automatically creates a player inspect modal if missing
+ * - Optionally injects picker filter controls if not present (non-destructive)
+ * - Ensures formation select has id="formation-select" so script bindings work
  *
- * Updates: added player modal, filtered pickers, transfer simulation preview,
- * captain confidence, chip preview hooks, and fixed a couple of template bugs.
+ * Drop-in replacement for the existing team.js. It will not overwrite your HTML,
+ * only create missing elements it depends on so you don't have to edit markup.
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -12,7 +15,7 @@ let teamsDB = {};
 let fixturesDB = [];
 let selectedSlotId = null;
 
-// Player picker filter state (controlled by UI elements you should add)
+// Player picker filter state (controlled by UI elements if present)
 const pickerFilters = {
     maxPrice: 15.0,
     minPrice: 4.0,
@@ -38,6 +41,102 @@ let squad = [
     { id: 13, pos: 'MID', name: '', isBench: true },
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
+
+// --- UI BOOTSTRAP HELPERS ---
+// Create minimal required UI elements at runtime if they're missing on the page.
+// This keeps integration friction low: you don't need to edit your HTML to get player modal or picker controls.
+
+function ensureUIElements() {
+    ensurePlayerModal();
+    ensurePickerControls();
+    ensureFormationSelectId();
+    // Ensure analysis modal results container exists
+    const analysisResults = document.getElementById('analysis-results');
+    if (!analysisResults) {
+        // If #analysis-modal exists but missing #analysis-results, create it inside
+        const analysisModal = document.getElementById('analysis-modal');
+        if (analysisModal) {
+            const container = document.createElement('div');
+            container.id = 'analysis-results';
+            analysisModal.querySelector('.modal-content')?.appendChild(container);
+        }
+    }
+}
+
+function ensurePlayerModal() {
+    if (document.getElementById('player-modal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'player-modal';
+    modal.className = 'modal';
+    modal.style.display = 'none';
+    modal.innerHTML = `
+        <div class="modal-content" style="padding:16px; max-width:640px; margin:48px auto; position:relative;">
+            <button id="close-player-modal" style="position:absolute; right:12px; top:12px; background:none; border:none; font-size:1.4rem; cursor:pointer;">&times;</button>
+            <div id="player-modal-content"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('close-player-modal').onclick = () => {
+        const m = document.getElementById('player-modal');
+        if (m) m.style.display = 'none';
+    };
+
+    // click outside to close
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+}
+
+function ensurePickerControls() {
+    // If any picker control exists, we assume the set is present; otherwise inject a small non-invasive control set
+    const anyPickerPresent = document.getElementById('picker-min-price') || document.getElementById('picker-max-price') || document.getElementById('picker-sort');
+    if (anyPickerPresent) return;
+
+    // Try to append near the formation select or into .status-bar
+    const statusBar = document.querySelector('.status-bar') || document.querySelector('.main-container') || document.body;
+    if (!statusBar) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'inline-flex';
+    wrapper.style.gap = '8px';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.marginLeft = '12px';
+
+    wrapper.innerHTML = `
+        <label style="font-weight:700; font-size:0.85rem; margin-right:4px;">Min Price</label>
+        <input id="picker-min-price" type="number" step="0.1" value="${pickerFilters.minPrice}" style="width:72px;" />
+        <label style="font-weight:700; font-size:0.85rem; margin-left:6px; margin-right:4px;">Max Price</label>
+        <input id="picker-max-price" type="number" step="0.1" value="${pickerFilters.maxPrice}" style="width:72px;" />
+        <label style="font-weight:700; font-size:0.85rem; margin-left:6px; margin-right:4px;">Min Own</label>
+        <input id="picker-min-ownership" type="number" step="0.1" value="${pickerFilters.minOwnership}" style="width:62px;" />
+        <label style="font-weight:700; font-size:0.85rem; margin-left:6px; margin-right:4px;">Sort</label>
+        <select id="picker-sort" style="width:100px;">
+            <option value="xp">xP</option>
+            <option value="vapm">VAPM</option>
+            <option value="price">Price</option>
+            <option value="ownership">Ownership</option>
+        </select>
+    `;
+
+    // Append near the formation select if available, otherwise into statusBar
+    const formation = document.getElementById('formation-select') || document.querySelector('select[onchange*="changeFormation"]');
+    if (formation && formation.parentElement) {
+        formation.parentElement.insertBefore(wrapper, formation.nextSibling);
+    } else {
+        statusBar.appendChild(wrapper);
+    }
+}
+
+function ensureFormationSelectId() {
+    let formSelect = document.getElementById('formation-select');
+    if (!formSelect) {
+        // try to find any select that calls changeFormation inline and give it id for binding
+        formSelect = document.querySelector('select[onchange*="changeFormation"]');
+        if (formSelect) formSelect.id = 'formation-select';
+    }
+}
 
 // --- 1. DATA SYNC & INITIALIZATION ---
 
@@ -259,6 +358,8 @@ function simulateSingleTransfer(outName, inName) {
     };
 }
 
+// --- 4. ANALYSIS & SUGGESTIONS ---
+
 function analyzeTeam() {
     if (squad.some(s => s.name === "")) return alert("Finish your squad first!");
     
@@ -347,12 +448,15 @@ function displayModal(cap, capConfidence, bench, transfers, analysis, transfersT
             }).join('') : '<p>Your team is currently AI-Optimal.</p>'}
         </div>
         <div class="analysis-section"><h3>📊 Squad Summary</h3>
-            <p>Team Value: £${(100 - (analysis.reduce((acc,p)=>acc+p.price,0))).toFixed(1)}m ITB (approx)</p>
+            <p>Estimated ITB: £${(100 - (analysis.reduce((acc,p)=>acc+p.price,0))).toFixed(1)}m (approx)</p>
         </div>
-        <div style="text-align:right"><button id="close-modal" class="btn">Close</button></div>
+        <div style="text-align:right"><button id="close-modal-dyn" class="btn">Close</button></div>
     `;
     modal.style.display = "block";
-    document.getElementById('close-modal').onclick = () => modal.style.display = "none";
+
+    // Hook close button inside results (some HTML has its own close button)
+    const closeBtn = document.getElementById('close-modal') || document.getElementById('close-modal-dyn');
+    if (closeBtn) closeBtn.onclick = () => modal.style.display = "none";
 }
 
 // Quick player modal to inspect a player
@@ -365,15 +469,15 @@ function openPlayerModal(name) {
 
     const nextFix = getNextFixtures(player.teamId);
     content.innerHTML = `
-        <h3>${player.name} — £${player.price}m</h3>
-        <p>Position: ${player.pos} — Ownership: ${player.ownership}%</p>
-        <p>Projected 3wk xP: ${getThreeWeekXP(player)}</p>
-        <div class="card-fixtures">${nextFix.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}${f.isHome ? '(H)' : '(A)'}</div>`).join('')}</div>
-        <div style="text-align:right"><button id="close-player-modal" class="btn">Close</button></div>
+        <h3 style="margin:0 0 8px 0;">${player.name} — £${player.price}m</h3>
+        <p style="margin:4px 0;">Position: ${player.pos} — Ownership: ${player.ownership}%</p>
+        <p style="margin:4px 0;">Projected 3wk xP: ${getThreeWeekXP(player)}</p>
+        <div class="card-fixtures" style="display:flex;gap:6px;margin-top:8px;">${nextFix.map(f => `<div class="fix-item diff-${f.diff}">${f.opp}${f.isHome ? '(H)' : '(A)'}</div>`).join('')}</div>
     `;
     modal.style.display = "block";
-    document.getElementById('close-player-modal').onclick = () => modal.style.display = "none";
 }
+
+// --- 5. WILDCARD & RENDERERS ---
 
 function runAIWildcard() {
     let budget = 100.0;
@@ -400,8 +504,6 @@ function runAIWildcard() {
     squad = newSquad; 
     changeFormation('4-4-2');
 }
-
-// --- 4. RENDERERS & UI HELPERS ---
 
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
@@ -487,7 +589,7 @@ function createSlotUI(slotData) {
     const selectEl = document.createElement('select');
     selectEl.className = 'hidden-picker';
     selectEl.onchange = (e) => updatePlayer(slotData.id, e.target.value);
-    // add options
+    // add options (buildPlayerOptions uses pickerFilters)
     selectEl.innerHTML = buildPlayerOptions(slotData.pos, slotData.name);
 
     div.appendChild(jerseyDiv);
@@ -543,39 +645,44 @@ function loadSquad() {
     if (saved) squad = JSON.parse(saved);
 }
 
-// --- 5. EVENT LISTENERS ---
+// --- 6. EVENT LISTENERS & BINDINGS ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    syncData();
-    if (document.getElementById('wildcard-btn')) document.getElementById('wildcard-btn').onclick = runAIWildcard;
-    if (document.getElementById('analyze-btn')) document.getElementById('analyze-btn').onclick = analyzeTeam;
-    if (document.getElementById('formation-select')) document.getElementById('formation-select').onchange = (e) => changeFormation(e.target.value);
+    // Create any missing UI pieces the script needs so you don't have to edit HTML (option B)
+    ensureUIElements();
 
-    // picker filter bindings (if present in DOM)
+    // Initialize picker filter elements (they may have been created programmatically above)
     const maxPriceEl = document.getElementById('picker-max-price');
     const minPriceEl = document.getElementById('picker-min-price');
     const minOwnershipEl = document.getElementById('picker-min-ownership');
     const sortSelectEl = document.getElementById('picker-sort');
 
     const refreshPickers = () => {
-        // re-render slots so pickers update their option lists
+        // update pickerFilters from DOM (if present)
+        if (maxPriceEl) pickerFilters.maxPrice = parseFloat(maxPriceEl.value || pickerFilters.maxPrice);
+        if (minPriceEl) pickerFilters.minPrice = parseFloat(minPriceEl.value || pickerFilters.minPrice);
+        if (minOwnershipEl) pickerFilters.minOwnership = parseFloat(minOwnershipEl.value || pickerFilters.minOwnership);
+        if (sortSelectEl) pickerFilters.sortBy = sortSelectEl.value || pickerFilters.sortBy;
         renderPitch();
     };
 
-    if (maxPriceEl) {
-        maxPriceEl.value = pickerFilters.maxPrice;
-        maxPriceEl.onchange = (e) => { pickerFilters.maxPrice = parseFloat(e.target.value); refreshPickers(); };
-    }
-    if (minPriceEl) {
-        minPriceEl.value = pickerFilters.minPrice;
-        minPriceEl.onchange = (e) => { pickerFilters.minPrice = parseFloat(e.target.value); refreshPickers(); };
-    }
-    if (minOwnershipEl) {
-        minOwnershipEl.value = pickerFilters.minOwnership;
-        minOwnershipEl.onchange = (e) => { pickerFilters.minOwnership = parseFloat(e.target.value); refreshPickers(); };
-    }
-    if (sortSelectEl) {
-        sortSelectEl.value = pickerFilters.sortBy;
-        sortSelectEl.onchange = (e) => { pickerFilters.sortBy = e.target.value; refreshPickers(); };
-    }
+    if (maxPriceEl) { maxPriceEl.value = pickerFilters.maxPrice; maxPriceEl.onchange = refreshPickers; }
+    if (minPriceEl) { minPriceEl.value = pickerFilters.minPrice; minPriceEl.onchange = refreshPickers; }
+    if (minOwnershipEl) { minOwnershipEl.value = pickerFilters.minOwnership; minOwnershipEl.onchange = refreshPickers; }
+    if (sortSelectEl) { sortSelectEl.value = pickerFilters.sortBy; sortSelectEl.onchange = refreshPickers; }
+
+    // Bind buttons & formation select
+    if (document.getElementById('wildcard-btn')) document.getElementById('wildcard-btn').onclick = runAIWildcard;
+    if (document.getElementById('analyze-btn')) document.getElementById('analyze-btn').onclick = analyzeTeam;
+    if (document.getElementById('formation-select')) document.getElementById('formation-select').onchange = (e) => changeFormation(e.target.value);
+
+    // Ensure analysis modal close button (if exists) closes properly
+    const closeModalBtn = document.getElementById('close-modal');
+    if (closeModalBtn) closeModalBtn.onclick = () => {
+        const m = document.getElementById('analysis-modal');
+        if (m) m.style.display = 'none';
+    };
+
+    // Finally sync data and render
+    syncData();
 });
