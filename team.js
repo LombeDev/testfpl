@@ -1,7 +1,7 @@
 /**
  * KOPALA FPL - MASTER ENGINE (v4.3.7)
  * Full 2025/26 Season Production Script
- * Features: Dynamic Formations, GK Swap Locks, 20-Team Mapping, Balanced Templates
+ * Fixed for HTML IDs: wildcard-btn and btn-reset
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -9,6 +9,9 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
+
+// The key used for saving data
+const STORAGE_KEY = 'kopala_v4_3_7';
 
 // Initial Squad Structure
 let squad = [
@@ -29,7 +32,7 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. CORE STATS & FORMATION ENGINE ---
+// --- 1. CORE STATS ---
 function calculateStats() {
     let totalCost = 0;
     let baseXP = 0;
@@ -102,9 +105,7 @@ async function syncData() {
         fixturesDB = rawFixtures;
         loadSquad();
         renderPitch();
-    } catch (e) { 
-        console.error("Sync Error: ", e); 
-    }
+    } catch (e) { console.error("Sync Error: ", e); }
 }
 
 // --- 3. UI RENDERING ---
@@ -135,11 +136,9 @@ function renderPitch() {
 function createSlotUI(slotData) {
     const div = document.createElement('div');
     div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    
     const p = playerDB.find(p => p.name === slotData.name);
     const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
     const currentSquadNames = squad.map(s => s.name).filter(n => n && n !== slotData.name);
-    
     const teamCounts = {};
     squad.forEach(s => {
         const pl = playerDB.find(x => x.name === s.name);
@@ -176,21 +175,17 @@ function handleSwap(id) {
         const p2 = squad.find(s => s.id === id);
         if (p1.id !== p2.id) {
             const involvesGK = p1.pos === 'GKP' || p2.pos === 'GKP';
-            const differentPos = p1.pos !== p2.pos;
-            if (involvesGK && differentPos) {
+            if (involvesGK && p1.pos !== p2.pos) {
                 alert("Goalkeepers can only be swapped with other Goalkeepers.");
             } else {
-                const tempName = p1.name;
-                const tempPos = p1.pos;
+                const tempName = p1.name; const tempPos = p1.pos;
                 p1.name = p2.name; p1.pos = p2.pos;
                 p2.name = tempName; p2.pos = tempPos;
                 if (!validateFormation()) {
-                    alert("Invalid Formation! (Min: 3 DEF, 2 MID, 1 FWD)");
+                    alert("Invalid Formation!");
                     p2.name = p1.name; p2.pos = p1.pos;
                     p1.name = tempName; p1.pos = tempPos;
-                } else {
-                    saveSquad();
-                }
+                } else { saveSquad(); }
             }
         }
         selectedSlotId = null;
@@ -210,31 +205,23 @@ function updatePlayer(id, name) {
     if (s) { s.name = name; saveSquad(); renderPitch(); }
 }
 
-function saveSquad() { localStorage.setItem('kopala_v4_3_7', JSON.stringify(squad)); }
+function saveSquad() { localStorage.setItem(STORAGE_KEY, JSON.stringify(squad)); }
 function loadSquad() { 
-    const s = localStorage.getItem('kopala_v4_3_7'); 
+    const s = localStorage.getItem(STORAGE_KEY); 
     if(s) squad = JSON.parse(s); 
 }
 
-// --- 5. NEW: REPAIRED RESET & TEMPLATE LOGIC ---
-
+// --- 5. FIXED ACTIONS ---
 function resetTeam() {
-    if (confirm("Clear entire squad?")) {
-        // Clear all names in the data
-        squad.forEach(slot => {
-            slot.name = '';
-        });
-        saveSquad();   // Save the empty state
-        renderPitch(); // Re-draw the pitch (removes jerseys)
+    if (confirm("Reset your entire squad?")) {
+        squad.forEach(slot => slot.name = '');
+        saveSquad();
+        renderPitch();
     }
 }
 
 function loadTemplate() {
-    if (playerDB.length === 0) {
-        alert("Data still loading, please wait...");
-        return;
-    }
-
+    if (playerDB.length === 0) return;
     let currentBudget = 100.0;
     const playersSelected = new Set();
     const teamCounts = {};
@@ -243,15 +230,12 @@ function loadTemplate() {
     squad.forEach((slot, index) => {
         const slotsRemaining = squad.length - index;
         const maxSpend = currentBudget - (slotsRemaining * 4.0);
-        
-        // Find the most owned player that fits budget and team limits
         const bestFit = sortedDB.find(p => 
             p.pos === slot.pos && 
             parseFloat(p.price) <= maxSpend &&
             !playersSelected.has(p.name) &&
             (teamCounts[p.teamId] || 0) < 3
         );
-
         if (bestFit) {
             slot.name = bestFit.name;
             currentBudget -= parseFloat(bestFit.price);
@@ -259,24 +243,29 @@ function loadTemplate() {
             teamCounts[bestFit.teamId] = (teamCounts[bestFit.teamId] || 0) + 1;
         }
     });
-
     saveSquad();
     renderPitch();
 }
 
-// Initialize and Bind Buttons
+// --- 6. EVENT BINDING ---
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
 
-    // Fix: Using querySelector to ensure we find the buttons
-    const rBtn = document.getElementById('reset-team-btn');
-    const tBtn = document.getElementById('template-team-btn');
-
+    // Fix Reset Button: Overwrite the inline HTML onclick
+    const rBtn = document.querySelector('.btn-reset');
     if (rBtn) {
-        rBtn.onclick = resetTeam; // Alternative to addEventListener for reliability
+        rBtn.onclick = (e) => {
+            e.preventDefault();
+            resetTeam();
+        };
     }
-    
+
+    // Fix Template Button: Match the HTML id "wildcard-btn"
+    const tBtn = document.getElementById('wildcard-btn');
     if (tBtn) {
-        tBtn.onclick = loadTemplate;
+        tBtn.onclick = (e) => {
+            e.preventDefault();
+            loadTemplate();
+        };
     }
 });
