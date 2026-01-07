@@ -1,297 +1,216 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v4.3.7)
- * Full 2025/26 Season Production Script
- * Feature: Next Fixture Display Integrated
+ * KOPALA FPL - MASTER REFRESH (v4.3.4)
+ * 2025/26 Season Edge-to-Edge Production CSS
  */
 
-const API_BASE = "/fpl-api/"; 
-let playerDB = [];
-let teamsDB = {}; 
-let fixturesDB = [];
-let selectedSlotId = null;
-
-const STORAGE_KEY = 'kopala_v4_3_7';
-
-let squad = [
-    { id: 0, pos: 'GKP', name: '', isBench: false },
-    { id: 1, pos: 'DEF', name: '', isBench: false },
-    { id: 2, pos: 'DEF', name: '', isBench: false },
-    { id: 3, pos: 'DEF', name: '', isBench: false },
-    { id: 4, pos: 'DEF', name: '', isBench: false },
-    { id: 5, pos: 'MID', name: '', isBench: false },
-    { id: 6, pos: 'MID', name: '', isBench: false },
-    { id: 7, pos: 'MID', name: '', isBench: false },
-    { id: 8, pos: 'MID', name: '', isBench: false },
-    { id: 9, pos: 'FWD', name: '', isBench: false },
-    { id: 10, pos: 'FWD', name: '', isBench: false },
-    { id: 11, pos: 'GKP', name: '', isBench: true },
-    { id: 12, pos: 'DEF', name: '', isBench: true },
-    { id: 13, pos: 'MID', name: '', isBench: true },
-    { id: 14, pos: 'FWD', name: '', isBench: true }
-];
-
-// --- 0. FIXTURE HELPER ---
-function getNextFixture(teamId) {
-    if (!fixturesDB || fixturesDB.length === 0) return "";
-    
-    const next = fixturesDB.find(f => 
-        !f.finished && (f.team_h === teamId || f.team_a === teamId)
-    );
-
-    if (!next) return "TBC";
-
-    const isHome = next.team_h === teamId;
-    const opponentId = isHome ? next.team_a : next.team_h;
-    
-    // Convert slug (e.g. man_city) to short code (MAN)
-    const opponentSlug = teamsDB[opponentId] || "???";
-    const oppCode = opponentSlug.substring(0, 3).toUpperCase();
-    
-    return `${oppCode} (${isHome ? 'H' : 'A'})`;
+/* ---- THEME & SAFE AREAS ---- */
+:root {
+  --fpl-purple: #37003c;
+  --fpl-green:  #00ff87;
+  --pitch-green: #02894e;
+  --card-glass: rgba(0, 0, 0, 0.3);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-// --- 1. CORE STATS ---
-function calculateStats() {
-    let totalCost = 0;
-    let baseXP = 0;
-    let maxXP = 0;
-    let captainName = "";
-
-    squad.forEach(slot => {
-        const p = playerDB.find(x => x.name === slot.name);
-        if (p) {
-            totalCost += parseFloat(p.price);
-            if (!slot.isBench) {
-                const xp = parseFloat(p.xp);
-                baseXP += xp;
-                if (xp > maxXP) { maxXP = xp; captainName = p.name; }
-            }
-        }
-    });
-
-    window.currentCaptain = captainName;
-
-    const bankVal = (100.0 - totalCost).toFixed(1);
-    const budgetEl = document.getElementById('budget-val');
-    if (budgetEl) {
-        budgetEl.textContent = `£${bankVal}m`;
-        budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#2d3436';
-    }
-
-    const totalXP = (baseXP + maxXP).toFixed(1);
-    const xpEl = document.getElementById('v-xp');
-    if (xpEl) xpEl.textContent = totalXP;
-
-    const ratingPercent = Math.min(100, Math.max(0, (totalXP / 75) * 100)).toFixed(0);
-    const ratingEl = document.getElementById('team-rating');
-    if (ratingEl) ratingEl.textContent = `${ratingPercent}%`;
+/* Base Reset for Edge-to-Edge */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  background: #f5f5f7;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
-// --- 2. DATA SYNC ---
-async function syncData() {
-    try {
-        const [bootRes, fixRes] = await Promise.all([
-            fetch(`${API_BASE}bootstrap-static/`),
-            fetch(`${API_BASE}fixtures/`)
-        ]);
-        const data = await bootRes.json();
-        const rawFixtures = await fixRes.json();
+   
 
-        data.teams.forEach(t => {
-            let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-            if (slug.includes('city')) slug = 'man_city';
-            if (slug.includes('united') && slug.includes('man')) slug = 'man_utd';
-            if (slug.includes('forest')) slug = 'nottm_forest';
-            if (slug.includes('spurs') || slug.includes('tottenham')) slug = 'tottenham';
-            if (slug.includes('palace')) slug = 'crystal_palace';
-            if (slug.includes('wolves')) slug = 'wolves';
-            if (slug.includes('ham')) slug = 'west_ham';
-            teamsDB[t.id] = slug;
-        });
 
-        playerDB = data.elements.map(p => ({
-            id: p.id,
-            name: p.web_name,
-            teamId: p.team,
-            teamSlug: teamsDB[p.team] || 'default',
-            pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
-            price: (p.now_cost / 10).toFixed(1),
-            xp: parseFloat(p.ep_next) || 0,
-            ownership: parseFloat(p.selected_by_percent) || 0
-        }));
-
-        fixturesDB = rawFixtures;
-        loadSquad();
-        renderPitch();
-    } catch (e) { console.error("Sync Error: ", e); }
+/* Full Width Header */
+.navbar {
+  background: var(--fpl-purple);
+  color: white;
+  padding: calc(var(--safe-top) + 15px) 20px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
 }
 
-// --- 3. UI RENDERING ---
-function renderPitch() {
-    const pitch = document.getElementById('pitch-container');
-    const bench = document.getElementById('bench-container');
-    if(!pitch || !bench) return;
-    
-    calculateStats(); 
-    pitch.innerHTML = ''; bench.innerHTML = '';
+.brand { font-weight: 900; font-size: 1.2rem; }
+.brand span { color: var(--fpl-green); }
 
-    ['GKP', 'DEF', 'MID', 'FWD'].forEach(pos => {
-        const startersInPos = squad.filter(s => !s.isBench && s.pos === pos);
-        if (startersInPos.length > 0) {
-            const row = document.createElement('div');
-            row.className = 'row';
-            startersInPos.forEach(p => row.appendChild(createSlotUI(p)));
-            pitch.appendChild(row);
-        }
-    });
+/* Status Bar */
+.status-bar {
+  background: #fff;
+  display: flex;
+  padding: 12px 5px;
+  border-bottom: 1px solid #ddd;
+}
+.stat-item { flex: 1; text-align: center; }
+.stat-label { font-size: 9px; font-weight: 800; color: #888; text-transform: uppercase; }
+.stat-value { font-size: 16px; font-weight: 900; color: #222; }
 
-    const bRow = document.createElement('div');
-    bRow.className = 'row bench-row';
-    squad.filter(s => s.isBench).forEach(p => bRow.appendChild(createSlotUI(p)));
-    bench.appendChild(bRow);
+/* ---- THE PITCH ---- */
+.pitch-outer-wrap {
+  background: var(--pitch-green);
+  /* 25/26 Grass Pattern */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.04) 0px,
+    rgba(255, 255, 255, 0.04) 50px,
+    transparent 50px,
+    transparent 100px
+  );
+  width: 100%;
+  padding: 20px 4px;
+  min-height: 70vh;
 }
 
-function createSlotUI(slotData) {
-    const div = document.createElement('div');
-    div.className = `slot ${selectedSlotId === slotData.id ? 'selected' : ''}`;
-    const p = playerDB.find(p => p.name === slotData.name);
-    const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
-    
-    // Next Fixture Logic
-    let fixtureHTML = "";
-    if (p) {
-        const fix = getNextFixture(p.teamId);
-        fixtureHTML = ` <span style="opacity: 0.6; font-weight: 400; font-size: 8px;">${fix}</span>`;
-    }
-
-    const currentSquadNames = squad.map(s => s.name).filter(n => n && n !== slotData.name);
-    const teamCounts = {};
-    squad.forEach(s => {
-        const pl = playerDB.find(x => x.name === s.name);
-        if(pl) teamCounts[pl.teamId] = (teamCounts[pl.teamId] || 0) + 1;
-    });
-
-    div.innerHTML = `
-        <div class="player-card-wrapper" onclick="handleSwap(${slotData.id})">
-            <div class="card-visual-area">
-                ${p ? `<div class="price-tag">£${p.price}</div>` : ''}
-                <div class="jersey ${p ? (p.pos === 'GKP' ? 'gkp_color' : p.teamSlug) : 'default'}">
-                    ${isCaptain ? '<div class="captain-badge">C</div>' : ''}
-                </div>
-            </div>
-            <div class="p-name-box">
-                ${slotData.name || slotData.pos}${fixtureHTML}
-            </div>
-        </div>
-        <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
-            <option value="">-- Select --</option>
-            ${playerDB.filter(x => x.pos === slotData.pos && !currentSquadNames.includes(x.name) && ((teamCounts[x.teamId] || 0) < 3 || (p && x.teamId === p.teamId)))
-                .sort((a,b) => b.ownership - a.ownership).slice(0, 25)
-                .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name}</option>`).join('')}
-        </select>
-    `;
-    return div;
+.pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-// --- 4. ENGINE CONTROLS ---
-function handleSwap(id) {
-    if (selectedSlotId === null) {
-        selectedSlotId = id;
-        renderPitch();
-    } else {
-        const p1 = squad.find(s => s.id === selectedSlotId);
-        const p2 = squad.find(s => s.id === id);
-        if (p1.id !== p2.id) {
-            const involvesGK = p1.pos === 'GKP' || p2.pos === 'GKP';
-            if (involvesGK && p1.pos !== p2.pos) {
-                alert("Goalkeepers can only be swapped with other Goalkeepers.");
-            } else {
-                const tempName = p1.name; const tempPos = p1.pos;
-                p1.name = p2.name; p1.pos = p2.pos;
-                p2.name = tempName; p2.pos = tempPos;
-                if (!validateFormation()) {
-                    alert("Invalid Formation!");
-                    p2.name = p1.name; p2.pos = p1.pos;
-                    p1.name = tempName; p1.pos = tempPos;
-                } else { saveSquad(); }
-            }
-        }
-        selectedSlotId = null;
-        renderPitch();
-    }
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
 }
 
-function validateFormation() {
-    const starters = squad.filter(s => !s.isBench);
-    const counts = { 'GKP': 0, 'DEF': 0, 'MID': 0, 'FWD': 0 };
-    starters.forEach(s => counts[s.pos]++);
-    return (counts['GKP'] === 1 && counts['DEF'] >= 3 && counts['MID'] >= 2 && counts['FWD'] >= 1);
+/* ---- PLAYER CARDS (VIRGIL STYLE) ---- */
+.slot {
+  flex: 1;
+  max-width: 20%; /* 5 players max per row */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
 }
 
-function updatePlayer(id, name) {
-    const s = squad.find(slot => slot.id === id);
-    if (s) { s.name = name; saveSquad(); renderPitch(); }
+.player-card-wrapper {
+  width: 100%;
+  background: var(--card-glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
 }
 
-function saveSquad() { localStorage.setItem(STORAGE_KEY, JSON.stringify(squad)); }
-function loadSquad() { 
-    const s = localStorage.getItem(STORAGE_KEY); 
-    if(s) squad = JSON.parse(s); 
+.card-visual-area {
+  height: 52px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
 }
 
-// --- 5. FIXED ACTIONS ---
-function resetTeam() {
-    if (confirm("Reset your entire squad?")) {
-        squad.forEach(slot => slot.name = '');
-        saveSquad();
-        renderPitch();
-    }
+.price-tag {
+  position: absolute;
+  top: 2px; right: 2px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 8px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: bold;
 }
 
-function loadTemplate() {
-    if (playerDB.length === 0) return;
-    let currentBudget = 100.0;
-    const playersSelected = new Set();
-    const teamCounts = {};
-    const sortedDB = [...playerDB].sort((a, b) => b.ownership - a.ownership);
-
-    squad.forEach((slot, index) => {
-        const slotsRemaining = squad.length - index;
-        const maxSpend = currentBudget - (slotsRemaining * 4.0);
-        const bestFit = sortedDB.find(p => 
-            p.pos === slot.pos && 
-            parseFloat(p.price) <= maxSpend &&
-            !playersSelected.has(p.name) &&
-            (teamCounts[p.teamId] || 0) < 3
-        );
-        if (bestFit) {
-            slot.name = bestFit.name;
-            currentBudget -= parseFloat(bestFit.price);
-            playersSelected.add(bestFit.name);
-            teamCounts[bestFit.teamId] = (teamCounts[bestFit.teamId] || 0) + 1;
-        }
-    });
-    saveSquad();
-    renderPitch();
+.p-name-box {
+  background: #fff;
+  color: var(--fpl-purple);
+  font-size: 9px;
+  font-weight: 900;
+  padding: 4px 1px;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-// --- 6. EVENT BINDING ---
-document.addEventListener('DOMContentLoaded', () => {
-    syncData();
+/* Hidden Select covering the card for mobile tapping */
+.hidden-picker {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+  z-index: 10;
+}
 
-    const rBtn = document.querySelector('.btn-reset');
-    if (rBtn) {
-        rBtn.onclick = (e) => {
-            e.preventDefault();
-            resetTeam();
-        };
-    }
+/* ---- 2025/26 JERSEY LIBRARY ---- */
+.jersey {
+  width: 34px;
+  height: 32px;
+  clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
+  position: relative;
+}
 
-    const tBtn = document.getElementById('wildcard-btn');
-    if (tBtn) {
-        tBtn.onclick = (e) => {
-            e.preventDefault();
-            loadTemplate();
-        };
-    }
-});
+/* Authentic Team Patterns */
+.jersey.arsenal        { background: #ef0107; border-left: 5px solid #fff; border-right: 5px solid #fff; }
+.jersey.liverpool      { background: #c8102e; border-top: 3px solid #f6eb61; } /* Yellow collar detail */
+.jersey.man_city       { background: #6cabdd; background-image: linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%); background-size: 20px 20px; } /* Sash effect */
+.jersey.newcastle      { background: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px; } /* Stripes */
+.jersey.brighton       { background: linear-gradient(90deg, #0057b8 50%, #fff 50%); background-size: 12px; } /* Stripes */
+.jersey.brentford      { background: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px; } /* Stripes */
+.jersey.sunderland     { background: repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, #fff 8px, #fff 16px); } /* Stripes */
+.jersey.leeds          { background: #fff; border: 2px solid #00509d; } /* Pure White with blue trim */
+.jersey.burnley        { background: #6c1d45; border-bottom: 5px solid #95d6f2; } /* Claret/Blue */
+.jersey.man_utd        { background: #da291c; border-bottom: 4px solid #000; }
+.jersey.chelsea        { background: #034694; border-bottom: 2px solid #00e5ff; } /* Liquid blue accent */
+.jersey.tottenham      { background: #fff; border-bottom: 6px solid #132257; }
+.jersey.aston_villa    { background: #95bfe5; border-bottom: 5px solid #670e36; }
+.jersey.everton        { background: #003399; border-top: 3px solid #fff; }
+.jersey.west_ham       { background: #7a263a; border-left: 5px solid #1bb1e7; border-right: 5px solid #1bb1e7; }
+.jersey.wolves         { background: #fdb913; border-bottom: 3px solid #231f20; }
+.jersey.fulham         { background: #fff; border-left: 5px solid #000; border-right: 5px solid #000; }
+.jersey.crystal_palace { background: linear-gradient(90deg, #1b458f 50%, #c4122e 50%); background-size: 18px; }
+.jersey.nottm_forest   { background: #dd0000; border-top: 2px solid #fff; }
+.jersey.bournemouth    { background: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 14px; }
+.jersey.leicester      { background: #003090; border-bottom: 3px solid #fdb913; }
+.jersey.ipswich        { background: #005696; border-bottom: 3px solid #fff; }
+
+/* ---- GOALKEEPER SYSTEM ---- */
+.jersey.gk-volt  { background: #e1ff00; border: 1px solid #c2db00; } /* Standard Neon */
+.jersey.gk-pink  { background: #ff00ea; border-bottom: 3px solid #000; } /* Pink Template */
+.jersey.gk-black { background: #1a1a1a; border-bottom: 3px solid #fff; } /* Black Template */
+.jersey.gk-cyan  { background: #00e5ff; border: 1px solid #00c2d9; } /* Blue Template */
+
+/* Empty slot */
+.jersey.default { 
+  background: rgba(255,255,255,0.1); 
+  border-radius: 50%; width: 22px; height: 22px; clip-path: none; border: 1px dashed #fff; 
+}
+
+/* Captain Badge */
+.captain-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--fpl-purple);
+  color: var(--fpl-green);
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  font-size: 9px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid #fff;
+  z-index: 5;
+}
+
+/* ---- BENCH AREA ---- */
+#bench-container {
+  background: rgba(0,0,0,0.2);
+  margin-top: 10px;
+  padding: 15px 5px calc(var(--safe-bottom) + 20px);
+  border-top: 2px solid rgba(255,255,255,0.1);
+}
+
+/* Responsive Scaling for older/smaller phones */
+@media (max-width: 380px) {
+  .jersey { width: 30px; height: 28px; }
+  .p-name-box { font-size: 8px; }
+  .stat-value { font-size: 14px; }
+}
