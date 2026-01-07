@@ -1,7 +1,7 @@
 /**
  * KOPALA FPL - MASTER ENGINE (v4.3.7)
  * Full 2025/26 Season Production Script
- * Features: Dynamic Formations, GK Swap Locks, 20-Team Mapping
+ * Features: Dynamic Formations, GK Swap Locks, 20-Team Mapping, Balanced Templates
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -185,11 +185,9 @@ function handleSwap(id) {
             const involvesGK = p1.pos === 'GKP' || p2.pos === 'GKP';
             const differentPos = p1.pos !== p2.pos;
 
-            // GK Rule: Only swap GKP with GKP
             if (involvesGK && differentPos) {
                 alert("Goalkeepers can only be swapped with other Goalkeepers.");
             } else {
-                // Swap identity to allow formation change
                 const tempName = p1.name;
                 const tempPos = p1.pos;
                 p1.name = p2.name; p1.pos = p2.pos;
@@ -227,4 +225,46 @@ function loadSquad() {
     if(s) squad = JSON.parse(s); 
 }
 
-document.addEventListener('DOMContentLoaded', syncData);
+// --- 5. TEAM CONTROLS (Reset & Template) ---
+function resetTeam() {
+    if (confirm("Clear entire squad?")) {
+        squad.forEach(slot => slot.name = '');
+        saveSquad();
+        renderPitch();
+    }
+}
+
+function loadTemplate() {
+    let currentBudget = 100.0;
+    const playersSelected = new Set();
+    const teamCounts = {};
+    const sortedDB = [...playerDB].sort((a, b) => b.ownership - a.ownership);
+
+    squad.forEach((slot, index) => {
+        const slotsRemaining = squad.length - index;
+        const maxSpend = currentBudget - (slotsRemaining * 4.0);
+        const bestFit = sortedDB.find(p => 
+            p.pos === slot.pos && 
+            parseFloat(p.price) <= maxSpend &&
+            !playersSelected.has(p.name) &&
+            (teamCounts[p.teamId] || 0) < 3
+        );
+
+        if (bestFit) {
+            slot.name = bestFit.name;
+            currentBudget -= parseFloat(bestFit.price);
+            playersSelected.add(bestFit.name);
+            teamCounts[bestFit.teamId] = (teamCounts[bestFit.teamId] || 0) + 1;
+        }
+    });
+    saveSquad();
+    renderPitch();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    syncData();
+    const rBtn = document.getElementById('reset-team-btn');
+    const tBtn = document.getElementById('template-team-btn');
+    if (rBtn) rBtn.addEventListener('click', resetTeam);
+    if (tBtn) tBtn.addEventListener('click', loadTemplate);
+});
