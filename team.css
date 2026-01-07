@@ -299,3 +299,12 @@ html, body {
   transition: transform 0.3s ease, filter 0.3s ease;
   /* ... keep your existing jersey styles (width, height, clip-path, etc.) ... */
 }
+
+
+.fixture-label {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 2px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
