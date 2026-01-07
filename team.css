@@ -275,3 +275,25 @@ html, body {
     opacity: 0.5;
     transform: scale(0.9);
 }
+
+
+
+/* --- Animation Keyframes --- */
+@keyframes jerseyPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0px #00ff5a); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 12px #00ff5a); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0px #00ff5a); }
+}
+
+/* --- Trigger Animation on Selected Player --- */
+.swap-target .jersey {
+  animation: jerseyPulse 1.2s infinite ease-in-out;
+  z-index: 10;
+  border: 2px solid #00ff5a !important; /* Green highlight border */
+}
+
+/* --- Smooth Transition for All Jerseys --- */
+.jersey {
+  transition: transform 0.3s ease, filter 0.3s ease;
+  /* ... keep your existing jersey styles (width, height, clip-path, etc.) ... */
+}
