@@ -301,10 +301,4 @@ html, body {
 }
 
 
-.fixture-label {
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 2px;
-    font-weight: bold;
-    text-transform: uppercase;
-}
+
