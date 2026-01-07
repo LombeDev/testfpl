@@ -1,7 +1,6 @@
 /**
- * KOPALA FPL - MASTER REFRESH (v4.4.0)
- * 2025/26 Season Production CSS
- * Optimized for Dynamic Formations & XP Templates
+ * KOPALA FPL - MASTER REFRESH (v4.3.4)
+ * 2025/26 Season Edge-to-Edge Production CSS
  */
 
 /* ---- THEME & SAFE AREAS ---- */
@@ -14,15 +13,20 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Base Reset */
+/* Base Reset for Edge-to-Edge */
 * { box-sizing: border-box; }
 html, body {
-  margin: 0; padding: 0;
+  margin: 0;
+  padding: 0;
   width: 100%;
   background: #f5f5f7;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
+
+   
+
 
 /* Full Width Header */
 .navbar {
@@ -32,6 +36,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  z-index: 100;
 }
 
 .brand { font-weight: 900; font-size: 1.2rem; }
@@ -51,6 +56,7 @@ html, body {
 /* ---- THE PITCH ---- */
 .pitch-outer-wrap {
   background: var(--pitch-green);
+  /* 25/26 Grass Pattern */
   background-image: repeating-linear-gradient(
     to bottom,
     rgba(255, 255, 255, 0.04) 0px,
@@ -60,7 +66,13 @@ html, body {
   );
   width: 100%;
   padding: 20px 4px;
-  min-height: 65vh;
+  min-height: 70vh;
+}
+
+.pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .row {
@@ -68,18 +80,16 @@ html, body {
   justify-content: center;
   gap: 4px;
   width: 100%;
-  margin-bottom: 15px;
 }
 
-/* ---- PLAYER CARDS ---- */
+/* ---- PLAYER CARDS (VIRGIL STYLE) ---- */
 .slot {
   flex: 1;
-  max-width: 20%; 
+  max-width: 20%; /* 5 players max per row */
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 
 .player-card-wrapper {
@@ -88,6 +98,7 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   overflow: hidden;
+  cursor: pointer;
   position: relative;
 }
 
@@ -97,7 +108,17 @@ html, body {
   justify-content: center;
   align-items: center;
   padding: 8px 0;
-  position: relative;
+}
+
+.price-tag {
+  position: absolute;
+  top: 2px; right: 2px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 8px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: bold;
 }
 
 .p-name-box {
@@ -113,34 +134,12 @@ html, body {
   text-overflow: ellipsis;
 }
 
-/* Top Left Sub Button */
-.sub-btn {
+/* Hidden Select covering the card for mobile tapping */
+.hidden-picker {
   position: absolute;
-  top: 2px; left: 2px;
-  background: var(--fpl-purple);
-  color: var(--fpl-green);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  width: 18px; height: 18px;
-  font-size: 9px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  z-index: 30;
-  transition: transform 0.2s;
-}
-
-.sub-btn:hover { transform: scale(1.2); }
-
-/* Top Right Price Tag */
-.price-tag {
-  position: absolute;
-  top: 2px; right: 2px;
-  background: rgba(0,0,0,0.8);
-  color: #fff;
-  font-size: 8px;
-  padding: 1px 4px;
-  border-radius: 2px;
-  z-index: 20;
+  top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+  z-index: 10;
 }
 
 /* ---- 2025/26 JERSEY LIBRARY ---- */
@@ -151,33 +150,37 @@ html, body {
   position: relative;
 }
 
-/* Goalkeeper - Single Universal Design */
-.jersey.gkp_jersey { 
-  background: #f9d423; 
-  background-image: linear-gradient(315deg, #f9d423 0%, #ff4e50 74%);
-  border: 1px solid #000;
-}
-
-/* Active Premier League Teams */
-.jersey.arsenal      { background: #ef0107; border-left: 5px solid #fff; border-right: 5px solid #fff; }
-.jersey.liverpool    { background: #c8102e; border-top: 3px solid #f6eb61; }
-.jersey.man_city     { background: #6cabdd; background-image: linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%); background-size: 20px 20px; }
-.jersey.man_utd      { background: #da291c; border-bottom: 4px solid #000; }
-.jersey.chelsea      { background: #034694; border-bottom: 2px solid #00e5ff; }
-.jersey.tottenham    { background: #fff; border-bottom: 6px solid #132257; }
-.jersey.aston_villa  { background: #95bfe5; border-bottom: 5px solid #670e36; }
-.jersey.newcastle    { background: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px; }
-.jersey.brighton     { background: linear-gradient(90deg, #0057b8 50%, #fff 50%); background-size: 12px; }
-.jersey.everton      { background: #003399; border-top: 3px solid #fff; }
-.jersey.west_ham     { background: #7a263a; border-left: 5px solid #1bb1e7; border-right: 5px solid #1bb1e7; }
-.jersey.wolves       { background: #fdb913; border-bottom: 3px solid #231f20; }
-.jersey.fulham       { background: #fff; border-left: 5px solid #000; border-right: 5px solid #000; }
+/* Authentic Team Patterns */
+.jersey.arsenal        { background: #ef0107; border-left: 5px solid #fff; border-right: 5px solid #fff; }
+.jersey.liverpool      { background: #c8102e; border-top: 3px solid #f6eb61; } /* Yellow collar detail */
+.jersey.man_city       { background: #6cabdd; background-image: linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%); background-size: 20px 20px; } /* Sash effect */
+.jersey.newcastle      { background: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px; } /* Stripes */
+.jersey.brighton       { background: linear-gradient(90deg, #0057b8 50%, #fff 50%); background-size: 12px; } /* Stripes */
+.jersey.brentford      { background: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px; } /* Stripes */
+.jersey.sunderland     { background: repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, #fff 8px, #fff 16px); } /* Stripes */
+.jersey.leeds          { background: #fff; border: 2px solid #00509d; } /* Pure White with blue trim */
+.jersey.burnley        { background: #6c1d45; border-bottom: 5px solid #95d6f2; } /* Claret/Blue */
+.jersey.man_utd        { background: #da291c; border-bottom: 4px solid #000; }
+.jersey.chelsea        { background: #034694; border-bottom: 2px solid #00e5ff; } /* Liquid blue accent */
+.jersey.tottenham      { background: #fff; border-bottom: 6px solid #132257; }
+.jersey.aston_villa    { background: #95bfe5; border-bottom: 5px solid #670e36; }
+.jersey.everton        { background: #003399; border-top: 3px solid #fff; }
+.jersey.west_ham       { background: #7a263a; border-left: 5px solid #1bb1e7; border-right: 5px solid #1bb1e7; }
+.jersey.wolves         { background: #fdb913; border-bottom: 3px solid #231f20; }
+.jersey.fulham         { background: #fff; border-left: 5px solid #000; border-right: 5px solid #000; }
 .jersey.crystal_palace { background: linear-gradient(90deg, #1b458f 50%, #c4122e 50%); background-size: 18px; }
-.jersey.nottm_forest { background: #dd0000; border-top: 2px solid #fff; }
-.jersey.bournemouth  { background: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 14px; }
-.jersey.brentford    { background: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px; }
-.jersey.ipswich      { background: #005696; border-bottom: 3px solid #fff; }
+.jersey.nottm_forest   { background: #dd0000; border-top: 2px solid #fff; }
+.jersey.bournemouth    { background: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 14px; }
+.jersey.leicester      { background: #003090; border-bottom: 3px solid #fdb913; }
+.jersey.ipswich        { background: #005696; border-bottom: 3px solid #fff; }
 
+/* ---- GOALKEEPER SYSTEM ---- */
+.jersey.gk-volt  { background: #e1ff00; border: 1px solid #c2db00; } /* Standard Neon */
+.jersey.gk-pink  { background: #ff00ea; border-bottom: 3px solid #000; } /* Pink Template */
+.jersey.gk-black { background: #1a1a1a; border-bottom: 3px solid #fff; } /* Black Template */
+.jersey.gk-cyan  { background: #00e5ff; border: 1px solid #00c2d9; } /* Blue Template */
+
+/* Empty slot */
 .jersey.default { 
   background: rgba(255,255,255,0.1); 
   border-radius: 50%; width: 22px; height: 22px; clip-path: none; border: 1px dashed #fff; 
@@ -189,12 +192,12 @@ html, body {
   top: -4px; right: -4px;
   background: var(--fpl-purple);
   color: var(--fpl-green);
-  width: 14px; height: 14px;
+  width: 15px; height: 15px;
   border-radius: 50%;
-  font-size: 8px; font-weight: 900;
+  font-size: 9px; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid #fff;
-  z-index: 40;
+  z-index: 5;
 }
 
 /* ---- BENCH AREA ---- */
@@ -205,19 +208,70 @@ html, body {
   border-top: 2px solid rgba(255,255,255,0.1);
 }
 
-/* ---- ANIMATIONS ---- */
-.swap-target {
-  animation: pulse-green 1.5s infinite;
-  z-index: 50;
-}
-
-@keyframes pulse-green {
-  0% { box-shadow: 0 0 0 0px rgba(0, 255, 135, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(0, 255, 135, 0); }
-  100% { box-shadow: 0 0 0 0px rgba(0, 255, 135, 0); }
-}
-
+/* Responsive Scaling for older/smaller phones */
 @media (max-width: 380px) {
   .jersey { width: 30px; height: 28px; }
   .p-name-box { font-size: 8px; }
+  .stat-value { font-size: 14px; }
+}
+
+
+/* Substitution Button Style - Top Left */
+.sub-btn {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: var(--fpl-purple);
+    color: var(--fpl-green);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 25; /* Higher than other card elements */
+    transition: all 0.2s ease;
+}
+
+.sub-btn:hover {
+    transform: scale(1.1);
+    background: var(--fpl-green);
+    color: var(--fpl-purple);
+}
+
+/* Ensure price tag is on the right so they don't fight for space */
+.price-tag {
+    position: absolute;
+    top: 2px; 
+    right: 2px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 8px;
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+
+
+/* Animation classes */
+.slot {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+.swap-target {
+    animation: pulse-green 1.5s infinite;
+    z-index: 30;
+}
+
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0px rgba(0, 255, 135, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 255, 135, 0); }
+    100% { box-shadow: 0 0 0 0px rgba(0, 255, 135, 0); }
+}
+
+.swapping {
+    opacity: 0.5;
+    transform: scale(0.9);
 }
