@@ -142,44 +142,46 @@ html, body {
   z-index: 10;
 }
 
-/* ---- 2025/26 JERSEY LIBRARY (FULL 20 TEAMS) ---- */
+/* ---- 2025/26 JERSEY LIBRARY (COMPLETE) ---- */
 .jersey {
-  width: 34px;
-  height: 32px;
+  width: 34px; height: 32px;
   clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0% 20%);
   position: relative;
-  transition: all 0.3s ease;
+  background-color: #555; /* Base fallback */
 }
 
-/* 1. Universal Goalkeeper (One jersey for all GKPs) */
+/* FIX: Goalkeepers (Uses gkp_jersey to match your JS logic) */
 .jersey.gkp_jersey { 
-  background: #f9d423; 
-  background-image: linear-gradient(315deg, #f9d423 0%, #ff4e50 74%);
-  border: 1px solid rgba(0,0,0,0.2);
+  background-color: #f9d423 !important; 
+  background: linear-gradient(135deg, #f9d423 0%, #ff4e50 100%) !important;
 }
 
-/* 2. The 20 Premier League Teams */
+/* The 20 Teams */
 .jersey.arsenal        { background: #ef0107; border-left: 5px solid #fff; border-right: 5px solid #fff; }
 .jersey.aston_villa    { background: #95bfe5; border-bottom: 5px solid #670e36; }
 .jersey.bournemouth    { background: linear-gradient(90deg, #000 50%, #da291c 50%); background-size: 14px; }
 .jersey.brentford      { background: linear-gradient(90deg, #e30613 50%, #fff 50%); background-size: 10px; }
 .jersey.brighton       { background: linear-gradient(90deg, #0057b8 50%, #fff 50%); background-size: 12px; }
-.jersey.burnley        { background: #6c1d45; border-bottom: 5px solid #95d6f2; } /* Claret & Blue */
+.jersey.burnley        { background: #6c1d45; border-bottom: 5px solid #95d6f2; }
 .jersey.chelsea        { background: #034694; border-bottom: 2px solid #00e5ff; }
 .jersey.crystal_palace { background: linear-gradient(90deg, #1b458f 50%, #c4122e 50%); background-size: 18px; }
 .jersey.everton        { background: #003399; border-top: 3px solid #fff; }
 .jersey.fulham         { background: #fff; border-left: 5px solid #000; border-right: 5px solid #000; }
-.jersey.leeds          { background: #fff; border: 2px solid #00509d; } /* Pure White with Blue trim */
+.jersey.leeds          { background: #fff; border: 2px solid #00509d; }
 .jersey.liverpool      { background: #c8102e; border-top: 3px solid #f6eb61; }
-.jersey.man_city       { background: #6cabdd; background-image: linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%); background-size: 20px 20px; }
+.jersey.man_city       { background: #6cabdd; border-right: 8px solid rgba(255,255,255,0.3); }
 .jersey.man_utd        { background: #da291c; border-bottom: 4px solid #000; }
 .jersey.newcastle      { background: linear-gradient(90deg, #000 50%, #fff 50%); background-size: 10px; }
 .jersey.nottm_forest   { background: #dd0000; border-top: 2px solid #fff; }
-.jersey.sunderland     { background: repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, #fff 8px, #fff 16px); } /* Red & White Stripes */
+.jersey.sunderland     { background: repeating-linear-gradient(90deg, #ff0000, #ff0000 7px, #fff 7px, #fff 14px); }
 .jersey.tottenham      { background: #fff; border-bottom: 6px solid #132257; }
 .jersey.west_ham       { background: #7a263a; border-left: 5px solid #1bb1e7; border-right: 5px solid #1bb1e7; }
 .jersey.wolves         { background: #fdb913; border-bottom: 3px solid #231f20; }
 
+.jersey.default { 
+  background: rgba(255,255,255,0.1); 
+  clip-path: none; border-radius: 50%; width: 20px; height: 20px; border: 1px dashed #fff; 
+}
 /* Fallback for empty slots */
 .jersey.default { 
   background: rgba(255,255,255,0.1); 
