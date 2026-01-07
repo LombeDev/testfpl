@@ -216,49 +216,40 @@ html, body {
 }
 
 
-/* Substitution Button Style */
+/* Substitution Button Style - Top Left */
 .sub-btn {
     position: absolute;
-    bottom: 2px;
-    left: 2px; /* Positioned opposite to price tag */
-    background: #37003c; /* FPL Purple */
-    color: #00ff87; /* FPL Green */
-    border: 1px solid rgba(255,255,255,0.3);
+    top: 2px;
+    left: 2px;
+    background: var(--fpl-purple);
+    color: var(--fpl-green);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 20;
+    z-index: 25; /* Higher than other card elements */
     transition: all 0.2s ease;
 }
 
 .sub-btn:hover {
     transform: scale(1.1);
-    background: #00ff87;
-    color: #37003c;
+    background: var(--fpl-green);
+    color: var(--fpl-purple);
 }
 
-/* Animation classes */
-.slot {
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-}
-
-.swap-target {
-    animation: pulse-green 1.5s infinite;
-    z-index: 30;
-}
-
-@keyframes pulse-green {
-    0% { box-shadow: 0 0 0 0px rgba(0, 255, 135, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(0, 255, 135, 0); }
-    100% { box-shadow: 0 0 0 0px rgba(0, 255, 135, 0); }
-}
-
-.swapping {
-    opacity: 0.5;
-    transform: scale(0.9);
+/* Ensure price tag is on the right so they don't fight for space */
+.price-tag {
+    position: absolute;
+    top: 2px; 
+    right: 2px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 8px;
+    padding: 1px 3px;
+    border-radius: 2px;
 }
