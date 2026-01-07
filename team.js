@@ -1,6 +1,7 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v4.4.2)
+ * KOPALA FPL - MASTER ENGINE (v4.4.3)
  * FULL PRODUCTION SOURCE - NO OMISSIONS
+ * Features: Fixed AI Rating, 3-Player Limit, & 2025/26 Jersey Mapping
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -8,7 +9,7 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
-const STORAGE_KEY = 'kopala_v4_4_2';
+const STORAGE_KEY = 'kopala_v4_4_3';
 
 // 15-man squad structure
 let squad = [
@@ -50,7 +51,7 @@ function calculateStats() {
         if (p) {
             totalCost += parseFloat(p.price);
             if (!slot.isBench) {
-                const xp = parseFloat(p.xp);
+                const xp = parseFloat(p.xp) || 0;
                 baseXP += xp;
                 if (xp > maxXP) { maxXP = xp; captainName = p.name; }
                 if (counts.hasOwnProperty(slot.pos)) counts[slot.pos]++;
@@ -59,17 +60,30 @@ function calculateStats() {
     });
 
     window.currentCaptain = captainName;
+
+    // 1. Budget Display
     const budgetEl = document.getElementById('budget-val');
     if (budgetEl) {
         const bankVal = (100.0 - totalCost).toFixed(1);
         budgetEl.textContent = `£${bankVal}m`;
-        budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#fff';
+        budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#2d3436';
     }
 
-    const totalXP = (baseXP + maxXP).toFixed(1);
+    // 2. XP & AI Rating Fix
+    const totalXPValue = (baseXP + maxXP).toFixed(1);
     const xpEl = document.getElementById('v-xp');
-    if (xpEl) xpEl.textContent = totalXP;
+    if (xpEl) xpEl.textContent = totalXPValue;
 
+    const ratingEl = document.getElementById('team-rating');
+    if (ratingEl) {
+        const score = parseFloat(totalXPValue);
+        // Normalized against a high-performing squad threshold of 75 XP
+        const ratingPercent = score > 0 ? Math.min(100, Math.round((score / 75) * 100)) : 0;
+        ratingEl.textContent = `${ratingPercent}%`;
+        ratingEl.style.color = ratingPercent > 70 ? "#00ff85" : (ratingPercent > 40 ? "#e1ff00" : "#ff005a");
+    }
+
+    // 3. Formation Label
     const formEl = document.getElementById('formation-label');
     if (formEl) formEl.textContent = `${counts.DEF}-${counts.MID}-${counts.FWD}`;
 }
@@ -88,14 +102,15 @@ async function syncData() {
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
             // Strict Mapping to match CSS
-            if (slug.includes('man_city') || (slug.includes('man') && slug.includes('city'))) slug = 'man_city';
-            if (slug.includes('man_utd') || (slug.includes('man') && slug.includes('united'))) slug = 'man_utd';
+            if (slug.includes('city')) slug = 'man_city';
+            if (slug.includes('united') && slug.includes('man')) slug = 'man_utd';
             if (slug.includes('forest')) slug = 'nottm_forest';
             if (slug.includes('spurs') || slug.includes('tottenham')) slug = 'tottenham';
             if (slug.includes('palace')) slug = 'crystal_palace';
             if (slug.includes('wolves')) slug = 'wolves';
-            if (slug.includes('ham')) slug = 'west_ham';
+            if (slug.includes('ham') && !slug.includes('south')) slug = 'west_ham';
             if (slug.includes('villa')) slug = 'aston_villa';
+            if (slug.includes('brighton')) slug = 'brighton';
             if (slug.includes('leeds')) slug = 'leeds';
             if (slug.includes('burnley')) slug = 'burnley';
             if (slug.includes('sunderland')) slug = 'sunderland';
@@ -154,6 +169,7 @@ function createSlotUI(slotData) {
     const p = playerDB.find(p => p.name === slotData.name);
     const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
     const jerseyClass = p ? (p.pos === 'GKP' ? 'gkp_jersey' : p.teamSlug) : 'default';
+    const fixText = p ? `<span style="opacity: 0.6; font-size: 8px;"> ${getNextFixture(p.teamId)}</span>` : "";
 
     div.innerHTML = `
         <div class="player-card-wrapper ${selectedSlotId === slotData.id ? 'swap-target' : ''}">
@@ -166,41 +182,38 @@ function createSlotUI(slotData) {
                     <i class="fa-solid fa-arrows-rotate"></i>
                 </button>
             </div>
-            <div class="p-name-box">${slotData.name || slotData.pos}</div>
+            <div class="p-name-box">${slotData.name || slotData.pos}${fixText}</div>
         </div>
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
             <option value="">-- Select --</option>
-            ${playerDB.filter(x => x.pos === slotData.pos).sort((a,b) => b.ownership - a.ownership).slice(0, 20)
+            ${playerDB.filter(x => x.pos === slotData.pos).sort((a,b) => b.ownership - a.ownership).slice(0, 25)
                 .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name}</option>`).join('')}
         </select>
     `;
     return div;
 }
 
-// --- AUTO-TEAM TEMPLATE ENGINE (FIXED) ---
+// --- TEMPLATE ENGINE (STRICT 3-PLAYER LIMIT) ---
 
 function loadTemplate() {
     if (!playerDB || playerDB.length === 0) return;
     
-    // 1. Reset everything
     squad.forEach(slot => slot.name = '');
     let budget = 100.0;
     const selectedPlayers = new Set();
-    const teamCounts = {}; // Key: teamId, Value: count
+    const teamCounts = {}; 
 
-    // 2. Sort by XP (to get "best" players first)
     const sortedDB = [...playerDB].sort((a, b) => b.xp - a.xp);
 
-    // 3. Fill Squad
     squad.forEach((slot, index) => {
-        const remainingSlots = 15 - index;
-        const reservedBudget = remainingSlots * 4.2; // Keep ~4.2m for others
+        const remaining = 15 - index;
+        const safetyMargin = remaining * 4.3; // Reserve funds for the rest of the squad
         
         const bestFit = sortedDB.find(p => 
             p.pos === slot.pos && 
-            parseFloat(p.price) <= (budget - (reservedBudget - 4.2)) && 
+            parseFloat(p.price) <= (budget - (safetyMargin - 4.3)) && 
             !selectedPlayers.has(p.name) &&
-            (teamCounts[p.teamId] || 0) < 3 // THE FIX: STRICTOR 3-PER-TEAM
+            (teamCounts[p.teamId] || 0) < 3
         );
 
         if (bestFit) {
@@ -215,7 +228,7 @@ function loadTemplate() {
     renderPitch();
 }
 
-// --- SQUAD LOGIC ---
+// --- SQUAD MANAGEMENT ---
 
 function startSubstitution(id) {
     if (selectedSlotId === null) {
@@ -230,17 +243,16 @@ function startSubstitution(id) {
 
         if (id1 === id2) { renderPitch(); return; }
         if ((s1.pos === 'GKP' || s2.pos === 'GKP') && s1.pos !== s2.pos) {
-            alert("Goalkeepers only swap with Goalkeepers.");
+            alert("Goalkeepers can only be swapped with other Goalkeepers.");
             renderPitch(); return;
         }
 
-        // Swap Logic
         const tempName = s1.name;
         s1.name = s2.name;
         s2.name = tempName;
 
         if (!validateFormation()) {
-            alert("Invalid Formation! Min: 3 DEF, 2 MID, 1 FWD.");
+            alert("Invalid Formation! Must have 3 DEF, 2 MID, 1 FWD.");
             s2.name = s1.name; s1.name = tempName; // Revert
         }
 
@@ -276,7 +288,6 @@ function resetTeam() {
 
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
-    // Buttons
     const rBtn = document.querySelector('.btn-reset');
     if (rBtn) rBtn.onclick = resetTeam;
     const tBtn = document.getElementById('wildcard-btn');
