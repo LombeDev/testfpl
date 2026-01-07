@@ -1,7 +1,6 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v4.4.5)
- * FULL PRODUCTION SOURCE - ZERO OMISSIONS
- * Features: Dynamic Swapping, Strict 3-Limit, AI Rating (75 XP Basis)
+ * KOPALA FPL - MASTER ENGINE (v4.4.6)
+ * FULL PRODUCTION SOURCE - FIXTURE PERSISTENCE FIX
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -9,9 +8,9 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
-const STORAGE_KEY = 'kopala_v4_4_5';
+const STORAGE_KEY = 'kopala_v4_4_6';
 
-// Master Squad Array
+// Squad state
 let squad = [
     { id: 0, pos: 'GKP', name: '', isBench: false },
     { id: 1, pos: 'DEF', name: '', isBench: false },
@@ -29,6 +28,30 @@ let squad = [
     { id: 13, pos: 'MID', name: '', isBench: true },
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
+
+// --- UPDATED FIXTURE LOGIC ---
+
+function getNextFixture(teamId) {
+    if (!fixturesDB || fixturesDB.length === 0) return "";
+    
+    // Find the first fixture for this team that is NOT finished
+    // This ensures that during a live GW, it still shows the current/next opponent
+    const next = fixturesDB.find(f => 
+        !f.finished && (f.team_h === teamId || f.team_a === teamId)
+    );
+    
+    if (!next) return "DONE"; // If all 38 games are finished
+
+    const isHome = next.team_h === teamId;
+    const opponentId = isHome ? next.team_a : next.team_h;
+    const opponentName = teamsDB[opponentId] || "???";
+    
+    // Shorten name (e.g., 'man_city' -> 'MCI')
+    const shortName = opponentName.substring(0, 3).toUpperCase();
+    const venue = isHome ? 'H' : 'A';
+    
+    return `${shortName} (${venue})`;
+}
 
 // --- CORE ANALYTICS ---
 
@@ -51,7 +74,6 @@ function calculateStats() {
 
     window.currentCaptain = captainName;
 
-    // UI Updates
     const budgetEl = document.getElementById('budget-val');
     if (budgetEl) {
         const bankVal = (100.0 - totalCost).toFixed(1);
@@ -66,7 +88,6 @@ function calculateStats() {
     const ratingEl = document.getElementById('team-rating');
     if (ratingEl) {
         const score = parseFloat(totalXPValue);
-        // Normalized against 75 XP (the threshold for an 'Elite' Gameweek team)
         const ratingPercent = score > 0 ? Math.min(100, Math.round((score / 75) * 100)) : 0;
         ratingEl.textContent = `${ratingPercent}%`;
     }
@@ -75,7 +96,7 @@ function calculateStats() {
     if (formEl) formEl.textContent = `${counts.DEF}-${counts.MID}-${counts.FWD}`;
 }
 
-// --- DATA INITIALIZATION ---
+// --- SYNC & MAPPING ---
 
 async function syncData() {
     try {
@@ -88,14 +109,12 @@ async function syncData() {
 
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-            // Strict Override for CSS Classes
+            // Mapping for 25/26 Promoted & Top Teams
             if (slug.includes('city')) slug = 'man_city';
             if (slug.includes('united') && slug.includes('man')) slug = 'man_utd';
             if (slug.includes('forest')) slug = 'nottm_forest';
             if (slug.includes('tottenham')) slug = 'tottenham';
             if (slug.includes('palace')) slug = 'crystal_palace';
-            if (slug.includes('wolves')) slug = 'wolves';
-            if (slug.includes('ham')) slug = 'west_ham';
             if (slug.includes('leeds')) slug = 'leeds';
             if (slug.includes('burnley')) slug = 'burnley';
             if (slug.includes('sunderland')) slug = 'sunderland';
@@ -115,10 +134,10 @@ async function syncData() {
 
         loadSquad();
         renderPitch();
-    } catch (e) { console.error("FPL API Sync Error: ", e); }
+    } catch (e) { console.error("Sync Error: ", e); }
 }
 
-// --- UI RENDERER ---
+// --- RENDERING ---
 
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
@@ -128,7 +147,6 @@ function renderPitch() {
     calculateStats(); 
     pitch.innerHTML = ''; bench.innerHTML = '';
 
-    // Draw Starting Rows
     ['GKP', 'DEF', 'MID', 'FWD'].forEach(posType => {
         const playersInPos = squad.filter(s => !s.isBench && s.pos === posType);
         if (playersInPos.length > 0) {
@@ -139,7 +157,6 @@ function renderPitch() {
         }
     });
 
-    // Draw Bench Row
     const bRow = document.createElement('div');
     bRow.className = 'row bench-row';
     squad.filter(s => s.isBench).forEach(slot => {
@@ -156,6 +173,9 @@ function createSlotUI(slotData) {
     const p = playerDB.find(p => p.name === slotData.name);
     const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
     const jerseyClass = p ? (p.pos === 'GKP' ? 'gkp_jersey' : p.teamSlug) : 'default';
+    
+    // THE FIX: Embed the fixture label right under the name
+    const fixtureLabel = p ? `<div class="fixture-label">${getNextFixture(p.teamId)}</div>` : "";
 
     div.innerHTML = `
         <div class="player-card-wrapper ${selectedSlotId === slotData.id ? 'swap-target' : ''}">
@@ -168,18 +188,21 @@ function createSlotUI(slotData) {
                     <i class="fa-solid fa-arrows-rotate"></i>
                 </button>
             </div>
-            <div class="p-name-box">${slotData.name || slotData.pos}</div>
+            <div class="p-name-box">
+                <div class="p-web-name">${slotData.name || slotData.pos}</div>
+                ${fixtureLabel}
+            </div>
         </div>
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
             <option value="">-- Select --</option>
-            ${playerDB.filter(x => x.pos === slotData.pos).sort((a,b) => b.ownership - a.ownership).slice(0, 20)
+            ${playerDB.filter(x => x.pos === slotData.pos).sort((a,b) => b.ownership - a.ownership).slice(0, 25)
                 .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name}</option>`).join('')}
         </select>
     `;
     return div;
 }
 
-// --- DYNAMIC ENGINE CONTROLS ---
+// --- INTERACTION ---
 
 async function startSubstitution(id) {
     if (selectedSlotId === null) {
@@ -194,25 +217,19 @@ async function startSubstitution(id) {
         const s2 = squad.find(s => s.id === id2);
 
         if (id1 === id2) { renderPitch(); return; }
-
         if ((s1.pos === 'GKP' || s2.pos === 'GKP') && s1.pos !== s2.pos) {
-            alert("Goalkeepers can only be swapped with Goalkeepers.");
+            alert("Goalkeepers only swap with Goalkeepers.");
             renderPitch(); return;
         }
 
-        // Swap Positions AND Names to ensure formation updates
+        // Full Swap (Name & Position)
         const tempName = s1.name;
         const tempPos = s1.pos;
-        
-        s1.name = s2.name;
-        s1.pos = s2.pos;
-        
-        s2.name = tempName;
-        s2.pos = tempPos;
+        s1.name = s2.name; s1.pos = s2.pos;
+        s2.name = tempName; s2.pos = tempPos;
 
         if (!validateFormation()) {
-            alert("Invalid Formation! Check your minimums (3 DEF, 2 MID, 1 FWD).");
-            // Revert swap
+            alert("Invalid Formation! (Min 3 DEF, 2 MID, 1 FWD)");
             s2.name = s1.name; s2.pos = s1.pos;
             s1.name = tempName; s1.pos = tempPos;
         }
@@ -238,16 +255,13 @@ function loadTemplate() {
     const sorted = [...playerDB].sort((a, b) => b.xp - a.xp);
 
     squad.forEach((slot, index) => {
-        const remaining = 15 - index;
-        const buffer = remaining * 4.2;
-        
+        const buffer = (15 - index) * 4.2;
         const bestFit = sorted.find(p => 
             p.pos === slot.pos && 
             parseFloat(p.price) <= (budget - (buffer - 4.2)) && 
             !selected.has(p.name) &&
             (teamCounts[p.teamId] || 0) < 3
         );
-
         if (bestFit) {
             slot.name = bestFit.name;
             budget -= parseFloat(bestFit.price);
@@ -255,9 +269,7 @@ function loadTemplate() {
             teamCounts[bestFit.teamId] = (teamCounts[bestFit.teamId] || 0) + 1;
         }
     });
-
-    saveSquad();
-    renderPitch();
+    saveSquad(); renderPitch();
 }
 
 function updatePlayer(id, name) {
@@ -278,7 +290,6 @@ function resetTeam() {
     }
 }
 
-// Init
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
     const rBtn = document.querySelector('.btn-reset');
