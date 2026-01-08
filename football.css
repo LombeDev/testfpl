@@ -474,3 +474,44 @@ td {
     font-size: 0.8rem;
     font-weight: bold;
 }
+
+
+/* Scrollable Table Container */
+.table-scroll-container {
+    max-height: 450px; /* Adjust height as needed */
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid var(--fpl-border);
+    position: relative;
+}
+
+/* Sticky Header Logic */
+.table-scroll-container table {
+    border-collapse: separate; /* Required for sticky borders */
+    border-spacing: 0;
+    width: 100%;
+}
+
+.table-scroll-container thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--fpl-container); /* Match your card background */
+    box-shadow: inset 0 -1px 0 var(--fpl-border); /* Bottom border for sticky header */
+    padding: 12px 8px;
+}
+
+/* Custom Scrollbar Styling (Optional - for Pro Look) */
+.table-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+.table-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--fpl-primary);
+}
