@@ -330,9 +330,110 @@ td {
 :root {
     --fpl-primary: #ff005a; 
     --fpl-surface: #fdf8f9; 
+
+
+
+    .value-badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.value-badge.underdog {
+    background: #00ff87; /* FPL Green */
+    color: #000;
+    box-shadow: 0 0 10px rgba(0, 255, 135, 0.4);
+}
+
+.value-badge.draw {
+    background: #ffd700; /* Gold */
+    color: #000;
+}
+
+/* Subtle highlight for the whole row */
+.has-value {
+    border-left: 3px solid #00ff87 !important;
+    background: rgba(0, 255, 135, 0.03);
+}
     --fpl-container: #ffffff; 
     --fpl-on-container: #37003c;
     --fpl-border: rgba(0,0,0,0.06);
     --transition-speed: 0.6s;
 }
 /* ... (keep other styles same) ... */
+
+
+
+.prediction-container {
+    margin-top: 12px;
+    padding: 0 10px;
+}
+
+.prob-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #eee;
+}
+
+.prob-segment { height: 100%; transition: width 0.5s ease; }
+.prob-segment.home { background: var(--fpl-primary); } /* Your primary color */
+.prob-segment.draw { background: #94a3b8; }           /* Neutral Grey */
+.prob-segment.away { background: #ff005a; }           /* Vibrant Red */
+
+.prob-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    margin-top: 4px;
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+.live-tag {
+    background: #ff005a;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    animation: pulse 1.5s infinite;
+}
+
+
+
+/* --- Smart Zones --- */
+.cl-zone { border-left: 4px solid #4e73df; } /* Champions League Blue */
+.el-zone { border-left: 4px solid #f6ad55; } /* Europa League Orange */
+.rel-zone { border-left: 4px solid #e53e3e; } /* Relegation Red */
+
+/* --- Form Guide Bubbles --- */
+.form-container { display: flex; gap: 4px; justify-content: center; }
+.form-pill {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: bold;
+}
+.pill-W { background: #28a745; }
+.pill-D { background: #ffc107; color: #000; }
+.pill-L { background: #dc3545; }
+
+/* --- Scrollable Engine --- */
+.smart-scroll {
+    max-height: 550px;
+    overflow-y: auto;
+    position: relative;
+    scrollbar-width: thin;
+}
+.smart-scroll thead th {
+    position: sticky;
+    top: 0;
+    background: var(--fpl-container);
+    z-index: 20;
+    box-shadow: inset 0 -1px 0 var(--fpl-border);
+}
