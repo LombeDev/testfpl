@@ -727,3 +727,29 @@ table {
 .pts-col, .total-col { width: 32px !important; text-align: center; }
 .cap-col { width: 60px !important; }
 .diff-col, .trans-col 
+
+
+.advice-container {
+    background: #1e1e1e;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    color: white;
+}
+
+.transfer-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    font-size: 12px;
+}
+
+.sell-tag { color: #ff2882; font-weight: bold; }
+.buy-tag { color: #01ef80; font-weight: bold; }
+
+.suggest-transfer {
+    border: 1px dashed yellow;
+    border-radius: 4px;
+    background: rgba(255, 255, 0, 0.1);
+}
