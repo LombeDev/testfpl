@@ -4,7 +4,7 @@ const API_BASE = "/fpl-api/";
 const LEAGUES_LIST = [
     { name: "Kopala FPL", id: "101712" },
     { name: "Bayporteers", id: "147133" },
-    { name: "Zedian Premier League", id: "1745660" }, 
+    { name: "Zedian Premier League", id: "1745660" }, // Replace with real IDs
     { name: "Zambia", id: "258" },
     { name: "Second Chance", id: "333" }
 ];
@@ -41,8 +41,7 @@ async function fetchProLeague(leagueId) {
         });
 
         const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
-        const activeGwLabel = document.getElementById("active-gw-label");
-        if (activeGwLabel) activeGwLabel.textContent = `GW ${currentEvent}`;
+        document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
 
         // Render the managers into the existing table body
         renderTable(leagueData.standings.results);
@@ -55,7 +54,8 @@ async function fetchProLeague(leagueId) {
 }
 
 /**
- * Renders the League Selection List (Responsive Mobile View)
+ * Renders the League Selection List (The UI from your screenshot)
+ * We inject this into the table-wrapper when no league is selected
  */
 function renderLeagueSelector() {
     const body = document.getElementById("league-body");
@@ -66,40 +66,12 @@ function renderLeagueSelector() {
 
     body.innerHTML = LEAGUES_LIST.map(league => `
         <tr style="border-bottom: 8px solid var(--fpl-surface);">
-            <td style="padding: 12px 8px; background: var(--fpl-container); display: block;">
-                <div style="
-                    display: flex; 
-                    justify-content: space-between; 
-                    align-items: center; 
-                    gap: 10px;
-                    width: 100%;
-                    box-sizing: border-box;
-                ">
-                    <span style="
-                        font-weight: 800; 
-                        font-size: 1rem; 
-                        color: var(--fpl-on-container);
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        flex: 1;
-                    ">
-                        ${league.name}
-                    </span>
+            <td colspan="7" style="padding: 15px; background: var(--fpl-container);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 1.1rem; color: var(--fpl-on-container);">${league.name}</span>
                     <button onclick="fetchProLeague('${league.id}')" 
-                        style="
-                            background: var(--fpl-blue); 
-                            color: #333; 
-                            border: none; 
-                            padding: 8px 12px; 
-                            border-radius: 6px; 
-                            font-weight: 800; 
-                            font-size: 10px; 
-                            cursor: pointer; 
-                            text-transform: uppercase;
-                            white-space: nowrap;
-                            flex-shrink: 0;
-                        ">
+                            style="background: var(--fpl-blue); color: #333; border: none; padding: 8px 15px; 
+                            border-radius: 6px; font-weight: 800; font-size: 10px; cursor: pointer; text-transform: uppercase;">
                         View League
                     </button>
                 </div>
@@ -281,13 +253,10 @@ function handleManagerClick(id, name) {
 /**
  * Event Listeners & Init
  */
-const closeModalBtn = document.getElementById("close-modal");
-if (closeModalBtn) {
-    closeModalBtn.onclick = () => {
-        document.getElementById("team-modal").classList.add("hidden");
-        document.body.style.overflow = ''; 
-    };
-}
+document.getElementById("close-modal").onclick = () => {
+    document.getElementById("team-modal").classList.add("hidden");
+    document.body.style.overflow = ''; 
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     // Start with the League Selection list
