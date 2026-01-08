@@ -241,3 +241,31 @@ td {
         max-height: 400px;
     }
 }
+
+
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: var(--fpl-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.back-to-top:hover {
+    transform: translateY(-5px);
+}
+
+.back-to-top:active {
+    transform: scale(0.9);
+}
