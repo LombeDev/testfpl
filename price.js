@@ -256,3 +256,30 @@ function updateTimer() {
 // Start
 setInterval(updateTimer, 1000);
 initPredictor();
+
+
+
+/**
+ * Back to Top Logic for Scrollable Container
+ */
+const scrollContainer = document.querySelector('.table-container');
+const backToTopBtn = document.getElementById('backToTop');
+
+if (scrollContainer && backToTopBtn) {
+    // Show button when scrolling down 300px inside the container
+    scrollContainer.addEventListener('scroll', () => {
+        if (scrollContainer.scrollTop > 300) {
+            backToTopBtn.style.display = 'flex';
+        } else {
+            backToTopBtn.style.display = 'none';
+        }
+    });
+
+    // Scroll back to top smoothly when clicked
+    backToTopBtn.addEventListener('click', () => {
+        scrollContainer.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
