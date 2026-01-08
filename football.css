@@ -437,3 +437,40 @@ td {
     z-index: 20;
     box-shadow: inset 0 -1px 0 var(--fpl-border);
 }
+
+
+
+/* Predictor Card Styling */
+.predictor-gradient {
+    background: linear-gradient(135deg, #37003c, var(--fpl-primary)) !important;
+    color: white;
+    padding: 24px;
+    border-radius: 20px;
+    margin-bottom: 25px;
+}
+.predictor-content { display: flex; justify-content: space-between; align-items: center; }
+.predictor-crest { width: 64px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+
+/* Run-In Dots */
+.run-in-container { display: flex; gap: 4px; margin-top: 4px; }
+.run-in-dot {
+    font-size: 0.55rem;
+    padding: 1px 4px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+}
+.diff-hard { background: #ff005a; } /* Playing a Top-6 team */
+.diff-easy { background: #00ff87; color: #000; } /* Playing a lower team */
+
+/* Responsive Table Adjustments */
+.center-text { text-align: center; }
+.table-crest { width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; }
+.fixture-mini-row {
+    display: grid;
+    grid-template-columns: 1fr 50px 1fr;
+    padding: 10px;
+    border-bottom: 1px solid var(--fpl-border);
+    font-size: 0.8rem;
+    font-weight: bold;
+}
