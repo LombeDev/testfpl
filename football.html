@@ -33,6 +33,45 @@
             font-family: 'Inter', 'Segoe UI', sans-serif;
         }
 
+        /* --- NEW SCROLL & STICKY ENGINE --- */
+        .table-container {
+            max-height: 480px; 
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            background: var(--fpl-container);
+        }
+
+        /* Sticky Headers */
+        #standings-table thead th, 
+        #scorers-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: var(--fpl-container);
+            box-shadow: inset 0 -1px 0 var(--fpl-border);
+        }
+
+        /* --- MOBILE BADGE FIX --- */
+        .table-crest {
+            width: 18px !important;
+            height: 18px !important;
+            object-fit: contain;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .table-crest {
+                width: 16px !important;
+                height: 16px !important;
+                margin-right: 5px;
+            }
+            /* Hide Form on very small screens to save space if needed, 
+               or keep it small */
+            .form-indicator { transform: scale(0.8); transform-origin: left; }
+        }
+
         /* --- PROGRESS BAR STYLES --- */
         .progress-container {
             width: 100%;
@@ -40,7 +79,7 @@
             background: transparent;
             overflow: hidden;
             position: sticky;
-            top: 58px; /* Matches Navbar height */
+            top: 58px;
             z-index: 1100;
         }
 
@@ -220,6 +259,8 @@
 
     <main class="main-content">
         <div class="container">
+            <div id="title-predictor"></div>
+
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; padding: 0 10px;">
                 <h1 id="section-title" class="page-title" style="margin:0;">English Premier League</h1>
                 <span id="last-updated">
@@ -276,7 +317,9 @@
                     <div class="card-header" style="padding: 15px;">
                         <h2 style="margin:0;"><i class="fa-solid fa-calendar-days"></i> Fixtures & Results</h2>
                     </div>
-                    <div id="fixtures-list" class="fixtures-grid"></div>
+                    <div class="table-container" style="max-height: 400px;">
+                        <div id="fixtures-list" class="fixtures-grid"></div>
+                    </div>
                 </section>
             </div>
         </div>
@@ -305,14 +348,13 @@
             setTimeout(() => updateProgress(100), 500);
         }
 
-        // Intercept league switching to show progress
+        // Intercept league switching
         const originalSwitchLeague = window.switchLeague;
         window.switchLeague = function(id) {
             simulateSync();
             if(typeof originalSwitchLeague === 'function') originalSwitchLeague(id);
         };
 
-        // Intercept refresh button
         const originalForceRefresh = window.forceRefresh;
         window.forceRefresh = function() {
             simulateSync();
@@ -352,10 +394,34 @@
             toggleThemeMenu();
         }
 
+        // Drawer Toggle Script
+        const menuBtn = document.getElementById('menu-btn');
+        const drawer = document.getElementById('side-drawer');
+        const backdrop = document.getElementById('main-backdrop');
+        const closeBtn = document.getElementById('close-btn');
+
+        if(menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                drawer.classList.add('active');
+                backdrop.classList.add('active');
+            });
+        }
+
+        if(closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                drawer.classList.remove('active');
+                backdrop.classList.remove('active');
+            });
+        }
+
         window.onclick = function(e) {
             if (!e.target.closest('.theme-menu-container')) {
                 const d = document.getElementById('theme-dropdown');
                 if (d) d.style.display = 'none';
+            }
+            if (e.target === backdrop) {
+                drawer.classList.remove('active');
+                backdrop.classList.remove('active');
             }
         }
 
