@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Leagues | Kopala FPL AI</title>
+    <title>Mini Leagues|Kopala FPL</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="kopala.css">
     <style>
         /* --- MATERIAL YOU DYNAMIC CORE --- */
         :root {
@@ -14,8 +16,10 @@
             --fpl-on-container: #37003c;
             --fpl-border: rgba(0,0,0,0.06);
             --transition-speed: 0.6s;
+            
             --fpl-purple: #37003c;
             --fpl-green: #00ff87;
+            --fpl-pink: #ff005a;
             --fpl-blue: #04f5ff;
         }
 
@@ -31,155 +35,267 @@
             color: var(--fpl-on-container);
             transition: background-color var(--transition-speed) ease, color var(--transition-speed);
             margin: 0;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
         }
 
-        /* --- SIDE DRAWER & BACKDROP --- */
-        .drawer {
-            position: fixed; top: 0; left: -300px; width: 280px; height: 100%;
-            background: var(--fpl-container); z-index: 3000;
-            transition: left 0.3s ease; box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-        }
-        .drawer.active { left: 0; }
-        .backdrop {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 2500; display: none;
-        }
-        .backdrop.active { display: block; }
-        .drawer-links { list-style: none; padding: 20px; margin: 0; }
-        .drawer-links li { padding: 15px 0; border-bottom: 1px solid var(--fpl-border); }
-        .drawer-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 700; }
-
-        /* --- NAVBAR --- */
+        /* --- THEMED NAVBAR --- */
         .navbar {
             background-color: var(--fpl-container);
             border-bottom: 1px solid var(--fpl-border);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px; position: sticky; top: 0; z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .brand { font-size: 1.5rem; font-weight: 900; color: var(--fpl-on-container); text-transform: uppercase; margin: 0; text-decoration: none; }
-        .brand span { color: var(--fpl-primary); }
-        .menu-icon { cursor: pointer; font-size: 1.2rem; margin-right: 15px; }
 
-        /* --- AI EMOTIONAL COMPONENTS --- */
-        .story-box {
-            background: linear-gradient(135deg, var(--fpl-purple) 0%, var(--fpl-primary) 150%);
-            color: white; padding: 24px; border-radius: 24px; margin-bottom: 25px;
-            border-left: 6px solid var(--fpl-green); box-shadow: 0 10px 30px rgba(255, 0, 90, 0.2);
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--fpl-on-container) !important;
+            text-transform: uppercase;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
         }
-        #rivalry-arena { background: var(--fpl-container); border: 1px solid var(--fpl-border); padding: 15px; border-radius: 24px; margin-bottom: 25px; }
-        .matchup-slider { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
 
-        /* --- TABLE --- */
-        .card { background-color: var(--fpl-container); border: 1px solid var(--fpl-border); border-radius: 24px; padding: 20px; margin-bottom: 20px; }
+        .brand span {
+            color: var(--fpl-primary);
+            margin-left: 5px;
+            transition: color var(--transition-speed);
+        }
+
+        /* --- THEME PICKER SYSTEM --- */
+        .theme-menu-container { position: relative; display: inline-block; }
+        
+        .btn-round {
+            width: 40px; height: 40px; border-radius: 50%;
+            background-color: var(--fpl-surface);
+            color: var(--fpl-primary);
+            border: 2px solid var(--fpl-primary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+
+        .btn-round:hover { transform: scale(1.1); background-color: var(--fpl-primary); color: white !important; }
+
+        .theme-dropdown {
+            display: none; position: absolute; top: 55px; right: 0;
+            background: var(--fpl-container); border: 1px solid var(--fpl-border);
+            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 12px 0; }
+        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* --- TABLE & CARD THEMING --- */
+        .card, .heatmap-card {
+            background-color: var(--fpl-container) !important;
+            border: 1px solid var(--fpl-border) !important;
+            border-radius: 24px !important;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: none;
+            transition: background-color var(--transition-speed);
+        }
+
         #league-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        #league-table th { text-align: left; opacity: 0.6; padding: 12px 8px; border-bottom: 1px solid var(--fpl-border); }
-        #league-table td { padding: 12px 8px; border-bottom: 1px solid var(--fpl-border); }
-
-        /* --- MODAL & PITCH --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 4000; display: flex; align-items: center; justify-content: center; }
-        .modal-content { width: 95%; max-width: 550px; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 28px; position: relative; }
-        
-        /* THE FOOTBALL PITCH */
-        .modal-pitch {
-            background: #008144; border: 3px solid rgba(255,255,255,0.4); border-radius: 12px;
-            padding: 10px; display: flex; flex-direction: column; gap: 15px; min-height: 400px;
-            background-image: linear-gradient(rgba(255,255,255,0.1) 2px, transparent 2px); background-size: 100% 25%;
+        #league-table th { 
+            background: transparent; 
+            color: var(--fpl-on-container); 
+            opacity: 0.6;
+            text-transform: uppercase; 
+            padding: 12px 8px; 
+            border-bottom: 1px solid var(--fpl-border); 
         }
-        .modal-row { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
-        .pitch-player { width: 60px; text-align: center; color: white; font-size: 9px; }
-        .jersey { width: 35px; height: 35px; margin: 0 auto; background: #ccc; border-radius: 4px; }
         
-        .hidden { display: none !important; }
-        .btn-round { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--fpl-primary); background: none; color: var(--fpl-primary); cursor: pointer; }
+        #league-table td { 
+            padding: 10px 8px; 
+            border-bottom: 1px solid var(--fpl-border); 
+            color: var(--fpl-on-container);
+        }
+
+        .m-name { color: var(--fpl-primary) !important; font-weight: 800; }
+        .live-pts, .bold-p { color: var(--fpl-on-container) !important; font-weight: 900; }
+        
+        /* Refresh/Sync Button */
+        .search-btn {
+            background: var(--fpl-surface) !important;
+            border: 1px solid var(--fpl-border) !important;
+            color: var(--fpl-primary) !important;
+            transition: all 0.3s ease;
+        }
+
+        /* Nav Links */
+        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
+        .nav-links li a { color: var(--fpl-on-container); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .nav-links li a:hover { color: var(--fpl-primary); }
+
+        @media screen and (min-width: 768px) {
+            #menu-btn { display: none !important; }
+            .nav-links { display: flex; align-items: center; }
+        }
+
+        footer { text-align: center; padding: 40px; opacity: 0.6; color: var(--fpl-on-container); }
     </style>
 </head>
 <body>
 
     <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; border-bottom: 1px solid var(--fpl-border); display: flex; justify-content: space-between;">
-            <h2 class="brand">KOPALA <span>FPL</span></h2>
-            <button onclick="toggleDrawer()" style="background:none; border:none; font-size:1.5rem;">&times;</button>
+        <div style="padding: 20px; background: var(--fpl-container); color: var(--fpl-on-container); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
+            <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
         </div>
         <ul class="drawer-links">
             <li><a href="index.html">Home</a></li>
-            <li><a href="team.html">AI Team Builder</a></li>
-            <li><a href="price.html">Price Changes</a></li>
-            <li><a href="contact.html">Contact</a></li>
+            <li><a href="team.html">My team by AI</a></li>
+            <li><a href="price.html">Price Change Predictor</a></li>
+            <li><a href="football.html">Football Leagues</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
         </ul>
     </div>
-    <div id="backdrop" class="backdrop" onclick="toggleDrawer()"></div>
+
+    <div id="backdrop" class="backdrop"></div>
 
     <nav class="navbar">
-        <div style="display: flex; align-items: center;">
-            <i class="fas fa-bars menu-icon" onclick="toggleDrawer()"></i>
+        <div class="nav-left" style="display: flex; align-items: center;">
+            <div id="menu-btn" class="menu-icon">
+                <span></span><span></span><span></span>
+            </div>
             <h1 class="brand">KOPALA <span>FPL</span></h1>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="team.html">My team by AI</a></li>
+                <li><a href="price.html">Price Change Predictor</a></li>
+                <li><a href="football.html">Football Leagues</a></li>
+                <li><a href="contact.html">Contact us</a></li>
+            </ul>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span id="active-gw-label" style="font-weight: 900;">GW --</span>
-            <button class="btn-round" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
-            <button class="btn-round" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
+        <div class="nav-right" style="display: flex; align-items: center; gap: 15px;">
+            <span id="active-gw-label" class="gw-text" style="color: var(--fpl-on-container); font-weight: 900;">GW --</span>
+            
+            <div class="theme-menu-container">
+                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
+                    <i class="fa-solid fa-palette"></i>
+                </button>
+                <div id="theme-dropdown" class="theme-dropdown">
+                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5; text-transform: uppercase;">Material Theme</span>
+                    <div class="swatch-grid">
+                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
+                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
+                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
+                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
+                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
+                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
+                    </div>
+                    <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer;">
+                        🌙 Dark Mode
+                    </button>
+                </div>
+            </div>
+
+            <button class="icon-btn search-btn" onclick="location.reload()" style="width: 35px; height: 35px; border-radius: 50%; cursor: pointer;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
         </div>
     </nav>
 
-    <div class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px;">
-        
-        <div id="rivalry-arena"></div>
-        <div id="league-story-container" class="story-box hidden"></div>
-
+    <div class="container" style="max-width: 1200px; margin: 20px auto; padding: 0 15px;">
         <div class="card">
-            <div style="overflow-x: auto;">
+            <div class="table-wrapper" style="overflow-x: auto;">
                 <table id="league-table">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Manager</th>
-                            <th>GW</th>
-                            <th>TOT</th>
-                            <th>Captain</th>
-                            <th>Diffs</th>
-                            <th>Trans</th>
+                            <th class="rank-col">#</th>
+                            <th class="manager-col">Manager</th>
+                            <th class="pts-col">GW</th>
+                            <th class="total-col">TOT</th>
+                            <th class="cap-col">Captain</th>
+                            <th class="diff-col">Diffs</th>
+                            <th class="trans-col">Trans</th>
                         </tr>
                     </thead>
-                    <tbody id="league-body"></tbody>
+                    <tbody id="league-body">
+                        </tbody>
                 </table>
             </div>
         </div>
+
+    <div id="loading-overlay" class="hidden">
+        <div class="fpl-spinner"></div>
+        <p style="font-weight: bold; color: var(--fpl-purple);">Syncing Mini-League Data...</p>
     </div>
 
-    <div id="loading-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--fpl-surface); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-        <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--fpl-primary)"></i>
-        <p>AI SYNCING...</p>
-    </div>
 
     <div id="team-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="background: var(--fpl-container);">
-            <button onclick="closeModal()" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:1.5rem; color:inherit;">&times;</button>
-            <h2 id="modal-manager-name" style="margin-top:0;">Manager</h2>
-            <div id="modal-squad-list"></div>
+        <div class="modal-content" style="background: var(--fpl-container); color: var(--fpl-on-container); border-radius: 24px;">
+            <div class="modal-header">
+                <h2 id="modal-manager-name">Manager Squad</h2>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+            <div id="modal-squad-list" class="squad-grid"></div>
         </div>
     </div>
 
     <script>
-        function toggleDrawer() {
-            document.getElementById('side-drawer').classList.toggle('active');
-            document.getElementById('backdrop').classList.toggle('active');
+        function toggleThemeMenu() {
+            const menu = document.getElementById('theme-dropdown');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         }
 
-        function closeModal() {
-            document.getElementById('team-modal').classList.add('hidden');
-            document.body.style.overflow = '';
+        function applyMaterialTheme(color, shouldToggle = false) {
+            document.body.classList.remove('dark-mode');
+            document.documentElement.style.setProperty('--fpl-primary', color);
+            const surfaceColor = `${color}0A`; 
+            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
+            localStorage.setItem('kopala_ai_theme', color);
+            localStorage.setItem('kopala_is_dark', 'false');
+            if(shouldToggle) toggleThemeMenu();
         }
 
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
-            localStorage.setItem('fpl_dark', isDark);
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            if(isDark) {
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme, false);
+            }
+            localStorage.setItem('kopala_is_dark', isDark);
+            toggleThemeMenu();
+        }
+
+        window.onclick = function(e) {
+            if (!e.target.closest('.theme-menu-container')) {
+                const d = document.getElementById('theme-dropdown');
+                if (d) d.style.display = 'none';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if(localStorage.getItem('fpl_dark') === 'true') document.body.classList.add('dark-mode');
+            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
+            
+            // Set menu to hidden explicitly
+            document.getElementById('theme-dropdown').style.display = 'none';
+
+            if (wasDark) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme, false); // false prevents the menu from opening
+            }
         });
     </script>
     <script src="kopala.js"></script>
