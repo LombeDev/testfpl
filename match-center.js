@@ -1,150 +1,132 @@
 /**
- * KOPALA FPL - AI PRO MATCH CENTER
- * Persistence Logic: Shows ended matches until the next GW begins.
+ * KOPALA FPL - PRO MATCH CENTER (FINAL STABLE VERSION)
  */
 
 const FPL_PROXY = "/fpl-api/"; 
 
-let state = {
-    playerLookup: {},
-    teamLookup: {},
-    activeGameweek: null,
-    refreshTimer: null,
-    watchlist: JSON.parse(localStorage.getItem('fpl_watchlist')) || [],
-    lastProcessedStats: {}
-};
+let playerLookup = {};
+let teamLookup = {};
+let activeGameweek = null;
+let refreshTimer = null;
 
-/**
- * 1. Initialize System with Persistence
- */
 async function initMatchCenter() {
-    const container = document.getElementById('fixtures-container');
-    
     try {
         const response = await fetch(`${FPL_PROXY}bootstrap-static/`);
         const data = await response.json();
         
-        state.playerLookup = Object.fromEntries(data.elements.map(p => [p.id, p.web_name]));
-        state.teamLookup = Object.fromEntries(data.teams.map(t => [t.id, { name: t.name, short: t.short_name }]));
+        data.elements.forEach(p => playerLookup[p.id] = p.web_name);
+        data.teams.forEach(t => teamLookup[t.id] = t.name);
         
-        // PERSISTENCE LOGIC: 
-        // 1. Look for the 'current' GW.
-        // 2. If the current GW is finished, we keep it as active until the 'next' GW starts.
-        const currentEvent = data.events.find(e => e.is_current);
-        const nextEvent = data.events.find(e => e.is_next);
-
-        // If current exists, use it. If not (very rare), use the last finished one.
-        state.activeGameweek = currentEvent ? currentEvent.id : (data.events.filter(e => e.finished).pop()?.id || 1);
-
-        console.log(`AI Engine: Showing Gameweek ${state.activeGameweek}`);
-
+        const current = data.events.find(e => e.is_current) || data.events.find(e => !e.finished);
+        activeGameweek = current ? current.id : 1;
         updateLiveScores();
-        renderWatchlistManager();
-        
     } catch (error) {
-        console.error("AI Sync Error:", error);
-        if (container) container.innerHTML = `<div style="text-align:center; padding:20px; font-size:0.7rem;">Syncing...</div>`;
-        setTimeout(initMatchCenter, 5000);
+        console.error("Sync Error:", error);
     }
 }
 
-/**
- * 2. Main Render Engine
- */
 async function updateLiveScores() {
     const container = document.getElementById('fixtures-container');
-    const liveIndicator = document.getElementById('live-indicator');
     if (!container) return;
+    clearTimeout(refreshTimer);
 
     try {
-        const response = await fetch(`${FPL_PROXY}fixtures/?event=${state.activeGameweek}`);
+        const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
         const fixtures = await response.json();
+        const startedGames = fixtures.filter(f => f.started);
         
-        // Sorting: Live > Finished > Upcoming
-        const sortedGames = fixtures.sort((a, b) => {
-            if (a.started && !a.finished && (!b.started || b.finished)) return -1;
-            if (a.finished && !b.finished && !b.started) return -1;
-            return new Date(b.kickoff_time) - new Date(a.kickoff_time);
-        });
-
-        const anyLive = fixtures.some(f => f.started && !f.finished);
-        if (liveIndicator) {
-            anyLive ? liveIndicator.classList.remove('hidden') : liveIndicator.classList.add('hidden');
-        }
+        // Only refresh if games are actually in progress
+        if (startedGames.some(f => !f.finished)) refreshTimer = setTimeout(updateLiveScores, 60000);
 
         let html = '';
         let lastDateString = "";
+        const sortedGames = [...startedGames].sort((a, b) => new Date(b.kickoff_time) - new Date(a.kickoff_time));
 
         sortedGames.forEach(game => {
             const kickoff = new Date(game.kickoff_time);
-            const dateStr = kickoff.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+            const currentDateString = kickoff.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
-            if (dateStr !== lastDateString) {
-                html += `<div style="color:#37003c; font-size:0.7rem; font-weight:800; margin: 15px 0 8px 5px; opacity:0.5; text-transform:uppercase;">${dateStr}</div>`;
-                lastDateString = dateStr;
+            if (currentDateString !== lastDateString) {
+                html += `<div style="color:#37003c; font-size:0.75rem; font-weight:800; margin: 20px 0 10px 5px; opacity:0.6; text-transform:uppercase;">${currentDateString}</div>`;
+                lastDateString = currentDateString;
             }
 
-            const home = state.teamLookup[game.team_h];
-            const away = state.teamLookup[game.team_a];
+            // --- FIXED MINUTE LOGIC ---
+            let statusDisplay = "";
+            if (game.finished) {
+                statusDisplay = 'FT'; // Shows FT if the game is over
+            } else if (game.started) {
+                const diffMins = Math.floor((new Date() - kickoff) / 60000);
+                if (diffMins < 45) statusDisplay = `${diffMins}'`;
+                else if (diffMins < 60) statusDisplay = 'HT';
+                else if (diffMins < 105) statusDisplay = `${diffMins - 15}'`;
+                else statusDisplay = "90+'"; // Prevents 171' bug
+            }
+
+            const homeAbbr = teamLookup[game.team_h].substring(0, 3).toUpperCase();
+            const awayAbbr = teamLookup[game.team_a].substring(0, 3).toUpperCase();
+
+            const goals = game.stats.find(s => s.identifier === 'goals_scored');
+            const assists = game.stats.find(s => s.identifier === 'assists');
+            let homeEvents = '', awayEvents = '';
             
-            // Smarter Status Label
-            let status = "PRE";
-            if (game.finished) status = "FT";
-            else if (game.started) status = `${game.minutes}'`;
+            if (goals) {
+                goals.h.forEach(s => homeEvents += `<div>${playerLookup[s.element]} ⚽</div>`);
+                goals.a.forEach(s => awayEvents += `<div>⚽ ${playerLookup[s.element]}</div>`);
+            }
+            if (assists) {
+                assists.h.forEach(s => homeEvents += `<div style="opacity:0.4; font-size:0.55rem;">${playerLookup[s.element]} <span style="color:#ff005a">A</span></div>`);
+                assists.a.forEach(s => awayEvents += `<div style="opacity:0.4; font-size:0.55rem;"><span style="color:#ff005a">A</span> ${playerLookup[s.element]}</div>`);
+            }
 
-            const goals = game.stats.find(s => s.identifier === 'goals_scored') || {h:[], a:[]};
-            const assists = game.stats.find(s => s.identifier === 'assists') || {h:[], a:[]};
-            const bps = game.stats.find(s => s.identifier === 'bps') || {h:[], a:[]};
-
-            const renderEvents = (players, isGoal) => players.map(s => {
-                const isWatched = state.watchlist.includes(s.element);
-                return `<div style="margin-bottom:2px;">${isWatched ? '★' : '☆'} ${state.playerLookup[s.element]} ${isGoal ? '⚽' : '<small style="color:#ff005a">A</small>'}</div>`;
-            }).join('');
-
-            const topBps = [...bps.h, ...bps.a].sort((a, b) => b.value - a.value).slice(0, 3);
-            const colors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-            const bonusHtml = topBps.map((p, i) => `
-                <div style="margin-bottom:6px; font-size:0.65rem; display:flex; align-items:center; gap:5px;">
-                    <span style="background:${colors[i]}; width:13px; height:13px; display:flex; align-items:center; justify-content:center; border-radius:2px; font-weight:900; font-size:0.5rem;">${3-i}</span>
-                    <span style="font-weight:700; color:#37003c;">${state.playerLookup[p.element]}</span>
-                    <span style="opacity:0.3;">${p.value}</span>
-                </div>`).join('');
+            const bps = game.stats.find(s => s.identifier === 'bps');
+            let bonusHtml = '';
+            if (bps) {
+                const top = [...bps.h, ...bps.a].sort((a, b) => b.value - a.value).slice(0, 3);
+                const colors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+                top.forEach((p, i) => {
+                    bonusHtml += `
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:0.65rem;">
+                            <span style="background:${colors[i]}; color:#000; width:13px; height:13px; display:flex; align-items:center; justify-content:center; border-radius:2px; font-weight:900; font-size:0.5rem;">${3-i}</span>
+                            <span style="font-weight:700;">${playerLookup[p.element]} <span style="opacity:0.3; font-weight:400;">${p.value}</span></span>
+                        </div>`;
+                });
+            }
 
             html += `
-                <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f5f5f5;">
-                    <div style="flex: 1.4; border-right: 1px solid #eee; padding-right: 10px;">
+                <div style="display: flex; flex-direction: row; padding: 12px 0; margin-bottom: 2px; border-bottom: 1px solid #f8f8f8; min-height: 90px;">
+                    <div style="flex: 1.3; padding-right: 12px; display: flex; flex-direction: column; border-right: 1px solid #eee;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-weight: 900; font-size: 0.8rem;">${home.short}</span>
-                            <div style="background: #37003c; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 900; font-family: monospace; font-size:0.75rem;">
-                                ${game.team_h_score ?? 0} - ${game.team_a_score ?? 0}
+                            <span style="font-weight: 900; font-size: 0.8rem; color:#37003c; flex: 1;">${homeAbbr}</span>
+                            <div style="background: #37003c; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 900; font-size: 0.8rem; font-family: monospace; margin: 0 10px;">
+                                ${game.team_h_score} | ${game.team_a_score}
                             </div>
-                            <span style="font-weight: 900; font-size: 0.8rem; text-align: right;">${away.short}</span>
+                            <span style="font-weight: 900; font-size: 0.8rem; color:#37003c; flex: 1; text-align: right;">${awayAbbr}</span>
                         </div>
-                        <div style="display: flex; gap: 8px; font-size: 0.6rem; min-height: 20px;">
-                            <div style="flex: 1;">${renderEvents(goals.h, true)}${renderEvents(assists.h, false)}</div>
-                            <div style="flex: 1; text-align: right;">${renderEvents(goals.a, true)}${renderEvents(assists.a, false)}</div>
+                        <div style="display: flex; gap: 8px; font-size: 0.65rem; flex-grow: 1;">
+                            <div style="flex: 1; text-align: left; font-weight: 600;">${homeEvents}</div>
+                            <div style="flex: 1; text-align: right; font-weight: 600;">${awayEvents}</div>
                         </div>
                         <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
-                             <span style="font-size: 0.55rem; opacity: 0.3; font-weight: 800;">GAMEDAY</span>
-                             <span style="font-size: 0.65rem; font-weight: 900; color:#ff005a;">${status}</span>
+                             <span style="font-size: 0.55rem; font-weight: 800; opacity: 0.2;">GW ${activeGameweek}</span>
+                             <span style="font-size: 0.65rem; font-weight: 900; color:#37003c;">${statusDisplay}</span>
                         </div>
                     </div>
-                    <div style="flex: 1; padding-left: 12px;">
-                        <div style="font-size: 0.55rem; font-weight: 900; color: #37003c; margin-bottom: 6px; opacity: 0.4;">BONUS POINTS</div>
-                        ${bonusHtml || '<span style="opacity:0.2; font-size:0.55rem;">Awaiting...</span>'}
+                    <div style="flex: 1; padding-left: 12px; display: flex; flex-direction: column;">
+                        <div style="font-size: 0.55rem; font-weight: 900; color: #37003c; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; opacity: 0.5;">
+                            🏆 BONUS <span style="width: 4px; height: 4px; background: ${game.finished ? '#ccc' : '#ff005a'}; border-radius: 50%;"></span>
+                        </div>
+                        <div style="flex-grow: 1;">
+                            ${bonusHtml || '<span style="opacity:0.2; font-size:0.55rem;">Awaiting...</span>'}
+                        </div>
                     </div>
                 </div>`;
         });
-
-        container.innerHTML = html;
         
-        // Polling: Fast (30s) if live, Slow (10m) if games are finished.
-        clearTimeout(state.refreshTimer);
-        state.refreshTimer = setTimeout(updateLiveScores, anyLive ? 30000 : 600000);
-
-    } catch (err) { console.error(err); }
+        container.innerHTML = html;
+    } catch (err) {
+        console.error("Match Center Engine Error:", err);
+    }
 }
-
-// Watchlist Logic (Keep your existing toggleWatchlist and renderWatchlistManager functions)
 
 document.addEventListener('DOMContentLoaded', initMatchCenter);
