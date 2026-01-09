@@ -1,6 +1,6 @@
 /**
- * KOPALA FPL - MASTER ENGINE (v5.0.0)
- * FULL PRODUCTION SOURCE - SMART OPTIMIZER & FDR INTEGRATION
+ * KOPALA FPL - MASTER ENGINE (v4.4.6)
+ * FULL PRODUCTION SOURCE - FIXTURE PERSISTENCE FIX
  */
 
 const API_BASE = "/fpl-api/"; 
@@ -8,7 +8,7 @@ let playerDB = [];
 let teamsDB = {}; 
 let fixturesDB = [];
 let selectedSlotId = null;
-const STORAGE_KEY = 'kopala_v5_pro';
+const STORAGE_KEY = 'kopala_v4_4_6';
 
 // Squad state
 let squad = [
@@ -29,161 +29,74 @@ let squad = [
     { id: 14, pos: 'FWD', name: '', isBench: true }
 ];
 
-// --- 1. FDR & FIXTURE LOGIC ---
-
-/**
- * Assigns a difficulty color based on opponent strength
- * Green = Easy, Orange = Tough, Pink = Elite
- */
-function getFDRColor(teamId) {
-    const elite = [1, 13, 14, 18]; // MCI, LIV, ARS, CHE (Example IDs)
-    const tough = [17, 19, 6, 2, 15]; // TOT, MUN, NEW, AVL, MUN
-    
-    if (elite.includes(teamId)) return '#ff005a'; // Hard
-    if (tough.includes(teamId)) return '#ff9f43'; // Moderate
-    return '#00ff87'; // Easy
-}
+// --- UPDATED FIXTURE LOGIC ---
 
 function getNextFixture(teamId) {
-    if (!fixturesDB || fixturesDB.length === 0) return { text: "TBC", color: "#666" };
+    if (!fixturesDB || fixturesDB.length === 0) return "";
     
+    // Find the first fixture for this team that is NOT finished
+    // This ensures that during a live GW, it still shows the current/next opponent
     const next = fixturesDB.find(f => 
         !f.finished && (f.team_h === teamId || f.team_a === teamId)
     );
     
-    if (!next) return { text: "DONE", color: "#666" };
+    if (!next) return "DONE"; // If all 38 games are finished
 
     const isHome = next.team_h === teamId;
     const opponentId = isHome ? next.team_a : next.team_h;
     const opponentName = teamsDB[opponentId] || "???";
     
+    // Shorten name (e.g., 'man_city' -> 'MCI')
     const shortName = opponentName.substring(0, 3).toUpperCase();
     const venue = isHome ? 'H' : 'A';
     
-    return {
-        text: `${shortName} (${venue})`,
-        color: getFDRColor(opponentId)
-    };
+    return `${shortName} (${venue})`;
 }
 
-// --- 2. CORE ANALYTICS (FFH STYLE) ---
+// --- CORE ANALYTICS ---
 
 function calculateStats() {
-    let squadValue = 0, starterXP = 0, maxXP = 0, captainName = "";
-    let formation = { 'DEF': 0, 'MID': 0, 'FWD': 0 };
+    let totalCost = 0, baseXP = 0, maxXP = 0, captainName = "";
+    let counts = { 'DEF': 0, 'MID': 0, 'FWD': 0 };
 
     squad.forEach(slot => {
         const p = playerDB.find(x => x.name === slot.name);
         if (p) {
-            const price = parseFloat(p.price);
-            squadValue += price;
-
+            totalCost += parseFloat(p.price);
             if (!slot.isBench) {
                 const xp = parseFloat(p.xp) || 0;
-                starterXP += xp;
-                
-                // Smart Captaincy: Identify highest predicted points
-                if (xp > maxXP) {
-                    maxXP = xp;
-                    captainName = p.name;
-                }
-                if (formation.hasOwnProperty(slot.pos)) formation[slot.pos]++;
+                baseXP += xp;
+                if (xp > maxXP) { maxXP = xp; captainName = p.name; }
+                if (counts.hasOwnProperty(slot.pos)) counts[slot.pos]++;
             }
         }
     });
 
     window.currentCaptain = captainName;
 
-    // UI: Predicted Points
-    const totalXPValue = (starterXP + maxXP).toFixed(1);
-    const xpEl = document.getElementById('v-xp');
-    if (xpEl) {
-        xpEl.textContent = totalXPValue;
-        xpEl.style.color = '#ff005a';
+    const budgetEl = document.getElementById('budget-val');
+    if (budgetEl) {
+        const bankVal = (100.0 - totalCost).toFixed(1);
+        budgetEl.textContent = `£${bankVal}m`;
+        budgetEl.style.color = (bankVal < 0) ? '#ff005a' : '#2d3436';
     }
 
-    // UI: AI Rating (Based on 70pt Elite Benchark)
+    const totalXPValue = (baseXP + maxXP).toFixed(1);
+    const xpEl = document.getElementById('v-xp');
+    if (xpEl) xpEl.textContent = totalXPValue;
+
     const ratingEl = document.getElementById('team-rating');
     if (ratingEl) {
         const score = parseFloat(totalXPValue);
-        const rating = score > 0 ? Math.min(100, Math.round((score / 70) * 100)) : 0;
-        ratingEl.textContent = `${rating}%`;
-        ratingEl.style.color = rating > 85 ? '#00ff87' : (rating > 60 ? '#f1c40f' : '#ff005a');
+        const ratingPercent = score > 0 ? Math.min(100, Math.round((score / 75) * 100)) : 0;
+        ratingEl.textContent = `${ratingPercent}%`;
     }
 
-    // UI: Team Value & Bank
-    const itb = (100.0 - squadValue).toFixed(1);
-    const budgetEl = document.getElementById('budget-val');
-    const tvEl = document.getElementById('team-value');
-
-    if (budgetEl) {
-        budgetEl.textContent = `£${itb}m`;
-        budgetEl.style.color = (itb < 0) ? '#ff005a' : '#2d3436';
-    }
-    if (tvEl) tvEl.textContent = `£${squadValue.toFixed(1)}m`;
-
-    // UI: Formation
     const formEl = document.getElementById('formation-label');
-    if (formEl) formEl.textContent = `${formation.DEF}-${formation.MID}-${formation.FWD}`;
-
-    // Trigger AI Transfer Optimization
-    suggestTransfer();
+    if (formEl) formEl.textContent = `${counts.DEF}-${counts.MID}-${counts.FWD}`;
 }
 
-// --- 3. SMART TRANSFER OPTIMIZER ---
-
-function suggestTransfer() {
-    const suggestionEl = document.getElementById('ai-suggestion');
-    if (!suggestionEl) return;
-
-    const starters = squad.filter(s => !s.isBench && s.name !== '');
-    if (starters.length === 0) {
-        suggestionEl.innerHTML = "<small style='color:#999'>Add players to see AI tips</small>";
-        return;
-    }
-
-    // Find the starter with the lowest XP contribution
-    let weakest = null;
-    let minXP = Infinity;
-    starters.forEach(slot => {
-        const p = playerDB.find(x => x.name === slot.name);
-        if (p && p.xp < minXP) {
-            minXP = p.xp;
-            weakest = p;
-        }
-    });
-
-    const itb = 100.0 - squad.reduce((acc, s) => {
-        const p = playerDB.find(x => x.name === s.name);
-        return acc + (p ? parseFloat(p.price) : 0);
-    }, 0);
-
-    const maxBudget = parseFloat(weakest.price) + itb;
-    const currentSquadNames = squad.map(s => s.name);
-
-    // Find affordable upgrade
-    const upgrade = playerDB.filter(p => 
-        p.pos === weakest.pos && 
-        parseFloat(p.price) <= maxBudget &&
-        !currentSquadNames.includes(p.name) &&
-        p.xp > weakest.xp
-    ).sort((a,b) => b.xp - a.xp)[0];
-
-    if (upgrade) {
-        suggestionEl.innerHTML = `
-            <div style="background: #fff; border: 1px solid #eee; border-left: 4px solid #ff005a; padding: 12px; border-radius: 8px; font-family: sans-serif;">
-                <span style="font-size: 11px; font-weight: 800; color: #888;">AI OPTIMIZER</span>
-                <div style="margin-top: 5px; font-size: 13px; color: #37003c;">
-                    Swap <b>${weakest.name}</b> for <b>${upgrade.name}</b> 
-                    <span style="color: #00ff87; font-weight: bold;">(+${(upgrade.xp - weakest.xp).toFixed(1)} pts)</span>
-                </div>
-            </div>`;
-    } else {
-        suggestionEl.innerHTML = "<small style='color:#999'>Squad is currently point-optimized.</small>";
-    }
-}
-
-// --- 4. SYNC & SYSTEM DATA ---
+// --- SYNC & MAPPING ---
 
 async function syncData() {
     try {
@@ -196,6 +109,15 @@ async function syncData() {
 
         data.teams.forEach(t => {
             let slug = t.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+            // Mapping for 25/26 Promoted & Top Teams
+            if (slug.includes('city')) slug = 'man_city';
+            if (slug.includes('united') && slug.includes('man')) slug = 'man_utd';
+            if (slug.includes('forest')) slug = 'nottm_forest';
+            if (slug.includes('tottenham')) slug = 'tottenham';
+            if (slug.includes('palace')) slug = 'crystal_palace';
+            if (slug.includes('leeds')) slug = 'leeds';
+            if (slug.includes('burnley')) slug = 'burnley';
+            if (slug.includes('sunderland')) slug = 'sunderland';
             teamsDB[t.id] = slug;
         });
 
@@ -215,7 +137,7 @@ async function syncData() {
     } catch (e) { console.error("Sync Error: ", e); }
 }
 
-// --- 5. UI RENDERING ---
+// --- RENDERING ---
 
 function renderPitch() {
     const pitch = document.getElementById('pitch-container');
@@ -252,12 +174,8 @@ function createSlotUI(slotData) {
     const isCaptain = p && p.name === window.currentCaptain && !slotData.isBench;
     const jerseyClass = p ? (p.pos === 'GKP' ? 'gkp_jersey' : p.teamSlug) : 'default';
     
-    // Fixture with FDR Color
-    let fixtureHTML = "";
-    if (p) {
-        const fix = getNextFixture(p.teamId);
-        fixtureHTML = `<div class="fdr-label" style="background:${fix.color}">${fix.text}</div>`;
-    }
+    // THE FIX: Embed the fixture label right under the name
+    const fixtureLabel = p ? `<div class="fixture-label">${getNextFixture(p.teamId)}</div>` : "";
 
     div.innerHTML = `
         <div class="player-card-wrapper ${selectedSlotId === slotData.id ? 'swap-target' : ''}">
@@ -272,19 +190,19 @@ function createSlotUI(slotData) {
             </div>
             <div class="p-name-box">
                 <div class="p-web-name">${slotData.name || slotData.pos}</div>
-                ${fixtureHTML}
+                ${fixtureLabel}
             </div>
         </div>
         <select class="hidden-picker" onchange="updatePlayer(${slotData.id}, this.value)">
             <option value="">-- Select --</option>
-            ${playerDB.filter(x => x.pos === slotData.pos).sort((a,b) => b.ownership - a.ownership).slice(0, 30)
+            ${playerDB.filter(x => x.pos === slotData.pos).sort((a,b) => b.ownership - a.ownership).slice(0, 25)
                 .map(x => `<option value="${x.name}" ${slotData.name === x.name ? 'selected' : ''}>${x.name}</option>`).join('')}
         </select>
     `;
     return div;
 }
 
-// --- 6. USER INTERACTIONS ---
+// --- INTERACTION ---
 
 async function startSubstitution(id) {
     if (selectedSlotId === null) {
@@ -304,6 +222,7 @@ async function startSubstitution(id) {
             renderPitch(); return;
         }
 
+        // Full Swap (Name & Position)
         const tempName = s1.name;
         const tempPos = s1.pos;
         s1.name = s2.name; s1.pos = s2.pos;
@@ -327,6 +246,32 @@ function validateFormation() {
     return (counts['GKP'] === 1 && counts['DEF'] >= 3 && counts['MID'] >= 2 && counts['FWD'] >= 1);
 }
 
+function loadTemplate() {
+    if (!playerDB || playerDB.length === 0) return;
+    squad.forEach(slot => slot.name = '');
+    let budget = 100.0;
+    const selected = new Set();
+    const teamCounts = {}; 
+    const sorted = [...playerDB].sort((a, b) => b.xp - a.xp);
+
+    squad.forEach((slot, index) => {
+        const buffer = (15 - index) * 4.2;
+        const bestFit = sorted.find(p => 
+            p.pos === slot.pos && 
+            parseFloat(p.price) <= (budget - (buffer - 4.2)) && 
+            !selected.has(p.name) &&
+            (teamCounts[p.teamId] || 0) < 3
+        );
+        if (bestFit) {
+            slot.name = bestFit.name;
+            budget -= parseFloat(bestFit.price);
+            selected.add(bestFit.name);
+            teamCounts[bestFit.teamId] = (teamCounts[bestFit.teamId] || 0) + 1;
+        }
+    });
+    saveSquad(); renderPitch();
+}
+
 function updatePlayer(id, name) {
     const s = squad.find(slot => slot.id === id);
     if (s) { s.name = name; saveSquad(); renderPitch(); }
@@ -345,7 +290,10 @@ function resetTeam() {
     }
 }
 
-// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     syncData();
+    const rBtn = document.querySelector('.btn-reset');
+    if (rBtn) rBtn.onclick = resetTeam;
+    const tBtn = document.getElementById('wildcard-btn');
+    if (tBtn) tBtn.onclick = loadTemplate;
 });
