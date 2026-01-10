@@ -157,73 +157,91 @@ document.addEventListener('DOMContentLoaded', initMatchCenter);
 
 
 
+/**
+ * Fetches and renders upcoming EPL fixtures
+ */
 async function loadUpcomingFixtures() {
     const container = document.getElementById('upcoming-list-container');
+    const badge = document.getElementById('next-gw-badge');
     
-    // We use a CORS proxy to bypass FPL API restrictions
-    const PROXY = "https://corsproxy.io/?"; 
-    const BOOTSTRAP_URL = `${PROXY}https://fantasy.premierleague.com/api/bootstrap-static/`;
-    const FIXTURES_BASE_URL = `${PROXY}https://fantasy.premierleague.com/api/fixtures/?event=`;
+    // Safety check: exit if elements don't exist
+    if (!container) return;
+
+    // Reliable CORS proxy for FPL API
+    const PROXY = "https://corsproxy.io/?";
+    const API_BOOTSTRAP = `${PROXY}https://fantasy.premierleague.com/api/bootstrap-static/`;
+    const API_FIXTURES = `${PROXY}https://fantasy.premierleague.com/api/fixtures/`;
 
     try {
-        // 1. Get the current Gameweek status
-        const bootstrapRes = await fetch(BOOTSTRAP_URL);
-        if (!bootstrapRes.ok) throw new Error('Bootstrap fetch failed');
-        const data = await bootstrapRes.json();
-        
-        // Find the current active gameweek and determine the next one
-        const currentGW = data.events.find(event => event.is_current);
-        const nextGWId = currentGW ? currentGW.id + 1 : 1;
-        
-        const badge = document.getElementById('next-gw-badge');
-        if(badge) badge.innerText = `GW ${nextGWId}`;
+        console.log("Starting fixture fetch...");
 
-        // 2. Fetch fixtures for the NEXT gameweek
-        const fixturesRes = await fetch(`${FIXTURES_BASE_URL}${nextGWId}`);
-        if (!fixturesRes.ok) throw new Error('Fixtures fetch failed');
-        const fixtures = await fixturesRes.json();
+        // 1. Get Team Names and GW info
+        const bootRes = await fetch(API_BOOTSTRAP);
+        if (!bootRes.ok) throw new Error("Bootstrap data failed");
+        const bootData = await bootRes.json();
 
-        // 3. Map team IDs to short names
+        // Find next GW
+        const nextGW = bootData.events.find(e => e.is_next) || bootData.events.find(e => e.is_current);
+        const nextGWId = nextGW ? nextGW.id : 1;
+        
+        // Update the badge in your HTML
+        if (badge) badge.innerText = `GW ${nextGWId}`;
+
+        // Create Team ID to Short Name map (e.g., 1 -> ARS)
         const teamMap = {};
-        data.teams.forEach(team => {
-            teamMap[team.id] = team.short_name;
-        });
+        bootData.teams.forEach(t => teamMap[t.id] = t.short_name);
 
-        // 4. Render
+        // 2. Fetch Fixtures for the specific GW
+        const fixRes = await fetch(`${API_FIXTURES}?event=${nextGWId}`);
+        if (!fixRes.ok) throw new Error("Fixtures data failed");
+        const fixtures = await fixRes.json();
+
+        console.log(`Found ${fixtures.length} fixtures for GW ${nextGWId}`);
+
+        // 3. Build HTML
         if (fixtures.length === 0) {
-            container.innerHTML = `<p style="text-align:center; font-size:0.8rem; opacity:0.5;">No fixtures scheduled.</p>`;
+            container.innerHTML = `<p style="text-align:center; padding:10px; font-size:0.8rem; opacity:0.6;">No fixtures scheduled yet.</p>`;
             return;
         }
 
-        container.innerHTML = fixtures.map(f => {
+        const fixturesHTML = fixtures.map(f => {
             const date = new Date(f.kickoff_time);
-            const day = date.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
-            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            const day = date.toLocaleDateString([], { weekday: 'short', day: 'numeric' });
+            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             return `
-                <div class="upcoming-item">
-                    <div class="team-box home">
-                        <span class="team-name-short">${teamMap[f.team_h]}</span>
+                <div class="upcoming-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--fpl-border);">
+                    <div style="width: 35%; text-align: right; font-weight: 800; font-size: 0.85rem;">
+                        ${teamMap[f.team_h] || 'TBC'}
                     </div>
-                    <div class="vs-box">
-                        <span class="vs-badge">VS</span>
-                        <span class="kickoff-time">${day}</span>
-                        <span class="kickoff-time">${time}</span>
+                    <div style="width: 25%; text-align: center; display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-size: 0.6rem; font-weight: 900; background: var(--fpl-surface); border: 1px solid var(--fpl-border); padding: 2px 6px; border-radius: 4px;">VS</span>
+                        <span style="font-size: 0.55rem; opacity: 0.6; font-weight: 700;">${day}</span>
+                        <span style="font-size: 0.55rem; opacity: 0.6; font-weight: 700;">${time}</span>
                     </div>
-                    <div class="team-box away">
-                        <span class="team-name-short">${teamMap[f.team_a]}</span>
+                    <div style="width: 35%; text-align: left; font-weight: 800; font-size: 0.85rem;">
+                        ${teamMap[f.team_a] || 'TBC'}
                     </div>
                 </div>
             `;
         }).join('');
 
-    } catch (error) {
-        console.error("Error details:", error);
+        container.innerHTML = fixturesHTML;
+
+    } catch (err) {
+        console.error("Fixture Error:", err);
         container.innerHTML = `
             <div style="text-align:center; padding:10px;">
-                <p style="font-size:0.7rem; color:var(--fpl-primary); font-weight:700;">API Connection Limited</p>
-                <p style="font-size:0.6rem; opacity:0.6;">Try refreshing the page or check back later.</p>
+                <p style="font-size:0.75rem; color:var(--fpl-primary); font-weight:800;">Connection Error</p>
+                <button onclick="loadUpcomingFixtures()" style="background:none; border:1px solid var(--fpl-primary); color:var(--fpl-primary); padding:4px 10px; border-radius:8px; font-size:0.6rem; font-weight:800; cursor:pointer; margin-top:5px;">RETRY</button>
             </div>
         `;
     }
+}
+
+// Kick off the function
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadUpcomingFixtures);
+} else {
+    loadUpcomingFixtures();
 }
