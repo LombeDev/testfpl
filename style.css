@@ -733,3 +733,20 @@ Make sure the name Kopala FPL is in the center
 }
 
 .p-val { opacity: 0.5; margin-left: 5px; font-size: 0.75rem; }
+
+
+
+
+.match-block {
+    background: var(--fpl-surface);
+    transition: 0.3s ease;
+}
+
+.match-block:hover {
+    border-color: var(--fpl-primary) !important;
+}
+
+.status-dot {
+    display: inline-block;
+    box-shadow: 0 0 5px rgba(0, 255, 135, 0.2);
+}
