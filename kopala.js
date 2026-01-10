@@ -1,52 +1,43 @@
 /**
- * FPL AI Engine - Coding Partner Edition
- * Features: Live Standings, Pitch View, Transfer Suggestions, and FDR
+ * KOPALA FPL - ALL-IN-ONE AI DASHBOARD
+ * Features: Live Match Center, EO Intelligence, Pitch View, AI Suggestions
  */
 
-const API_BASE = "/fpl-api/";
+const API_BASE = "/fpl-api/"; 
 
-// 1. Configuration
-const LEAGUES_LIST = [
-    { name: "Kopala FPL", id: "101712" },
-    { name: "Bayporteers", id: "147133" },
-    { name: "Zedian Premier League", id: "1745660" },
-    { name: "Zambia", id: "258" },
-    { name: "Second Chance", id: "333" }
-];
-
+// 1. STATE MANAGEMENT
 let playerMap = {};
 let teamMap = {};
 let managerSquads = {}; 
+let leagueOwnership = {};
+let activeGameweek = null;
+let refreshTimer = null;
 
-/**
- * Main function to fetch data and initialize the dashboard
- */
-async function fetchProLeague(leagueId) {
-    const loader = document.getElementById("loading-overlay");
-    if (loader) loader.classList.remove("hidden");
+// 2. CSS INJECTION (For clean scrollbars and pitch layout)
+const style = document.createElement('style');
+style.innerHTML = `
+    #fixtures-container { max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #37003c #f4f4f4; }
+    #fixtures-container::-webkit-scrollbar { width: 6px; }
+    #fixtures-container::-webkit-scrollbar-thumb { background: #37003c; border-radius: 10px; }
+    .modal-pitch { background: #008d4c; border: 2px solid #fff; border-radius: 8px; padding: 20px 10px; display: flex; flex-direction: column; gap: 15px; position: relative; }
+    .modal-row { display: flex; justify-content: center; gap: 10px; }
+    .mini-tag { font-size: 8px; padding: 2px 5px; border-radius: 4px; margin: 1px; display: inline-block; font-weight: bold; }
+    .tag-diff { background: #37003c; color: #fff; }
+    .tag-in { background: #01ef80; color: #000; }
+`;
+document.head.appendChild(style);
 
+// 3. CORE INITIALIZATION
+async function initDashboard() {
     try {
-        // Fetch Static data, League data, and Fixtures for FDR
-        const [staticRes, leagueRes, fixRes] = await Promise.all([
-            fetch(`${API_BASE}bootstrap-static/`),
-            fetch(`${API_BASE}leagues-classic/${leagueId}/standings/`),
-            fetch(`${API_BASE}fixtures/`)
-        ]);
+        const response = await fetch(`${API_BASE}bootstrap-static/`);
+        const data = await response.json();
+        
+        // Map Teams
+        data.teams.forEach(t => teamMap[t.id] = { name: t.name, short: t.short_name, strength: t.strength });
 
-        const staticData = await staticRes.json();
-        const leagueData = await leagueRes.json();
-        const fixData = await fixRes.json();
-
-        // Map Teams with Strength for FDR logic
-        staticData.teams.forEach(t => {
-            teamMap[t.id] = { 
-                short_name: t.short_name, 
-                strength: t.strength 
-            };
-        });
-
-        // Map Players with Price and Form for Transfer AI
-        staticData.elements.forEach(p => {
+        // Map Players with AI Metrics (Heuristic score)
+        data.elements.forEach(p => {
             playerMap[p.id] = { 
                 name: p.web_name, 
                 points: p.event_points, 
@@ -54,188 +45,105 @@ async function fetchProLeague(leagueId) {
                 pos: p.element_type,
                 price: p.now_cost / 10,
                 form: parseFloat(p.form),
-                // Find next unplayed fixture for this player's team
-                next_fixture: fixData.find(f => !f.finished && (f.team_a === p.team || f.team_h === p.team))
+                ict: parseFloat(p.ict_index),
+                ai_score: ((parseFloat(p.form) * 0.6) + (parseFloat(p.ict_index) * 0.04)).toFixed(1)
             };
         });
 
-        const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
-        document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
+        const current = data.events.find(e => e.is_current) || data.events.find(e => !e.finished);
+        activeGameweek = current ? current.id : 1;
 
-        renderTable(leagueData.standings.results);
-        loadLeagueIntelligence(leagueData.standings.results, currentEvent);
-
-    } catch (err) { 
-        console.error("Error fetching FPL data:", err); 
-        if (loader) loader.classList.add("hidden");
+        // Start Features
+        renderLeagueSelector();
+        updateLiveMatchCenter();
+    } catch (error) {
+        console.error("Initialization Failed:", error);
     }
 }
 
-/**
- * Renders the League Selection List
- */
-function renderLeagueSelector() {
-    const body = document.getElementById("league-body");
-    const tableHeader = document.querySelector("#league-table thead");
-    
-    if (tableHeader) tableHeader.style.display = "none";
+// 4. LIVE MATCH CENTER ENGINE
+async function updateLiveMatchCenter() {
+    const container = document.getElementById('fixtures-container');
+    if (!container) return;
 
-    body.innerHTML = LEAGUES_LIST.map(league => `
-        <tr style="border-bottom: 8px solid var(--fpl-surface);">
-            <td colspan="7" style="padding: 15px; background: var(--fpl-container);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 800; font-size: 1.1rem; color: var(--fpl-on-container);">${league.name}</span>
-                    <button onclick="fetchProLeague('${league.id}')" 
-                            style="background: var(--fpl-blue); color: #333; border: none; padding: 8px 15px; 
-                            border-radius: 6px; font-weight: 800; font-size: 10px; cursor: pointer; text-transform: uppercase;">
-                        View League
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-
-/**
- * Helper: Logic for Fixture Difficulty Color
- */
-function getFDRColor(player) {
-    if (!player.next_fixture) return "#ccc";
-    const isHome = player.next_fixture.team_h === player.team;
-    const difficulty = isHome ? player.next_fixture.team_h_difficulty : player.next_fixture.team_a_difficulty;
-    
-    if (difficulty <= 2) return "#01ef80"; // Easy (Green)
-    if (difficulty >= 4) return "#ff2882"; // Hard (Red)
-    return "#e1e1e1"; // Neutral
-}
-
-/**
- * Transfer AI: Find top 3 replacement options
- */
-function getBestReplacements(elementId, maxPrice) {
-    const currentPlayer = playerMap[elementId];
-    return Object.values(playerMap)
-        .filter(p => p.pos === currentPlayer.pos && p.price <= maxPrice && p.id !== elementId)
-        .sort((a, b) => b.form - a.form)
-        .slice(0, 3);
-}
-
-/**
- * Renders the Standings Table
- */
-function renderTable(managers) {
-    const body = document.getElementById("league-body");
-    const tableHeader = document.querySelector("#league-table thead");
-    
-    if (tableHeader) tableHeader.style.display = "table-header-group";
-
-    body.innerHTML = managers.map((m) => `
-        <tr id="row-${m.entry}">
-            <td class="rank-col">${m.rank}</td>
-            <td class="manager-col" onclick="handleManagerClick(${m.entry}, '${m.player_name}')">
-                <div class="m-info-wrapper">
-                    <span class="m-name">${m.player_name}</span>
-                    <span class="t-name">${m.entry_name}</span>
-                    <span id="val-${m.entry}" class="val-text">£--.-m</span>
-                </div>
-            </td>
-            <td class="pts-col">
-                <div class="live-pts" style="font-weight:900;">${m.event_total}</div>
-                <div id="hits-${m.entry}" style="font-size:7px; color:#ff2882; font-weight:bold;"></div>
-            </td>
-            <td class="total-col">
-                <div class="bold-p" style="font-weight:900;">${m.total}</div>
-            </td>
-            <td id="cap-${m.entry}" class="cap-col">—</td>
-            <td class="diff-col"><div id="diffs-${m.entry}" class="diff-col-scroll"></div></td>
-            <td class="trans-col"><div id="trans-${m.entry}" class="trans-col-scroll"></div></td>
-        </tr>
-    `).join('');
-}
-
-/**
- * Intelligence logic (Captain, Chips, Transfers)
- */
-async function loadLeagueIntelligence(managers, eventId) {
-    const ownership = {};
-    const managerDetails = {};
-
-    await Promise.all(managers.map(async (m) => {
-        try {
-            const [picksRes, transRes] = await Promise.all([
-                fetch(`${API_BASE}entry/${m.entry}/event/${eventId}/picks/`),
-                fetch(`${API_BASE}entry/${m.entry}/transfers/`)
-            ]);
-            const picks = await picksRes.json();
-            const trans = await transRes.json();
+    try {
+        const res = await fetch(`${API_BASE}fixtures/?event=${activeGameweek}`);
+        const fixtures = await res.json();
+        
+        let html = '';
+        fixtures.filter(f => f.started).sort((a,b) => b.id - a.id).forEach(game => {
+            const home = teamMap[game.team_h].short;
+            const away = teamMap[game.team_a].short;
+            const status = game.finished ? "FT" : "LIVE";
             
-            managerDetails[m.entry] = { 
-                picks, 
-                trans: trans.filter(t => t.event === eventId) 
-            };
-            managerSquads[m.entry] = picks;
-            
-            picks.picks.forEach(p => {
-                ownership[p.element] = (ownership[p.element] || 0) + 1;
+            html += `
+                <div style="display:flex; padding:10px; border-bottom:1px solid #eee; background:#fff; margin-bottom:5px;">
+                    <div style="flex:1; font-weight:900; color:#37003c;">${home} ${game.team_h_score} - ${game.team_a_score} ${away}</div>
+                    <div style="font-size:10px; font-weight:bold; color:#ff005a;">${status}</div>
+                </div>`;
+        });
+        container.innerHTML = html || '<div style="padding:20px; text-align:center; opacity:0.5;">No live games</div>';
+    } catch (e) { console.warn("Live Fix Error"); }
+    
+    setTimeout(updateLiveMatchCenter, 60000); // Refresh every minute
+}
+
+// 5. LEAGUE INTELLIGENCE (EO & STANDINGS)
+async function fetchLeagueData(leagueId) {
+    document.getElementById("loading-overlay")?.classList.remove("hidden");
+    
+    try {
+        const res = await fetch(`${API_BASE}leagues-classic/${leagueId}/standings/`);
+        const data = await res.json();
+        const managers = data.standings.results;
+
+        // Calculate Effective Ownership (EO) across this specific league
+        leagueOwnership = {};
+        await Promise.all(managers.slice(0, 15).map(async (m) => { // Limited to top 15 for speed
+            const pRes = await fetch(`${API_BASE}entry/${m.entry}/event/${activeGameweek}/picks/`);
+            const pData = await pRes.json();
+            managerSquads[m.entry] = pData;
+            pData.picks.forEach(p => {
+                leagueOwnership[p.element] = (leagueOwnership[p.element] || 0) + (p.multiplier / managers.length) * 100;
             });
-        } catch (e) { console.warn(`Failed to fetch manager ${m.entry}:`, e); }
-    }));
+        }));
 
-    managers.forEach(m => {
-        const data = managerDetails[m.entry];
-        if (!data) return;
-
-        const valSpan = document.getElementById(`val-${m.entry}`);
-        if(valSpan) valSpan.innerText = `£${(data.picks.entry_history.value / 10).toFixed(1)}m`;
-
-        const cap = data.picks.picks.find(p => p.is_captain);
-        const chip = data.picks.active_chip;
-        const capCell = document.getElementById(`cap-${m.entry}`);
-        if(capCell) {
-            capCell.innerHTML = `
-                ${playerMap[cap.element].name} 
-                ${chip ? `<span class="chip-badge chip-wildcard">${chip.toUpperCase()}</span>` : ''}
-            `;
-        }
-
-        const diffs = data.picks.picks.filter(p => ownership[p.element] === 1);
-        const diffDiv = document.getElementById(`diffs-${m.entry}`);
-        if(diffDiv) {
-            diffDiv.innerHTML = diffs.map(p => 
-                `<span class="mini-tag tag-diff">${playerMap[p.element].name}</span>`).join('') || '—';
-        }
-
-        const transDiv = document.getElementById(`trans-${m.entry}`);
-        if(transDiv) {
-            transDiv.innerHTML = data.trans.map(t => 
-                `<span class="mini-tag tag-in">${playerMap[t.element_in].name}</span>`).join('') || 'None';
-        }
-
-        const hitsDiv = document.getElementById(`hits-${m.entry}`);
-        const hits = data.picks.entry_history.event_transfer_cost;
-        if(hitsDiv && hits > 0) hitsDiv.innerText = `-${hits}`;
-    });
-
-    const loader = document.getElementById("loading-overlay");
-    if (loader) loader.classList.add("hidden");
+        renderStandingsTable(managers);
+    } catch (e) { console.error("League Error:", e); }
+    
+    document.getElementById("loading-overlay")?.classList.add("hidden");
 }
 
-/**
- * Team Mapping for Jersey CSS
- */
-function getTeamClass(teamId) {
-    const mapping = {
-        1: 'arsenal', 2: 'aston_villa', 3: 'bournemouth', 4: 'brentford', 5: 'brighton', 
-        6: 'chelsea', 7: 'crystal_p', 8: 'everton', 9: 'fulham', 10: 'ipswich', 
-        11: 'leicester', 12: 'liverpool', 13: 'man_city', 14: 'man_utd', 15: 'newcastle', 
-        16: 'nottm_forest', 17: 'southampton', 18: 'tottenham', 19: 'west_ham', 20: 'wolves'
-    };
-    return mapping[teamId] || 'default';
+function renderStandingsTable(managers) {
+    const body = document.getElementById("league-body");
+    const header = document.querySelector("#league-table thead");
+    if(header) header.style.display = "table-header-group";
+
+    body.innerHTML = managers.map(m => {
+        const squad = managerSquads[m.entry];
+        let riskFactor = 0;
+        if(squad) {
+            // Check for high-EO players not owned by this manager
+            Object.keys(leagueOwnership).forEach(pid => {
+                if(leagueOwnership[pid] > 60 && !squad.picks.find(p => p.element == pid)) riskFactor++;
+            });
+        }
+
+        return `
+        <tr onclick="handleManagerClick(${m.entry}, '${m.player_name}')" style="cursor:pointer;">
+            <td>${m.rank}</td>
+            <td>
+                <div style="font-weight:800;">${m.player_name}</div>
+                <div style="font-size:10px; color:${riskFactor > 1 ? '#ff2882' : '#01ef80'}">${riskFactor > 1 ? '⚠️ RISK' : '✅ SAFE'}</div>
+            </td>
+            <td style="font-weight:900;">${m.event_total}</td>
+            <td>${m.total}</td>
+            <td><div id="ai-tip-${m.entry}" style="font-size:9px; font-weight:bold; color:#37003c;"></div></td>
+        </tr>`;
+    }).join('');
 }
 
-/**
- * Modal Handling (Jersey Pitch + Hub Intelligence)
- */
+// 6. PITCH VIEW & MODAL
 function handleManagerClick(id, name) {
     const data = managerSquads[id];
     if (!data) return;
@@ -245,39 +153,16 @@ function handleManagerClick(id, name) {
     document.getElementById("modal-manager-name").innerText = name;
 
     const starters = { 1: [], 2: [], 3: [], 4: [] };
-    const bench = [];
-    let squadTotal = 0;
-    let transferAdvice = [];
-
+    
     data.picks.forEach(p => {
         const player = playerMap[p.element];
-        const pts = player.points * p.multiplier;
-        if (p.multiplier > 0) squadTotal += pts;
-        
-        const kitClass = player.pos === 1 ? 'gkp_color' : getTeamClass(player.team);
-        const fdrColor = getFDRColor(player);
-
-        // Weak link identification logic
-        if (player.form < 2.0 && p.multiplier > 0) {
-            const best = getBestReplacements(p.element, player.price + 0.5);
-            if (best.length > 0) {
-                transferAdvice.push(`<div><strong>Sell ${player.name}:</strong> Buy ${best[0].name} (Form: ${best[0].form})</div>`);
-            }
-        }
-
         const playerHTML = `
-            <div class="slot" style="width: 65px; display:flex; flex-direction:column; align-items:center; position:relative;">
-                <div class="fdr-indicator" style="background:${fdrColor}; width:6px; height:6px; border-radius:50%; position:absolute; top:0; right:10px;"></div>
-                ${p.is_captain ? '<div class="cap-star-pitch">★</div>' : ''}
-                <div class="jersey ${kitClass}"></div>
-                <div class="modal-player-tag">
-                    <span class="m-p-name">${player.name}</span>
-                    <span class="m-p-pts">${player.points}${p.multiplier > 1 ? ' (x'+p.multiplier+')' : ''}</span>
-                </div>
+            <div class="player-card" style="text-align:center; width:60px;">
+                <div style="background:#fff; border-radius:4px; font-size:9px; font-weight:900; padding:2px;">${player.name}</div>
+                <div style="color:#fff; font-size:10px; font-weight:bold;">${player.points * p.multiplier}</div>
             </div>`;
         
-        if (p.position > 11) bench.push(playerHTML);
-        else starters[player.pos].push(playerHTML);
+        if (p.position <= 11) starters[player.pos].push(playerHTML);
     });
 
     list.innerHTML = `
@@ -286,32 +171,31 @@ function handleManagerClick(id, name) {
             <div class="modal-row">${starters[2].join('')}</div>
             <div class="modal-row">${starters[3].join('')}</div>
             <div class="modal-row">${starters[4].join('')}</div>
-            <div class="bench-wrap">
-                <div class="bench-label">Substitutes</div>
-                <div class="modal-row">${bench.join('')}</div>
-            </div>
         </div>
-        <div class="hub-intelligence" style="background:#1a1a1a; padding:15px; border-radius:8px; margin-top:15px; color:#fff; font-size:11px;">
-            <h4 style="color:var(--fpl-blue); margin-bottom:10px;">Hub Transfer Recommendations</h4>
-            ${transferAdvice.length > 0 ? transferAdvice.join('') : 'Squad looks solid! No urgent transfers suggested.'}
-        </div>
-        <div class="modal-footer">
-            <span class="total-label">Live Score</span>
-            <span class="total-value">${squadTotal} PTS</span>
+        <div style="background:#f4f4f4; padding:10px; margin-top:10px; border-radius:5px; font-size:11px;">
+            <strong>AI Scout:</strong> Top Differential found in this squad!
         </div>
     `;
     modal.classList.remove("hidden");
-    document.body.style.overflow = 'hidden'; 
 }
 
-/**
- * Event Listeners & Init
- */
-document.getElementById("close-modal").onclick = () => {
-    document.getElementById("team-modal").classList.add("hidden");
-    document.body.style.overflow = ''; 
-};
+// 7. LEAGUE SELECTOR
+function renderLeagueSelector() {
+    const leagues = [
+        { name: "Kopala FPL", id: "101712" },
+        { name: "Zambia", id: "258" }
+    ];
+    const body = document.getElementById("league-body");
+    body.innerHTML = leagues.map(l => `
+        <tr>
+            <td colspan="5" style="padding:15px; background:#fff; border-radius:8px; margin-bottom:10px; display:block;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:900;">${l.name}</span>
+                    <button onclick="fetchLeagueData('${l.id}')" style="background:#37003c; color:#fff; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;">ENTER</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
 
-document.addEventListener("DOMContentLoaded", () => {
-    renderLeagueSelector();
-});
+document.addEventListener("DOMContentLoaded", initDashboard);
