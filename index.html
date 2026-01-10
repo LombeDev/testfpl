@@ -369,26 +369,22 @@
             </div>
 
 
-        <div id="upcoming-fixtures-card" class="card">
+    <div id="upcoming-fixtures-card" class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-forward-step" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
-            <h2 class="accent-title" style="margin: 0;">Next Gameweek</h2>
+            <i class="fa-solid fa-calendar-days" style="color: var(--fpl-primary);"></i>
+            <h2 class="accent-title" style="margin: 0;">Fixtures</h2>
         </div>
-        <span id="next-gw-badge" style="background: var(--fpl-primary); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 900;">GW 19</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button onclick="changeGW(-1)" class="nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <span id="next-gw-badge" class="gw-badge">GW 20</span>
+            <button onclick="changeGW(1)" class="nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
     </div>
 
     <div id="upcoming-list-container">
-        <div style="text-align: center; padding: 10px; opacity: 0.5; font-size: 0.8rem;">
-            <i class="fa-solid fa-calendar-check"></i> Loading upcoming matches...
         </div>
-    </div>
-    
-    <div style="margin-top: 15px; text-align: center;">
-        <a href="football.html" style="text-decoration: none; font-size: 0.7rem; font-weight: 800; color: var(--fpl-primary); opacity: 0.8;">VIEW FULL CALENDAR <i class="fa-solid fa-chevron-right"></i></a>
-    </div>
-</div>
-            
+</div> 
 
             <div id="live-dashboard" class="hidden">
                 <div class="card">
