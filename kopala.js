@@ -71,8 +71,10 @@ async function fetchProLeague(leagueId) {
     }
 }
 
-/**
- * Renders the League Selection List (Live Data + Official FPL Style)
+
+    
+    /**
+ * Renders the League Selection List (Justified & Right-Aligned)
  */
 async function renderLeagueSelector() {
     const body = document.getElementById("league-body");
@@ -80,36 +82,66 @@ async function renderLeagueSelector() {
     
     if (tableHeader) tableHeader.style.display = "none";
 
-    const hoverStyle = `
+    const style = `
         <style>
             .league-row { transition: background 0.1s ease; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-            .league-row:active { background: rgba(0, 0, 0, 0.05) !important; }
-            .fpl-badge-green { 
+            .league-row:active { background: rgba(0,0,0,0.05) !important; }
+            
+            /* The Container that handles the horizontal distribution */
+            .flex-justify { 
+                display: flex; 
+                justify-content: space-between; /* This forces Name to Left and Rank to Right */
+                align-items: center; 
+                width: 100%; 
+            }
+
+            .fpl-rank-badge { 
                 background: #01ef80; color: #37003c; width: 18px; height: 18px; 
                 border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-                font-size: 10px; font-weight: bold;
+                font-size: 9px; font-weight: bold; flex-shrink: 0;
             }
-            .count-skeleton { width: 40px; height: 14px; background: #eee; border-radius: 4px; animation: pulse 1.5s infinite; }
-            @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         </style>
     `;
     
-    // Initial Render with Skeletons
-    body.innerHTML = hoverStyle + LEAGUES_LIST.map(league => `
-        <tr class="league-row" onclick="fetchProLeague('${league.id}')" style="border-bottom: 1px solid #f2f2f2; width: 100%;">
-            <td colspan="7" style="padding: 12px 16px; background: #ffffff;">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <span style="font-weight: 600; font-size: 0.95rem; color: #37003c; flex: 1;">${league.name}</span>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span id="count-${league.id}" style="font-weight: 700; font-size: 0.95rem; color: #37003c;">
-                            <div class="count-skeleton"></div>
+    body.innerHTML = style + LEAGUES_LIST.map(league => `
+        <tr class="league-row" onclick="fetchProLeague('${league.id}')" style="border-bottom: 1px solid #f2f2f2;">
+            <td colspan="7" style="padding: 14px 16px; background: #ffffff;">
+                <div class="flex-justify">
+                    
+                    <div style="flex-grow: 1; min-width: 0;">
+                        <span style="font-weight: 700; font-size: 0.95rem; color: #37003c; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${league.name}
                         </span>
-                        <div class="fpl-badge-green"><span style="transform: translateY(-1px);">▲</span></div>
                     </div>
+
+                    <div style="display: flex; align-items: center; gap: 12px; margin-left: 15px;">
+                        <span id="count-${league.id}" style="font-weight: 800; font-size: 0.95rem; color: #37003c; text-align: right; min-width: 40px;">
+                            ...
+                        </span>
+                        <div class="fpl-rank-badge">▲</div>
+                    </div>
+                    
                 </div>
             </td>
         </tr>
     `).join('');
+
+    // Fetch and update the real counts
+    LEAGUES_LIST.forEach(async (league) => {
+        try {
+            const res = await fetch(`${FPL_PROXY}leagues-classic/${league.id}/standings/`);
+            const data = await res.json();
+            const countEl = document.getElementById(`count-${league.id}`);
+            if (countEl) {
+                // We use rank if available, otherwise entry_count
+                const val = data.league.rank || data.league.entry_count || "1";
+                countEl.innerText = parseInt(val).toLocaleString();
+            }
+        } catch (e) {
+            document.getElementById(`count-${league.id}`).innerText = "1";
+        }
+    });
+}
 
     // Background Fetch for Real Counts
     LEAGUES_LIST.forEach(async (league) => {
