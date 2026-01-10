@@ -72,7 +72,7 @@ async function fetchProLeague(leagueId) {
 }
 
 /**
- * Renders the League Selection List
+ * Renders the League Selection List (Mobile Optimized)
  */
 function renderLeagueSelector() {
     const body = document.getElementById("league-body");
@@ -81,13 +81,17 @@ function renderLeagueSelector() {
     if (tableHeader) tableHeader.style.display = "none";
 
     body.innerHTML = LEAGUES_LIST.map(league => `
-        <tr style="border-bottom: 8px solid var(--fpl-surface);">
-            <td colspan="7" style="padding: 15px; background: var(--fpl-container);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 800; font-size: 1.1rem; color: var(--fpl-on-container);">${league.name}</span>
+        <tr style="border-bottom: 4px solid var(--fpl-surface);">
+            <td colspan="7" style="padding: 10px 8px; background: var(--fpl-container);">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <span style="font-weight: 800; font-size: 0.85rem; color: var(--fpl-on-container); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${league.name}
+                    </span>
+                    
                     <button onclick="fetchProLeague('${league.id}')" 
-                            style="background: var(--fpl-blue); color: #333; border: none; padding: 8px 15px; 
-                            border-radius: 6px; font-weight: 800; font-size: 10px; cursor: pointer; text-transform: uppercase;">
+                            style="background: var(--fpl-blue); color: #333; border: none; padding: 6px 12px; 
+                            border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; 
+                            text-transform: uppercase; flex-shrink: 0; min-width: 85px;">
                         View League
                     </button>
                 </div>
