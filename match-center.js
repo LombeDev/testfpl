@@ -154,71 +154,60 @@ document.addEventListener('DOMContentLoaded', initMatchCenter);
 
 
 
-// Sample Data - (I've included key matches, you can fill the rest)
-const fullSchedule = {
-    20: [{ h: "TOT", a: "NEW", time: "Sat 12:30" }, { h: "MUN", a: "BRE", time: "Sun 16:30" }, { h: "LIV", a: "SOU", time: "Sat 15:00" }],
-    21: [{ h: "ARS", a: "CHE", time: "Sat 12:30" }, { h: "LIV", a: "MCI", time: "Sun 16:30" }],
-    22: [{ h: "CHE", a: "MCI", time: "Sat 17:30" }, { h: "LIV", a: "ARS", time: "Sun 16:30" }],
-    23: [{ h: "ARS", a: "TOT", time: "Sat 12:30" }, { h: "AST", a: "LIV", time: "Sat 15:00" }],
-    24: [{ h: "CHE", a: "MUN", time: "Sat 17:30" }, { h: "LIV", a: "NEW", time: "Sun 16:30" }],
-    25: [{ h: "MCI", a: "LIV", time: "Sat 12:30" }, { h: "TOT", a: "ARS", time: "Sun 14:00" }],
-    26: [{ h: "MUN", a: "MCI", time: "Sat 12:30" }, { h: "LIV", a: "CHE", time: "Sun 16:30" }],
-    27: [{ h: "ARS", a: "LIV", time: "Sat 15:00" }, { h: "MCI", a: "MUN", time: "Sun 16:30" }],
-    28: [{ h: "CHE", a: "ARS", time: "Sat 17:30" }, { h: "LIV", a: "TOT", time: "Sun 14:00" }],
-    29: [{ h: "MCI", a: "CHE", time: "Sat 15:00" }, { h: "MUN", a: "ARS", time: "Sun 16:30" }],
-    30: [{ h: "LIV", a: "MUN", time: "Sat 12:30" }, { h: "ARS", a: "MCI", time: "Sun 16:30" }],
-    31: [{ h: "CHE", a: "TOT", time: "Tue 20:00" }, { h: "LIV", a: "ARS", time: "Wed 20:15" }],
-    32: [{ h: "MUN", a: "LIV", time: "Sat 15:00" }, { h: "MCI", a: "TOT", time: "Sun 14:00" }],
-    33: [{ h: "ARS", a: "MUN", time: "Sat 17:30" }, { h: "TOT", a: "LIV", time: "Sun 16:30" }],
-    34: [{ h: "MCI", a: "ARS", time: "Sat 15:00" }, { h: "CHE", a: "LIV", time: "Sun 16:30" }],
-    35: [{ h: "MUN", a: "CHE", time: "Sat 12:30" }, { h: "LIV", a: "MCI", time: "Sun 16:30" }],
-    36: [{ h: "ARS", a: "LIV", time: "Sat 15:00" }, { h: "TOT", a: "MCI", time: "Sun 14:00" }],
-    37: [{ h: "CHE", a: "ARS", time: "Sat 12:30" }, { h: "MCI", a: "MUN", time: "Sun 16:30" }],
-    38: [{ h: "ARS", a: "IPS", time: "Sun 16:00" }, { h: "LIV", a: "CPL", time: "Sun 16:00" }, { h: "MUN", a: "AST", time: "Sun 16:00" }]
-};
-
-let currentViewGW = 20;
-
-function changeGW(direction) {
-    const newGW = currentViewGW + direction;
-    if (newGW >= 20 && newGW <= 38) {
-        currentViewGW = newGW;
-        renderFixtures();
-    }
-}
-
-function renderFixtures() {
-    const container = document.getElementById('upcoming-list-container');
+/**
+ * Renders Live EPL Fixtures from the Football-Data API
+ * Optimized for your Dashboard layout
+ */
+function renderFixtures(matches) {
+    const list = document.getElementById('upcoming-list-container');
     const badge = document.getElementById('next-gw-badge');
     
-    // 1. Update Badge
-    badge.innerText = `GW ${currentViewGW}`;
+    if (!list) return;
 
-    // 2. Lady Loading (Skeleton)
-    container.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+    // Filter for Premier League only and matches that haven't finished yet
+    const upcomingMatches = matches.filter(m => 
+        m.competition.code === 'PL' && 
+        (m.status === 'SCHEDULED' || m.status === 'TIMED' || m.status === 'LIVE' || m.status === 'IN_PLAY')
+    );
 
-    // 3. Simulated delay for "Lazy Loading" effect
-    setTimeout(() => {
-        const fixtures = fullSchedule[currentViewGW];
-        
-        if (!fixtures || fixtures.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:20px; font-size:0.8rem; opacity:0.5;">No fixtures scheduled.</p>`;
-            return;
-        }
+    // Update Badge to show current Matchday (Gameweek)
+    if (upcomingMatches.length > 0 && badge) {
+        badge.innerText = `GW ${upcomingMatches[0].matchday}`;
+    }
 
-        container.innerHTML = fixtures.map(f => `
-            <div class="upcoming-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--fpl-border);">
-                <div style="width:35%; text-align:right; font-weight:800; font-size:0.85rem;">${f.h}</div>
-                <div style="width:30%; text-align:center; display:flex; flex-direction:column; gap:2px;">
-                    <span style="font-size:0.6rem; font-weight:900; background:var(--fpl-primary); color:white; padding:2px 6px; border-radius:4px; margin: 0 auto;">VS</span>
-                    <span style="font-size:0.55rem; opacity:0.7; font-weight:700;">${f.time}</span>
+    if (upcomingMatches.length === 0) {
+        list.innerHTML = `<p style="text-align:center; padding:20px; font-size:0.8rem; opacity:0.5;">No upcoming fixtures found in this window.</p>`;
+        return;
+    }
+
+    // Limit to 10 fixtures for the dashboard view
+    list.innerHTML = upcomingMatches.slice(0, 10).map(m => {
+        const date = new Date(m.utcDate);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dayStr = date.toLocaleDateString([], { weekday: 'short', day: 'numeric' });
+        const isLive = m.status === 'IN_PLAY' || m.status === 'LIVE';
+
+        return `
+            <div class="upcoming-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom: 1px solid var(--fpl-border);">
+                <div style="width:35%; text-align:right; display:flex; flex-direction:row-reverse; align-items:center; gap:8px;">
+                    <img src="${m.homeTeam.crest}" style="width:18px; height:18px; object-fit:contain;">
+                    <span style="font-weight:800; font-size:0.85rem;">${getShortName(m.homeTeam)}</span>
                 </div>
-                <div style="width:35%; text-align:left; font-weight:800; font-size:0.85rem;">${f.a}</div>
+
+                <div style="width:30%; text-align:center; display:flex; flex-direction:column; gap:2px;">
+                    ${isLive ? 
+                        `<span style="font-size:0.7rem; font-weight:900; color:#ff0000; animation: pulse 1.5s infinite;">● LIVE</span>
+                         <span style="font-size:0.9rem; font-weight:900;">${m.score.fullTime.home} - ${m.score.fullTime.away}</span>` :
+                        `<span style="font-size:0.6rem; font-weight:900; background:var(--fpl-primary); color:white; padding:2px 6px; border-radius:4px; margin: 0 auto;">VS</span>
+                         <span style="font-size:0.55rem; opacity:0.7; font-weight:700; margin-top:2px;">${dayStr} ${timeStr}</span>`
+                    }
+                </div>
+
+                <div style="width:35%; text-align:left; display:flex; align-items:center; gap:8px;">
+                    <img src="${m.awayTeam.crest}" style="width:18px; height:18px; object-fit:contain;">
+                    <span style="font-weight:800; font-size:0.85rem;">${getShortName(m.awayTeam)}</span>
+                </div>
             </div>
-        `).join('');
-    }, 300); // 300ms delay for smooth feel
+        `;
+    }).join('');
 }
-
-// Initial Load
-document.addEventListener('DOMContentLoaded', renderFixtures);
-
