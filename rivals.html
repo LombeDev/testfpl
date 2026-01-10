@@ -3,42 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rivals </title>
+    <title>Rivals Area</title>
     <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="rivals.css">
+    <link rel="stylesheet" href="rivals.css">
 </head>
 <body>
-    <div id="loading-overlay" class="hidden">Gathering AI Intelligence...</div>
+    <div id="loading-overlay" class="hidden">Syncing Tactical Data...</div>
 
     <header class="fpl-header">
-        <h1>FPL Rivals</h1>
-        <div id="active-gw-label">GW --</div>
+        <div class="header-content">
+            <h1>FPL <span style="color:var(--fpl-green)">AI</span> ENGINE</h1>
+            <div id="active-gw-label" class="gw-badge">GW --</div>
+        </div>
     </header>
 
     <main>
+        <section id="hof-container"></section>
+
         <section class="card">
-            <table id="league-table">
-                <thead>
-                    <tr>
-                        <th>Pos</th>
-                        <th>Manager</th>
-                        <th>GW</th>
-                        <th>Total</th>
-                        <th>Captain</th>
-                        <th>Diffs</th>
-                        <th>Transfers</th>
-                    </tr>
-                </thead>
-                <tbody id="league-body">
-                    </tbody>
-            </table>
+            <div class="card-header">Classic Standings</div>
+            <div class="table-scroll">
+                <table id="league-table">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Manager</th>
+                            <th>GW</th>
+                            <th>Total</th>
+                            <th>Captain</th>
+                        </tr>
+                    </thead>
+                    <tbody id="league-body"></tbody>
+                </table>
+            </div>
         </section>
 
-        <section id="rivals-container">
-            </section>
+        <section id="rivals-container"></section>
     </main>
 
-    <
+    <div id="team-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-manager-name">War Room</h2>
+                <span id="close-modal" class="close">&times;</span>
+            </div>
+            <div id="modal-squad-list"></div>
+        </div>
+    </div>
 
     <script src="rivals.js"></script>
 </body>
