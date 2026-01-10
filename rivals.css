@@ -3,39 +3,44 @@
     --fpl-green: #01ef80;
     --fpl-pink: #ff2882;
     --fpl-blue: #04f5ff;
-    --fpl-container: #ffffff;
-    --fpl-surface: #f3f3f3;
+    --fpl-dark-green: #005a2b;
 }
 
 body {
-    background: var(--fpl-surface);
-    font-family: "Inter", sans-serif;
+    background: #f3f3f3;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    color: #333;
 }
 
 .fpl-header {
     background: var(--fpl-purple);
     color: white;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 15px 20px;
+}
+
+.gw-badge {
+    background: var(--fpl-pink);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 900;
+    font-size: 0.8rem;
 }
 
 .card {
     background: white;
     margin: 20px;
     border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { background: #f9f9f9; padding: 12px; text-align: left; color: #777; }
-td { padding: 12px; border-bottom: 1px solid #eee; }
+.card-header {
+    padding: 15px;
+    font-weight: 900;
+    border-bottom: 1px solid #eee;
+    color: var(--fpl-purple);
+}
 
-/* Rivals Styling */
+/* Rivals Grid */
 .rivals-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -48,29 +53,32 @@ td { padding: 12px; border-bottom: 1px solid #eee; }
     border-radius: 12px;
     padding: 16px;
     border: 1px solid #ddd;
-    transition: transform 0.2s;
+    position: relative;
 }
 
-.rival-card:hover { transform: translateY(-5px); }
+.match-of-the-week {
+    border: 2px solid #ffb100;
+    box-shadow: 0 0 15px rgba(255, 177, 0, 0.3);
+}
 
 .rival-matchup { display: flex; justify-content: space-between; align-items: center; }
-.rival-manager { text-align: center; width: 42%; }
-.m-name-small { font-size: 0.7rem; font-weight: 800; color: #888; text-transform: uppercase; }
-.m-score-large { font-size: 1.8rem; font-weight: 900; color: var(--fpl-purple); }
-
+.m-score-large { font-size: 2rem; font-weight: 900; color: var(--fpl-purple); }
 .vs-badge { background: var(--fpl-purple); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; }
 
-.prob-container { height: 8px; background: #eee; border-radius: 10px; margin: 10px 0; display: flex; overflow: hidden; }
-.prob-fill-m1 { background: var(--fpl-green); }
-.prob-fill-m2 { background: var(--fpl-purple); }
-.prob-text { font-size: 0.6rem; font-weight: 800; display: flex; justify-content: space-between; }
+/* Probabilities */
+.prob-container { height: 8px; background: #eee; border-radius: 10px; margin: 12px 0; display: flex; overflow: hidden; }
+.prob-fill-m1 { background: var(--fpl-green); transition: width 1s; }
+.prob-fill-m2 { background: var(--fpl-purple); transition: width 1s; }
 
-.ai-status-bar { border-top: 1px dashed #eee; margin-top: 10px; padding-top: 8px; text-align: center; color: var(--fpl-pink); font-size: 0.7rem; font-weight: 800; }
+/* Hall of Fame */
+.hall-of-fame { background: var(--fpl-purple); color: white; padding: 20px; margin: 20px; border-radius: 12px; }
+.hof-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
 
+/* War Room */
+.war-room-overlay { background: var(--fpl-dark-green); padding: 15px; border-radius: 8px; }
+.battle-row { display: flex; justify-content: space-between; color: white; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.compare-btn { width: 100%; margin-top: 10px; background: var(--fpl-blue); color: var(--fpl-purple); border: none; padding: 10px; border-radius: 6px; font-weight: 900; cursor: pointer; }
+
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: white; width: 90%; max-width: 500px; padding: 20px; border-radius: 12px; }
 .hidden { display: none; }
-
-/* Modal & Pitch Styles */
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-.modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-.modal-pitch { background: #008040; border: 2px solid white; border-radius: 8px; padding: 10px; }
-.modal-row { display: flex; justify-content: space-around; margin: 10px 0; }
