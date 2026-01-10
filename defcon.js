@@ -1,114 +1,92 @@
-const PROXY = "https://api.allorigins.win/raw?url=";
-let teams = {}; let players = {}; 
-let liveGW = 0; let prevGW = 0;
-let activeView = 0;
+/**
+ * KOPALA FPL - DEFENSIVE CONTRIBUTIONS CENTER
+ * Integrated with same logic as Match Center
+ */
 
-async function initDefCon() {
-    try {
-        const res = await fetch(PROXY + encodeURIComponent("https://fantasy.premierleague.com/api/bootstrap-static/"));
-        const data = await res.json();
-        
-        // Map data
-        data.teams.forEach(t => teams[t.id] = { name: t.name, short: t.short_name });
-        data.elements.forEach(p => players[p.id] = { name: p.web_name, pos: p.element_type, team: p.team });
-
-        // Logic for current vs previous
-        const curr = data.events.find(e => e.is_current) || data.events.find(e => e.is_next);
-        liveGW = curr.id;
-        prevGW = data.events.find(e => e.is_previous)?.id || liveGW;
-        
-        // Initial Load
-        activeView = liveGW;
-        fetchStats(activeView);
-    } catch (e) { console.error("FPL Init Failed", e); }
-}
-
-async function fetchStats(gwId) {
+async function updateDefCon() {
     const container = document.getElementById('defcon-list-container');
-    const status = document.getElementById('gw-status-text');
-    container.innerHTML = '<div style="font-size:0.7rem; opacity:0.5; padding:20px;">Fetching Live Data...</div>';
+    if (!container) return;
 
     try {
-        const [fRes, lRes] = await Promise.all([
-            fetch(PROXY + encodeURIComponent(`https://fantasy.premierleague.com/api/fixtures/?event=${gwId}`)),
-            fetch(PROXY + encodeURIComponent(`https://fantasy.premierleague.com/api/event/${gwId}/live/`))
-        ]);
-        
-        const fixtures = await fRes.json();
-        const liveData = await lRes.json();
-        let statsMap = {};
-        liveData.elements.forEach(el => statsMap[el.id] = el.stats);
+        const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
+        const fixtures = await response.json();
+        const startedGames = fixtures.filter(f => f.started);
 
-        status.innerText = `GAMEWEEK ${gwId} ${gwId === liveGW ? 'LIVE' : 'FINAL'}`;
-        container.innerHTML = '';
+        let html = '';
 
-        const started = fixtures.filter(f => f.started);
-        if (started.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:30px; opacity:0.3; font-size:0.8rem;">No matches started yet.</div>`;
-            return;
-        }
+        startedGames.forEach(game => {
+            const homeAbbr = teamLookup[game.team_h].substring(0, 3).toUpperCase();
+            const awayAbbr = teamLookup[game.team_a].substring(0, 3).toUpperCase();
 
-        started.forEach(fix => {
-            const matchPlayers = Object.keys(statsMap)
-                .map(id => ({ id: parseInt(id), ...players[id] }))
-                .filter(p => p.team === fix.team_h || p.team === fix.team_a)
-                .map(p => {
-                    const s = statsMap[p.id];
-                    // 2025/26 Rules: Defenders 10 CBIT, Mids/Fwds 12 CBIRT
-                    const cbit = s.clearances + s.blocks + s.interceptions + s.tackles;
-                    const total = (p.pos === 2) ? cbit : (cbit + s.recoveries);
-                    const target = (p.pos === 2) ? 10 : 12;
-                    return { ...p, val: total, goal: target, hasPts: total >= target, saves: s.saves };
-                })
-                .filter(p => p.val > 2 || p.saves > 0)
-                .sort((a, b) => b.val - a.val);
+            // Extract relevant defensive stats from the 'stats' array
+            const getStat = (id) => game.stats.find(s => s.identifier === id) || { h: [], a: [] };
+            
+            const clr = getStat('clearances'), blk = getStat('blocks'), 
+                  int = getStat('interceptions'), tkl = getStat('tackles'),
+                  rec = getStat('recoveries'), sav = getStat('saves');
 
-            if (matchPlayers.length > 0) renderMatch(container, fix, matchPlayers);
+            // Helper to aggregate CBIT/CBIRT per player
+            const playerStats = {};
+
+            const process = (statObj, weight = 1) => {
+                [...statObj.h, ...statObj.a].forEach(item => {
+                    if (!playerStats[item.element]) {
+                        playerStats[item.element] = { id: item.element, total: 0, saves: 0 };
+                    }
+                    playerStats[item.element].total += (item.value * weight);
+                });
+            };
+
+            // Process all defensive metrics
+            [clr, blk, int, tkl, rec].forEach(s => process(s));
+            [sav].forEach(s => {
+                [...s.h, ...s.a].forEach(item => {
+                    if (!playerStats[item.element]) playerStats[item.element] = { id: item.element, total: 0, saves: 0 };
+                    playerStats[item.element].saves = item.value;
+                });
+            });
+
+            // Filter players who are making an impact
+            const topDefenders = Object.values(playerStats)
+                .filter(p => p.total >= 5 || p.saves >= 1)
+                .sort((a, b) => b.total - a.total);
+
+            let matchDefHtml = '';
+            topDefenders.forEach(p => {
+                // Official FPL 25/26 Rule: Defenders threshold = 10, Mid/Fwd = 12
+                // Since pos isn't in fixture stats, we use a general indicator
+                const hasBonus = p.total >= 10; 
+                const savePts = Math.floor(p.saves / 3);
+
+                matchDefHtml += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:0.7rem;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="width:6px; height:6px; border-radius:50%; background:${hasBonus ? '#00ff87' : '#37003c'}; opacity:${hasBonus ? '1' : '0.2'}"></span>
+                            <span style="font-weight:700;">${playerLookup[p.id]}</span>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <span style="opacity:0.5;">${p.total} ${hasBonus ? '✔' : ''}</span>
+                            ${savePts > 0 ? `<span style="color:#e9fc04; font-weight:900;">+${savePts}S</span>` : ''}
+                        </div>
+                    </div>`;
+            });
+
+            html += `
+                <div class="defcon-match-row" style="margin-bottom:20px; border:1px solid #eee; border-radius:8px; overflow:hidden;">
+                    <div style="background:#37003c; color:white; padding:6px 12px; display:flex; justify-content:space-between; font-size:0.65rem; font-weight:800;">
+                        <span>${homeAbbr}</span>
+                        <span>${game.team_h_score} - ${game.team_a_score}</span>
+                        <span>${awayAbbr}</span>
+                    </div>
+                    <div style="padding:10px;">
+                        <div style="font-size:0.5rem; font-weight:900; opacity:0.3; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Defensive Contributions & Saves</div>
+                        ${matchDefHtml || '<span style="font-size:0.6rem; opacity:0.2;">No defensive actions recorded...</span>'}
+                    </div>
+                </div>`;
         });
-    } catch (e) { container.innerHTML = "Sync Error."; }
-}
 
-function renderMatch(container, fix, matchPlayers) {
-    container.innerHTML += `
-        <div class="match-block">
-            <div class="match-header">
-                <span>${teams[fix.team_h].short}</span>
-                <span style="color:#00ff87;">${fix.team_h_score} - ${fix.team_a_score}</span>
-                <span>${teams[fix.team_a].short}</span>
-            </div>
-            <div class="stats-grid">
-                <div>
-                    <div class="col-label">DEFENSIVE ACTIONS (+2)</div>
-                    ${matchPlayers.filter(p => p.val > 0).slice(0,4).map(p => `
-                        <div class="player-row">
-                            <span style="opacity:0.8">${p.name}</span>
-                            <span class="${p.hasPts ? 'success-text' : ''}">${p.val}${p.hasPts ? '✔' : ''}</span>
-                        </div>
-                    `).join('')}
-                </div>
-                <div>
-                    <div class="col-label">SAVES (+1)</div>
-                    ${matchPlayers.filter(p => p.saves > 0).slice(0,2).map(p => `
-                        <div class="player-row">
-                            <span style="opacity:0.8">${p.name}</span>
-                            <span class="save-text">${p.saves}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function toggleGW(mode) {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    if (mode === 'prev') {
-        document.getElementById('btn-prev').classList.add('active');
-        fetchStats(prevGW);
-    } else {
-        document.getElementById('btn-curr').classList.add('active');
-        fetchStats(liveGW);
+        container.innerHTML = html || '<div style="text-align:center; opacity:0.3; padding:20px;">No matches live...</div>';
+    } catch (err) {
+        console.error("DefCon Engine Error:", err);
     }
 }
-
-document.addEventListener('DOMContentLoaded', initDefCon);
