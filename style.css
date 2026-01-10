@@ -673,3 +673,63 @@ Make sure the name Kopala FPL is in the center
     animation: pulse 2s infinite;
 }
 
+
+
+
+
+.defcon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--fpl-border);
+    padding-bottom: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.col-label {
+    font-size: 0.65rem;
+    color: var(--fpl-primary);
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+}
+
+.player-stat-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.status-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    margin-right: 10px;
+}
+
+.success { background: #00ff87; color: #111; }
+.pending { background: #333; color: #777; }
+.save-success { background: #e9fc04; color: #111; }
+
+.bonus-tag {
+    margin-left: auto;
+    background: #00ff87;
+    color: #111;
+    font-weight: 900;
+    font-size: 0.6rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.p-val { opacity: 0.5; margin-left: 5px; font-size: 0.75rem; }
