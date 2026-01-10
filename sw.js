@@ -12,6 +12,9 @@ const STATIC_ASSETS = [
     'android-chrome-512x512.png',
     'manifest.json',
     'favicon-32x32.png'
+    'team.js'
+    'team.css'
+    'team.html'
 ];
 
 const updateChannel = new BroadcastChannel('fpl-updates');
