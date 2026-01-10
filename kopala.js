@@ -72,7 +72,7 @@ async function fetchProLeague(leagueId) {
 }
 
 /**
- * Renders the League Selection List (Mobile Optimized)
+ * Renders the League Selection List (Zero-Scroll Mobile Version)
  */
 function renderLeagueSelector() {
     const body = document.getElementById("league-body");
@@ -82,24 +82,28 @@ function renderLeagueSelector() {
 
     body.innerHTML = LEAGUES_LIST.map(league => `
         <tr style="border-bottom: 4px solid var(--fpl-surface);">
-            <td colspan="7" style="padding: 10px 8px; background: var(--fpl-container);">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                    <span style="font-weight: 800; font-size: 0.85rem; color: var(--fpl-on-container); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        ${league.name}
-                    </span>
+            <td colspan="7" style="padding: 10px 5px; background: var(--fpl-container); width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box;">
+                    
+                    <div style="flex: 1; min-width: 0; padding-right: 8px;">
+                        <span style="font-weight: 800; font-size: 0.8rem; color: var(--fpl-on-container); 
+                                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                            ${league.name}
+                        </span>
+                    </div>
                     
                     <button onclick="fetchProLeague('${league.id}')" 
-                            style="background: var(--fpl-blue); color: #333; border: none; padding: 6px 12px; 
+                            style="background: var(--fpl-blue); color: #333; border: none; padding: 7px 10px; 
                             border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; 
-                            text-transform: uppercase; flex-shrink: 0; min-width: 85px;">
+                            text-transform: uppercase; flex-shrink: 0; width: 90px; white-space: nowrap;">
                         View League
                     </button>
+                    
                 </div>
             </td>
         </tr>
     `).join('');
 }
-
 /**
  * Helper: Logic for Fixture Difficulty Color
  */
