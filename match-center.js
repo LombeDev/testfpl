@@ -155,59 +155,154 @@ document.addEventListener('DOMContentLoaded', initMatchCenter);
 
 
 /**
- * Renders Live EPL Fixtures from the Football-Data API
- * Optimized for your Dashboard layout
+ * KOPALA FPL - Ultimate Football Dashboard
+ * Integrated Version for Live EPL Fixtures & Navigation
  */
-function renderFixtures(matches) {
-    const list = document.getElementById('upcoming-list-container');
-    const badge = document.getElementById('next-gw-badge');
+
+// 1. CONFIGURATION & DICTIONARIES
+const LEAGUE_MAP = {
+    'PL': 'English Premier League', 'PD': 'La Liga', 'SA': 'Serie A',
+    'BL1': 'Bundesliga', 'FL1': 'Ligue 1', 'CL': 'Champions League'
+};
+
+const TEAM_SHORT_CODES = {
+    "Manchester City FC": "MCI", "Manchester United FC": "MUN", "Arsenal FC": "ARS",
+    "Liverpool FC": "LIV", "Chelsea FC": "CHE", "Tottenham Hotspur FC": "TOT",
+    "Aston Villa FC": "AVL", "Newcastle United FC": "NEW", "Everton FC": "EVE",
+    "Brighton & Hove Albion FC": "BHA", "West Ham United FC": "WHU", 
+    "Crystal Palace FC": "CRY", "Wolverhampton Wanderers FC": "WOL",
+    "Brentford FC": "BRE", "Fulham FC": "FUL", "Nottingham Forest FC": "NFO",
+    "Leicester City FC": "LEI", "Southampton FC": "SOU", "Ipswich Town FC": "IPS"
+};
+
+// Global States
+let activeLeague = 'PL';
+let allMatches = [];
+let currentViewGW = 21; // Starting Gameweek (adjust based on current date)
+let rawStandingsData = [];
+
+// 2. CORE INITIALIZATION
+async function init() {
+    const loader = document.getElementById('upcoming-list-container');
+    if (loader) loader.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+
+    // Proxy URL (Ensure this matches your backend/CORS setup)
+    const PROXY_URL = `/api/competitions/${activeLeague}/`;
     
-    if (!list) return;
+    try {
+        const [standingsRes, scorersRes, fixturesRes] = await Promise.all([
+            fetch(`${PROXY_URL}standings`),
+            fetch(`${PROXY_URL}scorers`),
+            getFixtures(PROXY_URL)
+        ]);
 
-    // Filter for Premier League only and matches that haven't finished yet
-    const upcomingMatches = matches.filter(m => 
-        m.competition.code === 'PL' && 
-        (m.status === 'SCHEDULED' || m.status === 'TIMED' || m.status === 'LIVE' || m.status === 'IN_PLAY')
-    );
+        const data = {
+            standings: await standingsRes.json(),
+            scorers: await scorersRes.json(),
+            fixtures: await fixturesRes.json()
+        };
 
-    // Update Badge to show current Matchday (Gameweek)
-    if (upcomingMatches.length > 0 && badge) {
-        badge.innerText = `GW ${upcomingMatches[0].matchday}`;
+        // Cache matches globally for navigation
+        allMatches = data.fixtures.matches || [];
+        
+        // Auto-detect current matchday if available
+        if (allMatches.length > 0) {
+            const currentMatch = allMatches.find(m => m.status === 'TIMED' || m.status === 'SCHEDULED');
+            if (currentMatch) currentViewGW = currentMatch.matchday;
+        }
+
+        renderAll(data);
+    } catch (err) {
+        console.error("Dashboard Sync Error:", err);
+        document.getElementById('upcoming-list-container').innerHTML = 
+            `<p style="text-align:center; padding:15px; font-size:0.7rem; color:red;">API Connection Error</p>`;
     }
+}
 
-    if (upcomingMatches.length === 0) {
-        list.innerHTML = `<p style="text-align:center; padding:20px; font-size:0.8rem; opacity:0.5;">No upcoming fixtures found in this window.</p>`;
+async function getFixtures(url) {
+    const start = new Date();
+    start.setDate(start.getDate() - 3);
+    const end = new Date();
+    end.setDate(end.getDate() + 100); // 100-day window to capture many Gameweeks
+    return fetch(`${url}matches?dateFrom=${start.toISOString().split('T')[0]}&dateTo=${end.toISOString().split('T')[0]}`);
+}
+
+// 3. NAVIGATION LOGIC
+function changeGW(direction) {
+    const newGW = currentViewGW + direction;
+    if (newGW >= 1 && newGW <= 38) {
+        currentViewGW = newGW;
+        
+        // Trigger Lady Loading Effect
+        const container = document.getElementById('upcoming-list-container');
+        container.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+        
+        // Short delay to simulate loading, then render from cached allMatches
+        setTimeout(() => {
+            renderFixtures(allMatches);
+        }, 400);
+    }
+}
+
+// 4. RENDERING FUNCTIONS
+function renderAll(data) {
+    if (data.standings.standings) {
+        rawStandingsData = data.standings.standings[0].table;
+        // Other rendering functions would go here (renderStandings, etc.)
+    }
+    if (data.fixtures.matches) renderFixtures(allMatches);
+}
+
+function renderFixtures(matches) {
+    const container = document.getElementById('upcoming-list-container');
+    const badge = document.getElementById('next-gw-badge');
+    if (!container) return;
+
+    // Update the UI Badge
+    if (badge) badge.innerText = `GW ${currentViewGW}`;
+
+    // Filter matches for the currently viewed Gameweek
+    const gwMatches = allMatches.filter(m => m.matchday === currentViewGW);
+
+    if (gwMatches.length === 0) {
+        container.innerHTML = `<p style="text-align:center; padding:20px; font-size:0.8rem; opacity:0.5;">No fixtures found for GW ${currentViewGW}</p>`;
         return;
     }
 
-    // Limit to 10 fixtures for the dashboard view
-    list.innerHTML = upcomingMatches.slice(0, 10).map(m => {
+    container.innerHTML = gwMatches.map(m => {
         const date = new Date(m.utcDate);
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const dayStr = date.toLocaleDateString([], { weekday: 'short', day: 'numeric' });
         const isLive = m.status === 'IN_PLAY' || m.status === 'LIVE';
 
         return `
-            <div class="upcoming-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom: 1px solid var(--fpl-border);">
-                <div style="width:35%; text-align:right; display:flex; flex-direction:row-reverse; align-items:center; gap:8px;">
-                    <img src="${m.homeTeam.crest}" style="width:18px; height:18px; object-fit:contain;">
-                    <span style="font-weight:800; font-size:0.85rem;">${getShortName(m.homeTeam)}</span>
+            <div class="fixture-mini-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--fpl-border);">
+                <div style="width:35%; text-align:right; font-weight:800; font-size:0.85rem;">
+                    ${getShortName(m.homeTeam)} <img src="${m.homeTeam.crest}" style="width:18px; margin-left:5px; vertical-align:middle;">
                 </div>
-
+                
                 <div style="width:30%; text-align:center; display:flex; flex-direction:column; gap:2px;">
                     ${isLive ? 
-                        `<span style="font-size:0.7rem; font-weight:900; color:#ff0000; animation: pulse 1.5s infinite;">● LIVE</span>
-                         <span style="font-size:0.9rem; font-weight:900;">${m.score.fullTime.home} - ${m.score.fullTime.away}</span>` :
+                        `<span style="color:#ff0000; font-weight:900; font-size:0.6rem; animation: pulse 1.5s infinite;">● LIVE</span>
+                         <span style="font-weight:900; font-size:0.9rem;">${m.score.fullTime.home}-${m.score.fullTime.away}</span>` :
                         `<span style="font-size:0.6rem; font-weight:900; background:var(--fpl-primary); color:white; padding:2px 6px; border-radius:4px; margin: 0 auto;">VS</span>
                          <span style="font-size:0.55rem; opacity:0.7; font-weight:700; margin-top:2px;">${dayStr} ${timeStr}</span>`
                     }
                 </div>
 
-                <div style="width:35%; text-align:left; display:flex; align-items:center; gap:8px;">
-                    <img src="${m.awayTeam.crest}" style="width:18px; height:18px; object-fit:contain;">
-                    <span style="font-weight:800; font-size:0.85rem;">${getShortName(m.awayTeam)}</span>
+                <div style="width:35%; text-align:left; font-weight:800; font-size:0.85rem;">
+                    <img src="${m.awayTeam.crest}" style="width:18px; margin-right:5px; vertical-align:middle;"> ${getShortName(m.awayTeam)}
                 </div>
             </div>
         `;
     }).join('');
 }
+
+// 5. HELPERS
+function getShortName(team) {
+    if (!team) return "???";
+    return TEAM_SHORT_CODES[team.name] || team.shortName || team.name.substring(0, 3).toUpperCase();
+}
+
+// Initialize on Load
+document.addEventListener('DOMContentLoaded', init);
