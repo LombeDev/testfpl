@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL AI Engine - Rivals Edition</title>
+    <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="rivals.css">
+</head>
+<body>
+    <div id="loading-overlay" class="hidden">Gathering AI Intelligence...</div>
+
+    <header class="fpl-header">
+        <h1>FPL AI ENGINE</h1>
+        <div id="active-gw-label">GW --</div>
+    </header>
+
+    <main>
+        <section class="card">
+            <table id="league-table">
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Manager</th>
+                        <th>GW</th>
+                        <th>Total</th>
+                        <th>Captain</th>
+                        <th>Diffs</th>
+                        <th>Transfers</th>
+                    </tr>
+                </thead>
+                <tbody id="league-body">
+                    </tbody>
+            </table>
+        </section>
+
+        <section id="rivals-container">
+            </section>
+    </main>
+
+    <div id="team-modal" class="modal hidden">
+        <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2 id="modal-manager-name">Manager Name</h2>
+            <div id="modal-squad-list"></div>
+        </div>
+    </div>
+
+    <script src="rivals.js"></script>
+</body>
+</html>
