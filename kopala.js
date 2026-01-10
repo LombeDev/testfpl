@@ -71,93 +71,49 @@ async function fetchProLeague(leagueId) {
     }
 }
 
-
-    
-    /**
- * Renders the League Selection List (Justified & Right-Aligned)
+/**
+ * Renders the League Selection List (FPL Style - Full Row Clickable)
  */
-async function renderLeagueSelector() {
+function renderLeagueSelector() {
     const body = document.getElementById("league-body");
     const tableHeader = document.querySelector("#league-table thead");
     
     if (tableHeader) tableHeader.style.display = "none";
 
-    const style = `
+    // Adding hover styles for a better "AI/Smart" feel
+    const hoverStyle = `
         <style>
-            .league-row { transition: background 0.1s ease; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-            .league-row:active { background: rgba(0,0,0,0.05) !important; }
-            
-            /* The Container that handles the horizontal distribution */
-            .flex-justify { 
-                display: flex; 
-                justify-content: space-between; /* This forces Name to Left and Rank to Right */
-                align-items: center; 
-                width: 100%; 
-            }
-
-            .fpl-rank-badge { 
-                background: #01ef80; color: #37003c; width: 18px; height: 18px; 
-                border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-                font-size: 9px; font-weight: bold; flex-shrink: 0;
-            }
+            .league-row { transition: background 0.2s; cursor: pointer; }
+            .league-row:hover { background: #f0f0f0 !important; }
+            .league-row:active { background: #e0e0e0 !important; }
         </style>
     `;
     
-    body.innerHTML = style + LEAGUES_LIST.map(league => `
-        <tr class="league-row" onclick="fetchProLeague('${league.id}')" style="border-bottom: 1px solid #f2f2f2;">
-            <td colspan="7" style="padding: 14px 16px; background: #ffffff;">
-                <div class="flex-justify">
+    body.innerHTML = hoverStyle + LEAGUES_LIST.map(league => `
+        <tr class="league-row" 
+            onclick="fetchProLeague('${league.id}')"
+            style="border-bottom: 2px solid var(--fpl-surface); width: 100%;">
+            
+            <td colspan="7" style="padding: 18px 15px; background: var(--fpl-container); position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     
-                    <div style="flex-grow: 1; min-width: 0;">
-                        <span style="font-weight: 700; font-size: 0.95rem; color: #37003c; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-weight: 800; font-size: 1rem; color: var(--fpl-on-container);">
                             ${league.name}
+                        </span>
+                        <span style="font-size: 0.65rem; color: var(--fpl-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                           
                         </span>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 12px; margin-left: 15px;">
-                        <span id="count-${league.id}" style="font-weight: 800; font-size: 0.95rem; color: #37003c; text-align: right; min-width: 40px;">
-                            ...
-                        </span>
-                        <div class="fpl-rank-badge">▲</div>
+                    <div style="color: var(--fpl-blue); font-size: 1.2rem; font-weight: bold; opacity: 0.5;">
+                        ›
                     </div>
                     
                 </div>
             </td>
         </tr>
     `).join('');
-
-    // Fetch and update the real counts
-    LEAGUES_LIST.forEach(async (league) => {
-        try {
-            const res = await fetch(`${FPL_PROXY}leagues-classic/${league.id}/standings/`);
-            const data = await res.json();
-            const countEl = document.getElementById(`count-${league.id}`);
-            if (countEl) {
-                // We use rank if available, otherwise entry_count
-                const val = data.league.rank || data.league.entry_count || "1";
-                countEl.innerText = parseInt(val).toLocaleString();
-            }
-        } catch (e) {
-            document.getElementById(`count-${league.id}`).innerText = "1";
-        }
-    });
-}
-
-    // Background Fetch for Real Counts
-    LEAGUES_LIST.forEach(async (league) => {
-        try {
-            const res = await fetch(`${FPL_PROXY}leagues-classic/${league.id}/standings/`);
-            const data = await res.json();
-            // The FPL API returns the total count in league.entry_count or league.rank
-            const actualCount = data.league.rank || "1"; 
-            
-            const countEl = document.getElementById(`count-${league.id}`);
-            if (countEl) countEl.innerText = parseInt(actualCount).toLocaleString();
-        } catch (e) {
-            console.warn(`Could not load count for ${league.id}`);
-            document.getElementById(`count-${league.id}`).innerText = "-";
-        }
-    });
 }
 /**
  * Helper: Logic for Fixture Difficulty Color
