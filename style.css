@@ -660,3 +660,16 @@ Make sure the name Kopala FPL is in the center
 
 
 
+.league-row {
+    transition: transform 0.2s ease;
+    cursor: pointer;
+}
+.league-row:hover {
+    transform: translateX(5px);
+    background: #1e1e1e; /* Slightly lighter on hover */
+}
+#last-updated {
+    color: #00ff87;
+    animation: pulse 2s infinite;
+}
+
