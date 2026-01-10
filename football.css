@@ -1,27 +1,18 @@
 /* --- 1. CORE VARIABLES --- */
 :root {
-    /* Colors */
     --bg-light: #ffffff;
     --fpl-green: #00ff87;
     --fpl-purple: #37003c;
     --fpl-pink: #ff005a;
-    --fpl-primary: #ff005a;
-    --fpl-surface: #fdf8f9;
-    --fpl-container: #ffffff;
-    --fpl-on-container: #37003c;
-    --fpl-border: rgba(0,0,0,0.06);
     --border-light: #e2e8f0;
     --text-main: #1a1a1a;
     --text-muted: #666666;
     --gray-bg: #f8fafc;
-    
-    /* Transitions */
-    --transition-speed: 0.6s;
 }
 
 /* --- 2. GLOBAL RESET & SAFETY --- */
 * {
-    box-sizing: border-box;
+    box-sizing: border-box; /* Critical: Includes padding in width */
 }
 
 html, body {
@@ -30,47 +21,27 @@ html, body {
     background-color: var(--gray-bg);
     color: var(--text-main);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    overflow-x: hidden;
+    overflow-x: hidden; /* Prevents horizontal wiggle */
     width: 100%;
 }
 
-/* --- 3. NAVBAR & STICKY LAYOUT --- */
+/* --- 3. NAVBAR & LAYOUT --- */
 .navbar {
-    background-color: var(--fpl-container);
-    border-bottom: 1px solid var(--fpl-border);
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-light);
+    padding: 10px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
     position: sticky;
     top: 0;
-    z-index: 1100;
-}
-
-.progress-container {
-    width: 100%;
-    height: 3px;
-    background: transparent;
-    overflow: hidden;
-    position: sticky;
-    top: 58px; /* Navbar Height */
-    z-index: 1050;
-}
-
-.league-nav-container {
-    position: sticky;
-    top: 61px; /* Navbar (58px) + Progress (3px) */
-    background: var(--fpl-surface);
     z-index: 1000;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--fpl-border);
-    backdrop-filter: blur(10px);
 }
 
 .main-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 10px 12px;
+    padding: 12px;
 }
 
 .dashboard-grid {
@@ -83,7 +54,7 @@ html, body {
     .dashboard-grid { grid-template-columns: 1fr; }
 }
 
-/* --- 4. CARDS & TABLES --- */
+/* --- 4. CARDS & TABLES (Screen-Safe) --- */
 .card {
     background: #ffffff;
     border-radius: 12px;
@@ -91,8 +62,7 @@ html, body {
     border: 1px solid var(--border-light);
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     width: 100%;
-    overflow: hidden;
-    margin-bottom: 16px;
+    overflow: hidden; /* Contains children */
 }
 
 .card-header {
@@ -112,34 +82,24 @@ html, body {
     color: var(--fpl-purple);
 }
 
-/* Scrollable Table Logic */
-.table-scroll-container {
-    max-height: 450px;
-    overflow-y: auto;
-    border-radius: 8px;
-    border: 1px solid var(--fpl-border);
-    position: relative;
-    scrollbar-width: thin;
+.table-container {
+    width: 100%;
+    overflow-x: auto; /* Safety scroll for tables */
+    -webkit-overflow-scrolling: touch;
 }
 
-.table-scroll-container table {
-    border-collapse: separate;
-    border-spacing: 0;
+table {
     width: 100%;
+    border-collapse: collapse;
     font-size: 0.8rem;
 }
 
-.table-scroll-container thead th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: var(--fpl-container);
-    box-shadow: inset 0 -1px 0 var(--fpl-border);
-    padding: 12px 8px;
+thead th {
+    background-color: var(--gray-bg);
+    padding: 8px 4px;
     color: var(--text-muted);
     font-size: 0.65rem;
     text-transform: uppercase;
-    text-align: left;
 }
 
 td {
@@ -147,20 +107,15 @@ td {
     border-bottom: 1px solid #f1f5f9;
 }
 
-/* --- 5. TEAM NAMES & BADGES (FIXED SIZES) --- */
 .team-cell { 
     display: flex; 
     align-items: center; 
     gap: 6px; 
 }
 
-/* The core fix for "Too Big" logos */
-.crest, 
-.f-home img, 
-.f-away img, 
-.table-crest { 
-    width: 14px; 
-    height: 14px; 
+.crest { 
+    width: 18px; 
+    height: 18px; 
     object-fit: contain;
     flex-shrink: 0; 
 }
@@ -169,11 +124,11 @@ td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 90px;
+    max-width: 90px; /* Prevents name from pushing screen width */
     font-weight: 600;
 }
 
-/* --- 6. FIXTURES & LIVE SCORES --- */
+/* --- 5. FIXTURES & LIVE SCORES --- */
 .fixtures-grid {
     display: flex;
     flex-direction: column;
@@ -181,6 +136,7 @@ td {
 
 .fixture-row {
     display: grid;
+    /* Time: 55px, Score: 55px, Teams share the rest */
     grid-template-columns: 55px 1fr 55px 1fr;
     align-items: center;
     padding: 12px 0;
@@ -201,7 +157,7 @@ td {
     display: flex; 
     align-items: center; 
     justify-content: flex-end; 
-    gap: 6px;
+    gap: 4px;
     font-size: 0.75rem;
 }
 
@@ -211,8 +167,14 @@ td {
     display: flex; 
     align-items: center; 
     justify-content: flex-start; 
-    gap: 6px;
+    gap: 4px;
     font-size: 0.75rem;
+}
+
+.f-home img, .f-away img {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
 }
 
 .score-pill {
@@ -238,43 +200,22 @@ td {
     100% { opacity: 1; }
 }
 
-/* --- 7. PREDICTIONS & BAR CHARTS --- */
-.prediction-container {
-    margin-top: 12px;
-    padding: 0 10px;
+/* --- 6. LEAGUE NAV (Horizontal Scroll) --- */
+.league-nav-container {
+    background: #fff;
+    border-bottom: 1px solid var(--border-light);
+    padding: 8px 0;
+    width: 100%;
 }
 
-.prob-bar {
-    display: flex;
-    height: 8px;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #eee;
-}
-
-.prob-segment { height: 100%; transition: width 0.5s ease; }
-.prob-segment.home { background: var(--fpl-primary); }
-.prob-segment.draw { background: #94a3b8; }
-.prob-segment.away { background: #ff005a; }
-
-.prob-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.7rem;
-    margin-top: 4px;
-    font-weight: bold;
-    opacity: 0.8;
-}
-
-/* --- 8. LEAGUE NAVIGATION --- */
 .league-nav-bar {
     display: flex;
     gap: 8px;
     overflow-x: auto;
     padding: 0 16px;
-    scrollbar-width: none;
+    scrollbar-width: none; /* Firefox */
 }
-.league-nav-bar::-webkit-scrollbar { display: none; }
+.league-nav-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
 .league-btn {
     padding: 6px 14px;
@@ -294,18 +235,183 @@ td {
     border-color: var(--fpl-purple);
 }
 
-/* --- 9. SPECIAL UI ELEMENTS (Badges/Forms) --- */
-.value-badge {
+/* --- 7. UI ELEMENTS --- */
+.toggle-btn {
+    border: none;
+    background: none;
+    padding: 4px 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.toggle-btn.active {
+    background: #fff;
+    color: var(--fpl-purple);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.view-toggles {
+    display: flex;
+    background: #f1f5f9;
+    padding: 2px;
+    border-radius: 8px;
+}
+
+#loader {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: var(--fpl-purple);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.fa-spin { animation: spin 1s infinite linear; }
+@keyframes spin { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
+
+/* --- 8. MOBILE-SPECIFIC TWEAKS --- */
+@media (max-width: 480px) {
+    .t-name { max-width: 70px; } /* Even tighter for small phones */
+    .f-home, .f-away { font-size: 0.7rem; }
+    .card { padding: 10px; }
+}
+
+
+/* --- FIXED STICKY STACKING --- */
+
+.navbar {
+    background-color: var(--fpl-container);
+    border-bottom: 1px solid var(--fpl-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1100; /* Highest priority */
+}
+
+/* Progress bar sits exactly under the navbar */
+.progress-container {
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    overflow: hidden;
+    position: sticky;
+    top: 58px; /* Navbar Height */
+    z-index: 1050;
+}
+
+/* League selector sticks under the progress bar */
+.league-nav-container {
+    position: sticky;
+    top: 61px; /* Navbar (58px) + Progress (3px) */
+    background: var(--fpl-surface);
+    z-index: 1000;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--fpl-border);
+    backdrop-filter: blur(10px); /* Makes it look premium while sticky */
+}
+
+/* Ensure body has enough padding so content doesn't jump 
+*/
+.main-content {
+    padding-top: 10px;
+}
+
+/* --- REST OF YOUR CSS PRESERVED --- */
+:root {
+    --fpl-primary: #ff005a; 
+    --fpl-surface: #fdf8f9; 
+
+
+
+    .value-badge {
     font-size: 0.65rem;
     padding: 2px 8px;
     border-radius: 12px;
     font-weight: 900;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.value-badge.underdog { background: var(--fpl-green); color: #000; }
-.value-badge.draw { background: #ffd700; color: #000; }
+.value-badge.underdog {
+    background: #00ff87; /* FPL Green */
+    color: #000;
+    box-shadow: 0 0 10px rgba(0, 255, 135, 0.4);
+}
 
+.value-badge.draw {
+    background: #ffd700; /* Gold */
+    color: #000;
+}
+
+/* Subtle highlight for the whole row */
+.has-value {
+    border-left: 3px solid #00ff87 !important;
+    background: rgba(0, 255, 135, 0.03);
+}
+    --fpl-container: #ffffff; 
+    --fpl-on-container: #37003c;
+    --fpl-border: rgba(0,0,0,0.06);
+    --transition-speed: 0.6s;
+}
+/* ... (keep other styles same) ... */
+
+
+
+.prediction-container {
+    margin-top: 12px;
+    padding: 0 10px;
+}
+
+.prob-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #eee;
+}
+
+.prob-segment { height: 100%; transition: width 0.5s ease; }
+.prob-segment.home { background: var(--fpl-primary); } /* Your primary color */
+.prob-segment.draw { background: #94a3b8; }           /* Neutral Grey */
+.prob-segment.away { background: #ff005a; }           /* Vibrant Red */
+
+.prob-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    margin-top: 4px;
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+.live-tag {
+    background: #ff005a;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    animation: pulse 1.5s infinite;
+}
+
+
+
+/* --- Smart Zones --- */
+.cl-zone { border-left: 4px solid #4e73df; } /* Champions League Blue */
+.el-zone { border-left: 4px solid #f6ad55; } /* Europa League Orange */
+.rel-zone { border-left: 4px solid #e53e3e; } /* Relegation Red */
+
+/* --- Form Guide Bubbles --- */
+.form-container { display: flex; gap: 4px; justify-content: center; }
 .form-pill {
     width: 20px; height: 20px;
     border-radius: 50%;
@@ -317,7 +423,24 @@ td {
 .pill-D { background: #ffc107; color: #000; }
 .pill-L { background: #dc3545; }
 
-/* Predictor Gradient Card */
+/* --- Scrollable Engine --- */
+.smart-scroll {
+    max-height: 550px;
+    overflow-y: auto;
+    position: relative;
+    scrollbar-width: thin;
+}
+.smart-scroll thead th {
+    position: sticky;
+    top: 0;
+    background: var(--fpl-container);
+    z-index: 20;
+    box-shadow: inset 0 -1px 0 var(--fpl-border);
+}
+
+
+
+/* Predictor Card Styling */
 .predictor-gradient {
     background: linear-gradient(135deg, #37003c, var(--fpl-primary)) !important;
     color: white;
@@ -325,19 +448,70 @@ td {
     border-radius: 20px;
     margin-bottom: 25px;
 }
+.predictor-content { display: flex; justify-content: space-between; align-items: center; }
+.predictor-crest { width: 64px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
 
-.predictor-crest { 
-    width: 64px; /* Larger for the featured predictor card only */
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); 
+/* Run-In Dots */
+.run-in-container { display: flex; gap: 4px; margin-top: 4px; }
+.run-in-dot {
+    font-size: 0.55rem;
+    padding: 1px 4px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+}
+.diff-hard { background: #ff005a; } /* Playing a Top-6 team */
+.diff-easy { background: #00ff87; color: #000; } /* Playing a lower team */
+
+/* Responsive Table Adjustments */
+.center-text { text-align: center; }
+.table-crest { width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; }
+.fixture-mini-row {
+    display: grid;
+    grid-template-columns: 1fr 50px 1fr;
+    padding: 10px;
+    border-bottom: 1px solid var(--fpl-border);
+    font-size: 0.8rem;
+    font-weight: bold;
 }
 
-/* --- 10. MOBILE-SPECIFIC TWEAKS --- */
-@media (max-width: 480px) {
-    .t-name { max-width: 70px; }
-    .f-home, .f-away { font-size: 0.7rem; gap: 4px; }
-    .card { padding: 10px; }
-    .crest, .f-home img, .f-away img, .table-crest {
-        width: 12px;
-        height: 12px;
-    }
+
+/* Scrollable Table Container */
+.table-scroll-container {
+    max-height: 450px; /* Adjust height as needed */
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid var(--fpl-border);
+    position: relative;
+}
+
+/* Sticky Header Logic */
+.table-scroll-container table {
+    border-collapse: separate; /* Required for sticky borders */
+    border-spacing: 0;
+    width: 100%;
+}
+
+.table-scroll-container thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--fpl-container); /* Match your card background */
+    box-shadow: inset 0 -1px 0 var(--fpl-border); /* Bottom border for sticky header */
+    padding: 12px 8px;
+}
+
+/* Custom Scrollbar Styling (Optional - for Pro Look) */
+.table-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+.table-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--fpl-primary);
 }
