@@ -1,165 +1,317 @@
-/**
- * KOPALA FPL - PRO MATCH CENTER (SMART AI EDITION)
- * Features: Live Scores, FDR, Transfer AI, and Rank Risk Assessment
- */
+ /**
+ * FPL AI Engine - Coding Partner Edition
+ * Features: Live Standings, Pitch View, Transfer Suggestions, and FDR
+ */
 
-const FPL_PROXY = "/fpl-api/"; 
+const API_BASE = "/fpl-api/";
 
-let playerLookup = {};
-let teamLookup = {};
-let activeGameweek = null;
-let refreshTimer = null;
-let leagueOwnership = {}; // Smart Feature: Track what others own
+// 1. Configuration
+const LEAGUES_LIST = [
+    { name: "Kopala FPL", id: "101712" },
+    { name: "Bayporteers", id: "147133" },
+    { name: "Zedian Premier League", id: "1745660" },
+    { name: "Zambia", id: "258" },
+    { name: "Second Chance", id: "333" }
+];
 
-async function initMatchCenter() {
-    try {
-        const response = await fetch(`${FPL_PROXY}bootstrap-static/`);
-        const data = await response.json();
-        
-        // Map Players with AI Stats (ICT Index & Form)
-        data.elements.forEach(p => {
-            playerLookup[p.id] = {
-                name: p.web_name,
-                team: p.team,
-                price: p.now_cost / 10,
-                form: parseFloat(p.form),
-                ict: parseFloat(p.ict_index),
-                points: p.event_points,
-                // AI Rank Score: Combined weight of form and underlying stats
-                ai_rank: ((parseFloat(p.form) * 0.7) + (parseFloat(p.ict_index) * 0.05)).toFixed(1)
-            };
-        });
-
-        data.teams.forEach(t => teamLookup[t.id] = t.name);
-        
-        const current = data.events.find(e => e.is_current) || data.events.find(e => !e.finished);
-        activeGameweek = current ? current.id : 1;
-        
-        updateLiveScores();
-    } catch (error) {
-        console.error("Sync Error:", error);
-    }
-}
+let playerMap = {};
+let teamMap = {};
+let managerSquads = {}; 
 
 /**
- * SMART FEATURE: Calculates how dangerous a player is to your rank
- */
-function getRankRisk(playerIds) {
-    let riskScore = 0;
-    playerIds.forEach(id => {
-        // High risk if a player has high form but isn't in your squad
-        if (playerLookup[id] && playerLookup[id].ai_rank > 7.0) riskScore++;
-    });
-    return riskScore > 3 ? "⚠️ HIGH RISK" : "✅ STABLE";
+ * Main function to fetch data and initialize the dashboard
+ */
+async function fetchProLeague(leagueId) {
+    const loader = document.getElementById("loading-overlay");
+    if (loader) loader.classList.remove("hidden");
+
+    try {
+        // Fetch Static data, League data, and Fixtures for FDR
+        const [staticRes, leagueRes, fixRes] = await Promise.all([
+            fetch(`${API_BASE}bootstrap-static/`),
+            fetch(`${API_BASE}leagues-classic/${leagueId}/standings/`),
+            fetch(`${API_BASE}fixtures/`)
+        ]);
+
+        const staticData = await staticRes.json();
+        const leagueData = await leagueRes.json();
+        const fixData = await fixRes.json();
+
+        // Map Teams with Strength for FDR logic
+        staticData.teams.forEach(t => {
+            teamMap[t.id] = { 
+                short_name: t.short_name, 
+                strength: t.strength 
+            };
+        });
+
+        // Map Players with Price and Form for Transfer AI
+        staticData.elements.forEach(p => {
+            playerMap[p.id] = { 
+                name: p.web_name, 
+                points: p.event_points, 
+                team: p.team, 
+                pos: p.element_type,
+                price: p.now_cost / 10,
+                form: parseFloat(p.form),
+                // Find next unplayed fixture for this player's team
+                next_fixture: fixData.find(f => !f.finished && (f.team_a === p.team || f.team_h === p.team))
+            };
+        });
+
+        const currentEvent = staticData.events.find(e => e.is_current || e.is_next).id;
+        document.getElementById("active-gw-label").textContent = `GW ${currentEvent}`;
+
+        renderTable(leagueData.standings.results);
+        loadLeagueIntelligence(leagueData.standings.results, currentEvent);
+
+    } catch (err) { 
+        console.error("Error fetching FPL data:", err); 
+        if (loader) loader.classList.add("hidden");
+    }
 }
 
-async function updateLiveScores() {
-    const container = document.getElementById('fixtures-container');
-    if (!container) return;
-    clearTimeout(refreshTimer);
+/**
+ * Renders the League Selection List
+ */
+function renderLeagueSelector() {
+    const body = document.getElementById("league-body");
+    const tableHeader = document.querySelector("#league-table thead");
+    
+    if (tableHeader) tableHeader.style.display = "none";
 
-    try {
-        const response = await fetch(`${FPL_PROXY}fixtures/?event=${activeGameweek}`);
-        const fixtures = await response.json();
-        const startedGames = fixtures.filter(f => f.started);
-        
-        if (startedGames.some(f => !f.finished)) refreshTimer = setTimeout(updateLiveScores, 60000);
-
-        let html = '';
-        let lastDateString = "";
-        const sortedGames = [...startedGames].sort((a, b) => new Date(b.kickoff_time) - new Date(a.kickoff_time));
-
-        sortedGames.forEach(game => {
-            const kickoff = new Date(game.kickoff_time);
-            const currentDateString = kickoff.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-
-            if (currentDateString !== lastDateString) {
-                html += `<div style="color:#37003c; font-size:0.75rem; font-weight:800; margin: 20px 0 10px 5px; opacity:0.6; text-transform:uppercase;">${currentDateString}</div>`;
-                lastDateString = currentDateString;
-            }
-
-            let statusDisplay = "";
-            if (game.finished) {
-                statusDisplay = 'FT';
-            } else if (game.started) {
-                const diffMins = Math.floor((new Date() - kickoff) / 60000);
-                if (diffMins < 45) statusDisplay = `${diffMins}'`;
-                else if (diffMins < 60) statusDisplay = 'HT';
-                else if (diffMins < 105) statusDisplay = `${diffMins - 15}'`;
-                else statusDisplay = "90+'";
-            }
-
-            const homeAbbr = teamLookup[game.team_h].substring(0, 3).toUpperCase();
-            const awayAbbr = teamLookup[game.team_a].substring(0, 3).toUpperCase();
-
-            // --- SMART STATS PROCESSING ---
-            const goals = game.stats.find(s => s.identifier === 'goals_scored');
-            const assists = game.stats.find(s => s.identifier === 'assists');
-            let homeEvents = '', awayEvents = '';
-            
-            if (goals) {
-                goals.h.forEach(s => homeEvents += `<div>${playerLookup[s.element].name} ⚽</div>`);
-                goals.a.forEach(s => awayEvents += `<div>⚽ ${playerLookup[s.element].name}</div>`);
-            }
-            if (assists) {
-                assists.h.forEach(s => homeEvents += `<div style="opacity:0.4; font-size:0.55rem;">${playerLookup[s.element].name} <span style="color:#ff005a">A</span></div>`);
-                assists.a.forEach(s => awayEvents += `<div style="opacity:0.4; font-size:0.55rem;"><span style="color:#ff005a">A</span> ${playerLookup[s.element].name}</div>`);
-            }
-
-            const bps = game.stats.find(s => s.identifier === 'bps');
-            let bonusHtml = '';
-            if (bps) {
-                const top = [...bps.h, ...bps.a].sort((a, b) => b.value - a.value).slice(0, 3);
-                const colors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-                top.forEach((p, i) => {
-                    bonusHtml += `
-                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:0.65rem;">
-                            <span style="background:${colors[i]}; color:#000; width:13px; height:13px; display:flex; align-items:center; justify-content:center; border-radius:2px; font-weight:900; font-size:0.5rem;">${3-i}</span>
-                            <span style="font-weight:700;">${playerLookup[p.element].name} <span style="opacity:0.3; font-weight:400;">BPS: ${p.value}</span></span>
-                        </div>`;
-                });
-            }
-
-            // --- FULL DOCUMENT SCROLLABLE WRAPPER ---
-            html += `
-                <div style="display: flex; flex-direction: row; padding: 12px 0; margin-bottom: 2px; border-bottom: 1px solid #f8f8f8; max-height: 150px; overflow-y: auto;">
-                    <div style="flex: 1.3; padding-right: 12px; display: flex; flex-direction: column; border-right: 1px solid #eee;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-weight: 900; font-size: 0.8rem; color:#37003c; flex: 1;">${homeAbbr}</span>
-                            <div style="background: #37003c; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 900; font-size: 0.8rem; font-family: monospace; margin: 0 10px;">
-                                ${game.team_h_score} | ${game.team_a_score}
-                            </div>
-                            <span style="font-weight: 900; font-size: 0.8rem; color:#37003c; flex: 1; text-align: right;">${awayAbbr}</span>
-                        </div>
-                        <div style="display: flex; gap: 8px; font-size: 0.65rem; flex-grow: 1;">
-                            <div style="flex: 1; text-align: left; font-weight: 600;">${homeEvents}</div>
-                            <div style="flex: 1; text-align: right; font-weight: 600;">${awayEvents}</div>
-                        </div>
-                        <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
-                             <span style="font-size: 0.55rem; font-weight: 800; opacity: 0.2;">GW ${activeGameweek}</span>
-                             <span style="font-size: 0.65rem; font-weight: 900; color:#37003c;">${statusDisplay}</span>
-                        </div>
-                    </div>
-                    <div style="flex: 1; padding-left: 12px; display: flex; flex-direction: column;">
-                        <div style="font-size: 0.55rem; font-weight: 900; color: #37003c; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; opacity: 0.5;">
-                            🏆 BONUS (AI LIVE) <span style="width: 4px; height: 4px; background: ${game.finished ? '#ccc' : '#ff005a'}; border-radius: 50%;"></span>
-                        </div>
-                        <div style="flex-grow: 1;">
-                            ${bonusHtml || '<span style="opacity:0.2; font-size:0.55rem;">Awaiting Data...</span>'}
-                        </div>
-                    </div>
-                </div>`;
-        });
-        
-        container.innerHTML = html;
-        // Apply vertical scroll to the whole container
-        container.style.maxHeight = "600px";
-        container.style.overflowY = "auto";
-        container.style.paddingRight = "10px";
-        
-    } catch (err) {
-        console.error("Match Center Engine Error:", err);
-    }
+    body.innerHTML = LEAGUES_LIST.map(league => `
+        <tr style="border-bottom: 8px solid var(--fpl-surface);">
+            <td colspan="7" style="padding: 15px; background: var(--fpl-container);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 1.1rem; color: var(--fpl-on-container);">${league.name}</span>
+                    <button onclick="fetchProLeague('${league.id}')" 
+                            style="background: var(--fpl-blue); color: #333; border: none; padding: 8px 15px; 
+                            border-radius: 6px; font-weight: 800; font-size: 10px; cursor: pointer; text-transform: uppercase;">
+                        View League
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
 }
 
-document.addEventListener('DOMContentLoaded', initMatchCenter);
+/**
+ * Helper: Logic for Fixture Difficulty Color
+ */
+function getFDRColor(player) {
+    if (!player.next_fixture) return "#ccc";
+    const isHome = player.next_fixture.team_h === player.team;
+    const difficulty = isHome ? player.next_fixture.team_h_difficulty : player.next_fixture.team_a_difficulty;
+    
+    if (difficulty <= 2) return "#01ef80"; // Easy (Green)
+    if (difficulty >= 4) return "#ff2882"; // Hard (Red)
+    return "#e1e1e1"; // Neutral
+}
+
+/**
+ * Transfer AI: Find top 3 replacement options
+ */
+function getBestReplacements(elementId, maxPrice) {
+    const currentPlayer = playerMap[elementId];
+    return Object.values(playerMap)
+        .filter(p => p.pos === currentPlayer.pos && p.price <= maxPrice && p.id !== elementId)
+        .sort((a, b) => b.form - a.form)
+        .slice(0, 3);
+}
+
+/**
+ * Renders the Standings Table
+ */
+function renderTable(managers) {
+    const body = document.getElementById("league-body");
+    const tableHeader = document.querySelector("#league-table thead");
+    
+    if (tableHeader) tableHeader.style.display = "table-header-group";
+
+    body.innerHTML = managers.map((m) => `
+        <tr id="row-${m.entry}">
+            <td class="rank-col">${m.rank}</td>
+            <td class="manager-col" onclick="handleManagerClick(${m.entry}, '${m.player_name}')">
+                <div class="m-info-wrapper">
+                    <span class="m-name">${m.player_name}</span>
+                    <span class="t-name">${m.entry_name}</span>
+                    <span id="val-${m.entry}" class="val-text">£--.-m</span>
+                </div>
+            </td>
+            <td class="pts-col">
+                <div class="live-pts" style="font-weight:900;">${m.event_total}</div>
+                <div id="hits-${m.entry}" style="font-size:7px; color:#ff2882; font-weight:bold;"></div>
+            </td>
+            <td class="total-col">
+                <div class="bold-p" style="font-weight:900;">${m.total}</div>
+            </td>
+            <td id="cap-${m.entry}" class="cap-col">—</td>
+            <td class="diff-col"><div id="diffs-${m.entry}" class="diff-col-scroll"></div></td>
+            <td class="trans-col"><div id="trans-${m.entry}" class="trans-col-scroll"></div></td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Intelligence logic (Captain, Chips, Transfers)
+ */
+async function loadLeagueIntelligence(managers, eventId) {
+    const ownership = {};
+    const managerDetails = {};
+
+    await Promise.all(managers.map(async (m) => {
+        try {
+            const [picksRes, transRes] = await Promise.all([
+                fetch(`${API_BASE}entry/${m.entry}/event/${eventId}/picks/`),
+                fetch(`${API_BASE}entry/${m.entry}/transfers/`)
+            ]);
+            const picks = await picksRes.json();
+            const trans = await transRes.json();
+            
+            managerDetails[m.entry] = { 
+                picks, 
+                trans: trans.filter(t => t.event === eventId) 
+            };
+            managerSquads[m.entry] = picks;
+            
+            picks.picks.forEach(p => {
+                ownership[p.element] = (ownership[p.element] || 0) + 1;
+            });
+        } catch (e) { console.warn(`Failed to fetch manager ${m.entry}:`, e); }
+    }));
+
+    managers.forEach(m => {
+        const data = managerDetails[m.entry];
+        if (!data) return;
+
+        const valSpan = document.getElementById(`val-${m.entry}`);
+        if(valSpan) valSpan.innerText = `£${(data.picks.entry_history.value / 10).toFixed(1)}m`;
+
+        const cap = data.picks.picks.find(p => p.is_captain);
+        const chip = data.picks.active_chip;
+        const capCell = document.getElementById(`cap-${m.entry}`);
+        if(capCell) {
+            capCell.innerHTML = `
+                ${playerMap[cap.element].name} 
+                ${chip ? `<span class="chip-badge chip-wildcard">${chip.toUpperCase()}</span>` : ''}
+            `;
+        }
+
+        const diffs = data.picks.picks.filter(p => ownership[p.element] === 1);
+        const diffDiv = document.getElementById(`diffs-${m.entry}`);
+        if(diffDiv) {
+            diffDiv.innerHTML = diffs.map(p => 
+                `<span class="mini-tag tag-diff">${playerMap[p.element].name}</span>`).join('') || '—';
+        }
+
+        const transDiv = document.getElementById(`trans-${m.entry}`);
+        if(transDiv) {
+            transDiv.innerHTML = data.trans.map(t => 
+                `<span class="mini-tag tag-in">${playerMap[t.element_in].name}</span>`).join('') || 'None';
+        }
+
+        const hitsDiv = document.getElementById(`hits-${m.entry}`);
+        const hits = data.picks.entry_history.event_transfer_cost;
+        if(hitsDiv && hits > 0) hitsDiv.innerText = `-${hits}`;
+    });
+
+    const loader = document.getElementById("loading-overlay");
+    if (loader) loader.classList.add("hidden");
+}
+
+/**
+ * Team Mapping for Jersey CSS
+ */
+function getTeamClass(teamId) {
+    const mapping = {
+        1: 'arsenal', 2: 'aston_villa', 3: 'bournemouth', 4: 'brentford', 5: 'brighton', 
+        6: 'chelsea', 7: 'crystal_p', 8: 'everton', 9: 'fulham', 10: 'ipswich', 
+        11: 'leicester', 12: 'liverpool', 13: 'man_city', 14: 'man_utd', 15: 'newcastle', 
+        16: 'nottm_forest', 17: 'southampton', 18: 'tottenham', 19: 'west_ham', 20: 'wolves'
+    };
+    return mapping[teamId] || 'default';
+}
+
+/**
+ * Modal Handling (Jersey Pitch + Hub Intelligence)
+ */
+function handleManagerClick(id, name) {
+    const data = managerSquads[id];
+    if (!data) return;
+
+    const modal = document.getElementById("team-modal");
+    const list = document.getElementById("modal-squad-list");
+    document.getElementById("modal-manager-name").innerText = name;
+
+    const starters = { 1: [], 2: [], 3: [], 4: [] };
+    const bench = [];
+    let squadTotal = 0;
+    let transferAdvice = [];
+
+    data.picks.forEach(p => {
+        const player = playerMap[p.element];
+        const pts = player.points * p.multiplier;
+        if (p.multiplier > 0) squadTotal += pts;
+        
+        const kitClass = player.pos === 1 ? 'gkp_color' : getTeamClass(player.team);
+        const fdrColor = getFDRColor(player);
+
+        // Weak link identification logic
+        if (player.form < 2.0 && p.multiplier > 0) {
+            const best = getBestReplacements(p.element, player.price + 0.5);
+            if (best.length > 0) {
+                transferAdvice.push(`<div><strong>Sell ${player.name}:</strong> Buy ${best[0].name} (Form: ${best[0].form})</div>`);
+            }
+        }
+
+        const playerHTML = `
+            <div class="slot" style="width: 65px; display:flex; flex-direction:column; align-items:center; position:relative;">
+                <div class="fdr-indicator" style="background:${fdrColor}; width:6px; height:6px; border-radius:50%; position:absolute; top:0; right:10px;"></div>
+                ${p.is_captain ? '<div class="cap-star-pitch">★</div>' : ''}
+                <div class="jersey ${kitClass}"></div>
+                <div class="modal-player-tag">
+                    <span class="m-p-name">${player.name}</span>
+                    <span class="m-p-pts">${player.points}${p.multiplier > 1 ? ' (x'+p.multiplier+')' : ''}</span>
+                </div>
+            </div>`;
+        
+        if (p.position > 11) bench.push(playerHTML);
+        else starters[player.pos].push(playerHTML);
+    });
+
+    list.innerHTML = `
+        <div class="modal-pitch">
+            <div class="modal-row">${starters[1].join('')}</div>
+            <div class="modal-row">${starters[2].join('')}</div>
+            <div class="modal-row">${starters[3].join('')}</div>
+            <div class="modal-row">${starters[4].join('')}</div>
+            <div class="bench-wrap">
+                <div class="bench-label">Substitutes</div>
+                <div class="modal-row">${bench.join('')}</div>
+            </div>
+        </div>
+        <div class="hub-intelligence" style="background:#1a1a1a; padding:15px; border-radius:8px; margin-top:15px; color:#fff; font-size:11px;">
+            <h4 style="color:var(--fpl-blue); margin-bottom:10px;">Hub Transfer Recommendations</h4>
+            ${transferAdvice.length > 0 ? transferAdvice.join('') : 'Squad looks solid! No urgent transfers suggested.'}
+        </div>
+        <div class="modal-footer">
+            <span class="total-label">Live Score</span>
+            <span class="total-value">${squadTotal} PTS</span>
+        </div>
+    `;
+    modal.classList.remove("hidden");
+    document.body.style.overflow = 'hidden'; 
+}
+
+/**
+ * Event Listeners & Init
+ */
+document.getElementById("close-modal").onclick = () => {
+    document.getElementById("team-modal").classList.add("hidden");
+    document.body.style.overflow = ''; 
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderLeagueSelector();
+});
