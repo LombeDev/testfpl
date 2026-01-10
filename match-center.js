@@ -9,6 +9,29 @@ let teamLookup = {};
 let activeGameweek = null;
 let refreshTimer = null;
 
+// Add this style block to your head or CSS file to make the scrollbar look clean
+const style = document.createElement('style');
+style.innerHTML = `
+    #fixtures-container {
+        max-height: 600px; /* Adjust this height to fit your page layout */
+        overflow-y: auto;
+        padding-right: 5px;
+        scrollbar-width: thin;
+        scrollbar-color: #37003c #f4f4f4;
+    }
+    #fixtures-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    #fixtures-container::-webkit-scrollbar-track {
+        background: #f4f4f4;
+    }
+    #fixtures-container::-webkit-scrollbar-thumb {
+        background-color: #37003c;
+        border-radius: 10px;
+    }
+`;
+document.head.appendChild(style);
+
 async function initMatchCenter() {
     try {
         const response = await fetch(`${FPL_PROXY}bootstrap-static/`);
@@ -92,8 +115,8 @@ async function updateLiveScores() {
             }
 
             html += `
-                <div style="display: flex; flex-direction: row; padding: 12px 0; margin-bottom: 2px; border-bottom: 1px solid #f8f8f8; height: 130px;">
-                    <div style="flex: 1.3; padding-right: 12px; display: flex; flex-direction: column; border-right: 1px solid #eee; overflow: hidden;">
+                <div style="display: flex; flex-direction: row; padding: 12px 0; margin-bottom: 2px; border-bottom: 1px solid #f8f8f8; min-height: 100px;">
+                    <div style="flex: 1.3; padding-right: 12px; display: flex; flex-direction: column; border-right: 1px solid #eee;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-weight: 900; font-size: 0.8rem; color:#37003c; flex: 1;">${homeAbbr}</span>
                             <div style="background: #37003c; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 900; font-size: 0.8rem; font-family: monospace; margin: 0 10px;">
@@ -101,23 +124,20 @@ async function updateLiveScores() {
                             </div>
                             <span style="font-weight: 900; font-size: 0.8rem; color:#37003c; flex: 1; text-align: right;">${awayAbbr}</span>
                         </div>
-                        
-                        <div style="display: flex; gap: 8px; font-size: 0.65rem; overflow-y: auto; flex-grow: 1; padding-right: 4px; scrollbar-width: thin;">
+                        <div style="display: flex; gap: 8px; font-size: 0.65rem; flex-grow: 1;">
                             <div style="flex: 1; text-align: left; font-weight: 600;">${homeEvents}</div>
                             <div style="flex: 1; text-align: right; font-weight: 600;">${awayEvents}</div>
                         </div>
-
                         <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
                              <span style="font-size: 0.55rem; font-weight: 800; opacity: 0.2;">GW ${activeGameweek}</span>
                              <span style="font-size: 0.65rem; font-weight: 900; color:#37003c;">${statusDisplay}</span>
                         </div>
                     </div>
-
-                    <div style="flex: 1; padding-left: 12px; display: flex; flex-direction: column; overflow: hidden;">
+                    <div style="flex: 1; padding-left: 12px; display: flex; flex-direction: column;">
                         <div style="font-size: 0.55rem; font-weight: 900; color: #37003c; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; opacity: 0.5;">
                             🏆 BONUS <span style="width: 4px; height: 4px; background: ${game.finished ? '#ccc' : '#ff005a'}; border-radius: 50%;"></span>
                         </div>
-                        <div style="flex-grow: 1; overflow-y: auto; scrollbar-width: thin;">
+                        <div style="flex-grow: 1;">
                             ${bonusHtml || '<span style="opacity:0.2; font-size:0.55rem;">Awaiting...</span>'}
                         </div>
                     </div>
