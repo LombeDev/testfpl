@@ -156,66 +156,65 @@ document.addEventListener('DOMContentLoaded', initMatchCenter);
 
 
 
-
 async function loadUpcomingFixtures() {
     const container = document.getElementById('upcoming-list-container');
     if (!container) return;
 
-    // Using a high-availability proxy
-    const proxy = "https://corsproxy.io/?";
-    const url = "https://fantasy.premierleague.com/api/bootstrap-static/";
+    // Switch to AllOrigins - more reliable for FPL data
+    const proxy = "https://api.allorigins.win/raw?url=";
+    const baseUrl = "https://fantasy.premierleague.com/api";
 
     try {
-        // Step 1: Get Gameweek and Team data
-        const bootResponse = await fetch(`${proxy}${url}`);
-        const bootData = await bootResponse.json();
+        // 1. Fetch Main Data (Bootstrap)
+        const bootRes = await fetch(`${proxy}${encodeURIComponent(baseUrl + '/bootstrap-static/')}`);
+        if (!bootRes.ok) throw new Error("Bootstrap failed");
+        const bootData = await bootRes.json();
 
-        // Step 2: Determine which GW to show
-        // If current GW is finished, show next. Otherwise, show current upcoming.
-        const currentGW = bootData.events.find(e => e.is_current) || {id: 0};
-        const nextGWId = currentGW.finished ? currentGW.id + 1 : currentGW.id;
+        // 2. Identify GW (Logic: find the first event where 'is_next' is true)
+        const nextGW = bootData.events.find(e => e.is_next) || bootData.events.find(e => e.is_current);
+        const gwId = nextGW ? nextGW.id : 1;
         
-        // Update badge
-        const badge = document.getElementById('next-gw-badge');
-        if(badge) badge.innerText = `GW ${nextGWId}`;
+        document.getElementById('next-gw-badge').innerText = `GW ${gwId}`;
 
-        // Step 3: Fetch the fixtures for that GW
-        const fixResponse = await fetch(`${proxy}https://fantasy.premierleague.com/api/fixtures/?event=${nextGWId}`);
-        const fixtures = await fixResponse.json();
+        // 3. Fetch Specific Fixtures
+        const fixRes = await fetch(`${proxy}${encodeURIComponent(baseUrl + '/fixtures/?event=' + gwId)}`);
+        const fixtures = await fixRes.json();
 
-        // Step 4: Map Team IDs to Names
-        const teams = {};
-        bootData.teams.forEach(t => teams[t.id] = t.short_name);
+        // 4. Map Teams
+        const teamNames = {};
+        bootData.teams.forEach(t => teamNames[t.id] = t.short_name);
 
-        // Step 5: Render
-        if (!fixtures.length) {
-            container.innerHTML = `<p style="text-align:center; padding:20px; font-size:0.8rem;">No fixtures found.</p>`;
+        // 5. Render to UI
+        if (!fixtures || fixtures.length === 0) {
+            container.innerHTML = `<p style="text-align:center; padding:15px; font-size:0.8rem;">Fixtures TBC</p>`;
             return;
         }
 
         container.innerHTML = fixtures.map(f => {
             const date = new Date(f.kickoff_time);
+            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `
-                <div class="upcoming-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--fpl-border);">
-                    <div style="width:35%; text-align:right; font-weight:800;">${teams[f.team_h]}</div>
-                    <div style="width:25%; text-align:center; display:flex; flex-direction:column; gap:2px;">
-                        <span style="font-size:0.6rem; font-weight:900; background:var(--fpl-surface); padding:2px 6px; border-radius:4px; border:1px solid var(--fpl-border);">VS</span>
-                        <span style="font-size:0.6rem; opacity:0.7; font-weight:700;">${date.toLocaleDateString([], {weekday:'short', day:'numeric'})}</span>
+                <div class="upcoming-item" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--fpl-border);">
+                    <div style="width:35%; text-align:right; font-weight:800; font-size:0.85rem;">${teamNames[f.team_h]}</div>
+                    <div style="width:25%; text-align:center; display:flex; flex-direction:column;">
+                        <span style="font-size:0.6rem; font-weight:900; background:var(--fpl-surface); padding:2px 4px; border-radius:4px; border:1px solid var(--fpl-border); margin: 0 auto;">VS</span>
+                        <span style="font-size:0.55rem; opacity:0.6; font-weight:700; margin-top:4px;">${time}</span>
                     </div>
-                    <div style="width:35%; text-align:left; font-weight:800;">${teams[f.team_a]}</div>
+                    <div style="width:35%; text-align:left; font-weight:800; font-size:0.85rem;">${teamNames[f.team_a]}</div>
                 </div>
             `;
         }).join('');
 
     } catch (error) {
-        console.error("FPL Load Error:", error);
-        container.innerHTML = `<div style="text-align:center; padding:15px;"><button onclick="loadUpcomingFixtures()" style="background:var(--fpl-primary); color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:800; cursor:pointer;">Retry Loading</button></div>`;
+        console.error("Critical Load Error:", error);
+        container.innerHTML = `
+            <div style="text-align:center; padding:15px;">
+                <p style="font-size:0.7rem; color:red; margin-bottom:8px;">Network Blocked</p>
+                <button onclick="window.location.reload()" style="background:var(--fpl-primary); color:white; border:none; padding:8px 16px; border-radius:12px; font-weight:800; cursor:pointer; font-size:0.7rem;">REFRESH PAGE</button>
+            </div>
+        `;
     }
 }
 
-// FORCE START: Ensures the function runs regardless of when the script is loaded
-if (document.readyState === "complete" || document.readyState === "interactive") {
-    loadUpcomingFixtures();
-} else {
-    document.addEventListener("DOMContentLoaded", loadUpcomingFixtures);
-}
+// Ensure execution
+loadUpcomingFixtures();
