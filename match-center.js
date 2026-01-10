@@ -151,3 +151,66 @@ async function updateLiveScores() {
 }
 
 document.addEventListener('DOMContentLoaded', initMatchCenter);
+
+
+async function loadUpcomingFixtures() {
+    const container = document.getElementById('upcoming-list-container');
+    
+    try {
+        // 1. Get the current Gameweek status
+        const bootstrapRes = await fetch('https://fantasy.premierleague.com/api/bootstrap-static/');
+        const data = await bootstrapRes.json();
+        
+        // Find the current active gameweek
+        const currentGW = data.events.find(event => event.is_current);
+        const nextGWId = currentGW ? currentGW.id + 1 : 1;
+        
+        // Update the badge in the UI
+        const badge = document.getElementById('next-gw-badge');
+        if(badge) badge.innerText = `GW ${nextGWId}`;
+
+        // 2. Fetch all fixtures for the NEXT gameweek
+        const fixturesRes = await fetch(`https://fantasy.premierleague.com/api/fixtures/?event=${nextGWId}`);
+        const fixtures = await fixturesRes.json();
+
+        // 3. Map team IDs to short names (using data from bootstrap-static)
+        const teamMap = {};
+        data.teams.forEach(team => {
+            teamMap[team.id] = team.short_name;
+        });
+
+        // 4. Render to HTML
+        if (fixtures.length === 0) {
+            container.innerHTML = `<p style="text-align:center; font-size:0.8rem; opacity:0.5;">No fixtures found for GW ${nextGWId}</p>`;
+            return;
+        }
+
+        container.innerHTML = fixtures.map(f => {
+            const date = new Date(f.kickoff_time);
+            const day = date.toLocaleDateString([], { weekday: 'short' });
+            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            return `
+                <div class="upcoming-item">
+                    <div class="team-box home">
+                        <span class="team-name-short">${teamMap[f.team_h]}</span>
+                    </div>
+                    <div class="vs-box">
+                        <span class="vs-badge">VS</span>
+                        <span class="kickoff-time">${day} ${time}</span>
+                    </div>
+                    <div class="team-box away">
+                        <span class="team-name-short">${teamMap[f.team_a]}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error("Error fetching upcoming fixtures:", error);
+        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:red;">Failed to load fixtures.</p>`;
+    }
+}
+
+// Call this function when the script loads
+document.addEventListener('DOMContentLoaded', loadUpcomingFixtures);
