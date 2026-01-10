@@ -153,42 +153,52 @@ async function updateLiveScores() {
 document.addEventListener('DOMContentLoaded', initMatchCenter);
 
 
+
+
+
+
 async function loadUpcomingFixtures() {
     const container = document.getElementById('upcoming-list-container');
     
+    // We use a CORS proxy to bypass FPL API restrictions
+    const PROXY = "https://corsproxy.io/?"; 
+    const BOOTSTRAP_URL = `${PROXY}https://fantasy.premierleague.com/api/bootstrap-static/`;
+    const FIXTURES_BASE_URL = `${PROXY}https://fantasy.premierleague.com/api/fixtures/?event=`;
+
     try {
         // 1. Get the current Gameweek status
-        const bootstrapRes = await fetch('https://fantasy.premierleague.com/api/bootstrap-static/');
+        const bootstrapRes = await fetch(BOOTSTRAP_URL);
+        if (!bootstrapRes.ok) throw new Error('Bootstrap fetch failed');
         const data = await bootstrapRes.json();
         
-        // Find the current active gameweek
+        // Find the current active gameweek and determine the next one
         const currentGW = data.events.find(event => event.is_current);
         const nextGWId = currentGW ? currentGW.id + 1 : 1;
         
-        // Update the badge in the UI
         const badge = document.getElementById('next-gw-badge');
         if(badge) badge.innerText = `GW ${nextGWId}`;
 
-        // 2. Fetch all fixtures for the NEXT gameweek
-        const fixturesRes = await fetch(`https://fantasy.premierleague.com/api/fixtures/?event=${nextGWId}`);
+        // 2. Fetch fixtures for the NEXT gameweek
+        const fixturesRes = await fetch(`${FIXTURES_BASE_URL}${nextGWId}`);
+        if (!fixturesRes.ok) throw new Error('Fixtures fetch failed');
         const fixtures = await fixturesRes.json();
 
-        // 3. Map team IDs to short names (using data from bootstrap-static)
+        // 3. Map team IDs to short names
         const teamMap = {};
         data.teams.forEach(team => {
             teamMap[team.id] = team.short_name;
         });
 
-        // 4. Render to HTML
+        // 4. Render
         if (fixtures.length === 0) {
-            container.innerHTML = `<p style="text-align:center; font-size:0.8rem; opacity:0.5;">No fixtures found for GW ${nextGWId}</p>`;
+            container.innerHTML = `<p style="text-align:center; font-size:0.8rem; opacity:0.5;">No fixtures scheduled.</p>`;
             return;
         }
 
         container.innerHTML = fixtures.map(f => {
             const date = new Date(f.kickoff_time);
-            const day = date.toLocaleDateString([], { weekday: 'short' });
-            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const day = date.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
             return `
                 <div class="upcoming-item">
@@ -197,7 +207,8 @@ async function loadUpcomingFixtures() {
                     </div>
                     <div class="vs-box">
                         <span class="vs-badge">VS</span>
-                        <span class="kickoff-time">${day} ${time}</span>
+                        <span class="kickoff-time">${day}</span>
+                        <span class="kickoff-time">${time}</span>
                     </div>
                     <div class="team-box away">
                         <span class="team-name-short">${teamMap[f.team_a]}</span>
@@ -207,10 +218,12 @@ async function loadUpcomingFixtures() {
         }).join('');
 
     } catch (error) {
-        console.error("Error fetching upcoming fixtures:", error);
-        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:red;">Failed to load fixtures.</p>`;
+        console.error("Error details:", error);
+        container.innerHTML = `
+            <div style="text-align:center; padding:10px;">
+                <p style="font-size:0.7rem; color:var(--fpl-primary); font-weight:700;">API Connection Limited</p>
+                <p style="font-size:0.6rem; opacity:0.6;">Try refreshing the page or check back later.</p>
+            </div>
+        `;
     }
 }
-
-// Call this function when the script loads
-document.addEventListener('DOMContentLoaded', loadUpcomingFixtures);
