@@ -601,3 +601,19 @@ Make sure the name Kopala FPL is in the center
     50% { opacity: 0.4; transform: scale(0.8); }
     100% { opacity: 1; transform: scale(1); }
 }
+
+
+#upcoming-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Custom scrollbar for the fixtures list */
+#upcoming-list-container::-webkit-scrollbar {
+    width: 4px;
+}
+#upcoming-list-container::-webkit-scrollbar-thumb {
+    background: var(--fpl-primary);
+    border-radius: 10px;
+}
