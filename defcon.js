@@ -1,52 +1,68 @@
 /**
- * KOPALA FPL - Live Defensive Contributions Tracker
+ * KOPALA FPL - Intelligent DefCon Tracker
+ * Shows previous GW data until the new one is live.
  */
 
-let playerNames = {}; 
-let playerPositions = {}; // 2=DEF, 3=MID, 4=FWD
+let pNames = {};
+let pPos = {}; 
 
 async function initDefcon() {
     const container = document.getElementById('defcon-list-container');
     const PROXY = "https://api.allorigins.win/raw?url=";
 
     try {
-        // 1. Get Player Info (Names and Positions)
+        // 1. Get General FPL Data
         const staticRes = await fetch(PROXY + encodeURIComponent("https://fantasy.premierleague.com/api/bootstrap-static/"));
         const staticData = await staticRes.json();
+        
         staticData.elements.forEach(p => {
-            playerNames[p.id] = p.web_name;
-            playerPositions[p.id] = p.element_type;
+            pNames[p.id] = p.web_name;
+            pPos[p.id] = p.element_type;
         });
-        const currentGW = staticData.events.find(e => e.is_current).id;
 
-        // 2. Get Live Stats for the GW
-        const liveRes = await fetch(PROXY + encodeURIComponent(`https://fantasy.premierleague.com/api/event/${currentGW}/live/`));
+        // 2. Logic: Should we show Current or Previous?
+        const currentEvent = staticData.events.find(e => e.is_current);
+        const prevEvent = staticData.events.find(e => e.is_previous);
+        
+        // If current GW hasn't started (deadline is in future), use Previous
+        const now = new Date();
+        const deadline = new Date(currentEvent.deadline_time);
+        const activeGW = (now < deadline) ? prevEvent.id : currentEvent.id;
+        const isLive = (now >= deadline);
+
+        // Update UI Header
+        document.getElementById('gw-status-text').innerText = isLive ? `GW ${activeGW} LIVE` : `GW ${activeGW} RESULTS`;
+
+        // 3. Fetch Data for the decided Gameweek
+        const liveRes = await fetch(PROXY + encodeURIComponent(`https://fantasy.premierleague.com/api/event/${activeGW}/live/`));
         const liveData = await liveRes.json();
 
-        // 3. Filter for players with significant defensive actions
-        const defconPlayers = liveData.elements
+        // 4. Process and Filter
+        const processed = liveData.elements
             .map(p => {
                 const s = p.stats;
-                const pos = playerPositions[p.id];
+                const pos = pPos[p.id];
+                // CBIT: Clearances, Blocks, Interceptions, Tackles
                 const cbit = s.clearances + s.blocks + s.interceptions + s.tackles;
+                // CBIRT: Mids/Fwds get Ball Recoveries too
                 const totalActions = (pos === 2) ? cbit : (cbit + s.recoveries);
-                const threshold = (pos === 2) ? 10 : 12;
+                const target = (pos === 2) ? 10 : 12;
 
                 return {
-                    name: playerNames[p.id],
+                    name: pNames[p.id],
                     actions: totalActions,
-                    target: threshold,
-                    hasPoints: totalActions >= threshold,
+                    target: target,
+                    hasPoints: totalActions >= target,
                     saves: s.saves,
                     savePts: Math.floor(s.saves / 3)
                 };
             })
-            .filter(p => p.actions > 5 || p.saves > 0) // Only show active players
+            .filter(p => p.actions > 0 || p.saves > 0)
             .sort((a, b) => b.actions - a.actions);
 
-        renderDefcon(defconPlayers);
+        renderDefcon(processed);
     } catch (err) {
-        console.error("DefCon Sync Error:", err);
+        console.error("DefCon Load Error:", err);
     }
 }
 
@@ -54,33 +70,30 @@ function renderDefcon(players) {
     const defList = document.getElementById('def-list');
     const savesList = document.getElementById('saves-list');
     
-    // Clear current lists
     defList.innerHTML = '';
     savesList.innerHTML = '';
 
-    players.forEach(p => {
-        // Defensive Contributions Column
-        if (p.actions > 0) {
+    // Filter to show only notable performers (e.g., top 15) to keep it clean
+    players.slice(0, 30).forEach(p => {
+        if (p.actions >= 5) {
             defList.innerHTML += `
                 <div class="player-stat-row">
                     <span class="status-icon ${p.hasPoints ? 'success' : 'pending'}">
-                        ${p.hasPoints ? '✔' : '⋯'}
+                        ${p.hasPoints ? '✔' : p.actions}
                     </span>
                     <span class="p-name">${p.name}</span>
-                    <span class="p-val">(${p.actions})</span>
+                    <span class="p-val"></span>
                     ${p.hasPoints ? '<span class="bonus-tag">+2</span>' : ''}
                 </div>`;
         }
 
-        // Saves Column
         if (p.saves > 0) {
             savesList.innerHTML += `
                 <div class="player-stat-row">
                     <span class="status-icon ${p.savePts > 0 ? 'save-success' : 'pending'}">
-                        ${p.savePts > 0 ? '+' + p.savePts : '⋯'}
+                        ${p.savePts > 0 ? '+' + p.savePts : p.saves}
                     </span>
                     <span class="p-name">${p.name}</span>
-                    <span class="p-val">(${p.saves})</span>
                 </div>`;
         }
     });
