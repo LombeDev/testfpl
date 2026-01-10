@@ -656,3 +656,28 @@ Make sure the name Kopala FPL is in the center
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+
+
+
+/* Lady Loading (Skeleton) Animation */
+.skeleton {
+    height: 45px;
+    background: linear-gradient(90deg, var(--fpl-surface) 25%, var(--fpl-border) 50%, var(--fpl-surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    margin: 10px 0;
+    border-radius: 8px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Pulsing dot for Live matches */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
