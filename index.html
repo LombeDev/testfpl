@@ -387,29 +387,23 @@
 
          
 
-<div id="defcon-card" class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-shield-halved" style="color: var(--fpl-primary);"></i>
-            <h2 class="accent-title" style="margin: 0;">DEFENSIVE CONTRIBUTIONS</h2>
+  <div id="defcon-card" class="fpl-card">
+    <div class="defcon-header">
+        <div class="title-group">
+            <h2 class="accent-title">DEFENSIVE CONTRIBUTIONS</h2>
+            <div id="gw-status-text" class="gw-badge">LOADING...</div>
         </div>
-        <div id="gw-status-text" style="font-size: 0.6rem; font-weight: 800; background: #333; padding: 2px 8px; border-radius: 10px; color: #aaa;">
-            LOADING...
+        
+        <div class="gw-nav">
+            <button onclick="toggleGW('prev')" id="btn-prev" class="nav-btn">PREV</button>
+            <button onclick="toggleGW('curr')" id="btn-curr" class="nav-btn active">LIVE</button>
         </div>
     </div>
 
-    <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div>
-            <h4 style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 10px;">CBIT ACTIONS (+2)</h4>
-            <div id="def-list"></div>
+    <div id="defcon-list-container">
         </div>
-        <div>
-            <h4 style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 10px;">SAVES (+1)</h4>
-            <div id="saves-list"></div>
-        </div>
-    </div>
 </div>
- 
+            
 
 
 
