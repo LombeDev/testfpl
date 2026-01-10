@@ -82,3 +82,96 @@ body {
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .modal-content { background: white; width: 90%; max-width: 500px; padding: 20px; border-radius: 12px; }
 .hidden { display: none; }
+
+
+.scout-report {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 15px;
+}
+
+.scout-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: var(--fpl-purple);
+    margin-bottom: 8px;
+}
+
+.radar-pulse {
+    width: 8px;
+    height: 8px;
+    background: var(--fpl-pink);
+    border-radius: 50%;
+    animation: radar-glow 1.5s infinite;
+}
+
+@keyframes radar-glow {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 40, 130, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 40, 130, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 40, 130, 0); }
+}
+
+.scout-prediction {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+}
+
+.scout-target {
+    color: var(--fpl-pink);
+    font-weight: 800;
+}
+
+
+
+/* Intelligence UI */
+.intel-briefing {
+    background: #1a1a1a;
+    color: var(--fpl-blue);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    border-radius: 8px 8px 0 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.battle-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    font-size: 0.6rem;
+    color: #aaa;
+    text-transform: uppercase;
+}
+
+.battle-row.shared-player {
+    opacity: 0.5; /* Shared players cancel each other out */
+    background: rgba(255,255,255,0.05);
+}
+
+.battle-row.diff-battle {
+    border-left: 3px solid var(--fpl-green);
+    background: rgba(1, 239, 128, 0.1);
+}
+
+.player-cell { display: flex; flex-direction: column; width: 40%; }
+.p-pts { font-size: 1.2rem; font-weight: 900; }
+.p-name { font-size: 0.7rem; text-transform: uppercase; opacity: 0.8; }
+.battle-status { font-size: 1rem; }
+
+/* Pulse animation for high-danger players */
+.danger-zone {
+    animation: danger-pulse 2s infinite;
+}
+
+@keyframes danger-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 40, 130, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 40, 130, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 40, 130, 0); }
+}
