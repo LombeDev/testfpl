@@ -750,3 +750,96 @@ Make sure the name Kopala FPL is in the center
     display: inline-block;
     box-shadow: 0 0 5px rgba(0, 255, 135, 0.2);
 }
+
+
+
+
+.fpl-card {
+    background: #111;
+    color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    max-width: 500px;
+}
+
+.defcon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.accent-title {
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    margin: 0;
+    color: #00ff87;
+}
+
+.gw-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    opacity: 0.6;
+    margin-top: 4px;
+}
+
+/* Navigation Buttons */
+.gw-nav { display: flex; gap: 4px; }
+.nav-btn {
+    background: #222;
+    border: 1px solid #333;
+    color: #888;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.nav-btn.active {
+    background: #00ff87;
+    color: #000;
+    border-color: #00ff87;
+}
+
+/* Match Blocks */
+.match-block {
+    margin-bottom: 15px;
+    border: 1px solid #222;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+}
+
+.match-header {
+    background: #1a1a1a;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    font-weight: 900;
+    border-bottom: 1px solid #222;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 12px;
+    gap: 15px;
+}
+
+.col-label {
+    font-size: 0.5rem;
+    opacity: 0.4;
+    margin-bottom: 8px;
+    font-weight: 800;
+}
+
+.player-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    margin-bottom: 5px;
+}
+
+.success-text { color: #00ff87; font-weight: 800; }
+.save-text { color: #e9fc04; }
