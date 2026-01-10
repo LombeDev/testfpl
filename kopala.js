@@ -72,7 +72,7 @@ async function fetchProLeague(leagueId) {
 }
 
 /**
- * Renders the League Selection List (Zero-Scroll Mobile Version)
+ * Renders the League Selection List (FPL Style - Full Row Clickable)
  */
 function renderLeagueSelector() {
     const body = document.getElementById("league-body");
@@ -80,24 +80,35 @@ function renderLeagueSelector() {
     
     if (tableHeader) tableHeader.style.display = "none";
 
-    body.innerHTML = LEAGUES_LIST.map(league => `
-        <tr style="border-bottom: 4px solid var(--fpl-surface);">
-            <td colspan="7" style="padding: 10px 5px; background: var(--fpl-container); width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box;">
+    // Adding hover styles for a better "AI/Smart" feel
+    const hoverStyle = `
+        <style>
+            .league-row { transition: background 0.2s; cursor: pointer; }
+            .league-row:hover { background: #f0f0f0 !important; }
+            .league-row:active { background: #e0e0e0 !important; }
+        </style>
+    `;
+    
+    body.innerHTML = hoverStyle + LEAGUES_LIST.map(league => `
+        <tr class="league-row" 
+            onclick="fetchProLeague('${league.id}')"
+            style="border-bottom: 2px solid var(--fpl-surface); width: 100%;">
+            
+            <td colspan="7" style="padding: 18px 15px; background: var(--fpl-container); position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     
-                    <div style="flex: 1; min-width: 0; padding-right: 8px;">
-                        <span style="font-weight: 800; font-size: 0.8rem; color: var(--fpl-on-container); 
-                                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-weight: 800; font-size: 1rem; color: var(--fpl-on-container);">
                             ${league.name}
                         </span>
+                        <span style="font-size: 0.65rem; color: var(--fpl-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Tap to Enter League
+                        </span>
                     </div>
-                    
-                    <button onclick="fetchProLeague('${league.id}')" 
-                            style="background: var(--fpl-blue); color: #333; border: none; padding: 7px 10px; 
-                            border-radius: 4px; font-weight: 800; font-size: 9px; cursor: pointer; 
-                            text-transform: uppercase; flex-shrink: 0; width: 90px; white-space: nowrap;">
-                        View League
-                    </button>
+
+                    <div style="color: var(--fpl-blue); font-size: 1.2rem; font-weight: bold; opacity: 0.5;">
+                        ›
+                    </div>
                     
                 </div>
             </td>
