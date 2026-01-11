@@ -14,6 +14,49 @@
     <link rel="manifest" href="/manifest.json">
 
     <style>
+/* --- DARK MODE REFINEMENTS --- */
+body.dark-mode {
+    /* Existing variables */
+    --fpl-surface: #0a0c10;
+    --fpl-container: #161b22;
+    --fpl-on-container: #ffffff;
+    --fpl-border: rgba(255,255,255,0.15);
+}
+
+/* 1. Fix Hamburger Icon Color */
+body.dark-mode .menu-icon span {
+    background-color: #ffffff;
+}
+
+/* 2. Fix Side Drawer Colors */
+body.dark-mode #side-drawer {
+    background-color: var(--fpl-container);
+    color: #ffffff;
+}
+
+/* 3. Fix Drawer Links and Icons */
+body.dark-mode .drawer-links li a {
+    color: #ffffff;
+}
+
+body.dark-mode #close-btn {
+    color: #ffffff;
+}
+
+/* 4. Ensure Nav Links on Desktop are white */
+body.dark-mode .nav-links li a {
+    color: #ffffff;
+}
+
+/* 5. Ensure Input fields are readable */
+body.dark-mode input#fpl-id {
+    background-color: var(--fpl-surface);
+    color: white;
+    border-color: var(--fpl-border);
+}
+
+
+
         /* --- MATERIAL YOU CORE VARIABLES --- */
         :root {
             --fpl-primary: #ff005a; 
