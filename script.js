@@ -246,3 +246,28 @@ function initPWAInstall() {
         }
     });
 }
+
+
+
+
+
+// Initialize OneSignal
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(function(OneSignal) {
+  OneSignal.init({
+    appId: "3d1539b9-d2bd-4690-bd6a-0bd21ed0340b",
+  });
+});
+
+// The function for your button
+function joinLeagueAlerts() {
+  window.OneSignalDeferred.push(function(OneSignal) {
+    // Ask the browser for permission to show notifications
+    OneSignal.Notifications.requestPermission();
+    
+    // Attach the league ID to this user's profile in OneSignal
+    OneSignal.User.addTag("league_id", "101712");
+  });
+  
+  alert("Success! You are now following League 101712.");
+}
