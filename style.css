@@ -755,30 +755,60 @@ Make sure the name Kopala FPL is in the center
 
 
 
-.nav-btn {
-  background-color: #007bff; /* FPL Blue or your brand color */
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.3s ease;
-}
-
-.nav-btn:hover {
-  background-color: #0056b3;
-}
-
-/* Adjusting the nav list to align items vertically */
+/* Ensure the nav list handles the bell correctly */
 .nav-links {
   display: flex;
-  align-items: center;
+  align-items: center; /* Vertically centers the bell with text */
   list-style: none;
   gap: 20px;
 }
 
+/* The clickable wrapper */
+.bell-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+/* The Icon Style */
+.bell-wrapper i {
+  color: #00ff87; /* FPL Green */
+  font-size: 1.3rem;
+}
+
+/* The Red Dot Badge */
+.bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: #ff005a;
+  color: white;
+  font-size: 9px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #37003c; /* Matches your Nav background color */
+  visibility: hidden; /* Only shows when active */
+}
+
+/* Hover Effect: Shake the bell */
+.bell-wrapper:hover i {
+  animation: bell-shake 0.5s ease-in-out;
+}
+
+@keyframes bell-shake {
+  0% { transform: rotate(0); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-15deg); }
+  60% { transform: rotate(10deg); }
+  80% { transform: rotate(-10deg); }
+  100% { transform: rotate(0); }
+}
