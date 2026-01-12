@@ -251,20 +251,3 @@ function initPWAInstall() {
 
 
 
-async function loadPlayerDatabase() {
-  try {
-    // This now redirects internally to your Netlify function
-    const response = await fetch('/api/fpl');
-    
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    
-    const data = await response.json();
-
-    if (data?.elements) {
-      console.log(`Successfully loaded ${data.elements.length} players.`);
-      // Your forEach logic here...
-    }
-  } catch (error) {
-    console.error("FPL Sync Failed:", error.message);
-  }
-}
