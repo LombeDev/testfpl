@@ -15,26 +15,20 @@ export default async () => {
         const pId = player.id.toString();
         const pInfo = staticData.elements.find(el => el.id === player.id);
         
-        // Grab current live stats
         const currentGoals = player.stats.goals_scored || 0;
         const currentAssists = player.stats.assists || 0;
 
-        // Grab what we "remembered" from the last minute
         const memory = await store.getJSON(pId) || { goals: 0, assists: 0 };
 
         let message = "";
-
-        // CHECK FOR GOALS
         if (currentGoals > memory.goals) {
             message = `⚽ GOAL! ${pInfo.web_name} has scored!`;
-        } 
-        // CHECK FOR ASSISTS
-        else if (currentAssists > memory.assists) {
+        } else if (currentAssists > memory.assists) {
             message = `🎯 ASSIST! ${pInfo.web_name} with the setup!`;
         }
 
         if (message) {
-            // Send to OneSignal
+            // BROADCAST TO EVERYONE
             await fetch("https://onesignal.com/api/v1/notifications", {
                 method: "POST",
                 headers: {
@@ -43,13 +37,13 @@ export default async () => {
                 },
                 body: JSON.stringify({
                     app_id: "3d1539b9-d2bd-4690-bd6a-0bd21ed0340b",
-                    filters: [{ field: "tag", key: "league_id", relation: "=", value: "101712" }],
-                    headings: { en: "FPL Live Alert" },
-                    contents: { en: message }
+                    included_segments: ["Total Subscriptions"], // Targets every registered user
+                    headings: { en: "Kopala FPL Live" },
+                    contents: { en: message },
+                    url: "https://kopalafpl.netlify.app"
                 })
             });
 
-            // Update memory so we don't alert the same event twice
             await store.setJSON(pId, { goals: currentGoals, assists: currentAssists });
         }
     }
