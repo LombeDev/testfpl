@@ -22,3 +22,10 @@
   to = "https://fantasy.premierleague.com/api/:splat"
   status = 200
   force = true
+
+
+  [build]
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
