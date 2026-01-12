@@ -330,11 +330,12 @@ body.dark-mode input#fpl-id {
             <li><a href="price.html">Price Change Predictor</a></li>
             <li><a href="football.html">Football Leagues</a></li>
             <li><a href="contact.html">Contact Us</a></li>
-            <li>
-      <button onclick="joinLeagueAlerts()" class="nav-btn">
-        <i class="fa-solid fa-bell"></i> Notify 101712
-      </button>
-    </li>
+            <li class="nav-item-bell">
+    <div class="bell-wrapper" onclick="subscribeToLiveScores()" title="Enable Live Goal Alerts">
+      <i class="fa-solid fa-bell"></i>
+      <span id="notif-badge" class="bell-badge">!</span>
+    </div>
+  </li>
         </ul>
     </div>
 
