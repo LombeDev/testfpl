@@ -331,3 +331,14 @@ function muteScores() {
         alert("Notifications muted.");
     });
 }
+
+
+
+
+async function sendTestPush() {
+    // Call the Netlify function we just made
+    const res = await fetch('/.netlify/functions/test-notify');
+    const data = await res.json();
+    console.log("Test Result:", data);
+    alert("Test trigger sent! Check your device.");
+}
