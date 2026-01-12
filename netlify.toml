@@ -32,13 +32,3 @@
 
 
 
-  # Configuration for Netlify Functions
-[functions]
-  directory = "netlify/functions"
-
-# Redirect /api/fpl to the actual function
-[[redirects]]
-  from = "/api/fpl"
-  to = "/.netlify/functions/fpl-proxy"
-  status = 200
-  force = true
