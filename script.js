@@ -251,7 +251,26 @@ function initPWAInstall() {
 
 
 
+async function loadPlayerDatabase() {
+  try {
+    // Netlify functions are always served at /.netlify/functions/filename
+    const response = await fetch('/.netlify/functions/fpl-proxy');
+    
+    if (!response.ok) throw new Error('Network response was not ok');
+    
+    const data = await response.json();
 
+    // Safely check for elements before looping
+    if (data && data.elements) {
+      data.elements.forEach(player => {
+        // Your logic for player data (e.g., player.web_name)
+        console.log(player.web_name);
+      });
+    }
+  } catch (error) {
+    console.error("FPL Database Sync Failed:", error);
+  }
+}
 
 
 
