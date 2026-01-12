@@ -9,11 +9,10 @@ export default async (request) => {
             },
             body: JSON.stringify({
                 app_id: "3d1539b9-d2bd-4690-bd6a-0bd21ed0340b",
-                filters: [
-                    { field: "tag", key: "league_id", relation: "=", value: "101712" }
-                ],
-                headings: { en: "🧪 Test Alert" },
-                contents: { en: "Your Kopala FPL Goal Bot is online!" },
+                // TARGET EVERYONE WHO CLICKED "ALLOW"
+                included_segments: ["Subscribed Users"], 
+                headings: { en: "📢 Global Test Alert" },
+                contents: { en: "This message is going to ALL subscribers!" },
                 url: "https://kopalafpl.netlify.app"
             })
         });
@@ -23,4 +22,5 @@ export default async (request) => {
     } catch (err) {
         return new Response(JSON.stringify({ status: "Error", message: err.message }), { status: 500 });
     }
+};
 };
