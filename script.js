@@ -250,95 +250,16 @@ function initPWAInstall() {
 
 
 
-
-/**
- * Kopala FPL - Notification & Live Score Logic
- * Handles OneSignal Push Subscriptions for League 101712
- */
-
-// 1. INITIALIZE ONESIGNAL
 window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.init({
-        appId: "3d1539b9-d2bd-4690-bd6a-0bd21ed0340b",
-        safari_web_id: "optional_if_needed", // Only if you set up Safari specifically
-        notifyButton: {
-            enable: false, // We are using your custom bell icon instead
-        },
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "3d1539b9-d2bd-4690-bd6a-0bd21ed0340b",
+      allowLocalhostAsSecureOrigin: true, // Useful for testing
     });
 
-    // On page load, check if the user is already tagged
-    // This ensures the bell stays "Active" (Red Dot visible) if they already joined
-    OneSignal.User.getTags().then(tags => {
-        if (tags && tags.league_id === "101712") {
-            updateBellUI(true);
-        }
-    });
-});
-
-/**
- * Function: subscribeToLiveScores
- * Triggered by clicking the Bell Icon in the Nav
- */
-async function subscribeToLiveScores() {
-    window.OneSignalDeferred.push(async function(OneSignal) {
-        try {
-            // Step A: Request browser permission
-            const permission = await OneSignal.Notifications.requestPermission();
-            
-            if (permission === 'granted') {
-                // Step B: Tag the user for your specific league bot
-                await OneSignal.User.addTag("league_id", "101712");
-                
-                // Step C: Update the UI
-                updateBellUI(true);
-                console.log("Subscribed to League 101712 successfully.");
-                alert("⚽ Success! Goal & Assist alerts enabled for League 101712.");
-            } else {
-                alert("Please enable notifications in your browser settings to receive scores.");
-            }
-        } catch (error) {
-            console.error("OneSignal Subscription Error:", error);
-        }
-    });
-}
-
-/**
- * Helper: updateBellUI
- * Toggles the red badge and bell color
- */
-function updateBellUI(isActive) {
-    const badge = document.getElementById('notif-badge');
-    const bellIcon = document.querySelector('.bell-wrapper i');
-
-    if (isActive) {
-        if (badge) badge.style.visibility = 'visible';
-        if (bellIcon) bellIcon.style.color = '#ffffff'; // Change green to white when active
-    } else {
-        if (badge) badge.style.visibility = 'hidden';
-        if (bellIcon) bellIcon.style.color = '#00ff87'; // Back to FPL green
+    // This is the simplest way to trigger the "Allow" prompt 
+    // and see the Welcome notification instantly
+    if (!OneSignal.Notifications.permission) {
+        await OneSignal.Notifications.requestPermission();
     }
-}
-
-/**
- * Optional: Function to "Unsubscribe" or Mute
- * You can call this if you ever add a 'Mute' setting
- */
-function muteScores() {
-    window.OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.User.removeTag("league_id");
-        updateBellUI(false);
-        alert("Notifications muted.");
-    });
-}
-
-
-
-
-async function sendTestPush() {
-    // Call the Netlify function we just made
-    const res = await fetch('/.netlify/functions/test-notify');
-    const data = await res.json();
-    console.log("Test Result:", data);
-    alert("Test trigger sent! Check your device.");
-}
+  });
