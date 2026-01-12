@@ -250,60 +250,8 @@ function initPWAInstall() {
 
 
 
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "3d1539b9-d2bd-4690-bd6a-0bd21ed0340b",
-      allowLocalhostAsSecureOrigin: true, // Useful for testing
-    });
-
-    // This is the simplest way to trigger the "Allow" prompt 
-    // and see the Welcome notification instantly
-    if (!OneSignal.Notifications.permission) {
-        await OneSignal.Notifications.requestPermission();
-    }
-  });
 
 
 
 
-// 1. Subscribe Button Logic
-async function subscribeToLiveScores() {
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-        console.log("Requesting permission...");
-        const permission = await OneSignal.Notifications.requestPermission();
-        
-        if (permission === 'granted') {
-            console.log("Permission granted!");
-            // Show the red badge
-            const badge = document.getElementById('notif-badge');
-            if (badge) badge.style.visibility = 'visible';
-            
-            // Optional: Tag the user for your league
-            await OneSignal.User.addTag("league_id", "101712");
-        } else {
-            console.warn("Permission denied by user.");
-        }
-    });
-}
 
-// 2. Test Bot Button Logic
-async function sendTestPush() {
-    console.log("Triggering test notification...");
-    try {
-        const response = await fetch('/.netlify/functions/test-notify');
-        
-        // This will help us see the actual error message from Netlify
-        const data = await response.json();
-        
-        if (response.status === 403) {
-            console.error("Authentication Error: Check your ONESIGNAL_REST_KEY in Netlify.");
-        }
-        
-        console.log("Server Response:", data);
-        alert("Server says: " + (data.status || "Check Console for Errors"));
-    } catch (err) {
-        console.error("Fetch failed. Is the function deployed?", err);
-    }
-}
