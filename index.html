@@ -5,584 +5,249 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kopala FPL | Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
     
     <meta name="theme-color" id="meta-theme-color" content="#ff005a">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/manifest.json">
     
     <style>
-/* --- DARK MODE REFINEMENTS --- */
-body.dark-mode {
-    /* Existing variables */
-    --fpl-surface: #0a0c10;
-    --fpl-container: #161b22;
-    --fpl-on-container: #ffffff;
-    --fpl-border: rgba(255,255,255,0.15);
-}
-
-/* 1. Fix Hamburger Icon Color */
-body.dark-mode .menu-icon span {
-    background-color: #ffffff;
-}
-
-/* 2. Fix Side Drawer Colors */
-body.dark-mode #side-drawer {
-    background-color: var(--fpl-container);
-    color: #ffffff;
-}
-
-/* 3. Fix Drawer Links and Icons */
-body.dark-mode .drawer-links li a {
-    color: #ffffff;
-}
-
-body.dark-mode #close-btn {
-    color: #ffffff;
-}
-
-/* 4. Ensure Nav Links on Desktop are white */
-body.dark-mode .nav-links li a {
-    color: #ffffff;
-}
-
-/* 5. Ensure Input fields are readable */
-body.dark-mode input#fpl-id {
-    background-color: var(--fpl-surface);
-    color: white;
-    border-color: var(--fpl-border);
-}
-
-
-
-        /* --- MATERIAL YOU CORE VARIABLES --- */
+        /* --- MATERIAL YOU & CORE VARIABLES --- */
         :root {
             --fpl-primary: #ff005a; 
             --fpl-surface: #fdf8f9; 
             --fpl-container: #ffffff; 
             --fpl-on-container: #37003c;
             --fpl-border: rgba(0,0,0,0.06);
-            --transition-speed: 0.6s;
+            --nav-blue: #2e47c1; /* From your Screenshot */
+            --transition-speed: 0.3s;
         }
 
         body.dark-mode {
             --fpl-surface: #0a0c10;
             --fpl-container: #161b22;
             --fpl-on-container: #ffffff;
-            --fpl-border: rgba(255,255,255,0.08);
+            --fpl-border: rgba(255,255,255,0.15);
         }
 
         body {
             background-color: var(--fpl-surface);
             color: var(--fpl-on-container);
-            transition: background-color var(--transition-speed) ease, color var(--transition-speed);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
             margin: 0;
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
         }
 
-        /* --- DESKTOP GRID SYSTEM --- */
-        .container {
-            width: 100%;
-            max-width: 1200px !important;
-            margin: 20px auto;
+        /* --- NEW TABBED NAVBAR (As per Screenshot) --- */
+        .navbar-tabbed {
+            background-color: var(--nav-blue);
+            position: sticky;
+            top: 0;
+            z-index: 2000;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow: hidden;
+        }
+
+        .beta-ribbon {
+            position: absolute;
+            top: 10px;
+            left: -30px;
+            background: white;
+            color: var(--nav-blue);
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 35px;
+            transform: rotate(-45deg);
+            z-index: 2001;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .tabs-container {
+            display: flex;
+            overflow-x: auto;
+            scrollbar-width: none;
             padding: 0 15px;
-            display: grid;
-            grid-template-columns: 1fr; /* Mobile default */
-            gap: 20px;
+            gap: 4px;
+        }
+        .tabs-container::-webkit-scrollbar { display: none; }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 700;
+            font-size: 0.8rem;
+            min-width: 90px;
+            border-radius: 12px 12px 0 0;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tab i { font-size: 1.2rem; margin-bottom: 4px; }
+
+        .nav-tab.active {
+            background-color: var(--fpl-surface);
+            color: var(--nav-blue);
+        }
+
+        body.dark-mode .nav-tab.active {
+            background-color: var(--fpl-surface);
+            color: var(--fpl-primary);
+        }
+
+        /* --- PROGRESS BAR --- */
+        .progress-container {
+            width: 100%; height: 4px; background: transparent;
+            position: absolute; bottom: 0; left: 0;
+        }
+        .progress-bar {
+            height: 100%; background: var(--fpl-primary); width: 0%;
+        }
+
+        /* --- CONTENT LAYOUT --- */
+        .container {
+            width: 100%; max-width: 1200px; margin: 20px auto;
+            padding: 0 15px; display: grid; grid-template-columns: 1fr; gap: 20px;
         }
 
         @media screen and (min-width: 992px) {
-            .container {
-                grid-template-columns: 1fr 350px; /* 2-Column Desktop Layout */
-                align-items: start;
-            }
-            .sidebar-area {
-                position: sticky;
-                top: 80px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-            }
+            .container { grid-template-columns: 1fr 350px; }
+            .sidebar-area { position: sticky; top: 100px; height: fit-content; }
         }
 
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            border: 0;
-        }
-
-        /* --- SCROLL PROGRESS BAR --- */
-        .progress-container {
-            width: 100%;
-            height: 4px;
-            background: transparent;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            z-index: 1001;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: var(--fpl-primary);
-            width: 0%;
-            transition: width 0.1s ease-out;
-        }
-
-        /* --- NAVBAR --- */
-        .navbar {
-            background-color: var(--fpl-container);
-            border-bottom: 1px solid var(--fpl-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .brand {
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: var(--fpl-on-container) !important;
-            text-transform: uppercase;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-
-        .brand span { color: var(--fpl-primary); margin-left: 5px; }
-
-        .menu-icon {
-            background: none;
-            border: none;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            cursor: pointer;
-            padding: 10px;
-        }
-
-        .menu-icon span {
-            display: block;
-            width: 20px;
-            height: 2px;
-            background: var(--fpl-on-container);
-        }
-
-        /* --- THEME PICKER --- */
-        .btn-round {
-            width: 42px; height: 42px; border-radius: 50%;
-            background-color: var(--fpl-surface);
-            color: var(--fpl-primary);
-            border: 2px solid var(--fpl-primary);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s ease;
-        }
-
-        .btn-round:hover { transform: scale(1.1); background-color: var(--fpl-primary); color: white !important; }
-
-        .theme-dropdown {
-            display: none; position: absolute; top: 55px; right: 0;
-            background: var(--fpl-container); border: 1px solid var(--fpl-border);
-            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
-        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); padding: 0; }
-
-        /* --- CARD STRUCTURE --- */
         .card {
             background-color: var(--fpl-container);
             border: 1px solid var(--fpl-border);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
-            height: auto;
-            min-height: fit-content;
-            overflow: hidden;
+            border-radius: 24px; padding: 20px; margin-bottom: 20px;
         }
 
         .accent-title {
-            color: var(--fpl-primary);
-            font-weight: 800;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            text-align: center;
+            color: var(--fpl-primary); font-weight: 800;
+            text-transform: uppercase; font-size: 0.9rem; margin-bottom: 15px;
         }
 
-        /* --- TRANSFER SIDEBAR SPECIFIC --- */
-        .market-header { font-size: 0.7rem; font-weight: 800; padding: 8px 12px; text-transform: uppercase; border-radius: 8px; margin-bottom: 10px; }
-        .market-header.in { background: rgba(0, 255, 135, 0.1); color: #008f4b; }
-        .market-header.out { background: rgba(255, 0, 90, 0.1); color: var(--fpl-primary); }
-        .transfer-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--fpl-border); font-size: 0.8rem; font-weight: 600; }
-
-        /* --- DEADLINE TIMER --- */
-        #countdown-timer {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
+        /* --- INPUT & BUTTONS --- */
+        input#fpl-id {
+            width: 100%; padding: 15px; border-radius: 12px;
+            border: 1px solid var(--fpl-border); margin-bottom: 15px;
+            background: var(--fpl-surface); color: inherit;
         }
 
-        .timer-unit {
-            background-color: var(--fpl-surface);
-            padding: 10px 5px;
-            border-radius: 12px;
-            flex: 1;
-            min-width: 60px;
-            max-width: 80px;
-            text-align: center;
-            border: 1px solid var(--fpl-border);
+        .btn-primary {
+            width: 100%; padding: 15px; background: var(--fpl-primary);
+            color: white; border: none; border-radius: 12px;
+            font-weight: 800; cursor: pointer;
         }
 
-        .timer-value {
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: var(--fpl-primary);
-            display: block;
-            margin-bottom: 4px;
+        /* --- THEME FAB --- */
+        .theme-fab {
+            position: fixed; bottom: 20px; right: 20px;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--fpl-primary); color: white;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; z-index: 1000;
         }
-
-        .timer-label {
-            font-size: 0.6rem;
-            font-weight: 700;
-            opacity: 0.6;
-            text-transform: uppercase;
-            display: block;
-        }
-
-        #pwa-install-btn {
-            display: none; position: fixed; bottom: 30px; right: 20px; z-index: 1001; 
-            background: var(--fpl-primary); color: white; border: none;
-            border-radius: 50px; padding: 12px 24px; font-weight: 800;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2); cursor: pointer;
-            align-items: center; gap: 8px;
-        }
-
-        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
-        .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
-        
-        @media screen and (min-width: 768px) {
-            #menu-btn { display: none !important; }
-            .nav-links { display: flex; }
-        }
-        
-        .hidden { display: none !important; }
-
-        @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 135, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
-        }
-        .pulse-dot { width: 8px; height: 8px; background-color: #00ff87; border-radius: 50%; display: inline-block; animation: pulse-green 2s infinite; }
-
-        .event-item { font-size: 0.75rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
-
-        /* --- Vertical Scroll for Price Lists --- */
-#risers-list, #fallers-list {
-    max-height: 120px; /* Limits the height to keep the card small */
-    overflow-y: auto;  /* Enables vertical scrolling */
-    padding-right: 8px; /* Prevents text from hitting the scrollbar */
-    margin-bottom: 15px;
-    border-bottom: 1px dashed var(--fpl-border); /* Subtle separator */
-}
-
-/* Optional: Slim Scrollbar Styling */
-#risers-list::-webkit-scrollbar, 
-#fallers-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-#risers-list::-webkit-scrollbar-thumb, 
-#fallers-list::-webkit-scrollbar-thumb {
-    background: var(--fpl-primary);
-    border-radius: 10px;
-}
-
-        
     </style>
 </head>
 <body>
 
-    <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <h2 class="brand">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" aria-label="Close menu" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
+    <nav class="navbar-tabbed">
+        <div class="beta-ribbon">BETA</div>
+        
+        <div class="tabs-container">
+            <a href="#" class="nav-tab">
+                <i class="fa-solid fa-fire"></i>
+                <span>Trending</span>
+            </a>
+            <a href="index.html" class="nav-tab active">
+                <i class="fa-solid fa-soccer-ball"></i>
+                <span>Football</span>
+            </a>
+            <a href="kopala.html" class="nav-tab">
+                <i class="fa-solid fa-users-rectangle"></i>
+                <span>Leagues</span>
+            </a>
+            <a href="price.html" class="nav-tab">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Prices</span>
+            </a>
+            <a href="contact.html" class="nav-tab">
+                <i class="fa-solid fa-envelope"></i>
+                <span>Contact</span>
+            </a>
         </div>
-        <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Mini Leagues</a></li>
-            <li><a href="price.html">Price Change Predictor</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-            
-        </ul>
-    </div>
 
-    <div id="main-backdrop" class="backdrop"></div>
-
-    <nav class="navbar">
         <div class="progress-container">
             <div class="progress-bar" id="myBar"></div>
         </div>
-
-        <div class="nav-left" style="display: flex; align-items: center;">
-            <button id="menu-btn" class="menu-icon" aria-label="Open menu">
-                <span></span><span></span><span></span>
-            </button>
-            <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="kopala.html">Mini Leagues</a></li>
-                <li><a href="price.html">Price Change Predictor</a></li>
-                <li><a href="contact.html">Contact Us</a></li>
-                    
-            </ul>
-        </div>
-        
-        <div class="nav-right">
-            <div class="theme-menu-container">
-                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()" aria-label="Change theme color">
-                    <i class="fa-solid fa-palette"></i>
-                </button>
-                <div id="theme-dropdown" class="theme-dropdown">
-                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
-                    <div class="swatch-grid">
-                        <button class="swatch" aria-label="Pink" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></button>
-                        <button class="swatch" aria-label="Green" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></button>
-                        <button class="swatch" aria-label="Purple" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></button>
-                        <button class="swatch" aria-label="Cyan" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></button>
-                        <button class="swatch" aria-label="Yellow" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></button>
-                        <button class="swatch" aria-label="Sky" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></button>
-                        <button class="swatch" aria-label="Orange" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></button>
-                        <button class="swatch" aria-label="Violet" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></button>
-                        <button class="swatch" aria-label="Blue" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></button>
-                        <button class="swatch" aria-label="Grey" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></button>
-                    </div>
-                    <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">
-                        🌙 Dark mode
-                    </button>
-                </div>
-            </div>
-        </div>
     </nav>
 
-    <button id="pwa-install-btn">
-        <i class="fa-solid fa-circle-down"></i> INSTALL APP
-    </button>
-
     <main class="container">
-        <div id="loading-overlay" class="hidden">Updating FPL Data...</div>
-
         <div class="main-content-area">
-
-              <div id="upcoming-fixtures-card" class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-calendar-days" style="color: var(--fpl-primary);"></i>
-            <h2 class="accent-title" style="margin: 0;">Fixtures</h2>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <button onclick="changeGW(-1)" class="nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <span id="next-gw-badge" class="gw-badge">GW 20</span>
-            <button onclick="changeGW(1)" class="nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-    </div>
-
-    <div id="upcoming-list-container">
-        </div>
-</div> 
-            
-            
-            <div id="match-center-card" class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-stadium" aria-hidden="true" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
-                        <h2 class="accent-title" style="margin: 0;">Bonus Points</h2>
-                    </div>
-                    <span id="live-indicator" class="hidden" style="display: flex; align-items: center; gap: 5px; color: #00ff87; font-size: 0.7rem; font-weight: 900;">
-                        <span class="pulse-dot"></span> LIVE
-                    </span>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="accent-title">GW 21 Live Match Center</h2>
+                    <span style="color: #00ff87; font-size: 0.7rem; font-weight: 900;">● LIVE</span>
                 </div>
-
-                <div id="fixtures-container">
-                    <div style="text-align: center; padding: 20px; opacity: 0.5;">
-                        <i class="fa-solid fa-circle-notch fa-spin"></i>
-                        <p style="font-size: 0.8rem; margin-top: 10px;">Checking for live matches...</p>
-                    </div>
+                <div id="fixtures-container" style="text-align: center; padding: 20px; opacity: 0.6;">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <p>Fetching live scores...</p>
                 </div>
             </div>
 
-
-         
-
-
-
-
-            <div id="live-dashboard" class="hidden">
-                <div class="card">
-                    <h2 class="accent-title">Manager Dashboard</h2>
-                    <p style="text-align:center; font-weight:800; font-size: 1.1rem; margin-bottom: 5px; color: var(--fpl-on-container);" id="disp-name">--</p>
-                    <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                        <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Rank</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-transfers">0</span><span class="timer-label">Transfers</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-safety">Live</span><span class="timer-label">Status</span></div>
-                        <button class="timer-unit reset-fpl-id" style="cursor:pointer; border-color: rgba(255,0,0,0.2); background: none;">
-                            <span class="timer-value" style="color:red;"><i class="fa-solid fa-right-from-bracket"></i></span>
-                            <span class="timer-label" style="color:red;">Reset</span>
-                        </button>
-                    </div>
-                    <div id="bps-list" style="margin-top:20px;"></div>
+            <div id="live-dashboard" class="card">
+                <h2 class="accent-title">Manager Stats</h2>
+                <p id="disp-name" style="text-align:center; font-weight:800;">Please Enter Team ID</p>
                 </div>
-            </div>
-
-            <div id="live-king-card" class="card" style="display:none;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <span style="background: var(--fpl-primary); color: white; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 900;">LIVE</span>
-                    <h2 class="accent-title" style="margin:0;">KING OF THE GW</h2>
-                </div>
-                <div id="live-king-content"></div>
-            </div>
-
         </div>
 
         <div class="sidebar-area">
-            
-            <div id="deadline-card" class="card">
-                <h2 class="accent-title">Next Deadline</h2>
-                <div id="countdown-timer">
-                    <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
-                </div>
-                <div id="gw-label" style="text-align: center; margin-top: 15px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
-                 
-                </div>
+            <div class="card">
+                <h2 class="accent-title">Live Rank Tracker</h2>
+                <input type="number" id="fpl-id" placeholder="Enter FPL Team ID">
+                <button class="btn-primary" id="change-id-btn">Track Live</button>
+                <p style="font-size: 0.7rem; margin-top: 10px; opacity: 0.6;">Find your ID in the URL of your 'My Team' page on the FPL website.</p>
             </div>
 
-            
-            <div id="id-entry-section" class="card">
-                <h2 class="accent-title">Live Rank</h2>
-                <label for="fpl-id" class="sr-only">Enter FPL Team ID</label>
-                <input type="number" id="fpl-id" placeholder="Enter FPL Team ID" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--fpl-border); margin-bottom:15px; box-sizing:border-box;">
-                <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">Go</button>
+            <div class="card">
+                <h2 class="accent-title">Settings</h2>
+                <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border:none; border-radius:8px; background:var(--fpl-surface); color:inherit; cursor:pointer;">
+                    <i class="fa-solid fa-moon"></i> Toggle Dark Mode
+                </button>
             </div>
-
-            <div id="price-card" class="card" style="display:none;">
-                <h2 class="accent-title">Prices</h2>
-                <div id="risers-list"></div>
-                <div id="fallers-list"></div>
-            </div>
-
         </div>
     </main>
 
-    <div id="confirm-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;">
-        <div class="card" style="width:100%; max-width:400px; text-align:center;">
-            <h2 class="accent-title">Clear FPL ID?</h2>
-            <p>This will remove your saved team data from this device.</p>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button id="cancel-clear" style="flex:1; padding:12px; border-radius:12px; border:1px solid var(--fpl-border); background:none; color:inherit; cursor:pointer;">Cancel</button>
-                <button id="confirm-clear" style="flex:1; padding:12px; border-radius:12px; border:none; background:red; color:white; cursor:pointer;">Clear Now</button>
-            </div>
-        </div>
+    <div class="theme-fab" onclick="alert('Theme Picker Opening...')">
+        <i class="fa-solid fa-palette"></i>
     </div>
 
-
-    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
-        <i class="fa-solid fa-arrow-up"></i>
-    </button>
-
     <script>
-        let ticking = false;
-        function updateProgressBar() {
-            const winScroll = document.documentElement.scrollTop;
-            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = (winScroll / height) * 100;
-            const bar = document.getElementById("myBar");
-            if(bar) bar.style.width = scrolled + "%";
-            ticking = false;
-        }
-
+        // --- PROGRESS BAR LOGIC ---
         window.onscroll = function() {
-            if (!ticking) {
-                window.requestAnimationFrame(updateProgressBar);
-                ticking = true;
-            }
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("myBar").style.width = scrolled + "%";
         };
 
-        function toggleThemeMenu() {
-            const menu = document.getElementById('theme-dropdown');
-            if(menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
-
-        function applyMaterialTheme(color, shouldCloseMenu = false) {
-            document.body.classList.remove('dark-mode');
-            document.documentElement.style.setProperty('--fpl-primary', color);
-            const surfaceColor = `${color}0A`; 
-            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
-            
-            const metaTheme = document.getElementById('meta-theme-color');
-            if(metaTheme) metaTheme.setAttribute('content', color);
-
-            localStorage.setItem('kopala_ai_theme', color);
-            localStorage.setItem('kopala_is_dark', 'false');
-            if(shouldCloseMenu) toggleThemeMenu();
-        }
-
+        // --- THEME LOGIC ---
         function toggleDarkMode() {
-            const isDark = document.body.classList.toggle('dark-mode');
-            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            const metaTheme = document.getElementById('meta-theme-color');
-            
-            if(isDark) {
-                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
-                if(metaTheme) metaTheme.setAttribute('content', '#0a0c10');
-            } else {
-                applyMaterialTheme(savedTheme, false);
-            }
-            localStorage.setItem('kopala_is_dark', isDark);
-            toggleThemeMenu();
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('kopala_dark', isDark);
         }
 
-        window.onclick = function(e) {
-            if (!e.target.closest('.theme-menu-container')) {
-                const d = document.getElementById('theme-dropdown');
-                if (d) d.style.display = 'none';
-            }
-        }
-
+        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
-            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
-            if (wasDark) {
+            if (localStorage.getItem('kopala_dark') === 'true') {
                 document.body.classList.add('dark-mode');
-                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
-            } else {
-                applyMaterialTheme(savedTheme, false);
             }
         });
     </script>
-
-    <script src="script.js" defer></script>
-    <script src="deadline.js" defer></script>
-    <script src="match-center.js" defer></script>
-    <script src="defcon.js" defer></script>
 </body>
 </html>
