@@ -40,7 +40,7 @@
             transition: background-color var(--transition-speed);
         }
 
-        /* --- NAVIGATION (TWO-ROW TABBED) --- */
+        /* --- NAVIGATION (CLEAN TABBED) --- */
         .navbar-tabbed {
             background-color: var(--nav-blue);
             position: sticky;
@@ -81,9 +81,11 @@
             cursor: pointer;
         }
 
-        /* Tabs Styling */
+        /* Tabs Styling - CENTERED */
         .tabs-outer-container {
             position: relative;
+            display: flex;
+            justify-content: center; /* Centers the scroll container */
             overflow-x: auto;
             scrollbar-width: none;
         }
@@ -91,6 +93,7 @@
 
         .tabs-inner-scroll {
             display: flex;
+            justify-content: center; /* Centers items inside the container */
             padding: 0 10px;
             gap: 4px;
         }
@@ -192,36 +195,22 @@
         .timer-label { font-size: 0.6rem; font-weight: 700; opacity: 0.6; text-transform: uppercase; }
 
         .hidden { display: none !important; }
-        
-        /* Side Drawer */
-        .drawer {
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-            background: var(--fpl-container); z-index: 3000; transition: 0.3s;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-        }
-        .drawer.active { left: 0; }
-        .backdrop {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 2999; display: none;
-        }
     </style>
 </head>
 <body>
 
-    <div id="side-drawer" class="drawer">
-  
-
     <nav class="navbar-tabbed">
         <div class="nav-top-row">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button id="menu-btn" class="btn-round"><i class="fa-solid fa-bars-staggered"></i></button>
+            <div style="display: flex; align-items: center;">
                 <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
-          
+            </div>
+            <button id="theme-master-btn" class="btn-round" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+        </div>
 
         <div class="tabs-outer-container">
             <div class="beta-ribbon">BETA</div>
             <div class="tabs-inner-scroll">
-                <a href="#" class="nav-tab"><i class="fa-solid fa-fire"></i><span>Home</span></a>
+                <a href="index.html" class="nav-tab active"><i class="fa-solid fa-fire"></i><span>Home</span></a>
                 <a href="kopala.html" class="nav-tab"><i class="fa-solid fa-users-rectangle"></i><span>Leagues</span></a>
                 <a href="price.html" class="nav-tab"><i class="fa-solid fa-chart-line"></i><span>Prices</span></a>
                 <a href="contact.html" class="nav-tab"><i class="fa-solid fa-envelope"></i><span>Contact</span></a>
@@ -316,28 +305,20 @@
             if(bar) bar.style.width = scrolled + "%";
         });
 
-        // Drawer Logic
-        const menuBtn = document.getElementById('menu-btn');
-        const drawer = document.getElementById('side-drawer');
-        const backdrop = document.getElementById('main-backdrop');
-
-        menuBtn.addEventListener('click', () => {
-            drawer.classList.add('active');
-            backdrop.style.display = 'block';
-        });
-
-        backdrop.addEventListener('click', () => {
-            drawer.classList.remove('active');
-            backdrop.style.display = 'none';
-        });
-
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
-            localStorage.setItem('fpl_dark', document.body.classList.contains('dark-mode'));
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('fpl_dark', isDark);
+            
+            // Update icon
+            const btn = document.getElementById('theme-master-btn');
+            btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         }
 
+        // Initialize Dark Mode & Icons
         if(localStorage.getItem('fpl_dark') === 'true') {
             document.body.classList.add('dark-mode');
+            document.getElementById('theme-master-btn').innerHTML = '<i class="fa-solid fa-sun"></i>';
         }
     </script>
 </body>
