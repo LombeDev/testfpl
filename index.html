@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kopala FPL | Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
     
     <meta name="theme-color" id="meta-theme-color" content="#ff005a">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -14,64 +13,24 @@
     <link rel="manifest" href="/manifest.json">
     
     <style>
-/* --- DARK MODE REFINEMENTS --- */
-body.dark-mode {
-    /* Existing variables */
-    --fpl-surface: #0a0c10;
-    --fpl-container: #161b22;
-    --fpl-on-container: #ffffff;
-    --fpl-border: rgba(255,255,255,0.15);
-}
-
-/* 1. Fix Hamburger Icon Color */
-body.dark-mode .menu-icon span {
-    background-color: #ffffff;
-}
-
-/* 2. Fix Side Drawer Colors */
-body.dark-mode #side-drawer {
-    background-color: var(--fpl-container);
-    color: #ffffff;
-}
-
-/* 3. Fix Drawer Links and Icons */
-body.dark-mode .drawer-links li a {
-    color: #ffffff;
-}
-
-body.dark-mode #close-btn {
-    color: #ffffff;
-}
-
-/* 4. Ensure Nav Links on Desktop are white */
-body.dark-mode .nav-links li a {
-    color: #ffffff;
-}
-
-/* 5. Ensure Input fields are readable */
-body.dark-mode input#fpl-id {
-    background-color: var(--fpl-surface);
-    color: white;
-    border-color: var(--fpl-border);
-}
-
-
-
-        /* --- MATERIAL YOU CORE VARIABLES --- */
+        /* --- CORE VARIABLES --- */
         :root {
             --fpl-primary: #ff005a; 
             --fpl-surface: #fdf8f9; 
             --fpl-container: #ffffff; 
             --fpl-on-container: #37003c;
             --fpl-border: rgba(0,0,0,0.06);
+            --fpl-cyan: #2de2ff;
+            --fpl-purple: #9b51e0;
             --transition-speed: 0.6s;
         }
 
+        /* --- DARK MODE --- */
         body.dark-mode {
             --fpl-surface: #0a0c10;
             --fpl-container: #161b22;
             --fpl-on-container: #ffffff;
-            --fpl-border: rgba(255,255,255,0.08);
+            --fpl-border: rgba(255,255,255,0.15);
         }
 
         body {
@@ -83,61 +42,7 @@ body.dark-mode input#fpl-id {
             overflow-x: hidden;
         }
 
-        /* --- DESKTOP GRID SYSTEM --- */
-        .container {
-            width: 100%;
-            max-width: 1200px !important;
-            margin: 20px auto;
-            padding: 0 15px;
-            display: grid;
-            grid-template-columns: 1fr; /* Mobile default */
-            gap: 20px;
-        }
-
-        @media screen and (min-width: 992px) {
-            .container {
-                grid-template-columns: 1fr 350px; /* 2-Column Desktop Layout */
-                align-items: start;
-            }
-            .sidebar-area {
-                position: sticky;
-                top: 80px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-            }
-        }
-
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            border: 0;
-        }
-
-        /* --- SCROLL PROGRESS BAR --- */
-        .progress-container {
-            width: 100%;
-            height: 4px;
-            background: transparent;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            z-index: 1001;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: var(--fpl-primary);
-            width: 0%;
-            transition: width 0.1s ease-out;
-        }
-
-        /* --- NAVBAR --- */
+        /* --- NAVIGATION & GRADIENT HEADER --- */
         .navbar {
             background-color: var(--fpl-container);
             border-bottom: 1px solid var(--fpl-border);
@@ -148,12 +53,24 @@ body.dark-mode input#fpl-id {
             position: sticky;
             top: 0;
             z-index: 1000;
+            height: 65px;
+        }
+
+        @media screen and (max-width: 991px) {
+            .navbar {
+                background: linear-gradient(90deg, var(--fpl-cyan), var(--fpl-purple)) !important;
+                border: none;
+            }
+            .brand, .brand span, .menu-icon span {
+                color: white !important;
+                background-color: white !important;
+            }
         }
 
         .brand {
             font-size: 1.5rem;
             font-weight: 900;
-            color: var(--fpl-on-container) !important;
+            color: var(--fpl-on-container);
             text-transform: uppercase;
             text-decoration: none;
             display: flex;
@@ -179,38 +96,40 @@ body.dark-mode input#fpl-id {
             background: var(--fpl-on-container);
         }
 
-        /* --- THEME PICKER --- */
-        .btn-round {
-            width: 42px; height: 42px; border-radius: 50%;
-            background-color: var(--fpl-surface);
-            color: var(--fpl-primary);
-            border: 2px solid var(--fpl-primary);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s ease;
+        /* --- BENTO GRID SYSTEM --- */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
         }
 
-        .btn-round:hover { transform: scale(1.1); background-color: var(--fpl-primary); color: white !important; }
-
-        .theme-dropdown {
-            display: none; position: absolute; top: 55px; right: 0;
-            background: var(--fpl-container); border: 1px solid var(--fpl-border);
-            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        @media screen and (min-width: 992px) {
+            .container {
+                grid-template-columns: 1fr 350px; /* Dashboard Left, Sidebar Right */
+                align-items: start;
+            }
+            .sidebar-area {
+                position: sticky;
+                top: 85px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
         }
 
-        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
-        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); padding: 0; }
-
-        /* --- CARD STRUCTURE --- */
+        /* --- CARD STYLING --- */
         .card {
             background-color: var(--fpl-container);
             border: 1px solid var(--fpl-border);
             border-radius: 24px;
             padding: 20px;
             margin-bottom: 20px;
-            height: auto;
-            min-height: fit-content;
-            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            position: relative;
         }
 
         .accent-title {
@@ -222,371 +141,221 @@ body.dark-mode input#fpl-id {
             text-align: center;
         }
 
-        /* --- TRANSFER SIDEBAR SPECIFIC --- */
-        .market-header { font-size: 0.7rem; font-weight: 800; padding: 8px 12px; text-transform: uppercase; border-radius: 8px; margin-bottom: 10px; }
-        .market-header.in { background: rgba(0, 255, 135, 0.1); color: #008f4b; }
-        .market-header.out { background: rgba(255, 0, 90, 0.1); color: var(--fpl-primary); }
-        .transfer-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--fpl-border); font-size: 0.8rem; font-weight: 600; }
-
-        /* --- DEADLINE TIMER --- */
-        #countdown-timer {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .timer-unit {
-            background-color: var(--fpl-surface);
-            padding: 10px 5px;
-            border-radius: 12px;
-            flex: 1;
-            min-width: 60px;
-            max-width: 80px;
+        /* --- FIXTURE LIST STYLING --- */
+        .fixture-date-bar {
+            background: linear-gradient(90deg, var(--fpl-cyan), var(--fpl-purple));
+            color: white;
             text-align: center;
-            border: 1px solid var(--fpl-border);
-        }
-
-        .timer-value {
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: var(--fpl-primary);
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .timer-label {
-            font-size: 0.6rem;
-            font-weight: 700;
-            opacity: 0.6;
+            font-weight: 800;
+            font-size: 0.8rem;
+            padding: 8px;
+            margin: 0 -20px 15px -20px;
             text-transform: uppercase;
-            display: block;
         }
 
-        #pwa-install-btn {
-            display: none; position: fixed; bottom: 30px; right: 20px; z-index: 1001; 
-            background: var(--fpl-primary); color: white; border: none;
-            border-radius: 50px; padding: 12px 24px; font-weight: 800;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2); cursor: pointer;
-            align-items: center; gap: 8px;
+        .fixture-row {
+            display: grid;
+            grid-template-columns: 30px 1fr 60px 1fr 30px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--fpl-border);
+            font-weight: 700;
+            font-size: 0.85rem;
         }
 
-        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
-        .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
-        
-        @media screen and (min-width: 768px) {
-            #menu-btn { display: none !important; }
-            .nav-links { display: flex; }
+        .score-pill {
+            background: #1e293b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1rem;
         }
-        
-        .hidden { display: none !important; }
 
-        @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 135, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+        /* --- INPUTS & BUTTONS --- */
+        #fpl-id {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--fpl-border);
+            margin-bottom: 15px;
+            font-weight: 600;
         }
-        .pulse-dot { width: 8px; height: 8px; background-color: #00ff87; border-radius: 50%; display: inline-block; animation: pulse-green 2s infinite; }
 
-        .event-item { font-size: 0.75rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
+        #change-id-btn {
+            width: 100%;
+            padding: 15px;
+            background: #93c5fd; /* Soft Blue */
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
 
-        /* --- Vertical Scroll for Price Lists --- */
-#risers-list, #fallers-list {
-    max-height: 120px; /* Limits the height to keep the card small */
-    overflow-y: auto;  /* Enables vertical scrolling */
-    padding-right: 8px; /* Prevents text from hitting the scrollbar */
-    margin-bottom: 15px;
-    border-bottom: 1px dashed var(--fpl-border); /* Subtle separator */
-}
+        /* --- DRAWER --- */
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100%;
+            background: var(--fpl-container);
+            z-index: 2000;
+            transition: left 0.3s ease;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+        .drawer.open { left: 0; }
+        .drawer-links { list-style: none; padding: 20px; }
+        .drawer-links li { margin-bottom: 15px; }
+        .drawer-links a { text-decoration: none; color: var(--fpl-on-container); font-weight: 700; }
 
-/* Optional: Slim Scrollbar Styling */
-#risers-list::-webkit-scrollbar, 
-#fallers-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-#risers-list::-webkit-scrollbar-thumb, 
-#fallers-list::-webkit-scrollbar-thumb {
-    background: var(--fpl-primary);
-    border-radius: 10px;
-}
-
-        
+        .backdrop {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1500;
+        }
+        .backdrop.active { display: block; }
     </style>
 </head>
-<body>
+<body class="fpl-core-theme">
 
     <div id="side-drawer" class="drawer">
         <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
             <h2 class="brand">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" aria-label="Close menu" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
+            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem; cursor:pointer;">&times;</button>
         </div>
         <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Mini Leagues</a></li>
-            <li><a href="team.html">AI team builder</a></li>
-            <li><a href="price.html">Price Change Predictor</a></li>
-            <li><a href="football.html">Football Leagues</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-            
+            <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="kopala.html"><i class="fa-solid fa-trophy"></i> Mini Leagues</a></li>
+            <li><a href="team.html"><i class="fa-solid fa-robot"></i> AI Team Builder</a></li>
+            <li><a href="price.html"><i class="fa-solid fa-tags"></i> Price Changes</a></li>
+            <li><a href="football.html"><i class="fa-solid fa-futbol"></i> Football Leagues</a></li>
+            <li><a href="contact.html"><i class="fa-solid fa-envelope"></i> Contact Us</a></li>
         </ul>
     </div>
 
     <div id="main-backdrop" class="backdrop"></div>
 
     <nav class="navbar">
-        <div class="progress-container">
-            <div class="progress-bar" id="myBar"></div>
-        </div>
-
         <div class="nav-left" style="display: flex; align-items: center;">
             <button id="menu-btn" class="menu-icon" aria-label="Open menu">
                 <span></span><span></span><span></span>
             </button>
             <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="kopala.html">Mini Leagues</a></li>
-                <li><a href="team.html">AI team builder</a></li>
-                <li><a href="price.html">Price Change Predictor</a></li>
-                <li><a href="football.html">Football Leagues</a></li>
-                <li><a href="contact.html">Contact Us</a></li>
-                    
-            </ul>
         </div>
         
         <div class="nav-right">
-            <div class="theme-menu-container">
-                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()" aria-label="Change theme color">
-                    <i class="fa-solid fa-palette"></i>
-                </button>
-                <div id="theme-dropdown" class="theme-dropdown">
-                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
-                    <div class="swatch-grid">
-                        <button class="swatch" aria-label="Pink" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></button>
-                        <button class="swatch" aria-label="Green" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></button>
-                        <button class="swatch" aria-label="Purple" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></button>
-                        <button class="swatch" aria-label="Cyan" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></button>
-                        <button class="swatch" aria-label="Yellow" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></button>
-                        <button class="swatch" aria-label="Sky" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></button>
-                        <button class="swatch" aria-label="Orange" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></button>
-                        <button class="swatch" aria-label="Violet" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></button>
-                        <button class="swatch" aria-label="Blue" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></button>
-                        <button class="swatch" aria-label="Grey" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></button>
-                    </div>
-                    <button class="dark-toggle-row" onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--fpl-surface); color:inherit; font-weight:700; cursor:pointer; margin-top:10px;">
-                        🌙 Dark mode
-                    </button>
-                </div>
+            <button id="theme-master-btn" class="menu-icon" onclick="toggleThemeMenu()" style="border: 1px solid var(--fpl-border); border-radius: 50%;">
+                <i class="fa-solid fa-palette"></i>
+            </button>
+            <div id="theme-dropdown" style="display:none; position:absolute; top:60px; right:20px; background:white; padding:15px; border-radius:15px; box-shadow:0 10px 20px rgba(0,0,0,0.1); z-index:2000;">
+                <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border:none; background:#eee; border-radius:8px; cursor:pointer;">🌙 Toggle Dark Mode</button>
             </div>
         </div>
     </nav>
 
-    <button id="pwa-install-btn">
-        <i class="fa-solid fa-circle-down"></i> INSTALL APP
-    </button>
-
     <main class="container">
-        <div id="loading-overlay" class="hidden">Updating FPL Data...</div>
-
+        
         <div class="main-content-area">
-
-              <div id="upcoming-fixtures-card" class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-calendar-days" style="color: var(--fpl-primary);"></i>
-            <h2 class="accent-title" style="margin: 0;">Fixtures</h2>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <button onclick="changeGW(-1)" class="nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <span id="next-gw-badge" class="gw-badge">GW 20</span>
-            <button onclick="changeGW(1)" class="nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-    </div>
-
-    <div id="upcoming-list-container">
-        </div>
-</div> 
             
-            
-            <div id="match-center-card" class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-stadium" aria-hidden="true" style="color: var(--fpl-primary); font-size: 0.8rem;"></i>
-                        <h2 class="accent-title" style="margin: 0;">Bonus Points</h2>
-                    </div>
-                    <span id="live-indicator" class="hidden" style="display: flex; align-items: center; gap: 5px; color: #00ff87; font-size: 0.7rem; font-weight: 900;">
-                        <span class="pulse-dot"></span> LIVE
-                    </span>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <button class="menu-icon" onclick="changeGW(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <h2 style="font-weight: 800; margin: 0;">Gameweek 21</h2>
+                    <button class="menu-icon" onclick="changeGW(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                
+                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px;">
+                    <button style="padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; background: white; font-weight: 700;"><i class="fa-solid fa-grip"></i> Pitch</button>
+                    <button style="padding: 8px 16px; border-radius: 20px; border: none; background: #f0f0f0; font-weight: 700;"><i class="fa-solid fa-table-list"></i> Table</button>
                 </div>
 
-                <div id="fixtures-container">
-                    <div style="text-align: center; padding: 20px; opacity: 0.5;">
-                        <i class="fa-solid fa-circle-notch fa-spin"></i>
-                        <p style="font-size: 0.8rem; margin-top: 10px;">Checking for live matches...</p>
-                    </div>
+                <div style="background: #fdfdfd; border: 1px solid #eee; padding: 20px; border-radius: 15px;">
+                    <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 10px;">Enter your FPL Team ID</p>
+                    <input type="number" id="fpl-id" placeholder="Enter your team ID (e.g., 123456)">
+                    <button id="change-id-btn"><i class="fa-solid fa-magnifying-glass"></i> Enter Team</button>
+                    <p style="font-size: 0.7rem; color: #888; margin-top: 10px; text-align: center;">You can find your team ID in the URL on the FPL website.</p>
                 </div>
             </div>
 
-
-         
-
-
-
-
-            <div id="live-dashboard" class="hidden">
-                <div class="card">
-                    <h2 class="accent-title">Manager Dashboard</h2>
-                    <p style="text-align:center; font-weight:800; font-size: 1.1rem; margin-bottom: 5px; color: var(--fpl-on-container);" id="disp-name">--</p>
-                    <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                        <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Rank</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-transfers">0</span><span class="timer-label">Transfers</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-safety">Live</span><span class="timer-label">Status</span></div>
-                        <button class="timer-unit reset-fpl-id" style="cursor:pointer; border-color: rgba(255,0,0,0.2); background: none;">
-                            <span class="timer-value" style="color:red;"><i class="fa-solid fa-right-from-bracket"></i></span>
-                            <span class="timer-label" style="color:red;">Reset</span>
-                        </button>
+            <div id="upcoming-fixtures-card" class="card">
+                <div class="fixture-date-bar">Tuesday 6 January</div>
+                <div id="upcoming-list-container">
+                    <div class="fixture-row">
+                        <i class="fa-brands fa-youtube" style="color:red"></i>
+                        <div style="text-align:right">West Ham</div>
+                        <div class="score-pill">1 - 2</div>
+                        <div style="text-align:left">Nott'm Forest</div>
+                        <i class="fa-solid fa-chevron-down" style="opacity:0.3"></i>
                     </div>
-                    <div id="bps-list" style="margin-top:20px;"></div>
                 </div>
-            </div>
-
-            <div id="live-king-card" class="card" style="display:none;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <span style="background: var(--fpl-primary); color: white; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 900;">LIVE</span>
-                    <h2 class="accent-title" style="margin:0;">KING OF THE GW</h2>
-                </div>
-                <div id="live-king-content"></div>
             </div>
 
         </div>
 
         <div class="sidebar-area">
             
-            <div id="deadline-card" class="card">
+            <div class="card">
                 <h2 class="accent-title">Next Deadline</h2>
-                <div id="countdown-timer">
-                    <div class="timer-unit"><span class="timer-value" id="days">00</span><span class="timer-label">Days</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="hours">00</span><span class="timer-label">Hrs</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="mins">00</span><span class="timer-label">Min</span></div>
-                    <div class="timer-unit"><span class="timer-value" id="secs">00</span><span class="timer-label">Sec</span></div>
-                </div>
-                <div id="gw-label" style="text-align: center; margin-top: 15px; font-weight: 800; font-size: 0.75rem; color: var(--fpl-primary); opacity: 0.8;">
-                 
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
+                    <div><span style="display:block; font-size:1.5rem; font-weight:900;" id="days">04</span><small>Days</small></div>
+                    <div><span style="display:block; font-size:1.5rem; font-weight:900;" id="hours">01</span><small>Hrs</small></div>
+                    <div><span style="display:block; font-size:1.5rem; font-weight:900;" id="mins">45</span><small>Min</small></div>
+                    <div><span style="display:block; font-size:1.5rem; font-weight:900;" id="secs">00</span><small>Sec</small></div>
                 </div>
             </div>
 
-            
-            <div id="id-entry-section" class="card">
-                <h2 class="accent-title">Live Rank</h2>
-                <label for="fpl-id" class="sr-only">Enter FPL Team ID</label>
-                <input type="number" id="fpl-id" placeholder="Enter FPL Team ID" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--fpl-border); margin-bottom:15px; box-sizing:border-box;">
-                <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">Go</button>
-            </div>
-
-            <div id="price-card" class="card" style="display:none;">
-                <h2 class="accent-title">Prices</h2>
-                <div id="risers-list"></div>
-                <div id="fallers-list"></div>
+            <div class="card">
+                <h2 class="accent-title">Injuries & Suspensions</h2>
+                <div id="injuries-list" style="font-size: 0.8rem;">
+                    <p style="opacity:0.5; text-align:center;">Loading player status...</p>
+                </div>
             </div>
 
         </div>
     </main>
 
-    <div id="confirm-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;">
-        <div class="card" style="width:100%; max-width:400px; text-align:center;">
-            <h2 class="accent-title">Clear FPL ID?</h2>
-            <p>This will remove your saved team data from this device.</p>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button id="cancel-clear" style="flex:1; padding:12px; border-radius:12px; border:1px solid var(--fpl-border); background:none; color:inherit; cursor:pointer;">Cancel</button>
-                <button id="confirm-clear" style="flex:1; padding:12px; border-radius:12px; border:none; background:red; color:white; cursor:pointer;">Clear Now</button>
-            </div>
-        </div>
-    </div>
-
-
-    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
-        <i class="fa-solid fa-arrow-up"></i>
-    </button>
-
     <script>
-        let ticking = false;
-        function updateProgressBar() {
-            const winScroll = document.documentElement.scrollTop;
-            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = (winScroll / height) * 100;
-            const bar = document.getElementById("myBar");
-            if(bar) bar.style.width = scrolled + "%";
-            ticking = false;
-        }
+        // SIDEBAR NAVIGATION
+        const menuBtn = document.getElementById('menu-btn');
+        const closeBtn = document.getElementById('close-btn');
+        const sideDrawer = document.getElementById('side-drawer');
+        const backdrop = document.getElementById('main-backdrop');
 
-        window.onscroll = function() {
-            if (!ticking) {
-                window.requestAnimationFrame(updateProgressBar);
-                ticking = true;
-            }
-        };
+        menuBtn.addEventListener('click', () => {
+            sideDrawer.classList.add('open');
+            backdrop.classList.add('active');
+        });
+
+        [closeBtn, backdrop].forEach(el => {
+            el.addEventListener('click', () => {
+                sideDrawer.classList.remove('open');
+                backdrop.classList.remove('active');
+            });
+        });
 
         function toggleThemeMenu() {
-            const menu = document.getElementById('theme-dropdown');
-            if(menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
-
-        function applyMaterialTheme(color, shouldCloseMenu = false) {
-            document.body.classList.remove('dark-mode');
-            document.documentElement.style.setProperty('--fpl-primary', color);
-            const surfaceColor = `${color}0A`; 
-            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
-            
-            const metaTheme = document.getElementById('meta-theme-color');
-            if(metaTheme) metaTheme.setAttribute('content', color);
-
-            localStorage.setItem('kopala_ai_theme', color);
-            localStorage.setItem('kopala_is_dark', 'false');
-            if(shouldCloseMenu) toggleThemeMenu();
+            const dropdown = document.getElementById('theme-dropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
         }
 
         function toggleDarkMode() {
-            const isDark = document.body.classList.toggle('dark-mode');
-            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            const metaTheme = document.getElementById('meta-theme-color');
-            
-            if(isDark) {
-                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
-                if(metaTheme) metaTheme.setAttribute('content', '#0a0c10');
-            } else {
-                applyMaterialTheme(savedTheme, false);
-            }
-            localStorage.setItem('kopala_is_dark', isDark);
+            document.body.classList.toggle('dark-mode');
             toggleThemeMenu();
         }
-
-        window.onclick = function(e) {
-            if (!e.target.closest('.theme-menu-container')) {
-                const d = document.getElementById('theme-dropdown');
-                if (d) d.style.display = 'none';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
-            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
-            if (wasDark) {
-                document.body.classList.add('dark-mode');
-                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
-            } else {
-                applyMaterialTheme(savedTheme, false);
-            }
-        });
     </script>
-
+    
     <script src="script.js" defer></script>
     <script src="deadline.js" defer></script>
     <script src="match-center.js" defer></script>
-    <script src="defcon.js" defer></script>
+
 </body>
 </html>
