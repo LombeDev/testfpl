@@ -1,6 +1,5 @@
-/* --- 1. CORE DESIGN SYSTEM & VARIABLES --- */
+/* --- 1. BRAND COLORS & DESIGN TOKENS --- */
 :root {
-    /* Brand Colors */
     --fpl-primary: #ff005a; 
     --fpl-purple: #9b51e0;
     --fpl-cyan: #2de2ff;
@@ -8,318 +7,132 @@
     --fpl-container: #ffffff; 
     --fpl-on-container: #37003c;
     --fpl-border: rgba(0,0,0,0.06);
-    --fpl-success: #00ff87;
-    
-    /* UI Refinements */
     --radius-lg: 24px;
     --radius-md: 12px;
-    --shadow: 0 4px 20px rgba(0,0,0,0.04);
-    --transition-speed: 0.3s;
 }
 
-/* --- 2. THEME MODES --- */
-body.dark-mode {
-    --fpl-surface: #0a0c10;
-    --fpl-container: #161b22;
-    --fpl-on-container: #ffffff;
-    --fpl-border: rgba(255,255,255,0.12);
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    -webkit-tap-highlight-color: transparent;
-}
-
-body {
-    background-color: var(--fpl-surface);
-    color: var(--fpl-on-container);
-    font-family: 'Inter', -apple-system, sans-serif;
-    line-height: 1.5;
-    transition: background-color var(--transition-speed) ease;
-}
-
-/* --- 3. NAVIGATION & PWA HEADER --- */
-.navbar {
-    background-color: var(--fpl-container);
-    border-bottom: 1px solid var(--fpl-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    height: 65px;
-}
-
-@media screen and (max-width: 991px) {
-    .navbar {
-        background: linear-gradient(90deg, var(--fpl-cyan), var(--fpl-purple)) !important;
-        border: none;
-    }
-    .brand, .brand span, .menu-icon span {
-        color: white !important;
-        background-color: white !important;
-    }
-}
-
-.brand {
-    font-size: 1.4rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    text-decoration: none;
-    letter-spacing: -0.5px;
-}
-
-.brand span { color: var(--fpl-primary); }
-
-.menu-icon {
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    cursor: pointer;
-    padding: 10px;
-}
-
-.menu-icon span {
-    width: 22px;
-    height: 2px;
-    background: var(--fpl-on-container);
-    border-radius: 2px;
-}
-
-/* --- 4. BENTO GRID LAYOUT --- */
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 16px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-}
-
+/* --- 2. THE BENTO GRID (DESKTOP) --- */
 @media screen and (min-width: 992px) {
     .container {
-        grid-template-columns: 1fr 380px; /* Dashboard Left, Sidebar Right */
+        display: grid !important;
+        /* Main content takes 1 unit, Sidebar is fixed width */
+        grid-template-columns: 1fr 380px !important; 
+        gap: 30px !important;
         align-items: start;
-        gap: 30px;
+        padding: 20px 40px !important;
     }
+    
     .sidebar-area {
-        position: sticky;
+        position: sticky !important;
         top: 85px;
     }
 }
 
-/* --- 5. CARD COMPONENTS --- */
+/* --- 3. THE MOBILE GRADIENT HEADER --- */
+@media screen and (max-width: 991px) {
+    .navbar {
+        background: linear-gradient(90deg, var(--fpl-cyan), var(--fpl-purple)) !important;
+        border: none !important;
+        height: 60px;
+    }
+    
+    .brand, .brand span {
+        color: white !important;
+    }
+    
+    .menu-icon span {
+        background-color: white !important;
+    }
+    
+    /* Progress bar on mobile */
+    .progress-bar {
+        background: white !important;
+        opacity: 0.5;
+    }
+}
+
+/* --- 4. CARD REFINEMENTS (FPL CORE LOOK) --- */
 .card {
-    background-color: var(--fpl-container);
-    border: 1px solid var(--fpl-border);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-    margin-bottom: 20px;
-    box-shadow: var(--shadow);
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;
+    border: 1px solid var(--fpl-border) !important;
+    transition: transform 0.3s ease;
+}
+
+/* Creating the Date Bar on the Fixtures Card using your ID */
+#upcoming-fixtures-card {
     position: relative;
-    overflow: hidden;
+    padding-top: 60px !important; /* Make room for the pseudo-element */
 }
 
-.accent-title {
-    color: var(--fpl-primary);
-    font-weight: 800;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    margin-bottom: 18px;
-    letter-spacing: 1px;
-}
-
-/* --- 6. FIXTURE & MATCH CENTER STYLING --- */
-.fixture-date-bar {
+#upcoming-fixtures-card::before {
+    content: "Tuesday 6 January"; /* Placeholder: Updated via JS usually */
+    position: absolute;
+    top: 50px; /* Adjust based on title position */
+    left: 0;
+    width: 100%;
+    height: 35px;
     background: linear-gradient(90deg, var(--fpl-cyan), var(--fpl-purple));
     color: white;
-    text-align: center;
-    font-weight: 800;
-    font-size: 0.75rem;
-    padding: 8px;
-    margin: -24px -24px 20px -24px;
-    text-transform: uppercase;
-}
-
-.fixture-row {
-    display: grid;
-    grid-template-columns: 35px 1fr 65px 1fr 35px;
-    align-items: center;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--fpl-border);
-    font-weight: 700;
-    font-size: 0.85rem;
-}
-
-.score-pill {
-    background: #1e293b;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 8px;
-    text-align: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1rem;
-}
-
-.fixture-row:last-child { border-bottom: none; }
-
-/* --- 7. INPUTS & BUTTONS (The FPL ID Section) --- */
-#fpl-id {
-    width: 100%;
-    padding: 16px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--fpl-border);
-    background: var(--fpl-surface);
-    color: var(--fpl-on-container);
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 16px;
-    transition: border-color 0.2s;
-}
-
-#fpl-id:focus {
-    outline: none;
-    border-color: var(--fpl-primary);
-}
-
-#change-id-btn {
-    width: 100%;
-    padding: 16px;
-    background: #93c5fd; /* Light Blue from screenshot */
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    font-weight: 800;
-    font-size: 1rem;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    transition: transform 0.1s, opacity 0.2s;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
 }
 
-#change-id-btn:hover { opacity: 0.9; }
-#change-id-btn:active { transform: scale(0.98); }
-
-/* --- 8. DEADLINE TIMER WIDGET --- */
-.timer-grid {
+/* --- 5. DYNAMIC FIXTURE ROWS (FOR JS INJECTION) --- */
+/* Target the containers where your JS injects rows */
+#upcoming-list-container .fixture-row, 
+#fixtures-container .fixture-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    grid-template-columns: 30px 1fr 65px 1fr 30px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--fpl-border);
+    font-weight: 700;
+}
+
+/* The dark score pill from the designs */
+.score-pill {
+    background: #1e293b;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-align: center;
+    font-family: monospace;
+    font-weight: 800;
+}
+
+/* --- 6. INPUT & BUTTON REFINEMENT --- */
+#fpl-id {
+    background: var(--fpl-surface) !important;
+    border: 1px solid var(--fpl-border) !important;
+    font-weight: 600;
+}
+
+#change-id-btn {
+    background: #93c5fd !important; /* Soft blue from screenshot */
+    border-radius: var(--radius-md) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- 7. DEADLINE TIMER GRID --- */
+#countdown-timer {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px !important;
 }
 
 .timer-unit {
-    background: var(--fpl-surface);
-    padding: 12px 4px;
-    border-radius: var(--radius-md);
-    text-align: center;
-    border: 1px solid var(--fpl-border);
+    background: var(--fpl-surface) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 12px 5px !important;
 }
 
 .timer-value {
-    display: block;
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: var(--fpl-primary);
-}
-
-.timer-label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    opacity: 0.6;
-}
-
-/* --- 9. MOBILE DRAWER & BACKDROP --- */
-.drawer {
-    position: fixed;
-    top: 0;
-    left: -300px;
-    width: 290px;
-    height: 100%;
-    background: var(--fpl-container);
-    z-index: 2000;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 10px 0 40px rgba(0,0,0,0.15);
-}
-
-.drawer.open { left: 0; }
-
-.drawer-links {
-    list-style: none;
-    padding: 10px 20px;
-}
-
-.drawer-links li {
-    padding: 14px 0;
-    border-bottom: 1px solid var(--fpl-border);
-}
-
-.drawer-links a {
-    text-decoration: none;
-    color: var(--fpl-on-container);
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-size: 1rem;
-}
-
-.drawer-links i {
-    width: 20px;
-    color: var(--fpl-primary);
-}
-
-.backdrop {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(4px);
-    display: none;
-    z-index: 1500;
-}
-
-.backdrop.active { display: block; }
-
-/* --- 10. UTILITIES --- */
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    background-color: var(--fpl-success);
-    border-radius: 50%;
-    display: inline-block;
-    box-shadow: 0 0 0 rgba(0, 255, 135, 0.4);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(0, 255, 135, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
-}
-
-.hidden { display: none !important; }
-
-/* Scroll Progress Bar */
-.progress-container {
-    width: 100%;
-    height: 3px;
-    background: transparent;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-}
-
-.progress-bar {
-    height: 100%;
-    background: var(--fpl-primary);
-    width: 0%;
+    color: var(--fpl-on-container) !important; /* Matches FPL Core black text */
+    font-size: 1.3rem !important;
 }
