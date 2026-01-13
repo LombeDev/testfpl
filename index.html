@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live FPL Tables Clone</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="login-screen">
@@ -18,49 +19,72 @@
                 <input type="number" id="team-id-input" placeholder="Team ID (e.g. 12345)">
                 <button onclick="handleLogin()">Start</button>
             </div>
+            <a href="#" class="help-link">► I don't know my team ID</a>
         </div>
     </div>
 
     <div id="dashboard" style="display:none;">
-        <div id="league-selector-container">
-            <select id="league-select" onchange="changeLeague(this.value)"></select>
-            <button onclick="toggleSettings()" class="settings-trigger">⚙️ Settings</button>
-        </div>
+        <header class="app-header">
+            <div class="selector-wrapper">
+                <label>Select league</label>
+                <select id="league-select" onchange="changeLeague(this.value)"></select>
+            </div>
+            <div class="header-actions">
+                <button onclick="toggleSettings()" class="settings-btn">⚙️</button>
+                <button onclick="handleLogin()" class="update-btn">Update</button>
+            </div>
+        </header>
 
-        <div class="main-tabs">
+        <nav class="main-tabs">
             <button class="tab-btn active" onclick="showView('table')">Table</button>
             <button class="tab-btn" onclick="showView('pitch')">Pitch</button>
-        </div>
+            <button class="tab-btn">Stats</button>
+        </nav>
 
-        <div id="table-view">
+        <section id="table-view" class="view-content">
+            <div class="filter-bar">
+                <div class="filters">
+                    <button class="filter-btn active">Overall</button>
+                    <button class="filter-btn">Month</button>
+                </div>
+            </div>
             <table class="live-table">
                 <thead>
-                    <tr><th>Rank</th><th>Team</th><th>GW</th><th>Total</th></tr>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Team & Manager</th>
+                        <th>Score</th>
+                        <th>Total</th>
+                    </tr>
                 </thead>
                 <tbody id="league-body"></tbody>
             </table>
-        </div>
+        </section>
 
-        <div id="pitch-view" style="display:none;" class="fpl-pitch">
-            <div class="pitch-row" id="row-gkp"></div>
-            <div class="pitch-row" id="row-def"></div>
-            <div class="pitch-row" id="row-mid"></div>
-            <div class="pitch-row" id="row-fwd"></div>
-        </div>
+        <section id="pitch-view" style="display:none;" class="view-content">
+            <div class="fpl-pitch">
+                <div class="pitch-row" id="row-gkp"></div>
+                <div class="pitch-row" id="row-def"></div>
+                <div class="pitch-row" id="row-mid"></div>
+                <div class="pitch-row" id="row-fwd"></div>
+            </div>
+        </section>
     </div>
 
     <div id="settings-drawer" class="drawer">
         <div class="drawer-header">
             <h2>Settings</h2>
-            <button onclick="toggleSettings()">×</button>
+            <button class="close-drawer" onclick="toggleSettings()">✕</button>
         </div>
         <div class="drawer-content">
             <div class="setting-group">
+                <h3>Live options</h3>
+                <label class="switch-item"><span>Live auto subs</span><input type="checkbox" id="auto-subs" checked></label>
+                <label class="switch-item"><span>Live bonus points</span><input type="checkbox" checked></label>
+            </div>
+            <div class="setting-group">
                 <h3>Look and feel</h3>
-                <label class="switch-item">
-                    <span>Dark mode</span>
-                    <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()">
-                </label>
+                <label class="switch-item"><span>Dark mode</span><input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()"></label>
             </div>
         </div>
     </div>
