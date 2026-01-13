@@ -5,121 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Price Predictor | KOPALA FPL</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="price.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- MATERIAL YOU DYNAMIC CORE --- */
+        /* --- CORE SYSTEM --- */
         :root {
             --fpl-primary: #ff005a; 
             --fpl-surface: #fdf8f9; 
             --fpl-container: #ffffff; 
             --fpl-on-container: #37003c;
-            --fpl-border: rgba(0,0,0,0.06);
-            --transition-speed: 0.6s;
+            --fpl-border: rgba(0,0,0,0.08);
+            --nav-blue: #2e47c1; 
+            --transition-speed: 0.3s;
         }
 
         body.dark-mode {
             --fpl-surface: #0a0c10;
             --fpl-container: #161b22;
             --fpl-on-container: #ffffff;
-            --fpl-border: rgba(255,255,255,0.08);
+            --fpl-border: rgba(255,255,255,0.12);
+            --nav-blue: #111827;
         }
 
         body {
             background-color: var(--fpl-surface);
             color: var(--fpl-on-container);
-            transition: background-color var(--transition-speed) ease, color var(--transition-speed);
             margin: 0;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            transition: background-color var(--transition-speed);
         }
 
-        /* --- THEMED NAVBAR --- */
-        .navbar {
-            background-color: var(--fpl-container);
-            border-bottom: 1px solid var(--fpl-border);
+        /* --- NAVIGATION (CENTERED TABBED) --- */
+        .navbar-tabbed {
+            background-color: var(--nav-blue);
+            position: sticky;
+            top: 0;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .nav-top-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            padding: 10px 15px;
+            height: 50px;
         }
 
-        .brand {
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: var(--fpl-on-container) !important;
-            text-transform: uppercase;
-            margin: 0;
+        .brand { 
+            color: white !important; 
+            font-size: 1.2rem; 
+            font-weight: 900; 
+            text-decoration: none; 
+            letter-spacing: -0.5px;
+        }
+        .brand span { color: #00f5ff; }
+
+        .btn-round {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Tabs Styling - CENTERED */
+        .tabs-outer-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .tabs-outer-container::-webkit-scrollbar { display: none; }
+
+        .tabs-inner-scroll {
+            display: flex;
+            justify-content: center;
+            padding: 0 10px;
+            gap: 4px;
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 18px;
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 700;
+            min-width: 80px;
+            border-radius: 12px 12px 0 0;
+            transition: all 0.2s ease;
         }
 
-        .brand span {
-            color: var(--fpl-primary);
-            margin-left: 5px;
-            transition: color var(--transition-speed);
-        }
+        .nav-tab i { font-size: 1.1rem; margin-bottom: 3px; }
 
-        /* --- THEME PICKER --- */
-        .theme-menu-container { position: relative; display: inline-block; }
-        
-        .btn-round-theme {
-            width: 38px; height: 38px; border-radius: 50%;
+        .nav-tab.active {
             background-color: var(--fpl-surface);
+            color: var(--nav-blue);
+        }
+
+        body.dark-mode .nav-tab.active {
             color: var(--fpl-primary);
-            border: 2px solid var(--fpl-primary);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s ease;
         }
 
-        .theme-dropdown {
-            display: none; position: absolute; top: 50px; right: 0;
-            background: var(--fpl-container); border: 1px solid var(--fpl-border);
-            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
-        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
-
-        /* --- PRICE PREDICTOR UI & PROGRESS BARS --- */
-        .main-title { color: var(--fpl-primary); font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
-        
-        /* Dynamic Progress Bar Styling */
-        progress {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            border-radius: 10px;
-            overflow: hidden;
-            border: none;
-        }
-
-        progress::-webkit-progress-bar {
-            background-color: var(--fpl-border);
-            border-radius: 10px;
-        }
-
-        progress::-webkit-progress-value {
-            background-color: var(--fpl-primary);
-            transition: width 0.5s ease;
-        }
-
-        progress::-moz-progress-bar {
-            background-color: var(--fpl-primary);
-        }
-
-        /* Custom class used in some scripts */
-        .progress-bar-fill {
-            background-color: var(--fpl-primary) !important;
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.4s ease;
+        /* --- PRICE PREDICTOR UI --- */
+        .main-title { 
+            color: var(--fpl-primary); 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: -1px; 
+            text-align: center;
+            margin-top: 20px;
         }
 
         .countdown-bar { 
@@ -128,6 +135,8 @@
             padding: 15px; 
             border-radius: 16px; 
             font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
         }
 
         .timer-badge { 
@@ -135,258 +144,155 @@
             color: white !important; 
             padding: 4px 12px; 
             border-radius: 8px; 
-            margin-left: 5px;
         }
 
-        /* --- SEARCH GLOW EFFECT --- */
         .input-field {
             background: var(--fpl-container);
             color: var(--fpl-on-container);
             border: 1px solid var(--fpl-border);
             border-radius: 12px;
             padding: 12px;
-            font-family: inherit;
             outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .input-field:focus {
-            border-color: var(--fpl-primary);
-            box-shadow: 0 0 0 4px rgba(var(--fpl-primary-rgb), 0.15);
-            background: var(--fpl-container);
+            font-family: inherit;
         }
 
         .table-card {
-            background: var(--fpl-container) !important;
-            border: 1px solid var(--fpl-border) !important;
-            border-radius: 24px !important;
-            overflow: hidden;
-            box-shadow: none;
-        }
-
-        #predictor-table th {
-            background: transparent;
-            color: var(--fpl-on-container);
-            opacity: 0.6;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            border-bottom: 1px solid var(--fpl-border);
-        }
-
-        #predictor-table td {
-            border-bottom: 1px solid var(--fpl-border);
-            padding: 12px;
-        }
-
-        .search-btn-round {
-            background: var(--fpl-surface);
-            border-radius: 50%;
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: var(--fpl-container);
             border: 1px solid var(--fpl-border);
-            cursor: pointer;
-            color: var(--fpl-primary);
-            transition: all 0.3s;
+            border-radius: 24px;
+            overflow: hidden;
+            margin-top: 20px;
         }
 
-        /* Nav Links */
-        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
-        .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
-        
-        @media screen and (min-width: 768px) {
-            #menu-btn { display: none !important; }
-            .nav-links { display: flex; align-items: center; }
+        #predictor-table { width: 100%; border-collapse: collapse; }
+        #predictor-table th { 
+            text-align: left; padding: 15px; opacity: 0.6; font-size: 0.75rem; 
+            border-bottom: 1px solid var(--fpl-border);
         }
+        #predictor-table td { padding: 15px; border-bottom: 1px solid var(--fpl-border); }
+
+        progress { width: 100%; height: 8px; border-radius: 10px; overflow: hidden; border: none; }
+        progress::-webkit-progress-bar { background-color: var(--fpl-border); }
+        progress::-webkit-progress-value { background-color: var(--fpl-primary); }
 
         footer { text-align: center; padding: 40px; opacity: 0.5; }
 
-        .live-badge {
-    background-color: #ff005a; /* Hard difficulty red */
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 900;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
+        /* Theme Dropdown */
+        .theme-dropdown {
+            display: none; position: absolute; top: 55px; right: 15px;
+            background: var(--fpl-container); border: 1px solid var(--fpl-border);
+            border-radius: 20px; padding: 18px; width: 200px; z-index: 3000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
+        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="side-drawer" class="drawer">
-        <div class="drawer-header" style="padding: 20px; background: var(--fpl-container); color: var(--fpl-on-container); display: flex; justify-content: space-between; border-bottom: 1px solid var(--fpl-border);">
-            <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
-        </div>
-        <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Mini Leagues</a></li>
-            <li><a href="team.html">AI team builder</a></li>
-            <li><a href="football.html">Football Leagues</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-        </ul>
-    </div>
-
-    <div id="main-backdrop" class="backdrop"></div>
-
-    <nav class="navbar">
-        <div class="nav-left" style="display: flex; align-items: center;">
-            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
+    <nav class="navbar-tabbed">
+        <div class="nav-top-row">
             <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
-
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="kopala.html">Mini Leagues</a></li>
-                <li><a href="team.html">AI team builder</a></li>
-                <li><a href="football.html">Football Leagues</a></li>
-                <li><a href="contact.html">Contact Us</a></li>
-            </ul>
-        </div>
-        
-        <div class="nav-right" style="display: flex; align-items: center; gap: 15px;">
-            <div class="theme-menu-container">
-                <button id="theme-master-btn" class="btn-round-theme" onclick="toggleThemeMenu()">
+            <div style="position: relative;">
+                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
                     <i class="fa-solid fa-palette"></i>
                 </button>
                 <div id="theme-dropdown" class="theme-dropdown">
-                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
+                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5; color: var(--fpl-on-container);">THEME COLOR</span>
                     <div class="swatch-grid">
-                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
-                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
-                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
-                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
-                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
-                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
+                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a')"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87')"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c')"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff')"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00')"></div>
                     </div>
-                    <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer;">
-                        🌙 Midnight Mode
+                    <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer; margin-top:10px;">
+                        🌙 Dark Mode
                     </button>
                 </div>
-            
-    </nav>
-
-    <main class="main-content">
-        <div class="container" style="max-width: 1000px; margin: 0 auto; padding: 20px 15px;">
-            <section class="predictor-header" style="text-align: center; margin-bottom: 30px;">
-                <h1 class="main-title">Price Change Predictor</h1>
-                <div class="countdown-bar" style="margin: 20px 0;">
-                    Next price change countdown: <span id="timer" class="timer-badge">Loading...</span>
-                </div>
-                <p class="rule-hint" style="font-size: 0.8rem; opacity: 0.7;">+100% means predicted rise, -100% means predicted fall</p>
-            </section>
-
-            <div class="filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="playerSearch" placeholder="Search for Player..." class="input-field" style="flex: 2;">
-                <select id="teamFilter" class="input-field" style="flex: 1;">
-                    <option value="All">All Teams</option>
-                </select>
             </div>
-
-            <div class="card table-card">
-                <div class="table-container" style="overflow-x: auto;">
-                    <table id="predictor-table" style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th>Team</th>
-                                <th>Progress Now</th>
-                                <th>Prediction (Tonight)</th>
-                                <th>Progress per hr</th>
-                            </tr>
-                        </thead>
-                        <tbody id="predictor-body"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="loader" style="text-align: center; padding: 20px; font-weight: 700;">Syncing with FPL API...</div>
         </div>
 
-        <button id="backToTop" class="back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-</button>
+        <div class="tabs-outer-container">
+            <div class="tabs-inner-scroll">
+                <a href="index.html" class="nav-tab"><i class="fa-solid fa-fire"></i><span>Home</span></a>
+                <a href="kopala.html" class="nav-tab"><i class="fa-solid fa-users-rectangle"></i><span>Leagues</span></a>
+                <a href="price.html" class="nav-tab active"><i class="fa-solid fa-chart-line"></i><span>Prices</span></a>
+                <a href="contact.html" class="nav-tab"><i class="fa-solid fa-envelope"></i><span>Contact</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="max-width: 1000px; margin: 0 auto; padding: 0 15px;">
+        <h1 class="main-title">Price Change Predictor</h1>
+        
+        <div class="countdown-bar">
+            Next price change countdown: <span id="timer" class="timer-badge">Loading...</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" id="playerSearch" placeholder="Search for Player..." class="input-field" style="flex: 2;">
+            <select id="teamFilter" class="input-field" style="flex: 1;">
+                <option value="All">All Teams</option>
+            </select>
+        </div>
+
+        <div class="table-card">
+            <div style="overflow-x: auto;">
+                <table id="predictor-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Team</th>
+                            <th>Progress</th>
+                            <th>Prediction</th>
+                        </tr>
+                    </thead>
+                    <tbody id="predictor-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="loader" style="text-align: center; padding: 20px; font-weight: 700;">Syncing Data...</div>
     </main>
 
     <footer>
-        <p>&copy; 2026 Kopala FPL. All rights reserved.</p>
+        <p>&copy; 2026 Kopala FPL</p>
     </footer>
-    
+
     <script>
         function toggleThemeMenu() {
             const menu = document.getElementById('theme-dropdown');
             menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         }
 
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 0, 90';
-        }
-
-        function applyMaterialTheme(color, shouldClose = false) {
-            document.body.classList.remove('dark-mode');
+        function applyMaterialTheme(color) {
             document.documentElement.style.setProperty('--fpl-primary', color);
-            document.documentElement.style.setProperty('--fpl-primary-rgb', hexToRgb(color));
-            const surfaceColor = `${color}0A`; 
-            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
             localStorage.setItem('kopala_ai_theme', color);
-            localStorage.setItem('kopala_is_dark', 'false');
-            if(shouldClose) {
-                const menu = document.getElementById('theme-dropdown');
-                if(menu) menu.style.display = 'none';
-            }
+            document.getElementById('theme-dropdown').style.display = 'none';
         }
 
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
-            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
-            if(isDark) {
-                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
-            } else {
-                applyMaterialTheme(savedTheme, false);
-            }
             localStorage.setItem('kopala_is_dark', isDark);
-            const menu = document.getElementById('theme-dropdown');
-            if(menu) menu.style.display = 'none';
+            document.getElementById('theme-dropdown').style.display = 'none';
         }
 
-        window.onclick = function(e) {
-            if (!e.target.closest('.theme-menu-container')) {
-                const d = document.getElementById('theme-dropdown');
-                if (d) d.style.display = 'none';
-            }
-        }
-
+        // Initialize from storage
         document.addEventListener('DOMContentLoaded', () => {
-            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
             const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
             
-            // Apply variables
             document.documentElement.style.setProperty('--fpl-primary', savedTheme);
-            document.documentElement.style.setProperty('--fpl-primary-rgb', hexToRgb(savedTheme));
-            
-            // Hard hide menu on load
-            const dropdown = document.getElementById('theme-dropdown');
-            if(dropdown) dropdown.style.display = 'none';
-
-            if (wasDark) {
-                document.body.classList.add('dark-mode');
-                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
-            } else {
-                applyMaterialTheme(savedTheme, false);
-            }
+            if (wasDark) document.body.classList.add('dark-mode');
         });
+
+        // Close dropdown when clicking outside
+        window.onclick = function(e) {
+            if (!e.target.closest('.nav-top-row')) {
+                document.getElementById('theme-dropdown').style.display = 'none';
+            }
+        }
     </script>
     <script src="price.js"></script>
     <script src="script.js"></script>
