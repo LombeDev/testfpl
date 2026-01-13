@@ -3,16 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kopala FPL | Home</title>
-    
+    <title>Mini Leagues | Kopala FPL</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    
-    <meta name="theme-color" id="meta-theme-color" content="#ff005a">
-    <link rel="manifest" href="/manifest.json">
-    
     <style>
-        /* --- CORE SYSTEM --- */
         :root {
             --fpl-primary: #ff005a; 
             --fpl-surface: #fdf8f9; 
@@ -20,7 +14,6 @@
             --fpl-on-container: #37003c;
             --fpl-border: rgba(0,0,0,0.08);
             --nav-blue: #2e47c1; 
-            --transition-speed: 0.3s;
         }
 
         body.dark-mode {
@@ -36,11 +29,9 @@
             color: var(--fpl-on-container);
             margin: 0;
             font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            transition: background-color var(--transition-speed);
         }
 
-        /* --- NAVIGATION (CLEAN TABBED) --- */
+        /* NAVIGATION */
         .navbar-tabbed {
             background-color: var(--nav-blue);
             position: sticky;
@@ -56,269 +47,98 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 15px;
-            height: 50px;
         }
 
-        .brand { 
-            color: white !important; 
-            font-size: 1.2rem; 
-            font-weight: 900; 
-            text-decoration: none; 
-            letter-spacing: -0.5px;
-        }
+        .brand { color: white; font-weight: 900; text-decoration: none; text-transform: uppercase; }
         .brand span { color: #00f5ff; }
 
-        .btn-round {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: white;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        /* Tabs Styling - CENTERED */
-        .tabs-outer-container {
-            position: relative;
-            display: flex;
-            justify-content: center; /* Centers the scroll container */
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-        .tabs-outer-container::-webkit-scrollbar { display: none; }
-
-        .tabs-inner-scroll {
-            display: flex;
-            justify-content: center; /* Centers items inside the container */
-            padding: 0 10px;
-            gap: 4px;
-        }
-
+        .tabs-container { display: flex; justify-content: center; gap: 5px; padding: 0 10px; }
         .nav-tab {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 8px 18px;
+            padding: 10px 20px;
             color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 700;
-            min-width: 80px;
             border-radius: 12px 12px 0 0;
-            transition: all 0.2s ease;
         }
+        .nav-tab.active { background: var(--fpl-surface); color: var(--nav-blue); }
 
-        .nav-tab i { font-size: 1.1rem; margin-bottom: 3px; }
+        /* CARDS & TABLES */
+        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+        .card { background: var(--fpl-container); border-radius: 24px; padding: 20px; border: 1px solid var(--fpl-border); margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; padding: 12px; opacity: 0.6; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--fpl-border); }
+        td { padding: 12px; border-bottom: 1px solid var(--fpl-border); }
+        
+        .m-name { color: var(--fpl-primary); font-weight: 800; cursor: pointer; }
+        .live-tag { font-size: 9px; background: #ff005a; color: white; padding: 2px 4px; border-radius: 4px; margin-left: 5px; }
 
-        .nav-tab.active {
-            background-color: var(--fpl-surface);
-            color: var(--nav-blue);
-        }
-
-        body.dark-mode .nav-tab.active {
-            color: var(--fpl-primary);
-        }
-
-        .beta-ribbon {
-            position: absolute;
-            top: 0; left: 0;
-            background: white;
-            color: var(--nav-blue);
-            font-size: 8px;
-            font-weight: 900;
-            padding: 1px 15px;
-            transform: rotate(-45deg) translate(-10px, -5px);
-            z-index: 10;
-        }
-
-        /* --- PROGRESS BAR --- */
-        .progress-container { width: 100%; height: 3px; background: transparent; }
-        .progress-bar { height: 100%; background: #00f5ff; width: 0%; transition: width 0.1s; }
-
-        /* --- LAYOUT & CARDS --- */
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 15px auto;
-            padding: 0 15px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            box-sizing: border-box;
-        }
-
-        @media (min-width: 992px) {
-            .container { grid-template-columns: 1fr 350px; }
-        }
-
-        .card {
-            background: var(--fpl-container);
-            border: 1px solid var(--fpl-border);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
-
-        .accent-title {
-            color: var(--fpl-primary);
-            font-weight: 800;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* --- DASHBOARD ELEMENTS --- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .timer-unit {
-            background: var(--fpl-surface);
-            padding: 12px 5px;
+        /* PITCH VIEW */
+        .pitch-container {
+            background: linear-gradient(to bottom, #118c4f 0%, #0c6b3c 100%);
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 19%, rgba(255,255,255,0.05) 20%);
             border-radius: 16px;
-            text-align: center;
-            border: 1px solid var(--fpl-border);
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
         }
 
-        .timer-value { font-size: 1.1rem; font-weight: 900; color: var(--fpl-primary); display: block; }
-        .timer-label { font-size: 0.6rem; font-weight: 700; opacity: 0.6; text-transform: uppercase; }
+        .player-card { display: flex; flex-direction: column; align-items: center; width: 65px; position: relative; }
+        .player-img-wrap { width: 50px; height: 50px; background: #fff; border-radius: 50%; overflow: hidden; border: 2px solid white; }
+        .player-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .player-label { background: #fff; color: #333; font-size: 0.6rem; font-weight: 800; width: 100%; text-align: center; border-radius: 4px; margin-top: 4px; }
 
-        .hidden { display: none !important; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <nav class="navbar-tabbed">
         <div class="nav-top-row">
-            <div style="display: flex; align-items: center;">
-                <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
-            </div>
-            <button id="theme-master-btn" class="btn-round" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <a href="#" class="brand">KOPALA <span>FPL</span></a>
+            <div id="active-gw-label" style="color:white; font-weight:900;">GW --</div>
         </div>
-
-        <div class="tabs-outer-container">
-            <div class="beta-ribbon">BETA</div>
-            <div class="tabs-inner-scroll">
-                <a href="kopala.html" class="nav-tab"><i class="fa-solid fa-users-rectangle"></i><span>Leagues</span></a>
-                <a href="price.html" class="nav-tab"><i class="fa-solid fa-chart-line"></i><span>Prices</span></a>
-                <a href="contact.html" class="nav-tab"><i class="fa-solid fa-envelope"></i><span>Contact</span></a>
-            </div>
-        </div>
-
-        <div class="progress-container">
-            <div class="progress-bar" id="myBar"></div>
+        <div class="tabs-container">
+            <a href="index.html" class="nav-tab">Home</a>
+            <a href="#" class="nav-tab active">Leagues</a>
+            <a href="price.html" class="nav-tab">Prices</a>
         </div>
     </nav>
 
-    <main class="container">
-        <div class="main-column">
-            
-            <div id="upcoming-fixtures-card" class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h2 class="accent-title" style="margin:0;"><i class="fa-solid fa-calendar-day"></i> Fixtures</h2>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span id="next-gw-badge" style="font-weight: 900; font-size: 0.75rem;">GW --</span>
-                    </div>
-                </div>
-                <div id="upcoming-list-container">
-                    <p style="text-align:center; opacity:0.5; font-size:0.8rem;">Loading matches...</p>
-                </div>
+    <div class="container">
+        <div id="id-entry-card" class="card">
+            <h2 style="text-align:center">Enter Team ID</h2>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="user-team-id" placeholder="e.g. 12345" style="flex:1; padding:12px; border-radius:12px; border:1px solid var(--fpl-border);">
+                <button onclick="loadUserLeagues()" style="background:var(--fpl-primary); color:white; border:none; padding:0 25px; border-radius:12px; font-weight:bold;">START</button>
             </div>
-
-            <div id="live-dashboard" class="hidden">
-                <div class="card">
-                    <h2 class="accent-title"><i class="fa-solid fa-gauge-high"></i> Manager Stats</h2>
-                    <p id="disp-name" style="text-align:center; font-weight:900; font-size:1.1rem; margin-bottom:15px; color:var(--fpl-primary);">--</p>
-                    
-                    <div class="stats-grid">
-                        <div class="timer-unit"><span class="timer-value" id="disp-gw">0</span><span class="timer-label">GW Pts</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-total">0</span><span class="timer-label">Total</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-rank">--</span><span class="timer-label">Rank</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-transfers">0</span><span class="timer-label">Transfers</span></div>
-                        <div class="timer-unit"><span class="timer-value" id="disp-safety">--</span><span class="timer-label">Safety</span></div>
-                        <button class="timer-unit reset-fpl-id" style="border:1px solid rgba(255,0,0,0.2); cursor:pointer;">
-                            <span class="timer-value" style="color:red;"><i class="fa-solid fa-power-off"></i></span>
-                            <span class="timer-label" style="color:red;">Reset</span>
-                        </button>
-                    </div>
-                    <div id="bps-list" style="margin-top:15px;"></div>
-                </div>
-            </div>
-
-            <div id="match-center-card" class="card">
-                <h2 class="accent-title"><i class="fa-solid fa-star"></i> Bonus Points Center</h2>
-                <div id="fixtures-container"></div>
-            </div>
-
         </div>
 
-        <div class="sidebar-column">
-            
-            <div id="deadline-card" class="card">
-                <h2 class="accent-title"><i class="fa-solid fa-clock"></i> Deadline</h2>
-                <div style="display: flex; gap: 5px;">
-                    <div class="timer-unit" style="flex:1;"><span class="timer-value" id="days">00</span><span class="timer-label">D</span></div>
-                    <div class="timer-unit" style="flex:1;"><span class="timer-value" id="hours">00</span><span class="timer-label">H</span></div>
-                    <div class="timer-unit" style="flex:1;"><span class="timer-value" id="mins">00</span><span class="timer-label">M</span></div>
-                    <div class="timer-unit" style="flex:1;"><span class="timer-value" id="secs">00</span><span class="timer-label">S</span></div>
-                </div>
-                <div id="gw-label" style="text-align: center; margin-top: 10px; font-weight: 900; font-size: 0.7rem; color: var(--fpl-primary);"></div>
-            </div>
-
-            <div id="id-entry-section" class="card">
-                <h2 class="accent-title"><i class="fa-solid fa-magnifying-glass"></i> Track Manager</h2>
-                <input type="number" id="fpl-id" placeholder="Team ID (e.g. 123456)" style="width:100%; padding:15px; border-radius:15px; border:1px solid var(--fpl-border); background:var(--fpl-surface); color:inherit; box-sizing:border-box; margin-bottom:10px; font-family:inherit; font-weight:700;">
-                <button id="change-id-btn" style="width:100%; padding:15px; background:var(--fpl-primary); color:white; border:none; border-radius:15px; font-weight:900; cursor:pointer; font-size:0.9rem;">Track Live Points</button>
-            </div>
-
+        <div id="league-selector-container" class="hidden">
+            <select id="league-dropdown" onchange="fetchLeagueData(this.value)" style="width:100%; padding:15px; border-radius:15px; margin-bottom:20px;">
+                <option value="">Select a League...</option>
+            </select>
         </div>
-    </main>
 
-    <div id="loading-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); color:white; z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; font-weight:900;">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; margin-bottom:10px;"></i>
-        SYNCING DATA...
+        <div id="table-container" class="card hidden">
+            <table id="league-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Manager</th>
+                        <th>GW Pts</th>
+                        <th>Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="league-body"></tbody>
+            </table>
+        </div>
     </div>
 
-    <script src="script.js" defer></script>
-    <script src="deadline.js" defer></script>
-    <script src="match-center.js" defer></script>
-
-    <script>
-        // Progress Bar
-        window.addEventListener('scroll', () => {
-            const winScroll = document.documentElement.scrollTop;
-            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = (winScroll / height) * 100;
-            const bar = document.getElementById("myBar");
-            if(bar) bar.style.width = scrolled + "%";
-        });
-
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('fpl_dark', isDark);
-            
-            // Update icon
-            const btn = document.getElementById('theme-master-btn');
-            btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-        }
-
-        // Initialize Dark Mode & Icons
-        if(localStorage.getItem('fpl_dark') === 'true') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('theme-master-btn').innerHTML = '<i class="fa-solid fa-sun"></i>';
-        }
-    </script>
+    <script src="kopala.js"></script>
 </body>
 </html>
