@@ -2,132 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mini Leagues | Kopala FPL</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --fpl-primary: #ff005a; 
-            --fpl-surface: #fdf8f9; 
-            --fpl-container: #ffffff; 
-            --fpl-on-container: #37003c;
-            --fpl-border: rgba(0,0,0,0.08);
-            --nav-blue: #2e47c1; 
-        }
-
-        body.dark-mode {
-            --fpl-surface: #0a0c10;
-            --fpl-container: #161b22;
-            --fpl-on-container: #ffffff;
-            --fpl-border: rgba(255,255,255,0.12);
-            --nav-blue: #111827;
-        }
-
-        body {
-            background-color: var(--fpl-surface);
-            color: var(--fpl-on-container);
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* NAVIGATION */
-        .navbar-tabbed {
-            background-color: var(--nav-blue);
-            position: sticky;
-            top: 0;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .nav-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-        }
-
-        .brand { color: white; font-weight: 900; text-decoration: none; text-transform: uppercase; }
-        .brand span { color: #00f5ff; }
-
-        .tabs-container { display: flex; justify-content: center; gap: 5px; padding: 0 10px; }
-        .nav-tab {
-            padding: 10px 20px;
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            font-size: 0.75rem;
-            font-weight: 700;
-            border-radius: 12px 12px 0 0;
-        }
-        .nav-tab.active { background: var(--fpl-surface); color: var(--nav-blue); }
-
-        /* CARDS & TABLES */
-        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
-        .card { background: var(--fpl-container); border-radius: 24px; padding: 20px; border: 1px solid var(--fpl-border); margin-bottom: 20px; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th { text-align: left; padding: 12px; opacity: 0.6; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--fpl-border); }
-        td { padding: 12px; border-bottom: 1px solid var(--fpl-border); }
-        
-        .m-name { color: var(--fpl-primary); font-weight: 800; cursor: pointer; }
-        .live-tag { font-size: 9px; background: #ff005a; color: white; padding: 2px 4px; border-radius: 4px; margin-left: 5px; }
-
-        /* PITCH VIEW */
-        .pitch-container {
-            background: linear-gradient(to bottom, #118c4f 0%, #0c6b3c 100%);
-            background-image: repeating-linear-gradient(0deg, transparent, transparent 19%, rgba(255,255,255,0.05) 20%);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .player-card { display: flex; flex-direction: column; align-items: center; width: 65px; position: relative; }
-        .player-img-wrap { width: 50px; height: 50px; background: #fff; border-radius: 50%; overflow: hidden; border: 2px solid white; }
-        .player-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .player-label { background: #fff; color: #333; font-size: 0.6rem; font-weight: 800; width: 100%; text-align: center; border-radius: 4px; margin-top: 4px; }
-
-        .hidden { display: none; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live FPL Tables Clone</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-
-    <div class="container">
-        <div id="id-entry-card" class="card">
-            <h2 style="text-align:center">Enter Team ID</h2>
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="user-team-id" placeholder="e.g. 12345" style="flex:1; padding:12px; border-radius:12px; border:1px solid var(--fpl-border);">
-                <button onclick="loadUserLeagues()" style="background:var(--fpl-primary); color:white; border:none; padding:0 25px; border-radius:12px; font-weight:bold;">START</button>
+    <div id="login-screen">
+        <div class="hero-section">
+            <h1>LIVE <span>FPL Tables</span></h1>
+            <p>Live FPL points and league tables</p>
+        </div>
+        <div class="login-card">
+            <h3>Enter your team ID</h3>
+            <div class="input-group">
+                <input type="number" id="team-id-input" placeholder="Team ID (e.g. 12345)">
+                <button onclick="handleLogin()">Start</button>
             </div>
         </div>
+    </div>
 
-        <div id="league-selector-container" class="hidden">
-            <select id="league-dropdown" onchange="fetchLeagueData(this.value)" style="width:100%; padding:15px; border-radius:15px; margin-bottom:20px;">
-                <option value="">Select a League...</option>
-            </select>
+    <div id="dashboard" style="display:none;">
+        <div id="league-selector-container">
+            <select id="league-select" onchange="changeLeague(this.value)"></select>
+            <button onclick="toggleSettings()" class="settings-trigger">⚙️ Settings</button>
         </div>
 
-        <div id="table-container" class="card hidden">
-            <table id="league-table">
+        <div class="main-tabs">
+            <button class="tab-btn active" onclick="showView('table')">Table</button>
+            <button class="tab-btn" onclick="showView('pitch')">Pitch</button>
+        </div>
+
+        <div id="table-view">
+            <table class="live-table">
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Manager</th>
-                        <th>GW Pts</th>
-                        <th>Total</th>
-                        <th></th>
-                    </tr>
+                    <tr><th>Rank</th><th>Team</th><th>GW</th><th>Total</th></tr>
                 </thead>
                 <tbody id="league-body"></tbody>
             </table>
         </div>
+
+        <div id="pitch-view" style="display:none;" class="fpl-pitch">
+            <div class="pitch-row" id="row-gkp"></div>
+            <div class="pitch-row" id="row-def"></div>
+            <div class="pitch-row" id="row-mid"></div>
+            <div class="pitch-row" id="row-fwd"></div>
+        </div>
     </div>
 
-    <script src="kopala.js"></script>
+    <div id="settings-drawer" class="drawer">
+        <div class="drawer-header">
+            <h2>Settings</h2>
+            <button onclick="toggleSettings()">×</button>
+        </div>
+        <div class="drawer-content">
+            <div class="setting-group">
+                <h3>Look and feel</h3>
+                <label class="switch-item">
+                    <span>Dark mode</span>
+                    <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
