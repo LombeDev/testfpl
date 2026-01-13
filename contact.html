@@ -5,89 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Contact Us | KOPALA FPL</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- MATERIAL YOU DYNAMIC CORE --- */
+        /* --- CORE SYSTEM --- */
         :root {
             --fpl-primary: #ff005a; 
+            --fpl-primary-rgb: 255, 0, 90;
             --fpl-surface: #fdf8f9; 
             --fpl-container: #ffffff; 
             --fpl-on-container: #37003c;
-            --fpl-border: rgba(0,0,0,0.06);
-            --transition-speed: 0.6s;
+            --fpl-border: rgba(0,0,0,0.08);
+            --nav-blue: #2e47c1; 
             --whatsapp: #25D366;
+            --transition-speed: 0.3s;
         }
 
         body.dark-mode {
             --fpl-surface: #0a0c10;
             --fpl-container: #161b22;
             --fpl-on-container: #ffffff;
-            --fpl-border: rgba(255,255,255,0.08);
+            --fpl-border: rgba(255,255,255,0.12);
+            --nav-blue: #111827;
         }
 
         body {
             background-color: var(--fpl-surface);
             color: var(--fpl-on-container);
-            transition: background-color var(--transition-speed) ease, color var(--transition-speed);
             margin: 0;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+            transition: background-color var(--transition-speed);
         }
 
-        /* --- THEMED NAVBAR --- */
-        .navbar {
-            background-color: var(--fpl-container);
-            border-bottom: 1px solid var(--fpl-border);
+        /* --- NAVIGATION (CENTERED TABBED) --- */
+        .navbar-tabbed {
+            background-color: var(--nav-blue);
+            position: sticky;
+            top: 0;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .nav-top-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            padding: 10px 15px;
+            height: 50px;
         }
 
-        .brand {
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: var(--fpl-on-container) !important;
-            text-transform: uppercase;
-            margin: 0;
+        .brand { 
+            color: white !important; 
+            font-size: 1.2rem; 
+            font-weight: 900; 
+            text-decoration: none; 
+            letter-spacing: -0.5px;
+        }
+        .brand span { color: #00f5ff; }
+
+        .btn-round {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .tabs-outer-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .tabs-outer-container::-webkit-scrollbar { display: none; }
+
+        .tabs-inner-scroll {
+            display: flex;
+            justify-content: center;
+            padding: 0 10px;
+            gap: 4px;
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 18px;
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 700;
+            min-width: 80px;
+            border-radius: 12px 12px 0 0;
+            transition: all 0.2s ease;
         }
 
-        .brand span {
-            color: var(--fpl-primary);
-            margin-left: 5px;
-            transition: color var(--transition-speed);
-        }
+        .nav-tab i { font-size: 1.1rem; margin-bottom: 3px; }
 
-        /* --- THEME PICKER --- */
-        .theme-menu-container { position: relative; display: inline-block; }
-        
-        .btn-round-theme {
-            width: 38px; height: 38px; border-radius: 50%;
+        .nav-tab.active {
             background-color: var(--fpl-surface);
+            color: var(--nav-blue);
+        }
+
+        body.dark-mode .nav-tab.active {
             color: var(--fpl-primary);
-            border: 2px solid var(--fpl-primary);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s ease;
         }
 
-        .theme-dropdown {
-            display: none; 
-            position: absolute; top: 50px; right: 0;
-            background: var(--fpl-container); border: 1px solid var(--fpl-border);
-            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
-        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
-
-        /* --- PAGE CONTENT --- */
+        /* --- CONTACT CONTENT --- */
         .main-container { max-width: 600px; margin: 0 auto; padding: 20px; }
 
         .page-title {
@@ -107,6 +141,7 @@
             border-radius: 24px;
             padding: 30px 20px;
             text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
         }
 
         .contact-icon-wrap {
@@ -136,20 +171,7 @@
             box-shadow: 0 8px 20px rgba(var(--fpl-primary-rgb), 0.2);
         }
 
-        .whatsapp-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 24px rgba(var(--fpl-primary-rgb), 0.3);
-        }
-
-        .email-link {
-            color: var(--fpl-primary);
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        .email-link:hover {
-            text-decoration: underline;
-        }
+        .email-link { color: var(--fpl-primary); text-decoration: none; font-weight: 700; }
 
         .feedback-box {
             background: var(--fpl-surface);
@@ -179,78 +201,50 @@
             gap: 10px;
         }
 
-        .feedback-box li::before {
-            content: "•";
-            color: var(--fpl-primary);
-            font-weight: bold;
+        /* --- THEME MENU --- */
+        .theme-dropdown {
+            display: none; position: absolute; top: 55px; right: 15px;
+            background: var(--fpl-container); border: 1px solid var(--fpl-border);
+            border-radius: 20px; padding: 18px; width: 200px; z-index: 3000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-
-        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
-        .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
-        
-        @media screen and (min-width: 768px) {
-            #menu-btn { display: none !important; }
-            .nav-links { display: flex; align-items: center; }
-        }
+        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
+        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
 
         footer { text-align: center; padding: 40px; opacity: 0.5; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <div id="side-drawer" class="drawer">
-        <div style="padding: 20px; background: var(--fpl-container); color: var(--fpl-on-container); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
-            <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
-            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem; cursor:pointer;">&times;</button>
-        </div>
-        <ul class="drawer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="kopala.html">Mini Leagues</a></li>
-            <li><a href="team.html">AI team builder</a></li>
-            <li><a href="price.html">Price Change Predictor</a></li>
-            <li><a href="football.html">Football Leagues</a></li>
-        </ul>
-    </div>
-
-    <div id="main-backdrop" class="backdrop"></div>
-
-    <nav class="navbar">
-        <div class="nav-left" style="display: flex; align-items: center;">
-            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
+    <nav class="navbar-tabbed">
+        <div class="nav-top-row">
             <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
-
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="kopala.html">Mini Leagues</a></li>
-                <li><a href="team.html">AI team builder</a></li>
-                <li><a href="price.html">Price Change Predictor</a></li>
-                <li><a href="football.html">Football Leagues</a></li>
-            </ul>
-        </div>
-
-        <div class="nav-right">
-            <div class="theme-menu-container">
-                <button id="theme-master-btn" class="btn-round-theme" onclick="toggleThemeMenu()">
+            <div style="position: relative;">
+                <button id="theme-master-btn" class="btn-round" onclick="toggleThemeMenu()">
                     <i class="fa-solid fa-palette"></i>
                 </button>
                 <div id="theme-dropdown" class="theme-dropdown">
-                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
+                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5; color: var(--fpl-on-container);">THEME COLOR</span>
                     <div class="swatch-grid">
                         <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a')"></div>
                         <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87')"></div>
                         <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c')"></div>
                         <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff')"></div>
                         <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00')"></div>
-                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff')"></div>
-                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00')"></div>
-                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4')"></div>
-                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea')"></div>
-                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888')"></div>
                     </div>
-                    <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer;">
+                    <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer; margin-top:10px;">
                         🌙 Midnight Mode
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <div class="tabs-outer-container">
+            <div class="tabs-inner-scroll">
+                <a href="index.html" class="nav-tab"><i class="fa-solid fa-fire"></i><span>Home</span></a>
+                <a href="kopala.html" class="nav-tab"><i class="fa-solid fa-users-rectangle"></i><span>Leagues</span></a>
+                <a href="price.html" class="nav-tab"><i class="fa-solid fa-chart-line"></i><span>Prices</span></a>
+                <a href="contact.html" class="nav-tab active"><i class="fa-solid fa-envelope"></i><span>Contact</span></a>
             </div>
         </div>
     </nav>
@@ -272,7 +266,7 @@
             </a>
 
             <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px; font-weight: 600;">
-                Or email us: <a href="mailto:lombeicloud@gmail.com" class="email-link" id="email-link">lombeicloud@gmail.com</a>
+                Or email us: <a href="mailto:lombeicloud@gmail.com" class="email-link">lombeicloud@gmail.com</a>
             </div>
 
             <div class="feedback-box">
@@ -288,7 +282,6 @@
                 <strong>Kopala FPL</strong>
             </p>
         </section>
-
     </main>
 
     <footer>
@@ -303,7 +296,8 @@
 
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 0, 90';
+            if(!result) return "255, 0, 90";
+            return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
         }
 
         function applyMaterialTheme(color) {
@@ -313,6 +307,7 @@
             document.documentElement.style.setProperty('--fpl-surface', `${color}0A`);
             localStorage.setItem('kopala_ai_theme', color);
             localStorage.setItem('kopala_is_dark', 'false');
+            document.getElementById('theme-dropdown').style.display = 'none';
         }
 
         function toggleDarkMode() {
@@ -324,21 +319,13 @@
                 applyMaterialTheme(savedTheme);
             }
             localStorage.setItem('kopala_is_dark', isDark);
-            toggleThemeMenu();
-        }
-
-        window.onclick = function(e) {
-            if (!e.target.closest('.theme-menu-container')) {
-                const d = document.getElementById('theme-dropdown');
-                if (d) d.style.display = 'none';
-            }
+            document.getElementById('theme-dropdown').style.display = 'none';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
             const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
             
-            document.getElementById('theme-dropdown').style.display = 'none';
             document.documentElement.style.setProperty('--fpl-primary', savedTheme);
             document.documentElement.style.setProperty('--fpl-primary-rgb', hexToRgb(savedTheme));
             
@@ -349,7 +336,13 @@
                 document.documentElement.style.setProperty('--fpl-surface', `${savedTheme}0A`);
             }
         });
+
+        window.onclick = function(e) {
+            if (!e.target.closest('.nav-top-row')) {
+                const d = document.getElementById('theme-dropdown');
+                if (d) d.style.display = 'none';
+            }
+        }
     </script>
-    <script src="script.js"></script>
 </body>
 </html>
