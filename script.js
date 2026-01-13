@@ -1,91 +1,60 @@
-let currentGW = 1;
-let staticData = null;
+const PROXY = "https://cors-anywhere.herokuapp.com/";
+const BASE_URL = "https://fantasy.premierleague.com/api/";
 
-// Initialization
-async function init() {
-    const res = await fetch('https://fantasy.premierleague.com/api/bootstrap-static/');
-    staticData = await res.json();
-    currentGW = staticData.events.find(e => e.is_current).id;
-    document.getElementById('active-gw-label').textContent = `GW ${currentGW}`;
-}
-init();
+let currentUserLeagues = [];
 
-async function loadUserLeagues() {
-    const teamId = document.getElementById('user-team-id').value;
-    const response = await fetch(`/.netlify/functions/fpl-api?path=user&teamId=${teamId}`);
-    const data = await response.json();
-    
-    const dropdown = document.getElementById('league-dropdown');
-    data.leagues.classic.forEach(l => {
-        const opt = document.createElement('option');
-        opt.value = l.id;
-        opt.textContent = l.name;
-        dropdown.appendChild(opt);
-    });
+async function handleLogin() {
+    const teamId = document.getElementById('team-id-input').value;
+    if (!teamId) return alert("Enter ID");
 
-    document.getElementById('id-entry-card').classList.add('hidden');
-    document.getElementById('league-selector-container').classList.remove('hidden');
+    try {
+        const res = await fetch(`${PROXY}${BASE_URL}entry/${teamId}/`);
+        const data = await res.json();
+        
+        currentUserLeagues = data.leagues.classic;
+        populateLeagueSelector(currentUserLeagues);
+        
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        
+        // Load first league by default
+        changeLeague(currentUserLeagues[0].id);
+    } catch (e) { alert("Error fetching manager data. Check CORS proxy."); }
 }
 
-async function fetchLeagueData(leagueId) {
-    if(!leagueId) return;
-    const response = await fetch(`/.netlify/functions/fpl-api?path=league&leagueId=${leagueId}`);
-    const data = await response.json();
-    
-    const tbody = document.getElementById('league-body');
-    tbody.innerHTML = '';
-
-    for (const m of data.standings.results) {
-        // Calculate Live Points
-        const liveRes = await fetch(`/.netlify/functions/fpl-api?path=live&gw=${currentGW}`);
-        const liveData = await liveRes.json();
-        const picksRes = await fetch(`/.netlify/functions/fpl-api?path=picks&teamId=${m.entry}&gw=${currentGW}`);
-        const picksData = await picksRes.json();
-
-        let liveGW = 0;
-        picksData.picks.forEach(p => {
-            const playerLive = liveData.elements.find(el => el.id === p.element);
-            if(p.position <= 11) liveGW += (playerLive.stats.total_points * p.multiplier);
-        });
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${m.rank}</td>
-            <td class="m-name" onclick="toggleTeamDropdown(${m.entry}, this)">${m.entry_name}</td>
-            <td>${liveGW} <span class="live-tag">LIVE</span></td>
-            <td><b>${m.total + (liveGW - m.event_total)}</b></td>
-            <td><i class="fa-solid fa-chevron-down"></i></td>
-        `;
-        tbody.appendChild(row);
-    }
-    document.getElementById('table-container').classList.remove('hidden');
+function populateLeagueSelector(leagues) {
+    const select = document.getElementById('league-select');
+    select.innerHTML = leagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
 }
 
-async function toggleTeamDropdown(managerId, cell) {
-    const row = cell.parentElement;
-    if (row.nextElementSibling?.classList.contains('squad-dropdown')) {
-        row.nextElementSibling.remove();
-        return;
-    }
+async function changeLeague(leagueId) {
+    const res = await fetch(`${PROXY}${BASE_URL}leagues-classic/${leagueId}/standings/`);
+    const data = await res.json();
+    renderTable(data.standings.results);
+}
 
-    const response = await fetch(`/.netlify/functions/fpl-api?path=picks&teamId=${managerId}&gw=${currentGW}`);
-    const data = await response.json();
+function renderTable(rows) {
+    const body = document.getElementById('league-body');
+    body.innerHTML = rows.map(r => `
+        <tr>
+            <td>${r.rank}</td>
+            <td>${r.entry_name}<br><small>${r.player_name}</small></td>
+            <td class="score-text">${r.event_total}</td>
+            <td>${r.total}</td>
+        </tr>
+    `).join('');
+}
 
-    const dropdownRow = document.createElement('tr');
-    dropdownRow.className = 'squad-dropdown';
+function toggleSettings() { document.getElementById('settings-drawer').classList.toggle('open'); }
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+}
+
+function showView(view) {
+    document.getElementById('table-view').style.display = view === 'table' ? 'block' : 'none';
+    document.getElementById('pitch-view').style.display = view === 'pitch' ? 'flex' : 'none';
     
-    let html = `<td colspan="5"><div class="pitch-container">`;
-    data.picks.forEach(p => {
-        const det = staticData.elements.find(el => el.id === p.element);
-        html += `
-            <div class="player-card">
-                <div class="player-img-wrap">
-                    <img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p${det.code}.png">
-                </div>
-                <div class="player-label">${det.web_name}</div>
-            </div>`;
-    });
-    html += `</div></td>`;
-    dropdownRow.innerHTML = html;
-    row.after(dropdownRow);
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
 }
