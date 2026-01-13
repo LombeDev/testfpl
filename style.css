@@ -1,28 +1,33 @@
-/* --- DESIGN TOKENS & SYSTEM VARIABLES --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@800;900&display=swap');
+/* KOPALA FPL - PREMIUM SPORTS DESIGN SYSTEM
+    Refactor: Senior UI/UX Specialization
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@800;900&display=swap');
 
 :root {
-    /* FPL Official & Premium Palette */
+    /* Official FPL Palette */
     --fpl-purple: #37003c;
     --fpl-pink: #ff005a;
     --fpl-green: #00ff87;
     --fpl-cyan: #04f5ff;
     
-    /* UI Surface Colors */
+    /* UI Surfaces */
+    --app-bg: #f4f4f7;
+    --card-bg: #ffffff;
     --glass-bg: rgba(255, 255, 255, 0.85);
-    --surface: #ffffff;
-    --app-bg: #f0f2f5;
-    --border: rgba(0, 0, 0, 0.06);
     
     /* Typography */
-    --font-main: 'Inter', sans-serif;
-    --font-brand: 'Outfit', sans-serif;
+    --text-main: #1e293b;
+    --text-dim: #64748b;
+    --border: rgba(0, 0, 0, 0.08);
     
-    /* Easing */
+    /* Motion */
     --haptic: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --radius-lg: 16px;
+    --radius-md: 10px;
 }
 
-/* --- BASE & SMOOTHING --- */
+/* --- GLOBAL RESETS --- */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -30,57 +35,72 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-body {
-    font-family: var(--font-main);
-    background-color: var(--app-bg);
-    color: #1e293b;
-    line-height: 1.4;
+html {
+    scroll-behavior: smooth;
     overflow-x: hidden;
 }
 
-/* --- GLASSMORPHISM NAVBAR --- */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--app-bg);
+    color: var(--text-main);
+    line-height: 1.4;
+}
+
+/* --- GLASSMORPHISM NAVBAR (CENTERED BRAND) --- */
 .navbar {
     display: grid;
-    grid-template-columns: 1fr auto 1fr; /* Exact center branding */
+    grid-template-columns: 60px 1fr 60px; /* Forces center column to 1fr */
     align-items: center;
-    padding: 12px 16px;
+    padding: 0 16px;
     background: var(--glass-bg);
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
+    height: 65px;
     z-index: 1000;
 }
 
 .brand {
     grid-column: 2;
-    font-family: var(--font-brand);
-    font-size: 1.25rem;
+    text-align: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.3rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: -0.5px;
     color: var(--fpl-purple);
+    text-decoration: none;
 }
 
 .brand span { color: var(--fpl-pink); }
 
+.nav-left, .nav-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* --- HAPTIC INTERACTION SYSTEM --- */
-.btn-primary, .card, .icon-btn, .price-row, .nav-btn {
-    transition: transform 0.2s var(--haptic), filter 0.2s ease;
-    cursor: pointer;
+.card, .btn-primary, .icon-btn, .price-row, .fixture-card, .nav-btn-sm {
+    transition: transform 0.2s var(--haptic), background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btn-primary:active, .card:active, .icon-btn:active, .price-row:active {
-    transform: scale(0.96);
-    filter: brightness(0.95);
+.card:active, .btn-primary:active, .price-row:active, .fixture-card:active {
+    transform: scale(0.97);
 }
 
-/* --- BENTO BOX GRID (DESKTOP OPTIMIZED) --- */
+.icon-btn:active {
+    transform: scale(0.9);
+}
+
+/* --- BENTO BOX LAYOUT --- */
 .container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 16px;
+    max-width: 1200px;
+    margin: 16px auto;
+    padding: 0 16px;
     display: grid;
     grid-template-columns: 1fr;
     gap: 16px;
@@ -88,11 +108,11 @@ body {
 
 @media (min-width: 1024px) {
     .container {
-        grid-template-columns: 320px 1fr 300px; /* 3-column Sports Dashboard */
+        grid-template-columns: 320px 1fr;
         align-items: start;
     }
     
-    .sidebar-left, .sidebar-right {
+    .sidebar-area {
         position: sticky;
         top: 85px;
         display: flex;
@@ -101,40 +121,110 @@ body {
     }
 }
 
-/* --- DATA DENSITY: COMPACT CARDS --- */
+/* --- DATA DENSITY: CARDS --- */
 .card {
-    background: var(--surface);
-    border-radius: 16px;
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--border);
-    padding: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-}
-
-.card-title {
-    font-size: 0.75rem;
+.card-label {
+    font-size: 0.65rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
     color: var(--text-dim);
+    margin-bottom: 12px;
+    display: block;
 }
 
-/* --- STATUS VISUALS & BADGES --- */
-.live-tag {
-    background: var(--fpl-pink);
+/* --- DASHBOARD & STATS --- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.stat-box {
+    background: var(--app-bg);
+    padding: 12px 4px;
+    border-radius: var(--radius-md);
+    text-align: center;
+    border: 1px solid var(--border);
+}
+
+.stat-box span {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--fpl-purple);
+}
+
+.stat-box label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+/* --- FIXTURE & BONUS CENTER (PRO DENSITY) --- */
+.fixture-card {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+}
+
+.fixture-card:last-child { border-bottom: none; }
+
+.match-row {
+    display: grid;
+    grid-template-columns: 1fr 65px 1fr;
+    align-items: center;
+    text-align: center;
+}
+
+.team-unit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.team-unit.home { justify-content: flex-end; }
+.team-unit.away { justify-content: flex-start; }
+
+.score-box {
+    background: var(--fpl-purple);
     color: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+}
+
+/* Bonus Pills */
+.bonus-pill {
+    background: var(--fpl-green);
+    color: var(--fpl-purple);
+    font-size: 0.7rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: auto;
+}
+
+/* --- STATUS VISUALS --- */
+.live-badge {
+    background: var(--fpl-pink);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 20px;
     font-size: 0.65rem;
     font-weight: 900;
-    padding: 2px 8px;
-    border-radius: 4px;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -143,83 +233,102 @@ body {
 .pulse-dot {
     width: 6px;
     height: 6px;
-    background: #fff;
+    background: white;
     border-radius: 50%;
-    animation: blink 1.2s infinite ease-in-out;
+    animation: pulse 1.5s infinite;
 }
 
-/* FDR Difficulty Badges (1-5) */
-.fdr-badge {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 0.75rem;
-    color: white;
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
 }
 
-.fdr-1 { background: #00ff87; }
-.fdr-2 { background: #01fc7a; }
-.fdr-3 { background: #e7e7e7; color: #333; }
-.fdr-4 { background: #ff7600; }
-.fdr-5 { background: #ff005a; }
-
-/* --- FIXTURE DATA STRIPED ROWS --- */
-.fixture-row {
-    display: grid;
-    grid-template-columns: 1fr 60px 1fr;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.team-abbr {
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--fpl-purple);
-}
-
-.score-pill {
-    background: var(--fpl-purple);
-    color: white;
-    font-family: 'Monaco', monospace;
-    font-size: 0.9rem;
-    font-weight: 900;
-    padding: 4px 0;
-    border-radius: 6px;
-    text-align: center;
-}
-
-/* --- TYPOGRAPHY REFINEMENT --- */
-.player-name {
-    font-family: var(--font-main);
-    font-weight: 700;
+/* --- INPUTS & BUTTONS --- */
+input[type="number"] {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--app-bg);
     font-size: 0.95rem;
+    font-weight: 600;
+    outline: none;
+    transition: border 0.2s;
+}
+
+input:focus { border-color: var(--fpl-pink); }
+
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--fpl-pink);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 800;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+/* --- DRAWER --- */
+.drawer {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100%;
+    background: var(--card-bg);
+    z-index: 2000;
+    transition: transform 0.4s var(--haptic);
+    padding: 20px;
+}
+.drawer.open { transform: translateX(280px); }
+
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    display: none;
+    z-index: 1500;
+}
+.backdrop.active { display: block; }
+
+/* --- THEME MENU --- */
+.theme-dropdown {
+    position: absolute;
+    top: 70px;
+    right: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: none;
+    width: 180px;
+}
+.theme-dropdown.show { display: block; animation: slideDown 0.3s var(--haptic); }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- PWA INSTALL BUTTON --- */
+#install-card {
+    border: 2px dashed var(--fpl-green);
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(0, 255, 135, 0.05) 100%);
+}
+
+#install-btn {
+    background: var(--fpl-green);
     color: var(--fpl-purple);
 }
 
-.label-tiny {
-    font-size: 0.6rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: var(--text-dim);
-}
-
-/* --- ANIMATIONS --- */
-@keyframes blink {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.3; transform: scale(0.8); }
-}
-
-/* --- SCROLL OPTIMIZATION --- */
-.scroll-x {
-    display: flex;
-    overflow-x: auto;
-    gap: 12px;
-    padding-bottom: 8px;
-    scrollbar-width: none;
-}
-.scroll-x::-webkit-scrollbar { display: none; }
+/* --- SCROLLBARS --- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
