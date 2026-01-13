@@ -751,6 +751,87 @@ Make sure the name Kopala FPL is in the center
     box-shadow: 0 0 5px rgba(0, 255, 135, 0.2);
 }
 
+/* --- TABBED NAV REFINEMENTS --- */
+.navbar-tabbed {
+    background-color: #2e47c1;
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+}
 
+.nav-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    height: 50px;
+}
+
+.nav-left-group { display: flex; align-items: center; gap: 10px; }
+
+.brand { 
+    color: white !important; 
+    font-size: 1.2rem; 
+    font-weight: 900; 
+    text-decoration: none; 
+}
+.brand span { color: #00f5ff; }
+
+/* Tabs Layout */
+.tabs-outer-container {
+    position: relative;
+    background-color: #2e47c1;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.tabs-outer-container::-webkit-scrollbar { display: none; }
+
+.tabs-inner-scroll {
+    display: flex;
+    padding: 0 10px;
+    gap: 4px;
+    align-items: flex-end;
+}
+
+.nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 15px;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 75px;
+    border-radius: 10px 10px 0 0;
+}
+
+.nav-tab i { font-size: 1.1rem; margin-bottom: 3px; }
+
+/* Active State matches your screenshot white background */
+.nav-tab.active {
+    background-color: var(--fpl-surface);
+    color: #2e47c1;
+}
+
+/* Beta Ribbon */
+.beta-ribbon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+    color: #2e47c1;
+    font-size: 8px;
+    font-weight: 900;
+    padding: 1px 15px;
+    transform: rotate(-45deg) translate(-8px, -4px);
+    z-index: 10;
+}
+
+/* Dark Mode Overrides */
+body.dark-mode .navbar-tabbed { background-color: #161b22; }
+body.dark-mode .nav-tab.active { color: var(--fpl-primary); }
 
 
