@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KOPALA FPL | My team by AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="team.css">
     <style>
         /* --- MATERIAL YOU DYNAMIC CORE --- */
         :root {
@@ -14,7 +16,7 @@
             --fpl-on-container: #37003c;
             --fpl-border: rgba(0,0,0,0.06);
             --transition-speed: 0.6s;
-            --pitch-green: #008e4a;
+            --link-blue: #0000ee;
         }
 
         body.dark-mode {
@@ -27,226 +29,308 @@
         body {
             background-color: var(--fpl-surface);
             color: var(--fpl-on-container);
-            transition: background-color var(--transition-speed), color var(--transition-speed);
-            margin: 0; font-family: 'Inter', sans-serif;
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed);
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
         }
 
         /* --- THEMED NAVBAR --- */
         .navbar {
             background-color: var(--fpl-container);
             border-bottom: 1px solid var(--fpl-border);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 20px; position: sticky; top: 0; z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        .brand { font-size: 1.5rem; font-weight: 900; color: var(--fpl-on-container) !important; text-decoration: none; }
-        .brand span { color: var(--fpl-primary); }
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--fpl-on-container) !important;
+            text-transform: uppercase;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
 
-        /* --- PITCH & CARDS --- */
+        .brand span {
+            color: var(--fpl-primary);
+            margin-left: 5px;
+            transition: color var(--transition-speed);
+        }
+
+        /* --- THEME PICKER --- */
+        .theme-menu-container { position: relative; display: inline-block; }
+        
+        .btn-round-theme {
+            width: 38px; height: 38px; border-radius: 50%;
+            background-color: var(--fpl-surface);
+            color: var(--fpl-primary);
+            border: 2px solid var(--fpl-primary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+
+        .theme-dropdown {
+            display: none; position: absolute; top: 50px; right: 0;
+            background: var(--fpl-container); border: 1px solid var(--fpl-border);
+            border-radius: 20px; padding: 18px; width: 200px; z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
+        .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* --- FIXED PITCH STYLING --- */
         .pitch-outer-wrap {
-            background: var(--pitch-green);
-            border-radius: 12px; margin: 15px auto; padding: 20px 0;
-            max-width: 95%; min-height: 550px;
-            display: flex; flex-direction: column; justify-content: space-between;
+            position: relative;
+            background: #008f4c; /* Standard FPL Pitch Green */
+            border-radius: 12px;
+            padding: 25px 0;
+            margin: 15px auto;
+            max-width: 95%;
+            min-height: 500px; /* Fixed height to prevent jumping */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             box-shadow: inset 0 0 40px rgba(0,0,0,0.2);
         }
 
-        .pitch-row { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
-
-        .player-card-wrapper {
-            width: 70px; text-align: center; position: relative; cursor: pointer;
+        #pitch-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            height: 100%;
         }
 
-        .card-visual {
-            background: rgba(255,255,255,0.1); border-radius: 4px;
-            position: relative; overflow: visible;
+        .bench-divider {
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            text-align: center;
+            padding: 4px 0;
+            letter-spacing: 1px;
         }
 
-        .player-face { width: 100%; display: block; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3)); }
-
-        .price-tag {
-            position: absolute; top: -5px; right: -5px; background: var(--fpl-primary);
-            color: white; font-size: 9px; padding: 2px 4px; border-radius: 4px; font-weight: 800;
+        .bench-area {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 5px;
+            background: rgba(0,0,0,0.15);
         }
 
-        .p-name-box {
-            background: #37003c; color: white; border-radius: 2px;
-            padding: 2px 0; font-size: 10px; font-weight: 700; margin-top: 2px;
+        /* --- UI ELEMENTS --- */
+        .status-bar {
+            background: var(--fpl-container);
+            border: 1px solid var(--fpl-border);
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin: 15px auto;
+            max-width: 95%;
+            color: var(--fpl-on-container);
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .p-fixture { background: #fff; color: #37003c; font-size: 9px; }
-
-        /* --- SEARCH MODAL --- */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 3000; align-items: flex-end;
+        .stat-box, .stat-item {
+            background: var(--fpl-container);
+            border: 1px solid var(--fpl-border);
+            border-radius: 16px;
+            padding: 15px;
         }
 
-        .modal-window {
-            background: var(--fpl-container); width: 100%; max-height: 80vh;
-            border-radius: 24px 24px 0 0; padding: 20px; overflow-y: auto;
-            animation: slideUp 0.3s ease-out;
-        }
+        .stat-value, .value { color: var(--fpl-primary) !important; font-weight: 900; }
 
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        .search-box {
-            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--fpl-border);
-            background: var(--fpl-surface); color: var(--fpl-on-container); margin: 10px 0;
-        }
-
-        .player-row {
-            display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--fpl-border);
+        .btn-primary, .ai-action-btn {
+            background-color: var(--fpl-primary) !important;
+            color: white !important;
+            border-radius: 12px;
+            border: none;
+            padding: 12px 20px;
+            font-weight: 700;
             cursor: pointer;
         }
 
-        .row-img { width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; }
-        .row-info { flex-grow: 1; }
-        .row-price { font-weight: 900; color: var(--fpl-primary); }
+        .btn-reset {
+            color: var(--fpl-primary);
+            background: transparent;
+            border: 1px solid var(--fpl-border);
+            border-radius: 12px;
+            padding: 10px;
+            cursor: pointer;
+        }
 
-        .btn-group { display: flex; gap: 10px; justify-content: center; margin: 20px; }
+        .nav-links { display: none; list-style: none; margin: 0 0 0 30px; padding: 0; gap: 20px; }
+        .nav-links li a { text-decoration: none; color: var(--fpl-on-container); font-weight: 600; font-size: 0.9rem; }
+        
+        @media screen and (min-width: 768px) {
+            #menu-btn { display: none !important; }
+            .nav-links { display: flex; align-items: center; }
+        }
+
+        .modal-content {
+            background-color: var(--fpl-container) !important;
+            color: var(--fpl-on-container) !important;
+            border-radius: 24px;
+        }
     </style>
 </head>
 <body>
 
+    <div id="side-drawer" class="drawer">
+        <div style="padding: 20px; background: var(--fpl-container); color: var(--fpl-on-container); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--fpl-border);">
+            <h2 class="brand" style="margin: 0;">KOPALA <span>FPL</span></h2>
+            <button id="close-btn" style="background:none; border:none; color:inherit; font-size:1.5rem;">&times;</button>
+        </div>
+        <ul class="drawer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="kopala.html">Mini Leagues</a></li>
+            <li><a href="price.html">Price Change Predictor</a></li>
+            <li><a href="football.html">Football Leagues</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+    </div>
+    
+    <div id="backdrop" class="backdrop"></div>
+
     <nav class="navbar">
-        <a href="#" class="brand">KOPALA <span>FPL</span></a>
-        <button onclick="toggleDarkMode()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">🌙</button>
+        <div class="nav-left" style="display: flex; align-items: center;">
+            <div id="menu-btn" class="menu-icon"><span></span><span></span><span></span></div>
+            <a href="index.html" class="brand">KOPALA <span>FPL</span></a>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="kopala.html">Mini Leagues</a></li>
+                <li><a href="price.html">Price Change Predictor</a></li>
+                <li><a href="football.html">Football Leagues</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
+            </ul>
+        </div>
+
+        <div class="nav-right">
+            <div class="theme-menu-container">
+                <button id="theme-master-btn" class="btn-round-theme" onclick="toggleThemeMenu()">
+                    <i class="fa-solid fa-palette"></i>
+                </button>
+                <div id="theme-dropdown" class="theme-dropdown">
+                    <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">THEME COLOR</span>
+                    <div class="swatch-grid">
+                        <div class="swatch" style="background: #ff005a;" onclick="applyMaterialTheme('#ff005a', true)"></div>
+                        <div class="swatch" style="background: #00ff87;" onclick="applyMaterialTheme('#00ff87', true)"></div>
+                        <div class="swatch" style="background: #37003c;" onclick="applyMaterialTheme('#37003c', true)"></div>
+                        <div class="swatch" style="background: #04f5ff;" onclick="applyMaterialTheme('#04f5ff', true)"></div>
+                        <div class="swatch" style="background: #e1ff00;" onclick="applyMaterialTheme('#e1ff00', true)"></div>
+                        <div class="swatch" style="background: #60e6ff;" onclick="applyMaterialTheme('#60e6ff', true)"></div>
+                        <div class="swatch" style="background: #ff4d00;" onclick="applyMaterialTheme('#ff4d00', true)"></div>
+                        <div class="swatch" style="background: #7d32f4;" onclick="applyMaterialTheme('#7d32f4', true)"></div>
+                        <div class="swatch" style="background: #0072ea;" onclick="applyMaterialTheme('#0072ea', true)"></div>
+                        <div class="swatch" style="background: #888888;" onclick="applyMaterialTheme('#888888', true)"></div>
+                    </div>
+                    <button onclick="toggleDarkMode()" style="width:100%; padding:10px; border-radius:12px; border:none; background:var(--fpl-surface); color:var(--fpl-on-container); font-weight:700; cursor:pointer; margin-top:5px;">
+                        🌙 Midnight Mode
+                    </button>
+                </div>
+            </div>
+        </div>
     </nav>
 
-    <main>
-        <div class="pitch-outer-wrap" id="pitch-ui">
-            </div>
+    <main class="main-container">
+        <div class="ticker" id="ticker"></div>
 
-        <div class="btn-group">
-            <button class="ai-action-btn" onclick="autoPickTeam()" style="background:var(--fpl-primary); color:white; border:none; padding:12px 20px; border-radius:12px; font-weight:700;">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Pick Team
-            </button>
-            <button onclick="resetTeam()" style="padding:12px; border-radius:12px; border:1px solid var(--fpl-border); background:none; color:inherit;">
-                <i class="fa-solid fa-trash"></i> Reset
-            </button>
+        <div class="pitch-outer-wrap">
+            <div class="pitch" id="pitch-container"></div>
+            <div class="bench-divider">SUBSTITUTES</div>
+            <div class="bench-area" id="bench-container"></div>
         </div>
+
+         <div class="btn-group" style="margin-bottom:10px;">
+            <button class="btn-reset" onclick="localStorage.removeItem('kopala_saved_squad'); location.reload();">
+                <i class="fa-solid fa-trash"></i> Reset team
+            </button>
+         </div>
+
+         <div class="btn-group" style="margin-bottom:10px;">
+            <button id="wildcard-btn" class="ai-action-btn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> template team
+            </button>
+           </div>
+
+    <section class="stats-summary" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+    <div class="stat-box" style="text-align: center; border-right: 1px solid #eee;">
+        <span class="stat-label" style="display: block; font-size: 11px; color: #666; text-transform: uppercase; font-weight: 700;">Predicted Points</span>
+        <span class="stat-value" id="v-xp" style="font-size: 22px; font-weight: 900; color: #37003c;">0.0</span>
+    </div>
+    <div class="stat-box" style="text-align: center; border-right: 1px solid #eee;">
+        <span class="stat-label" style="display: block; font-size: 11px; color: #666; text-transform: uppercase; font-weight: 700;">AI Rating</span>
+        <span class="stat-value" id="team-rating" style="font-size: 22px; font-weight: 900; color: #00ff87;">0%</span>
+    </div>
+    <div class="stat-box" style="text-align: center;">
+        <span class="stat-label" style="display: block; font-size: 11px; color: #666; text-transform: uppercase; font-weight: 700;">In The Bank</span>
+        <span class="stat-value" id="budget-val" style="font-size: 22px; font-weight: 900; color: #2d3436;">£0.0m</span>
+    </div>
+</section>
     </main>
 
-    <div id="player-modal" class="modal-overlay">
-        <div class="modal-window">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>Select Player</h3>
-                <button onclick="closeModal()" style="font-size:2rem; background:none; border:none; color:inherit;">&times;</button>
-            </div>
-            <input type="text" id="player-search" class="search-box" placeholder="Search name or team..." oninput="filterPlayers()">
-            <div id="modal-list"></div>
-        </div>
-    </div>
+   
 
     <script>
-        // --- DATA & STATE ---
-        let playerDB = [];
-        let squad = [
-            { id: 1, pos: 'GKP', name: null }, { id: 2, pos: 'DEF', name: null },
-            { id: 3, pos: 'DEF', name: null }, { id: 4, pos: 'DEF', name: null },
-            { id: 5, pos: 'MID', name: null }, { id: 6, pos: 'MID', name: null },
-            { id: 7, pos: 'MID', name: null }, { id: 8, pos: 'FWD', name: null }
-        ];
-        let activeSlot = null;
-
-        // --- INITIALIZATION ---
-        async function init() {
-            try {
-                const res = await fetch('https://fantasy.premierleague.com/api/bootstrap-static/');
-                const data = await res.json();
-                playerDB = data.elements.map(p => ({
-                    code: p.code,
-                    name: p.web_name,
-                    pos: ["", "GKP", "DEF", "MID", "FWD"][p.element_type],
-                    price: (p.now_cost / 10).toFixed(1),
-                    team: data.teams.find(t => t.id === p.team).short_name
-                }));
-                renderPitch();
-            } catch (e) { console.error("API Load Failed", e); }
+        function toggleThemeMenu() {
+            const menu = document.getElementById('theme-dropdown');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         }
 
-        // --- UI RENDERING ---
-        function renderPitch() {
-            const pitch = document.getElementById('pitch-ui');
-            pitch.innerHTML = '';
+        function applyMaterialTheme(color, shouldClose = false) {
+            document.body.classList.remove('dark-mode');
+            document.documentElement.style.setProperty('--fpl-primary', color);
+            const surfaceColor = `${color}0A`; 
+            document.documentElement.style.setProperty('--fpl-surface', surfaceColor);
             
-            const positions = ['GKP', 'DEF', 'MID', 'FWD'];
-            positions.forEach(pos => {
-                const row = document.createElement('div');
-                row.className = 'pitch-row';
-                squad.filter(s => s.pos === pos).forEach(slot => {
-                    row.appendChild(createPlayerCard(slot));
-                });
-                pitch.appendChild(row);
-            });
-        }
-
-        function createPlayerCard(slot) {
-            const player = playerDB.find(p => p.name === slot.name);
-            const div = document.createElement('div');
-            div.className = 'player-card-wrapper';
-            div.onclick = () => openModal(slot.id);
-
-            const imgUrl = player 
-                ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${player.code}.png`
-                : 'https://fantasy.premierleague.com/static/media/shirt_default.9f913d96.webp';
-
-            div.innerHTML = `
-                <div class="card-visual">
-                    ${player ? `<div class="price-tag">£${player.price}</div>` : ''}
-                    <img src="${imgUrl}" class="player-face">
-                </div>
-                <div class="p-name-box">
-                    <div>${slot.name || slot.pos}</div>
-                    ${player ? `<div class="p-fixture">${player.team}</div>` : ''}
-                </div>
-            `;
-            return div;
-        }
-
-        // --- SEARCH LOGIC ---
-        function openModal(slotId) {
-            activeSlot = slotId;
-            document.getElementById('player-modal').style.display = 'flex';
-            filterPlayers();
-        }
-
-        function closeModal() { document.getElementById('player-modal').style.display = 'none'; }
-
-        function filterPlayers() {
-            const query = document.getElementById('player-search').value.toLowerCase();
-            const slot = squad.find(s => s.id === activeSlot);
-            const filtered = playerDB.filter(p => p.pos === slot.pos && p.name.toLowerCase().includes(query)).slice(0, 20);
+            localStorage.setItem('kopala_ai_theme', color);
+            localStorage.setItem('kopala_is_dark', 'false');
             
-            const list = document.getElementById('modal-list');
-            list.innerHTML = '';
-            filtered.forEach(p => {
-                const row = document.createElement('div');
-                row.className = 'player-row';
-                row.onclick = () => selectPlayer(p.name);
-                row.innerHTML = `
-                    <img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p${p.code}.png" class="row-img">
-                    <div class="row-info">
-                        <strong>${p.name}</strong><br><small>${p.team} • ${p.pos}</small>
-                    </div>
-                    <div class="row-price">£${p.price}m</div>
-                `;
-                list.appendChild(row);
-            });
+            if(shouldClose) toggleThemeMenu();
         }
 
-        function selectPlayer(name) {
-            const slot = squad.find(s => s.id === activeSlot);
-            slot.name = name;
-            renderPitch();
-            closeModal();
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            if(isDark) {
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme, false);
+            }
+            localStorage.setItem('kopala_is_dark', isDark);
+            toggleThemeMenu();
         }
 
-        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-        function resetTeam() { squad.forEach(s => s.name = null); renderPitch(); }
+        window.onclick = function(e) {
+            if (!e.target.closest('.theme-menu-container')) {
+                const d = document.getElementById('theme-dropdown');
+                if (d) d.style.display = 'none';
+            }
+        }
 
-        init();
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('kopala_ai_theme') || '#ff005a';
+            const wasDark = localStorage.getItem('kopala_is_dark') === 'true';
+            
+            document.documentElement.style.setProperty('--fpl-primary', savedTheme);
+            if (wasDark) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.style.setProperty('--fpl-surface', '#0a0c10');
+            } else {
+                applyMaterialTheme(savedTheme, false);
+            }
+            document.getElementById('theme-dropdown').style.display = 'none';
+        });
     </script>
+    <script src="team.js"></script>
+    <script src="menu.js"></script>
 </body>
 </html>
